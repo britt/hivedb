@@ -1,10 +1,12 @@
 package org.hivedb.management;
 
+import static org.testng.AssertJUnit.assertEquals;
+
+import org.hivedb.management.statistics.FillStatisticsMBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
-import static org.testng.AssertJUnit.*;
 
 public class FillStatisticsTest {
 	ApplicationContext context = null;
