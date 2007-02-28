@@ -1,0 +1,64 @@
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN 2.0//EN" "http://www.springframework.org/dtd/spring-beans-2.0.dtd">
+<beans>
+	<!-- start a JMX Server -->
+	<bean id="mbeanServer"
+		class="org.springframework.jmx.support.MBeanServerFactoryBean" />
+
+	<!--  Use an RMI registry to expose our MBeans remotely through a JSR160 JMXConnectorServer -->
+	<bean id="rmiRegistry"
+		class="org.springframework.remoting.rmi.RmiRegistryFactoryBean" />
+
+	<bean id="serverConnector"
+		class="org.springframework.jmx.support.ConnectorServerFactoryBean"
+		depends-on="rmiRegistry">
+		<property name="objectName" value="connector:name=rmi" />
+		<property name="serviceUrl"
+			value="service:jmx:rmi://localhost/jndi/rmi://localhost:1099/myconnector" />
+	</bean>
+
+	<bean id="exporter"
+		class="org.springframework.jmx.export.MBeanExporter"
+		lazy-init="false">
+		<property name="beans">
+			<map>
+				<entry key="Server:name=HttpAdaptorFormatted">
+					<bean class="mx4j.tools.adaptor.http.HttpAdaptor">
+						<property name="port" value="9000" />
+						<property name="host" value="0.0.0.0" />
+						<property name="processor">
+							<bean
+								class="mx4j.tools.adaptor.http.XSLTProcessor" />
+						</property>
+					</bean>
+				</entry>
+				<entry key="Server:name=HttpAdaptorRaw">
+					<bean class="mx4j.tools.adaptor.http.HttpAdaptor">
+						<property name="port" value="9001" />
+						<property name="host" value="0.0.0.0" />
+					</bean>
+				</entry>
+				<entry key="HiveDB:name=FillStatistics">
+					<bean
+						class="org.hivedb.management.FillStatisticsMBeanImpl" />
+				</entry>
+			</map>
+		</property>
+		<property name="listeners">
+			<list>
+				<!-- let the HttpAdapter be started after it is registered in the MBeanServer -->
+				<bean
+					class="org.hivedb.management.HttpAdaptorManager">
+					<property name="mbeanServer" ref="mbeanServer" />
+				</bean>
+			</list>
+		</property>
+	</bean>
+	
+
+	<bean id="fillStatisticsProxy"
+		class="org.springframework.jmx.access.MBeanProxyFactoryBean">
+		<property name="objectName" value="HiveDB:name=FillStatistics" />
+		<property name="proxyInterface"
+			value="org.hivedb.management.FillStatisticsMBean" />
+	</bean>
+</beans>

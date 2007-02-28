@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="HiveDB">
+	<bannerLeft>
+		<name>HiveDB</name>
+		<src width="180">images/hivedb-120.png</src>
+	</bannerLeft>
+	<bannerRight>
+		<name>HiveDB</name>
+	</bannerRight>
+	<body>
+		<links>
+			<item name="Wiki" href="http://www.hivedb.org"/>
+		</links>
+		<menu name="HiveDB">
+			<item name="Introduction" href="index.html"/>
+			<item name="Wiki" href="http://www.hivedb.org" />
+		</menu>
+		${reports}
+	</body>
+</project>
