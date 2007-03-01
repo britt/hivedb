@@ -51,4 +51,29 @@ public class RollingAverageStatisticsImpl implements RollingAverageStatistics {
 		this.step = step;
 	}
 
+	public long getMax(String key) {
+		long max = Long.MIN_VALUE;
+		for(RollingAverage.ObservationInterval observation : this.stats.get(key).getIntervalData())
+			max = Math.max( max, divideAsDoubles(observation.getSum(), observation.getCount()));
+		return max;
+	}
+
+	public long getMin(String key) {
+		long min = Long.MAX_VALUE;
+		for(RollingAverage.ObservationInterval observation : this.stats.get(key).getIntervalData())
+			min = Math.min( min, divideAsDoubles(observation.getSum(), observation.getCount()));
+		return min;
+	}
+
+	public double getVariance(String key) {
+		Collection<RollingAverage.ObservationInterval> observations = this.stats.get(key).getIntervalData();
+		long sum = 0;
+		for(RollingAverage.ObservationInterval observation : observations)
+			sum += Math.pow(divideAsDoubles(observation.getSum(), observation.getCount()) - this.get(key), 2);
+		return (double) sum / observations.size();
+	}
+	
+	private long divideAsDoubles(long numerator, long denominator) {
+		return Math.round( (double) numerator / denominator);
+	}
 }

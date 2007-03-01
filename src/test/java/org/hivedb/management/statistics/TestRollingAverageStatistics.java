@@ -57,6 +57,20 @@ public class TestRollingAverageStatistics {
 		for(String key: testKeys())
 			assertEquals(0, stats.get(key));
 	}
+	@Test
+	public void testComputedStatistics() throws Exception{
+		RollingAverageStatistics stats = new RollingAverageStatisticsImpl(testKeys(), 1000, 10);
+		String key = testKeys().iterator().next();
+		
+		for(int i=0; i<5; i++) {
+			stats.add(key, 10+i*10);
+			Thread.sleep(11);
+		}
+		
+		assertEquals(10, stats.getMin(key));
+		assertEquals(50, stats.getMax(key));
+		assertEquals(200.0, stats.getVariance(key));
+	}
 	
 	private Collection<String> testKeys() {
 		Collection<String> keys = new ArrayList<String>();

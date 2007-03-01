@@ -1,6 +1,8 @@
 package org.hivedb.util;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -294,6 +296,17 @@ public class RollingAverage {
 	public int getIntervalCount() {
 		return sums.length;
 	}
+	
+	/** 
+	 * @return The sum and observation count for each interval recorded
+	 */
+	public Collection<ObservationInterval> getIntervalData() {
+		ArrayList<ObservationInterval> observations = new ArrayList<ObservationInterval>();
+		for(int i=0; i<sums.length; i++)
+			if(counts[i] != 0)
+				observations.add(new ObservationInterval(sums[i], counts[i]));
+		return observations;
+	}
 
 	/**
 	 * Handles discarding expired data, updating countsTotal/sumsTotal, and
@@ -347,6 +360,25 @@ public class RollingAverage {
 			return sb.toString();
 		} finally {
 			lock.unlock();
+		}
+	}
+	
+	/**
+	 * A tuple for passing observation data.
+	 * @author bcrawford
+	 *
+	 */
+	public class ObservationInterval {
+		private long sum, count;
+		public long getCount() {
+			return count;
+		}
+		public long getSum() {
+			return sum;
+		}
+		public ObservationInterval(long sum, long count) {
+			this.sum = sum;
+			this.count = count;
 		}
 	}
 }
