@@ -39,7 +39,7 @@
 				</entry>
 				<entry key="HiveDB:name=FillStatistics">
 					<bean
-						class="org.hivedb.management.FillStatisticsMBeanImpl" />
+						class="org.hivedb.management.statistics.NodeFillStatisticsMBean" />
 				</entry>
 			</map>
 		</property>
@@ -59,6 +59,6 @@
 		class="org.springframework.jmx.access.MBeanProxyFactoryBean">
 		<property name="objectName" value="HiveDB:name=FillStatistics" />
 		<property name="proxyInterface"
-			value="org.hivedb.management.FillStatisticsMBean" />
+			value="org.hivedb.management.statistics.NodeFillStatistics" />
 	</bean>
 </beans>
