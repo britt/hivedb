@@ -5,6 +5,7 @@ import java.sql.Date;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.util.HiveUtils;
 
+// TODO Naming incongruity, all of the other *Statistics are interfaces
 public class PartitionKeyStatistics implements Comparable, Cloneable{
 	private PartitionDimension partitionDimension;
 	private Object key;
