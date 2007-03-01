@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.commons.dbcp.BasicDataSource;
-import org.hivedb.meta.Access;
-import org.hivedb.meta.AccessType;
 import org.hivedb.meta.ColumnInfo;
 import org.hivedb.meta.GlobalSchema;
 import org.hivedb.meta.HiveSemaphore;
@@ -55,8 +53,7 @@ public abstract class DaoTestCase extends DerbyTestCase {
 	}
 
 	protected Node createNode() {
-		return new Node("jdbc:foo:foodb@localhost", new Access(
-				AccessType.ReadWrite, 1, 1), false);
+		return new Node("jdbc:foo:foodb@localhost", false);
 	}
 
 	protected NodeGroup createPopulatedNodeGroup() {

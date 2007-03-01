@@ -14,8 +14,6 @@ import java.util.Queue;
 import java.util.TreeSet;
 
 import org.apache.commons.dbcp.BasicDataSource;
-import org.hivedb.meta.Access;
-import org.hivedb.meta.AccessType;
 import org.hivedb.meta.Assigner;
 import org.hivedb.meta.ColumnInfo;
 import org.hivedb.meta.GlobalSchema;
@@ -290,17 +288,14 @@ public class HiveScenarioTests {
 				public void f() throws Exception {
 					final Node node = Atom.getFirst(partitionDimension.getNodeGroup().getNodes());
 					final boolean readOnly = node.isReadOnly();
-					final Access access = node.getAccess();
 					final String uri = node.getUri();
 					node.setReadOnly(!readOnly);
-					node.setAccess(new Access(AccessType.Read, access.getReadShareLevel() % 13, access.getWriteShareLevel() % 17));
 					node.setUri("jdbc:mysql://arb/it?user=ra&password=ry");
 					hive.updateNode(node);			
 					assertEquality(hive, node);
 					new Undo() {							
 						public void f() throws Exception {
 							node.setReadOnly(readOnly);
-							node.setAccess(access);
 							node.setUri(uri);
 							hive.updateNode(node);			
 							assertEquality(hive, node);

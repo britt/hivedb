@@ -66,11 +66,11 @@ public class MigrationJobTest {
 	}
 	
 	private Node mockDestination() {
-		return new Node(0, "destination", null, false);
+		return new Node(0, "destination", false);
 	}
 	
 	private Node mockOrigin() {
-		return new Node(0, "origin", null, false);
+		return new Node(0, "origin", false);
 	}
 	
 	private void runJob(JobDetail job, Trigger trigger, SchedulerFactory factory) throws SchedulerException {

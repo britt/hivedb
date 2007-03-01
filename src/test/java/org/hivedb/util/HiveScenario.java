@@ -9,8 +9,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.hivedb.HiveException;
-import org.hivedb.meta.Access;
-import org.hivedb.meta.AccessType;
 import org.hivedb.meta.ColumnInfo;
 import org.hivedb.meta.Hive;
 import org.hivedb.meta.Node;
@@ -88,7 +86,6 @@ public class HiveScenario {
 					public String f() { return hive.getHiveUri(); }}, new NumberIterator(2)),
 				Generate.create(new Generator<Node>(){
 					public Node f() { return new Node(  hive.getHiveUri(), 
-														new Access(AccessType.ReadWrite, 100, 100),
 														false); }},
 									  new NumberIterator(3))
 			);
@@ -116,7 +113,7 @@ public class HiveScenario {
 						return new PartitionDimension(
 							primaryClass.getSimpleName(),
 							JdbcTypeMapper.primitiveTypeToJdbcType(primaryClass.getMethod("getIdAsPrimaryIndexInstance").getReturnType()),
-							new NodeGroup(Transform.map(new Unary<Node,Node>() { public Node f(Node n) {return new Node(n.getUri(), n.getAccess(), n.isReadOnly());}},dataNodes)),
+							new NodeGroup(Transform.map(new Unary<Node,Node>() { public Node f(Node n) {return new Node(n.getUri(),n.isReadOnly());}},dataNodes)),
 							indexUriIterator.next(),
 							Transform.map(new Unary<Class, Resource>() {
 								public Resource f(Class classType) { 

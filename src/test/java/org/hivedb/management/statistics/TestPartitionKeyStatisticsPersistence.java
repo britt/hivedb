@@ -16,8 +16,6 @@ import java.util.Random;
 
 import javax.sql.DataSource;
 
-import org.hivedb.meta.Access;
-import org.hivedb.meta.AccessType;
 import org.hivedb.meta.Assigner;
 import org.hivedb.meta.ColumnInfo;
 import org.hivedb.meta.GlobalSchema;
@@ -180,8 +178,7 @@ public class TestPartitionKeyStatisticsPersistence extends DerbyTestCase {
 	}
 
 	private Node node() {
-		return new Node(0, getConnectString(), new Access(AccessType.ReadWrite,
-				100, 100), false);
+		return new Node(0, getConnectString(), false);
 	}
 
 	private PartitionDimension partitionDimension() {

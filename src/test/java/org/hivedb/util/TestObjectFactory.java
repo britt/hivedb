@@ -10,8 +10,6 @@ import java.util.Random;
 import org.hivedb.management.quartz.MigrationEstimator;
 import org.hivedb.management.statistics.NodeStatistics;
 import org.hivedb.management.statistics.PartitionKeyStatistics;
-import org.hivedb.meta.Access;
-import org.hivedb.meta.AccessType;
 import org.hivedb.meta.ColumnInfo;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.NodeGroup;
@@ -27,7 +25,7 @@ public class TestObjectFactory {
 	}
 	
 	public static Node node() {
-		return new Node("aNode" + new Random().nextInt(), new Access(AccessType.ReadWrite, 0, 0), false);
+		return new Node("aNode" + new Random().nextInt(), false);
 	}
 	
 	public static PartitionKeyStatistics partitionKeyStats(int fill){

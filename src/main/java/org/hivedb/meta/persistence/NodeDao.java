@@ -12,8 +12,6 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
-import org.hivedb.HiveException;
-import org.hivedb.meta.Access;
 import org.hivedb.meta.Node;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
@@ -34,16 +32,13 @@ public class NodeDao extends JdbcDaoSupport implements DataAccessObject<Node,Int
 		Object[] parameters = new Object[] { 
 				newObject.getNodeGroup().getId(),
 				newObject.getUri(), 
-				newObject.getAccess().getAccessType().toString(),
-				newObject.getAccess().getReadShareLevel(),
-				newObject.getAccess().getWriteShareLevel(),
 				newObject.isReadOnly()
 				};
 		KeyHolder generatedKey = new GeneratedKeyHolder();
 		JdbcTemplate j = getJdbcTemplate();
 		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
-				"INSERT INTO node_metadata (node_group_id,uri,access,read_share_level,write_share_level,read_only) VALUES (?,?,?,?,?,?)",
-				new int[] {Types.INTEGER,Types.VARCHAR,Types.VARCHAR,Types.INTEGER,Types.INTEGER,Types.INTEGER});
+				"INSERT INTO node_metadata (node_group_id,uri,read_only) VALUES (?,?,?)",
+				new int[] {Types.INTEGER,Types.VARCHAR,Types.INTEGER});
 		creatorFactory.setReturnGeneratedKeys(true);
 		int rows = j.update(creatorFactory
 				.newPreparedStatementCreator(parameters), generatedKey);
@@ -80,16 +75,13 @@ public class NodeDao extends JdbcDaoSupport implements DataAccessObject<Node,Int
 		Object[] parameters = new Object[] { 
 				node.getNodeGroup().getId(),
 				node.getUri(), 
-				node.getAccess().getAccessType().toString(),
-				node.getAccess().getReadShareLevel(),
-				node.getAccess().getWriteShareLevel(),
 				node.isReadOnly(),
 				node.getId()
 				};
 		JdbcTemplate j = getJdbcTemplate();
 		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
-				"UPDATE node_metadata set node_group_id=?,uri=?,access=?,read_share_level=?,write_share_level=?,read_only=? where id=?",
-				new int[] {Types.INTEGER,Types.VARCHAR,Types.VARCHAR,Types.INTEGER,Types.INTEGER,Types.INTEGER,Types.INTEGER});
+				"UPDATE node_metadata set node_group_id=?,uri=?,read_only=? where id=?",
+				new int[] {Types.INTEGER,Types.VARCHAR,Types.INTEGER,Types.INTEGER});
 		int rows = j.update(creatorFactory
 				.newPreparedStatementCreator(parameters));
 		if (rows != 1)
@@ -98,16 +90,7 @@ public class NodeDao extends JdbcDaoSupport implements DataAccessObject<Node,Int
 
 	protected class NodeRowMapper implements RowMapper {
 		public Object mapRow(ResultSet rs, int rowNumber) throws SQLException {
-			Access access;
-			try {
-				access = new Access(
-						Access.parseType(rs.getString("access")),
-						rs.getInt("read_share_level"),
-						rs.getInt("write_share_level"));
-			} catch (HiveException e) {
-				throw new SQLException(e.getMessage());
-			}
-			return new Node(rs.getInt("id"), rs.getString("uri"), access, rs.getInt("read_only") == 0 ? false : true);
+			return new Node(rs.getInt("id"), rs.getString("uri"), rs.getInt("read_only") == 0 ? false : true);
 		}
 	}
 }

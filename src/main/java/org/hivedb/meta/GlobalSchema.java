@@ -38,9 +38,6 @@ public class GlobalSchema extends Schema {
 				+ "id " + getNumericPrimaryKeySequenceModifier(dialect) + ", " 
 				+ "node_group_id int not null, "
 				+ "uri varchar(255) not null, "
-				+ "access varchar(64), "
-				+ "read_share_level int default 1, " // Derby doesn't have TINYINT
-				+ "write_share_level int default 1, " // Derby doesn't have TINYINT
 				+ "read_only int " // Derby doesn't have BIT
 				+ " )";
 	}

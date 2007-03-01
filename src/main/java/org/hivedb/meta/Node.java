@@ -18,12 +18,11 @@ public class Node implements Comparable<Node>, Cloneable, Identifiable {
 	private int id;
 	private String uri;
 	private NodeGroup nodeGroup;
-	private Access access;
 	private boolean readOnly;
 	private double capacity;
 	
-	public Node(String uri, Access access, boolean readOnly) {
-		this(Hive.NEW_OBJECT_ID, uri, access, readOnly);
+	public Node(String uri, boolean readOnly) {
+		this(Hive.NEW_OBJECT_ID, uri, readOnly);
 	}
 
 	/**
@@ -33,20 +32,13 @@ public class Node implements Comparable<Node>, Cloneable, Identifiable {
 	 * @param access
 	 * @param readOnly
 	 */
-	public Node(int id, String uri, Access access, boolean readOnly) {
+	public Node(int id, String uri, boolean readOnly) {
 		super();
 		this.id = id;
 		this.uri = uri;
-		this.access = access;
 		this.readOnly = readOnly;
 	}
-	
-	public Access getAccess() {
-		return access;
-	}
-	public void setAccess(Access access) {
-		this.access = access;
-	}
+
 	public int getId() {
 		return id;
 	}
@@ -97,7 +89,7 @@ public class Node implements Comparable<Node>, Cloneable, Identifiable {
 	}
 	public int hashCode() {
 		return HiveUtils.makeHashCode(new Object[] {
-				uri, access, readOnly
+				uri, readOnly
 		});
 	}
 	
@@ -106,7 +98,6 @@ public class Node implements Comparable<Node>, Cloneable, Identifiable {
 		return HiveUtils.toDeepFormatedString(this, 
 										"Id", 		getId(), 
 										"Uri", 		getUri(), 
-										"Access", 	getAccess(),
 										"ReadOnly",	isReadOnly());									
 	}
 
@@ -119,6 +110,6 @@ public class Node implements Comparable<Node>, Cloneable, Identifiable {
 	 */
 	public Object clone()
 	{
-		return new Node(uri, access,readOnly);
+		return new Node(uri,readOnly);
 	}
 }
