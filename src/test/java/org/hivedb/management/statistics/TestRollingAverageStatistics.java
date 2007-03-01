@@ -16,7 +16,7 @@ public class TestRollingAverageStatistics {
 			stats.add(key, 10);
 		
 		for(String key: testKeys())
-			assertEquals(10L, stats.get(key));
+			assertEquals(10L, stats.getAverage(key));
 	}
 	@Test
 	public void testGetWindowSizeAndInterval() {
@@ -38,7 +38,7 @@ public class TestRollingAverageStatistics {
 		}
 		
 		for(String key: testKeys())
-			assertEquals(15, stats.get(key));
+			assertEquals(15, stats.getAverage(key));
 	}
 	@Test
 	public void testIncrementAndDecrement() {
@@ -49,13 +49,13 @@ public class TestRollingAverageStatistics {
 		}
 		
 		for(String key: testKeys())
-			assertEquals(1, stats.get(key));
+			assertEquals(1, stats.getAverage(key));
 		
 		for(String key: testKeys())
 			stats.decrement(key);
 		
 		for(String key: testKeys())
-			assertEquals(0, stats.get(key));
+			assertEquals(0, stats.getAverage(key));
 	}
 	@Test
 	public void testComputedStatistics() throws Exception{

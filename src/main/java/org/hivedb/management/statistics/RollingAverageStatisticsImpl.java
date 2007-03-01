@@ -1,5 +1,6 @@
 package org.hivedb.management.statistics;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Map;
@@ -31,7 +32,7 @@ public class RollingAverageStatisticsImpl implements RollingAverageStatistics {
 		this.stats.get(key).add(-1*step);
 	}
 
-	public long get(String key) {
+	public long getAverage(String key) {
 		return this.stats.get(key).getAverage();
 	}
 
@@ -69,11 +70,18 @@ public class RollingAverageStatisticsImpl implements RollingAverageStatistics {
 		Collection<RollingAverage.ObservationInterval> observations = this.stats.get(key).getIntervalData();
 		long sum = 0;
 		for(RollingAverage.ObservationInterval observation : observations)
-			sum += Math.pow(divideAsDoubles(observation.getSum(), observation.getCount()) - this.get(key), 2);
+			sum += Math.pow(divideAsDoubles(observation.getSum(), observation.getCount()) - this.getAverage(key), 2);
 		return (double) sum / observations.size();
 	}
 	
 	private long divideAsDoubles(long numerator, long denominator) {
 		return Math.round( (double) numerator / denominator);
+	}
+
+	public Collection<String> listStatistics() {
+		Collection<String> keys = new ArrayList<String>();
+		for(String key : this.stats.keySet())
+			keys.add(key);
+		return keys;
 	}
 }
