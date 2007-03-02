@@ -20,6 +20,10 @@ public class Node implements Comparable<Node>, Cloneable, Identifiable {
 	private NodeGroup nodeGroup;
 	private boolean readOnly;
 	private double capacity;
+
+	public Node(String uri) {
+		this(uri, false);
+	}
 	
 	public Node(String uri, boolean readOnly) {
 		this(Hive.NEW_OBJECT_ID, uri, readOnly);
