@@ -5,6 +5,13 @@ import javax.sql.DataSource;
 import org.springframework.jdbc.support.incrementer.DataFieldMaxValueIncrementer;
 import org.springframework.jdbc.support.incrementer.MySQLMaxValueIncrementer;
 
+/**
+ * Reasonable defaults hardcoded for key buffer size (100) and increment column name (JdbcKeyAuthority.COLUMN_NAME).
+ * 
+ * @author Justin McCarthy
+ *
+ * @param <T> Type of generated keys (Long or Integer)
+ */
 public class MySqlKeyAuthority<T extends Number> extends JdbcKeyAuthority<T> {
 	public MySqlKeyAuthority(DataSource ds, Class keySpace, Class<T> returnType) {
 		super(keySpace, returnType);
