@@ -4,6 +4,7 @@
  */
 package org.hivedb.meta;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 import org.hivedb.HiveException;
@@ -19,7 +20,18 @@ public class Resource implements Comparable<Resource>, IdAndNameIdentifiable {
 	private int id;
 	private String name;
 	private PartitionDimension partitionDimension;
-	private Collection<SecondaryIndex> secondaryIndexes;
+	private Collection<SecondaryIndex> secondaryIndexes = null;
+
+	/**
+	 * 
+	 * Create Constructor
+	 * 
+	 * @param name
+	 * @param secondaryIndexes
+	 */
+	public Resource(String name) {
+		this(Hive.NEW_OBJECT_ID, name, new ArrayList<SecondaryIndex>());
+	}
 	
 	/**
 	 * 

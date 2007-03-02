@@ -17,8 +17,7 @@ public class JdbcKeyAuthority<T extends Number> implements KeyAuthority {
 	DataFieldMaxValueIncrementer incrementer = null;
 
 	private Class returnType = null;
-
-	private String keySpace = null;
+	private Class keySpace = null;
 
 	// Only used to issue CREATE TABLE
 	private DataSource dataSource = null;
@@ -32,29 +31,20 @@ public class JdbcKeyAuthority<T extends Number> implements KeyAuthority {
 	 *            or Float)
 	 */
 	public JdbcKeyAuthority(Class keySpace, Class<T> returnType) {
-		this(tableNameForClass(keySpace), returnType);
-		this.returnType = returnType;
-	}
-
-	/**
-	 * @param keySpace
-	 *            A String that distinguishes this counter (the class name will
-	 *            be mapped to a database table)
-	 * @param returnType
-	 *            Type of the numeric keys this KeyAuthority generates (Integer
-	 *            or Float)
-	 */
-	public JdbcKeyAuthority(String keySpace, Class<T> returnType) {
-		this.returnType = returnType;
 		this.keySpace = keySpace;
+		this.returnType = returnType;
 	}
 
-	public void setIncrementer(DataFieldMaxValueIncrementer incrementer) {
+	protected void setIncrementer(DataFieldMaxValueIncrementer incrementer) {
 		this.incrementer = incrementer;
 	}
 
 	public void setDataSource(DataSource dataSource) {
 		this.dataSource = dataSource;
+	}
+
+	protected DataSource getDataSource() {
+		return this.dataSource;
 	}
 
 	public T nextAvailableKey() {
@@ -80,12 +70,16 @@ public class JdbcKeyAuthority<T extends Number> implements KeyAuthority {
 
 	private void createSchema() {
 		JdbcTemplate template = new JdbcTemplate(dataSource);
-		template.execute("CREATE TABLE " + keySpace + " (" + COLUMN_NAME
+		template.execute("CREATE TABLE " + getKeyspaceTableName() + " (" + COLUMN_NAME
 				+ " int);");
-		template.execute("INSERT INTO  " + keySpace + " VALUES (1)");
+		template.execute("INSERT INTO  " + getKeyspaceTableName() + " VALUES (1)");
 	}
 
 	public static String COLUMN_NAME = "current_max_id";
+	
+	protected String getKeyspaceTableName() {
+		return tableNameForClass(keySpace);
+	}
 
 	public static String tableNameForClass(Class aClass) {
 		return "key_authority_"

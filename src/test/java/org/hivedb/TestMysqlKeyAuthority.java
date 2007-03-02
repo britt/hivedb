@@ -5,26 +5,23 @@ import static org.testng.AssertJUnit.assertTrue;
 import javax.sql.DataSource;
 
 import org.hivedb.management.JdbcKeyAuthority;
+import org.hivedb.management.MySqlKeyAuthority;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
-import org.springframework.jdbc.support.incrementer.DataFieldMaxValueIncrementer;
-import org.springframework.jdbc.support.incrementer.MySQLMaxValueIncrementer;
-import org.testng.annotations.BeforeMethod;
 
 public class TestMysqlKeyAuthority {
 	DataSource ds = null;
 
-//	@Test(groups={"mysql"})
+	//@Test()
 	public void testAssign() throws Exception {
-		JdbcKeyAuthority<Integer> authority = new JdbcKeyAuthority<Integer>("key_authority_test",
-				Integer.class);
+		JdbcKeyAuthority<Integer> authority = new MySqlKeyAuthority<Integer>(
+				getDataSource(), this.getClass(), Integer.class);
 		authority.setDataSource(getDataSource());
-		authority.setIncrementer(getIncrementer());
 		int firstKey = authority.nextAvailableKey().intValue();
 		int secondKey = authority.nextAvailableKey().intValue();
 		assertTrue(secondKey > firstKey);
 	}
-	
-	@BeforeMethod()
+
+	//@BeforeMethod
 	public void configure() throws Exception {
 		Class.forName("com.mysql.jdbc.Driver");
 		ds = new HiveBasicDataSource(getConnectStringWithoutDatabase());
@@ -48,16 +45,7 @@ public class TestMysqlKeyAuthority {
 	}
 
 	private String getDatabaseName() {
-		return "test_key_authority";
-	}
-
-	private DataFieldMaxValueIncrementer getIncrementer() {
-		MySQLMaxValueIncrementer incrementer = new MySQLMaxValueIncrementer();
-		incrementer.setDataSource(getDataSource());
-		incrementer.setCacheSize(100);
-		incrementer.setIncrementerName("key_authority_test");
-		incrementer.setColumnName(JdbcKeyAuthority.COLUMN_NAME);
-		return incrementer;
+		return "test";
 	}
 
 	private DataSource getDataSource() {

@@ -1,0 +1,22 @@
+package org.hivedb.management;
+
+import javax.sql.DataSource;
+
+import org.springframework.jdbc.support.incrementer.DataFieldMaxValueIncrementer;
+import org.springframework.jdbc.support.incrementer.MySQLMaxValueIncrementer;
+
+public class MySqlKeyAuthority<T extends Number> extends JdbcKeyAuthority<T> {
+	public MySqlKeyAuthority(DataSource ds, Class keySpace, Class<T> returnType) {
+		super(keySpace, returnType);
+		setIncrementer(this.getIncrementer(ds));
+	}
+
+	private DataFieldMaxValueIncrementer getIncrementer(DataSource ds) {
+		MySQLMaxValueIncrementer incrementer = new MySQLMaxValueIncrementer();
+		incrementer.setCacheSize(100);
+		incrementer.setDataSource(ds);
+		incrementer.setIncrementerName(getKeyspaceTableName());
+		incrementer.setColumnName(COLUMN_NAME);
+		return incrementer;
+	}
+}
