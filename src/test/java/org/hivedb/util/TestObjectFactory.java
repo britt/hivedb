@@ -9,7 +9,9 @@ import java.util.Random;
 
 import org.hivedb.management.quartz.MigrationEstimator;
 import org.hivedb.management.statistics.NodeStatistics;
+import org.hivedb.management.statistics.NodeStatisticsBean;
 import org.hivedb.management.statistics.PartitionKeyStatistics;
+import org.hivedb.management.statistics.PartitionKeyStatisticsBean;
 import org.hivedb.meta.ColumnInfo;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.NodeGroup;
@@ -19,7 +21,7 @@ import org.hivedb.meta.SecondaryIndex;
 
 public class TestObjectFactory {
 	public static NodeStatistics filledNodeStatistics(double capacity, List<PartitionKeyStatistics> stats) {
-		NodeStatistics s = new NodeStatistics(node(), stats, halfFullEstimator());
+		NodeStatistics s = new NodeStatisticsBean(node(), stats, halfFullEstimator());
 		s.getNode().setCapacity(capacity);
 		return s;
 	}
@@ -28,8 +30,8 @@ public class TestObjectFactory {
 		return new Node("aNode" + new Random().nextInt(), false);
 	}
 	
-	public static PartitionKeyStatistics partitionKeyStats(int fill){
-		PartitionKeyStatistics key = new PartitionKeyStatistics(null, new Random().nextInt(), new Date(System.currentTimeMillis()));
+	public static PartitionKeyStatisticsBean partitionKeyStats(int fill){
+		PartitionKeyStatisticsBean key = new PartitionKeyStatisticsBean(null, new Random().nextInt(), new Date(System.currentTimeMillis()));
 		key.setChildRecordCount(fill);
 		return key;
 	}

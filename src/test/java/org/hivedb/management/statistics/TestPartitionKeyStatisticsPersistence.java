@@ -92,14 +92,14 @@ public class TestPartitionKeyStatisticsPersistence extends DerbyTestCase {
 	@Test
 	public void testFindByPartitionKey() {
 		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(ds);
-		PartitionKeyStatistics frozen = dao.findByPrimaryPartitionKey(partitionDimension(), keys.get(0));
+		PartitionKeyStatisticsBean frozen = dao.findByPrimaryPartitionKey(partitionDimension(), keys.get(0));
 		assertNotNull(frozen);
 	}
 
 	@Test
 	public void testIncrementChildRecords() {
 		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(ds);
-		PartitionKeyStatistics frozen = new PartitionKeyStatistics(partitionDimension(), keys
+		PartitionKeyStatistics frozen = new PartitionKeyStatisticsBean(partitionDimension(), keys
 				.iterator().next(), new Date(System.currentTimeMillis()));
 		frozen.setChildRecordCount(21);
 		try {
@@ -119,7 +119,7 @@ public class TestPartitionKeyStatisticsPersistence extends DerbyTestCase {
 	@Test
 	public void testDecrementChildRecords() {
 		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(ds);
-		PartitionKeyStatistics frozen = new PartitionKeyStatistics(partitionDimension(), keys
+		PartitionKeyStatistics frozen = new PartitionKeyStatisticsBean(partitionDimension(), keys
 				.iterator().next(), new Date(System.currentTimeMillis()));
 		frozen.setChildRecordCount(21);
 		try {
@@ -147,7 +147,7 @@ public class TestPartitionKeyStatisticsPersistence extends DerbyTestCase {
 		assertEquals(5, stats.size());
 		for(PartitionKeyStatistics s : stats) {
 			assertTrue(keys.contains(s.getKey()));
-			assertEquals(PartitionKeyStatistics.class, s.getClass());
+			assertEquals(PartitionKeyStatisticsBean.class, s.getClass());
 		}
 	}
 

@@ -28,7 +28,7 @@ public class PartitionKeyStatisticsDao extends JdbcDaoSupport implements Statist
 		this.setDataSource(ds);
 	}
 	
-	public PartitionKeyStatistics findByPrimaryPartitionKey(PartitionDimension dimension, Object key){
+	public PartitionKeyStatisticsBean findByPrimaryPartitionKey(PartitionDimension dimension, Object key){
 		Object[] parameters = new Object[] {key};
 		
 		JdbcTemplate j = getJdbcTemplate();
@@ -36,10 +36,10 @@ public class PartitionKeyStatisticsDao extends JdbcDaoSupport implements Statist
 				selectSql(new IndexSchema(dimension).getPrimaryIndexTableName()), 
 				new int[] {dimension.getColumnType()});
 		
-		PartitionKeyStatistics stats = null;
+		PartitionKeyStatisticsBean stats = null;
 		try {
 			List results = j.query(factory.newPreparedStatementCreator(parameters), new PartitionKeyStatisticsRowMapper(dimension));
-			stats = (PartitionKeyStatistics) results.get(0);
+			stats = (PartitionKeyStatisticsBean) results.get(0);
 		} catch( IndexOutOfBoundsException e) {
 			//if there is no matching key this exception will be thrown
 			//so we really just want to crush it and return null
@@ -115,7 +115,7 @@ public class PartitionKeyStatisticsDao extends JdbcDaoSupport implements Statist
 			this.dimension = dimension;
 		}
 		public Object mapRow(ResultSet rs, int rowNumber) throws SQLException {
-			PartitionKeyStatistics stats = new PartitionKeyStatistics(dimension, rs.getObject("id"), rs.getDate("last_updated"));
+			PartitionKeyStatisticsBean stats = new PartitionKeyStatisticsBean(dimension, rs.getObject("id"), rs.getDate("last_updated"));
 			stats.setChildRecordCount(rs.getInt("secondary_index_count"));
 			return stats;
 		}

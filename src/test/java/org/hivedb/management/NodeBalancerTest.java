@@ -16,6 +16,7 @@ import org.hivedb.management.quartz.NodeBalancer;
 import org.hivedb.management.quartz.NodeBalancerImpl;
 import org.hivedb.management.statistics.NodeStatistics;
 import org.hivedb.management.statistics.PartitionKeyStatistics;
+import org.hivedb.management.statistics.PartitionKeyStatisticsBean;
 import org.hivedb.meta.Assigner;
 import org.hivedb.meta.GlobalSchema;
 import org.hivedb.meta.Hive;
@@ -41,9 +42,9 @@ public class NodeBalancerTest extends DerbyTestCase {
 		
 		NodeStatistics full = TestObjectFactory.filledNodeStatistics(NODE_CAPACITY, new ArrayList<PartitionKeyStatistics>());
 		
-		PartitionKeyStatistics firstHalf = TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/2);
+		PartitionKeyStatisticsBean firstHalf = TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/2);
 		firstHalf.setKey(new Integer(7));
-		PartitionKeyStatistics secondHalf = TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/2);
+		PartitionKeyStatisticsBean secondHalf = TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/2);
 		secondHalf.setKey(new Integer(12));
 		
 		full.addPartitionKey(firstHalf);
@@ -63,10 +64,10 @@ public class NodeBalancerTest extends DerbyTestCase {
 		NodeStatistics empty = TestObjectFactory.filledNodeStatistics(NODE_CAPACITY, new ArrayList<PartitionKeyStatistics>());
 		NodeStatistics full = TestObjectFactory.filledNodeStatistics(NODE_CAPACITY, new ArrayList<PartitionKeyStatistics>());
 		
-		PartitionKeyStatistics firstHalf = TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/2);
+		PartitionKeyStatisticsBean firstHalf = TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/2);
 		firstHalf.setKey(new Integer(7));
 		firstHalf.setChildRecordCount((int)NODE_CAPACITY/2);
-		PartitionKeyStatistics secondHalf = TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/2);
+		PartitionKeyStatisticsBean secondHalf = TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/2);
 		secondHalf.setKey(new Integer(12));
 		secondHalf.setChildRecordCount((int)NODE_CAPACITY/2);
 		
@@ -92,11 +93,11 @@ public class NodeBalancerTest extends DerbyTestCase {
 		
 		NodeStatistics full = TestObjectFactory.filledNodeStatistics(NODE_CAPACITY, new ArrayList<PartitionKeyStatistics>());
 		
-		PartitionKeyStatistics firstQuarter = TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/4);
+		PartitionKeyStatisticsBean firstQuarter = TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/4);
 		firstQuarter.setKey(new Integer(7));
-		PartitionKeyStatistics secondQuarter = TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/4);
+		PartitionKeyStatisticsBean secondQuarter = TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/4);
 		secondQuarter.setKey(new Integer(9));
-		PartitionKeyStatistics lastHalf = TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/2);
+		PartitionKeyStatisticsBean lastHalf = TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/2);
 		lastHalf.setKey(new Integer(12));
 		
 		full.addPartitionKey(firstQuarter);

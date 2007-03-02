@@ -8,12 +8,12 @@ import java.util.TreeSet;
 import javax.sql.DataSource;
 
 import org.hivedb.management.statistics.NodeStatistics;
+import org.hivedb.management.statistics.NodeStatisticsBean;
 import org.hivedb.management.statistics.PartitionKeyStatistics;
 import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 
-// TODO Extract interfaces (?)
 // TODO I don't like the Impl naming
 // TODO Add move plan validation
 // TODO Determine what to do when  a valid plan cannot be found
@@ -37,7 +37,7 @@ public class NodeBalancerImpl implements NodeBalancer {
 		startingState = new TreeSet<NodeStatistics>();
 		for(Node node : nodes) {
 			List<PartitionKeyStatistics> stats = dao.findAllByNodeAndDimension(dimension, node);
-			startingState.add(new NodeStatistics(node, stats, estimator));
+			startingState.add(new NodeStatisticsBean(node, stats, estimator));
 		}
 		
 		//Compute the moves needed to balance each node
@@ -53,7 +53,7 @@ public class NodeBalancerImpl implements NodeBalancer {
 	private SortedSet<NodeStatistics> cloneNodeStatsList(SortedSet<NodeStatistics> original) {
 		SortedSet<NodeStatistics> copy = new TreeSet<NodeStatistics>();
 		for(NodeStatistics obj : original)
-			copy.add(obj.clone());
+			copy.add(((NodeStatisticsBean)obj).clone());
 		return copy;
 	}
 	
