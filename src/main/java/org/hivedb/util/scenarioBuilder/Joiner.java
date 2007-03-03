@@ -1,4 +1,4 @@
-package org.hivedb.util;
+package org.hivedb.util.scenarioBuilder;
 
 public abstract class Joiner<C,R> {
 	public abstract R f(C item, R result);

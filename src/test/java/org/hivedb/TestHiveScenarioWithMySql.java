@@ -3,8 +3,8 @@ package org.hivedb;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import org.hivedb.util.HiveScenario;
-import org.hivedb.util.HiveScenarioAlternativeConfig;
+import org.hivedb.util.scenarioBuilder.HiveScenarioAlternativeConfig;
+import org.hivedb.util.scenarioBuilder.HiveScenarioMarauderConfig;
 import org.testng.annotations.BeforeTest;
 
 public class TestHiveScenarioWithMySql {
@@ -32,7 +32,7 @@ public class TestHiveScenarioWithMySql {
 	public void testPirateDomain() throws Exception {
 		String databaseName = "test";
 		recycleDatabase(databaseName, getDatabaseAgnosticConnectString());
-		HiveScenarioTests.performTest(databaseName, new HiveScenario.HiveScenarioConfig(), getConnectString(databaseName));
+		new HiveScenarioTest(new HiveScenarioMarauderConfig(getConnectString(databaseName))).performTest();
 	}
 
 	/**
@@ -42,7 +42,7 @@ public class TestHiveScenarioWithMySql {
 	public void testMemberDomain() throws Exception {
 		String databaseName = "alternative_test";
 		recycleDatabase(databaseName, getDatabaseAgnosticConnectString());
-		HiveScenarioTests.performTest(databaseName, new HiveScenarioAlternativeConfig(), getConnectString(databaseName));
+		new HiveScenarioTest(new HiveScenarioAlternativeConfig(getConnectString(databaseName))).performTest();
 	}
 	
 	private static void recycleDatabase(String databaseName, String databaseAgnosticConnectionString) throws SQLException {

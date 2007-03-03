@@ -1,4 +1,4 @@
-package org.hivedb.util;
+package org.hivedb.util.scenarioBuilder;
 
 public class Amass {
 	public static<C,R> R join(Joiner<C,R> joiner, Iterable<C> iterable, R initialValue)

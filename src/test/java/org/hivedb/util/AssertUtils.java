@@ -1,5 +1,7 @@
 package org.hivedb.util;
 
+import org.hivedb.util.scenarioBuilder.Undoable;
+
 import junit.framework.TestCase;
 
 public class AssertUtils  {

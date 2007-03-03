@@ -1,19 +1,63 @@
-package org.hivedb.util;
+package org.hivedb.util.scenarioBuilder;
 
+import java.util.Collection;
 import java.util.UUID;
 
-public class HiveScenarioAlternativeConfig extends HiveScenario.HiveScenarioConfig {
-	protected Class[] getPrimaryClasses() { return new Class[] { Member.class, Admin.class };}
-	protected int getInstanceCountPerPrimaryIndex() { return 2; }
-	protected int getInstanceCountPerSecondaryIndex() { return 10; };
+import org.apache.commons.dbcp.BasicDataSource;
+import org.hivedb.HiveException;
+import org.hivedb.meta.Access;
+import org.hivedb.meta.AccessType;
+import org.hivedb.meta.GlobalSchema;
+import org.hivedb.meta.Hive;
+import org.hivedb.meta.Node;
+import org.hivedb.meta.persistence.HiveBasicDataSource;
+import org.hivedb.meta.persistence.HiveSemaphoreDao;
+
+public class HiveScenarioAlternativeConfig implements HiveScenarioConfig {
+	
+	private Hive hive;
+	public HiveScenarioAlternativeConfig(String connectString) {
+		try {
+			try {
+				new GlobalSchema(connectString).install();
+				
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			BasicDataSource ds = new HiveBasicDataSource(connectString);
+			new HiveSemaphoreDao(ds).create();
+			hive = Hive.load(connectString, true);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	public Hive getHive()
+	{
+		return hive;
+	}
+	
+	public Class[] getPrimaryClasses() { return new Class[] { Member.class, Admin.class };}
+	public int getInstanceCountPerPrimaryIndex() { return 2; }
+	public int getInstanceCountPerSecondaryIndex() { return 10; };
 	// Classes to be used as resources and secondary indexes.
 	// If the classes are also primary indexes, then the secondary index created will be
 	// a property of class, such as name, which will reference the id of the class (an intra-class reference.)
 	// If the classes are no also primary classes, then the secondary index created will be
 	// the class's id which references the id of another class (an inter-class reference)
-	protected Class[] getResourceAndSecondaryIndexClasses() {
+	public Class[] getResourceAndSecondaryIndexClasses() {
 		return  new Class[] {
 			Product.class, Token.class };
+	}
+	public Collection<String> getIndexUris(final Hive hive) {
+		return Generate.create(new Generator<String>(){
+			public String f() { return hive.getHiveUri(); }}, new NumberIterator(2));
+	}
+	// The nodes of representing the data storage databases. These may be nonunique as well.
+	public Collection<Node> getNodes(final Hive hive) {
+		return Generate.create(new Generator<Node>(){
+			public Node f() { return new Node(  hive.getHiveUri(), 												
+												false); }},
+							  new NumberIterator(3));
 	}
 	
 	public static class Member implements PrimaryAndSecondaryIndexIdentifiable

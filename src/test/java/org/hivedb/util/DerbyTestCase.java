@@ -7,11 +7,16 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import org.hivedb.util.scenarioBuilder.DerbyUtils;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 
 public abstract class DerbyTestCase {
 	//Override these valus to customize your test
+	protected boolean cleanupDbAfterEachTest = false;
 	protected String databaseName =  "derbyTestDb";
 	protected String loadScript = null;
 	protected String userName = "theuser";
@@ -43,6 +48,20 @@ public abstract class DerbyTestCase {
 			deleteDerbyDb();
 		}
 	}
+	
+	@BeforeMethod
+	protected void beforeMethod() {
+		if( cleanupDbAfterEachTest ){
+			initializeDerby();
+		}
+	}
+	@AfterMethod
+	protected void afterMethod() {
+		if( cleanupDbAfterEachTest ){
+			deleteDerbyDb();
+		}
+	}
+
 	
 	protected String getConnectString()  {
 		return DerbyUtils.connectString(databaseName);

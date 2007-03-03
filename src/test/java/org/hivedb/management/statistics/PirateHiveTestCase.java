@@ -4,11 +4,11 @@ import static org.testng.AssertJUnit.fail;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.hivedb.meta.GlobalSchema;
-import org.hivedb.meta.Hive;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
 import org.hivedb.util.DerbyTestCase;
-import org.hivedb.util.HiveScenario;
+import org.hivedb.util.scenarioBuilder.HiveScenario;
+import org.hivedb.util.scenarioBuilder.HiveScenarioMarauderConfig;
 
 public abstract class PirateHiveTestCase extends DerbyTestCase {
 	protected HiveScenario yeScenario = null;
@@ -19,7 +19,7 @@ public abstract class PirateHiveTestCase extends DerbyTestCase {
 			new GlobalSchema(getConnectString()).install();
 			BasicDataSource ds = new HiveBasicDataSource(getConnectString());
 			new HiveSemaphoreDao(ds).create();
-			yeScenario = HiveScenario.buildAndSyncHive(Hive.load(getConnectString()));
+			yeScenario = HiveScenario.run(new HiveScenarioMarauderConfig(getConnectString()));
 		} catch (Exception e) {
 			e.printStackTrace();
 			fail("Unable to initialize the hive: " + e.getMessage());

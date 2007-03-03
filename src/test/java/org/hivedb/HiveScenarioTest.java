@@ -14,9 +14,10 @@ import java.util.Queue;
 import java.util.TreeSet;
 
 import org.apache.commons.dbcp.BasicDataSource;
+import org.hivedb.HiveException;
+import org.hivedb.HiveReadOnlyException;
 import org.hivedb.meta.Assigner;
 import org.hivedb.meta.ColumnInfo;
-import org.hivedb.meta.GlobalSchema;
 import org.hivedb.meta.Hive;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
@@ -25,50 +26,56 @@ import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
 import org.hivedb.util.AssertUtils;
-import org.hivedb.util.Atom;
-import org.hivedb.util.Filter;
-import org.hivedb.util.HiveScenario;
 import org.hivedb.util.JdbcTypeMapper;
-import org.hivedb.util.Predicate;
-import org.hivedb.util.PrimaryIndexIdentifiable;
-import org.hivedb.util.RingIteratorable;
-import org.hivedb.util.SecondaryIndexIdentifiable;
-import org.hivedb.util.Transform;
-import org.hivedb.util.Unary;
-import org.hivedb.util.Undoable;
-import org.hivedb.util.HiveScenario.HiveScenarioConfig;
+import org.hivedb.util.AssertUtils.UndoableToss;
+import org.hivedb.util.scenarioBuilder.Atom;
+import org.hivedb.util.scenarioBuilder.Filter;
+import org.hivedb.util.scenarioBuilder.HiveScenario;
+import org.hivedb.util.scenarioBuilder.HiveScenarioConfig;
+import org.hivedb.util.scenarioBuilder.Predicate;
+import org.hivedb.util.scenarioBuilder.PrimaryIndexIdentifiable;
+import org.hivedb.util.scenarioBuilder.RingIteratorable;
+import org.hivedb.util.scenarioBuilder.SecondaryIndexIdentifiable;
+import org.hivedb.util.scenarioBuilder.Transform;
+import org.hivedb.util.scenarioBuilder.Unary;
+import org.hivedb.util.scenarioBuilder.Undoable;
+import org.hivedb.util.scenarioBuilder.Filter.AllAllFilter;
+import org.hivedb.util.scenarioBuilder.Transform.IdentityFunction;
+import org.hivedb.util.scenarioBuilder.Undoable.Undo;
 
-public class HiveScenarioTests {
+public class HiveScenarioTest {
 	
-	public static void performTest(String databaseName, HiveScenarioConfig hiveScenarioConfig, String connectionString) throws Exception, HiveException, SQLException {
-		
-		new GlobalSchema(connectionString).install();
-		BasicDataSource ds = new HiveBasicDataSource(connectionString);
-		new HiveSemaphoreDao(ds).create();
-
-		HiveScenario hiveScenario = HiveScenario.buildAndSyncHive(
-			Hive.load(connectionString, true),
-			hiveScenarioConfig);
+	protected Hive hive;
+	HiveScenarioConfig hiveScenarioConfig;
+	public HiveScenarioTest(HiveScenarioConfig hiveScenarioConfig)
+	{
+		this.hiveScenarioConfig = hiveScenarioConfig;
+		hive = hiveScenarioConfig.getHive();
+	}
+	public void performTest() throws Exception, HiveException, SQLException {
+		HiveScenario hiveScenario = HiveScenario.run(hiveScenarioConfig);
 		validate(hiveScenario);
 	}
 
-
-	private static void validate(HiveScenario hiveScenario) throws HiveException, SQLException {
-		HiveScenarioTests.validateReadsFromPersistence(hiveScenario);
-		HiveScenarioTests.validateUpdatesToPersistence(hiveScenario);
-		HiveScenarioTests.validateReadsFromPersistence(hiveScenario);
-		HiveScenarioTests.validateDeletesToPersistence(hiveScenario);
-		HiveScenarioTests.validateReadsFromPersistence(hiveScenario);
+	protected void validate(HiveScenario hiveScenario) throws HiveException, SQLException {
+		validateReadsFromPersistence(hiveScenario);
+		validateUpdatesToPersistence(hiveScenario);
+		validateReadsFromPersistence(hiveScenario);
+		validateDeletesToPersistence(hiveScenario);
+		validateReadsFromPersistence(hiveScenario);
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static void validateReadsFromPersistence(final HiveScenario hiveScenario) throws HiveException, SQLException
+	public void validateReadsFromPersistence(final HiveScenario hiveScenario) throws HiveException, SQLException
 	{
 		Hive hive = hiveScenario.getHive();
 	
+		final HashSet<PartitionDimension> expected = new HashSet<PartitionDimension>(hiveScenario.getCreatedPartitionDimensions());
+		final HashSet<PartitionDimension> actual = new HashSet<PartitionDimension>(hive.getPartitionDimensions());
 		// Validate our PartitionDimension in memory against those that are in the persistence
-		assertEquals(new HashSet<PartitionDimension>(hiveScenario.getCreatedPartitionDimensions()),
-					 new HashSet<PartitionDimension>(hive.getPartitionDimensions()));
+		assertEquals(String.format("Expected %s but got %s", expected, actual),
+					expected.hashCode(),
+					actual.hashCode());
 		
 		for (PartitionDimension partitionDimension : hiveScenario.getCreatedPartitionDimensions()) {
 			PartitionDimension partitionDimensionFromHive = hive.getPartitionDimension(partitionDimension.getName());
@@ -139,7 +146,7 @@ public class HiveScenarioTests {
 		}, secondaryIndexInstancesFromHiveScenario);
 	}
 
-	public static void validateUpdatesToPersistence(final HiveScenario hiveScenario) throws HiveException, SQLException
+	public void validateUpdatesToPersistence(final HiveScenario hiveScenario) throws HiveException, SQLException
 	{
 		final Hive hive = hiveScenario.getHive();
 		for (final PartitionDimension partitionDimension : hiveScenario.getCreatedPartitionDimensions()) {
@@ -412,7 +419,7 @@ public class HiveScenarioTests {
 		} catch (Exception e) { throw new HiveException("Undoable exception", e); }
 	}	
 	
-	public static void validateDeletesToPersistence(final HiveScenario hiveScenario) throws HiveException, SQLException
+	public void validateDeletesToPersistence(final HiveScenario hiveScenario) throws HiveException, SQLException
 	{
 		final Hive hive = hiveScenario.getHive();
 		for (final PartitionDimension partitionDimension : hiveScenario.getCreatedPartitionDimensions()) {					

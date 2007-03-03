@@ -1,4 +1,4 @@
-package org.hivedb.util;
+package org.hivedb.util.scenarioBuilder;
 
 import java.util.Stack;
 
@@ -37,7 +37,7 @@ public abstract class Undoable {
 		undo();
 	}
 	Stack<Undo> undoStack = new Stack<Undo>();
-	protected abstract class Undo
+	public abstract class Undo
 	{
 		public Undo()
 		{

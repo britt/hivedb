@@ -1,4 +1,4 @@
-package org.hivedb.util;
+package org.hivedb.util.scenarioBuilder;
 
 import java.io.File;
 import java.io.IOException;

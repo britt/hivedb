@@ -1,4 +1,4 @@
-package org.hivedb.util;
+package org.hivedb.util.scenarioBuilder;
 
 public abstract class TryFail<T> extends TryCatch<T>
 {

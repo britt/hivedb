@@ -1,26 +1,26 @@
 package org.hivedb;
 
 import org.hivedb.util.DerbyTestCase;
-import org.hivedb.util.HiveScenario;
-import org.hivedb.util.HiveScenarioAlternativeConfig;
+import org.hivedb.util.scenarioBuilder.HiveScenarioAlternativeConfig;
+import org.hivedb.util.scenarioBuilder.HiveScenarioMarauderConfig;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-public class TestHiveScenarioWithDerby extends DerbyTestCase {	
-	@BeforeMethod
-	public void setUp() {
-		// must not share Derby across methods for this test
-		cleanupDerby();
-		initializeDerby();		
-	}
+public class TestHiveScenarioWithDerby extends DerbyTestCase {
 	
+	@BeforeTest
+	public void before() {
+		cleanupDbAfterEachTest = true;
+	}
 	/**
 	 *  Fills a hive with metaday and indexes to validate CRUD operations
 	 *  This tests works but is commented out due to its slowness
 	 */
+
 	@Test
 	public void testPirateDomain() throws Exception {
-		HiveScenarioTests.performTest(databaseName, new HiveScenario.HiveScenarioConfig(), getConnectString());
+		new HiveScenarioTest(new HiveScenarioMarauderConfig(getConnectString())).performTest();
 	}
 
 	/**
@@ -28,6 +28,6 @@ public class TestHiveScenarioWithDerby extends DerbyTestCase {
 	 */
 	@Test
 	public void testMemberDomain() throws Exception {
-		HiveScenarioTests.performTest(databaseName, new HiveScenarioAlternativeConfig(), getConnectString());
+		new HiveScenarioTest(new HiveScenarioAlternativeConfig(getConnectString())).performTest();
 	}
 }

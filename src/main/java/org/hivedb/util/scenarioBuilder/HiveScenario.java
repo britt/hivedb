@@ -1,7 +1,8 @@
-package org.hivedb.util;
+package org.hivedb.util.scenarioBuilder;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -16,6 +17,7 @@ import org.hivedb.meta.NodeGroup;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.util.JdbcTypeMapper;
 
 /**
  *
@@ -44,27 +46,24 @@ import org.hivedb.meta.SecondaryIndex;
  */
 public class HiveScenario {
 	
-	public static class HiveScenarioConfig {
-		protected int getInstanceCountPerPrimaryIndex() { return 10; }
-		protected int getInstanceCountPerSecondaryIndex() { return 100; };
-		// Classes to be used as primary indexes
-		protected  Class[] getPrimaryClasses() { return new Class[] { Pirate.class, Buccaneer.class };}
-		// Classes to be used as resources and secondary indexes.
-		// If the classes are also primary indexes, then the secondary index created will be
-		// a property of class, such as name, which will reference the id of the class (an intra-class reference.)
-		// If the classes are no also primary classes, then the secondary index created will be
-		// the class's id which references the id of another class (an inter-class reference)
-		protected Class[] getResourceAndSecondaryIndexClasses() {
-			return  new Class[] {
-				Pirate.class, Buccaneer.class, Treasure.class, Booty.class, Loot.class, Stash.class, Chanty.class, Bottle.class};
-		}
+	public static HiveScenario run(HiveScenarioConfig hiveScenarioConfig) throws HiveException {
+		HiveScenario hiveScenario = new HiveScenario(hiveScenarioConfig);
+		hiveScenarioConfig.getHive().sync();
+		return hiveScenario;
 	}
-	 
-	private HiveScenarioConfig hiveScenarioConfig;
+
+	protected HiveScenario(final HiveScenarioConfig hiveScenarioConfig) throws HiveException
+	{
+		final Hive hive = hiveScenarioConfig.getHive();
+		graphTestClasses(hiveScenarioConfig);
+		Map<Class, PartitionDimension> partitionDimensionMap = configureHive(hiveScenarioConfig, hive);
+		populateHive(hiveScenarioConfig, hive, partitionDimensionMap);
+	}
+	
 	private Map<Class, Collection<Class>> primaryToResourceMap = new DebugMap<Class,Collection<Class>>();
 	private Map<Class, Class> resourceToPrimaryMap = new DebugMap<Class, Class>();
 	private Map<String, Class> resourceNameToClassMap = new DebugMap<String, Class>();
-	public void init() {
+	public void graphTestClasses(HiveScenarioConfig hiveScenarioConfig) {
 		for (Class resourceClass : hiveScenarioConfig.getResourceAndSecondaryIndexClasses()) {
 			try {
 				Class primaryClass = resourceClass.getMethod("getPrimaryIndexInstanceReference").getReturnType();
@@ -76,34 +75,23 @@ public class HiveScenario {
 			resourceNameToClassMap.put(resourceClass.getSimpleName(), resourceClass);
 		}	
 	}
+
+	private void populateHive(final HiveScenarioConfig hiveScenarioConfig, final Hive hive, Map<Class, PartitionDimension> partitionDimensionMap) {
+		// Create a number of instances for each of the primary PartitionIndex classes, distributing them among the nodes
+		Map<Class, Collection<PrimaryIndexIdentifiable>> primaryIndexInstanceMap = createPrimaryIndexInstances(hive, partitionDimensionMap, hiveScenarioConfig.getInstanceCountPerPrimaryIndex());
+		// Create a number of instances for each of the secondary PartitionIndex classes.
+		// Each secondary instances references a primary instance, with classes according to secondaryToPrimaryMap
+		Map<String, Collection<PrimaryIndexIdentifiable>> resourceNameToPrimaryIndexInstanceMap = Transform.connectMaps(Transform.connectMaps(resourceNameToClassMap, resourceToPrimaryMap), primaryIndexInstanceMap);
+		Map<Class, Map<Resource, Map<SecondaryIndex, Collection<SecondaryIndexIdentifiable>>>> secondaryIndexInstances = createSecondaryIndexInstances(hive, partitionDimensionMap, resourceNameToClassMap, resourceNameToPrimaryIndexInstanceMap, hiveScenarioConfig.getInstanceCountPerSecondaryIndex());
 	
-	public static HiveScenario buildAndSyncHive(final Hive hive, HiveScenarioConfig hiveScenarioConfig) throws HiveException {
-		HiveScenario hiveScenario = 
-			new HiveScenario(
-				hiveScenarioConfig,
-				hive,
-				Generate.create(new Generator<String>(){
-					public String f() { return hive.getHiveUri(); }}, new NumberIterator(2)),
-				Generate.create(new Generator<Node>(){
-					public Node f() { return new Node(  hive.getHiveUri(), 
-														false); }},
-									  new NumberIterator(3))
-			);
-		
-	
-		hive.sync();
-		return hiveScenario;
-	}
-	public static HiveScenario buildAndSyncHive(final Hive hive) throws HiveException {
-		return buildAndSyncHive(hive, new HiveScenarioConfig());
+		this.hive = hive;
+		this.partitionDimensionMap = partitionDimensionMap;
+		this.primaryIndexInstanceMap = primaryIndexInstanceMap;
+		this.secondaryIndexInstances = secondaryIndexInstances;
 	}
 
-	public HiveScenario(HiveScenarioConfig hiveScenarioConfig, final Hive hive, final Collection<String> indexUris, final Collection<Node> dataNodes) throws HiveException
-	{
-		this.hiveScenarioConfig = hiveScenarioConfig;
-		init();
-		
-		final RingIteratorable<String> indexUriIterator = new RingIteratorable<String>(indexUris);
+	private Map<Class, PartitionDimension> configureHive(final HiveScenarioConfig hiveScenarioConfig, final Hive hive) throws HiveException {
+		final RingIteratorable<String> indexUriIterator = new RingIteratorable<String>(hiveScenarioConfig.getIndexUris(hive));
 		// Create partition dimensions and their its subordinate NodeGroup, primary Node, Resources, and SecondaryIndexes
 		Map<Class, PartitionDimension> partitionDimensionMap = Transform.toMap(
 			new Transform.IdentityFunction<Class>(),
@@ -113,7 +101,7 @@ public class HiveScenario {
 						return new PartitionDimension(
 							primaryClass.getSimpleName(),
 							JdbcTypeMapper.primitiveTypeToJdbcType(primaryClass.getMethod("getIdAsPrimaryIndexInstance").getReturnType()),
-							new NodeGroup(Transform.map(new Unary<Node,Node>() { public Node f(Node n) {return new Node(n.getUri(),n.isReadOnly());}},dataNodes)),
+							new NodeGroup(Transform.map(new Unary<Node,Node>() { public Node f(Node n) {return new Node(n.getUri(), n.isReadOnly());}}, hiveScenarioConfig.getNodes(hive))),
 							indexUriIterator.next(),
 							Transform.map(new Unary<Class, Resource>() {
 								public Resource f(Class classType) { 
@@ -137,18 +125,7 @@ public class HiveScenario {
 		{
 			throw new RuntimeException(exception);
 		}
-					
-		// Create a number of instances for each of the primary PartitionIndex classes, distributing them among the nodes
-		Map<Class, Collection<PrimaryIndexIdentifiable>> primaryIndexInstanceMap = createPrimaryIndexInstances(hive, partitionDimensionMap, hiveScenarioConfig.getInstanceCountPerPrimaryIndex());
-		// Create a number of instances for each of the secondary PartitionIndex classes.
-		// Each secondary instances references a primary instance, with classes according to secondaryToPrimaryMap
-		Map<String, Collection<PrimaryIndexIdentifiable>> resourceNameToPrimaryIndexInstanceMap = Transform.connectMaps(Transform.connectMaps(resourceNameToClassMap, resourceToPrimaryMap), primaryIndexInstanceMap);
-		Map<Class, Map<Resource, Map<SecondaryIndex, Collection<SecondaryIndexIdentifiable>>>> secondaryIndexInstances = createSecondaryIndexInstances(hive, partitionDimensionMap, resourceNameToClassMap, resourceNameToPrimaryIndexInstanceMap, hiveScenarioConfig.getInstanceCountPerSecondaryIndex());
-	
-		this.hive = hive;
-		this.partitionDimensionMap = partitionDimensionMap;
-		this.primaryIndexInstanceMap = primaryIndexInstanceMap;
-		this.secondaryIndexInstances = secondaryIndexInstances;
+		return partitionDimensionMap;
 	}
 	Hive hive;
 	Map<Class, PartitionDimension> partitionDimensionMap;
@@ -243,15 +220,20 @@ public class HiveScenario {
 						public PrimaryIndexIdentifiable f() {					
 							try {
 								PrimaryIndexIdentifiable identifiable = (PrimaryIndexIdentifiable) primaryIndexClass.getConstructor().newInstance(new Object[] {});
-								hive.insertPrimaryIndexKey(partitionDimension, identifiable.getIdAsPrimaryIndexInstance());
+								persistPrimaryIndexInstance(hive, partitionDimension, identifiable);
 								return identifiable;
 							}
-							catch ( Exception e) { throw new RuntimeException(e); }}},
+							catch ( Exception e) { throw new RuntimeException(e); }}
+
+						},
 						new NumberIterator(count));
 				}
 			},
 			partitionDimensionMap.entrySet());
 	}	
+	protected void persistPrimaryIndexInstance(final Hive hive, final PartitionDimension partitionDimension, PrimaryIndexIdentifiable identifiable) throws HiveException, SQLException {
+		hive.insertPrimaryIndexKey(partitionDimension, identifiable.getIdAsPrimaryIndexInstance());
+	}
 	
 	protected Map<Class, Map<Resource, Map<SecondaryIndex, Collection<SecondaryIndexIdentifiable>>>> createSecondaryIndexInstances(
 		final Hive hive,
@@ -303,9 +285,10 @@ public class HiveScenario {
 														// Construct a SecondaryIndex instance with a reference to a PrimaryIndex instance
 														// In this case, the types of the primary and secondary classes match, so make secondary index
 														// between getSecondaryId() and getId() values
-														hive.insertSecondaryIndexKey(secondaryIndex, primaryIndexInstance.getIdAsSecondaryIndexInstance(), primaryIndexInstance.getIdAsPrimaryIndexInstance());
+														persistSecondaryIndex(hive, secondaryIndex, primaryIndexInstance);
 														return primaryIndexInstance;
-													}														
+													}
+														
 													private SecondaryIndexIdentifiable generateAndInsertDifferentClassSecondaryIndexInstance(final Hive hive, final PartitionDimension partitionDimension, final Class secondaryIndexClass, SecondaryIndex secondaryIndex, PrimaryIndexIdentifiable primaryIndexInstance) throws Exception {
 														// Construct a SecondaryIndex instance with a reference to a PrimaryIndex instance
 														// In this case, the types of the primary and secondary classes are different, so make a secondary index
@@ -325,152 +308,8 @@ public class HiveScenario {
 			},
 			partitionDimensionMap.entrySet());
 	}
-	// A primary index classes
-	protected static class Pirate implements PrimaryAndSecondaryIndexIdentifiable
-	{
-		public static int idGenerator = 0;
-		public Pirate() { 
-			id = ++idGenerator;
-			pirateName = "name"+id; }		
-		int id;
-		String pirateName;
-		public Integer getIdAsPrimaryIndexInstance() { return id; }
-		public Pirate getPrimaryIndexInstanceReference() { return this; }
-		public String getIdAsSecondaryIndexInstance() {	return pirateName;}
-		public Integer getPrimaryIndexIdAsSecondaryIndexInstance() { return id; } // self referencing
-		public String getSecondaryIdName()
-		{
-			return "name";
-		}	
-	}
-	protected static class Buccaneer implements PrimaryAndSecondaryIndexIdentifiable
-	{
-		public static int idGenerator = 0;
-		public Buccaneer() { 
-			id = new Integer(++idGenerator).toString();
-			buccaneerName = "name"+id;};
-		String id;
-		String buccaneerName;
-		public String getIdAsPrimaryIndexInstance() { return id; }
-		public Buccaneer getPrimaryIndexInstanceReference() { return this; }
-		public String getIdAsSecondaryIndexInstance() {	return buccaneerName; }
-		public String getPrimaryIndexIdAsSecondaryIndexInstance() { return id; } // self referencing
-		public String getSecondaryIdName()
-		{
-			return "name";
-		}
-	}
-	
-	
-	// Resource and Secondary index classes that test all possible secondary index id types
-	protected static class Treasure implements PrimaryAndSecondaryIndexIdentifiable
-	{
-		public static int idGenerator = 0;
-		int id;
-		Pirate primaryResource;
-		public Treasure(Pirate primaryResource) {
-			id = ++idGenerator;
-			this.primaryResource = primaryResource;
-		}
-		public Integer getIdAsPrimaryIndexInstance() { return id; }
-		public Pirate getPrimaryIndexInstanceReference() { return primaryResource; }
-		public Integer getIdAsSecondaryIndexInstance() { return id; }
-		public Integer getPrimaryIndexIdAsSecondaryIndexInstance() { return primaryResource.getIdAsPrimaryIndexInstance(); } 
-		public String getSecondaryIdName()
-		{
-			return "pirate_id";
-		}
-	}	                      
-	protected static class Booty implements PrimaryAndSecondaryIndexIdentifiable
-	{
-		public static long idGenerator = 2^32;
-		long id;
-		Pirate primaryResource;
-		public Booty(Pirate primaryResource) {
-			id = ++idGenerator;
-			this.primaryResource = primaryResource;
-		}
-		public Long getIdAsPrimaryIndexInstance() { return id; }
-		public Pirate getPrimaryIndexInstanceReference() { return primaryResource; }
-		public Long getIdAsSecondaryIndexInstance() { return id; }
-		public Integer getPrimaryIndexIdAsSecondaryIndexInstance() { return primaryResource.getIdAsPrimaryIndexInstance(); }
-		
-		public String getSecondaryIdName()
-		{
-			return "pirate_id";
-		}
-	}
-	protected static class Loot implements PrimaryAndSecondaryIndexIdentifiable
-	{
-		public static int idGenerator = 0;
-		int id;
-		Pirate primaryResource;
-		public Loot(Pirate primaryResource) {
-			this.id = ++idGenerator;
-			this.primaryResource = primaryResource;
-		}
-		public Integer getIdAsPrimaryIndexInstance() { return id; }
-		public Pirate getPrimaryIndexInstanceReference() { return primaryResource; }
-		public Integer getIdAsSecondaryIndexInstance() { return id; }
-		public Integer getPrimaryIndexIdAsSecondaryIndexInstance() { return primaryResource.getIdAsPrimaryIndexInstance(); }
-		public String getSecondaryIdName()
-		{
-			return "pirate_id";
-		}
-	}
-	protected static class Stash implements PrimaryAndSecondaryIndexIdentifiable
-	{
-		public static double idGenerator = 0d;
-		double id;
-		Buccaneer primaryResource;
-		public Stash(Buccaneer primaryResource) {
-			idGenerator += 1.1;
-			this.id = idGenerator;
-			this.primaryResource = primaryResource;
-		}
-		public Double getIdAsPrimaryIndexInstance() { return id; }
-		public Buccaneer getPrimaryIndexInstanceReference() { return primaryResource; }
-		public Double getIdAsSecondaryIndexInstance() { return id; }
-		public String getPrimaryIndexIdAsSecondaryIndexInstance() { return primaryResource.getIdAsPrimaryIndexInstance(); }
-		public String getSecondaryIdName()
-		{
-			return "bucaneer_id";
-		}
-	}
-	protected static class Chanty implements PrimaryAndSecondaryIndexIdentifiable
-	{
-		public static int idGenerator = 0;
-		String id;
-		Buccaneer primaryResource;
-		public Chanty(Buccaneer primaryResource) {
-			this.id = new Integer(++idGenerator).toString(); 
-			this.primaryResource = primaryResource;
-		}
-		public String getIdAsPrimaryIndexInstance() { return id; }
-		public Buccaneer getPrimaryIndexInstanceReference() { return primaryResource; }
-		public String getIdAsSecondaryIndexInstance() { return id; }
-		public String getPrimaryIndexIdAsSecondaryIndexInstance() { return primaryResource.getIdAsPrimaryIndexInstance(); }
-		public String getSecondaryIdName()
-		{
-			return "bucaneer_id";
-		}
-	}
-	protected static class Bottle implements PrimaryAndSecondaryIndexIdentifiable
-	{	
-		static int current = 0;
-		int id;
-		Buccaneer primaryResource;
-		public Bottle(Buccaneer primaryResource) {
-			this.primaryResource = primaryResource;
-			id = current++;
-		}
-		public Integer getIdAsPrimaryIndexInstance() { return id;}
-		public Buccaneer getPrimaryIndexInstanceReference() { return primaryResource; }
-		public Integer getIdAsSecondaryIndexInstance() { return id; }
-		public String getPrimaryIndexIdAsSecondaryIndexInstance() { return primaryResource.getIdAsPrimaryIndexInstance(); }
-		public String getSecondaryIdName()
-		{
-			return "bucaneer_id";
-		}
+	protected void persistSecondaryIndex(final Hive hive, SecondaryIndex secondaryIndex, PrimaryAndSecondaryIndexIdentifiable primaryIndexInstance) throws HiveException, SQLException {
+		hive.insertSecondaryIndexKey(secondaryIndex, primaryIndexInstance.getIdAsSecondaryIndexInstance(), primaryIndexInstance.getIdAsPrimaryIndexInstance());
 	}
 }
+
