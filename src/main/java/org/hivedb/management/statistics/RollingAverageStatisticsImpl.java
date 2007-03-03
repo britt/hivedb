@@ -17,7 +17,7 @@ public class RollingAverageStatisticsImpl implements RollingAverageStatistics {
 	public RollingAverageStatisticsImpl(Collection<String> keys, long windowSize, long intervalSize) {
 		this();
 		for(String key : keys)
-			this.stats.put(key, RollingAverage.getInstanceByIntervalSize(windowSize, intervalSize));
+			this.registerCounter(key, windowSize, intervalSize);
 	}
 	
 	public void add(String key, long value) {
@@ -83,5 +83,9 @@ public class RollingAverageStatisticsImpl implements RollingAverageStatistics {
 		for(String key : this.stats.keySet())
 			keys.add(key);
 		return keys;
+	}
+
+	public void registerCounter(String name, long window, long interval) {
+		this.stats.put(name, RollingAverage.getInstanceByIntervalSize(window, interval));
 	}
 }

@@ -23,4 +23,5 @@ public interface NodeFillStatistics {
 	public void decrementFillRate();
 	
 	public long getCapacity();
+	public void setCapacity(long capacity);
 }

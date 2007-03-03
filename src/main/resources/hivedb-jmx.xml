@@ -15,7 +15,13 @@
 		<property name="serviceUrl"
 			value="service:jmx:rmi://localhost/jndi/rmi://localhost:1099/myconnector" />
 	</bean>
-
+	
+	<bean name="NodeFillStatistics" class="org.hivedb.management.statistics.NodeFillStatisticsMBean">
+		<constructor-arg value="100" />
+		<constructor-arg value="1000" />
+		<constructor-arg value="100" />
+	</bean>
+	
 	<bean id="exporter"
 		class="org.springframework.jmx.export.MBeanExporter"
 		lazy-init="false">
@@ -37,11 +43,8 @@
 						<property name="host" value="0.0.0.0" />
 					</bean>
 				</entry>
-				<entry key="HiveDB:name=FillStatistics">
-					<bean class="org.hivedb.management.statistics.NodeFillStatisticsMBean" />
-				</entry>
-				<entry key="HiveDB:name=HiveStatistics">
-					<bean class="org.hivedb.management.statistics.HivePerformanceStatisticsMBean" />
+				<entry key="HiveDB:name=NodeFillStatistics">
+					<ref bean="NodeFillStatistics" />
 				</entry>
 			</map>
 		</property>
@@ -56,17 +59,6 @@
 		</property>
 	</bean>
 	
+	
 
-	<bean id="fillStatisticsProxy"
-		class="org.springframework.jmx.access.MBeanProxyFactoryBean">
-		<property name="objectName" value="HiveDB:name=FillStatistics" />
-		<property name="proxyInterface"
-			value="org.hivedb.management.statistics.NodeFillStatistics" />
-	</bean>
-	<bean id="fillStatisticsProxy"
-		class="org.springframework.jmx.access.MBeanProxyFactoryBean">
-		<property name="objectName" value="HiveDB:name=HiveStatistics" />
-		<property name="proxyInterface"
-			value="org.hivedb.management.statistics.HivePerformanceStatistics" />
-	</bean>
 </beans>

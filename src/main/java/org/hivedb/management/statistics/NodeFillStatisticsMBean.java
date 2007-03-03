@@ -9,9 +9,9 @@ public class NodeFillStatisticsMBean extends StandardMBean implements
 	private static final String FILLLEVEL = "FillLevel";
 	private static final String FILLRATE = "FillRate";
 
-	private long capacity;
+	private long capacity = 0;
 	private RollingAverageStatistics stats;
-
+	
 	public NodeFillStatisticsMBean(long capacity, long window, long interval)
 			throws NotCompliantMBeanException {
 		super(NodeFillStatistics.class);
@@ -94,5 +94,9 @@ public class NodeFillStatisticsMBean extends StandardMBean implements
 
 	public long getCapacity() {
 		return capacity;
+	}
+
+	public void setCapacity(long capacity) {
+		this.capacity = capacity;
 	}
 }

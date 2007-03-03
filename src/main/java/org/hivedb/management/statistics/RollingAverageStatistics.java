@@ -70,4 +70,12 @@ public interface RollingAverageStatistics {
 	 * @param key The name of statistic being fetched.
 	 */
 	public void decrement(String key);
+	
+	/**
+	 * Add a new statistics to be measured
+	 * @param name
+	 * @param window
+	 * @param interval
+	 */
+	public void registerCounter(String name, long window, long interval);
 }
