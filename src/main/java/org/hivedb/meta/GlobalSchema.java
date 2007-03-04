@@ -4,11 +4,14 @@
  */
 package org.hivedb.meta;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.apache.commons.dbcp.BasicDataSource;
 import org.hivedb.HiveException;
 import org.hivedb.Schema;
+import org.hivedb.meta.persistence.HiveSemaphoreDao;
 
 /**
  * The Global Hive Configuration schema contains records of the Hive's internal
@@ -49,7 +52,7 @@ public class GlobalSchema extends Schema {
 	}
 
 	private String getCreateHive() {
-		return "CREATE TABLE hive_metadata ( " 
+		return "CREATE TABLE semaphore_metadata ( " 
 				+ "read_only int not null," 
 				+ "revision int not null"
 				+ " )";
@@ -81,6 +84,13 @@ public class GlobalSchema extends Schema {
 				+ "name varchar(128) not null "
 				+ " )";
 	}
+	
+	public void install() throws SQLException {
+		super.install();
+		BasicDataSource ds = new BasicDataSource();
+		ds.setUrl(this.dbURI);
+		new HiveSemaphoreDao(ds).create();
+	}
 
 	public String[] getCreateStatements() {
 		return new String[] {
@@ -95,7 +105,7 @@ public class GlobalSchema extends Schema {
 	@Override
 	public Collection<TableInfo> getTables() {
 		Collection<TableInfo> TableInfos = new ArrayList<TableInfo>();
-		TableInfos.add(new TableInfo("hive_metadata", getCreateHive()));
+		TableInfos.add(new TableInfo("semaphore_metadata", getCreateHive()));
 		TableInfos.add(new TableInfo("node_metadata", getCreateNode()));
 		TableInfos.add(new TableInfo("node_group_metadata", getCreateNodeGroup()));
 		TableInfos.add(new TableInfo("partition_dimension_metadata", getCreatePartitionDimension()));

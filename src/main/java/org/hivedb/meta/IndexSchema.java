@@ -54,7 +54,7 @@ public class IndexSchema extends Schema{
 			"CREATE TABLE " + getPrimaryIndexTableName()
 			+ " ( " 
 			+ " id " + addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(partitionDimension.getColumnType())) + " primary key not null, "
-			+ " node varchar(64) not null, "
+			+ " node SMALLINT not null, "
 			+ " secondary_index_count INTEGER not null, "
 			+ " last_updated "+ JdbcTypeMapper.jdbcTypeToString(Types.DATE) +" not null, "
 			+ " read_only " +  GlobalSchema.getBooleanTypeForDialect(dialect) + " default 0"			

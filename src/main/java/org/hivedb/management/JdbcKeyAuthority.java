@@ -13,7 +13,7 @@ import org.springframework.jdbc.support.incrementer.DataFieldMaxValueIncrementer
  * 
  * @author Justin McCarthy (jmccarthy@cafepress.com)
  */
-public class JdbcKeyAuthority<T extends Number> implements KeyAuthority {
+public abstract class JdbcKeyAuthority<T extends Number> implements KeyAuthority {
 	DataFieldMaxValueIncrementer incrementer = null;
 
 	private Class returnType = null;

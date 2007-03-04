@@ -27,11 +27,11 @@ public class HiveSemaphoreDao extends JdbcDaoSupport {
 		HiveSemaphore result;
 		try {
 			result = (HiveSemaphore) t.queryForObject(
-					"SELECT * FROM hive_metadata", new Object[0],
+					"SELECT * FROM semaphore_metadata", new Object[0],
 					new HiveSemaphoreRowMapper());
 		} catch (Exception ex) {
 			throw new SQLException(
-					"Exception loading HiveSemaphore -- verify that hive_metadata has one and only one row: "
+					"Exception loading HiveSemaphore -- verify that semaphore_metadata has one and only one row: "
 							+ ex.getMessage());
 		}
 		return result;
@@ -46,7 +46,7 @@ public class HiveSemaphoreDao extends JdbcDaoSupport {
 			Object[] parameters = new Object[] { 0, 1 };
 			int rows = j
 					.update(
-							"INSERT INTO hive_metadata (read_only,revision) VALUES (?,?)",
+							"INSERT INTO semaphore_metadata (read_only,revision) VALUES (?,?)",
 							parameters);
 			if (rows != 1)
 				throw new SQLException("Unable to create HiveSemaphore: "
@@ -76,7 +76,7 @@ public class HiveSemaphoreDao extends JdbcDaoSupport {
 		Object[] parameters = new Object[] { hs.isReadOnly() ? 1 : 0,
 				hs.getRevision() };
 		JdbcTemplate j = getJdbcTemplate();
-		j.update("UPDATE hive_metadata SET read_only = ?, revision = ?",
+		j.update("UPDATE semaphore_metadata SET read_only = ?, revision = ?",
 				parameters);
 	}
 

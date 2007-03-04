@@ -4,7 +4,7 @@ import static org.testng.AssertJUnit.assertTrue;
 
 import javax.sql.DataSource;
 
-import org.hivedb.management.JdbcKeyAuthority;
+import org.hivedb.management.KeyAuthority;
 import org.hivedb.management.MySqlKeyAuthority;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 
@@ -12,10 +12,10 @@ public class TestMysqlKeyAuthority {
 	DataSource ds = null;
 
 	//@Test()
+	@SuppressWarnings("unchecked")
 	public void testAssign() throws Exception {
-		JdbcKeyAuthority<Integer> authority = new MySqlKeyAuthority<Integer>(
+		KeyAuthority<Integer> authority = new MySqlKeyAuthority<Integer>(
 				getDataSource(), this.getClass(), Integer.class);
-		authority.setDataSource(getDataSource());
 		int firstKey = authority.nextAvailableKey().intValue();
 		int secondKey = authority.nextAvailableKey().intValue();
 		assertTrue(secondKey > firstKey);

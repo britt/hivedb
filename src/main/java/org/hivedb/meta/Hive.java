@@ -10,6 +10,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import javax.sql.DataSource;
+
 import org.apache.commons.dbcp.BasicDataSource;
 import org.hivedb.HiveException;
 import org.hivedb.HiveReadOnlyException;
@@ -37,7 +39,9 @@ public class Hive {
 	private boolean readOnly;
 	private Collection<PartitionDimension> partitionDimensions;
 	private StatisticsRecorder statistics;
-	private static HiveSyncDaemon daemon;
+	private HiveSyncDaemon daemon;
+	private DataSource dataSoure;
+	
 	/**
 	 *  System entry point.
 	 */ 
@@ -56,7 +60,6 @@ public class Hive {
 		StatisticsRecorder tracker = statisticsTrackingEnabled ? new PartitionKeyStatisticsDao( new HiveBasicDataSource(hiveDatabaseUri)) : null;
 		
 		Hive hive = new Hive(hiveDatabaseUri, 0, false, new ArrayList<PartitionDimension>(), tracker);
-		daemon = new HiveSyncDaemon(hive);
 		return hive;
 	}
 	
@@ -78,12 +81,14 @@ public class Hive {
 	 * @param revision
 	 * @param readOnly
 	 */
-	public Hive(String hiveUri, int revision, boolean readOnly, Collection<PartitionDimension> partitionDimensions, StatisticsRecorder statistics) {
+	protected Hive(String hiveUri, int revision, boolean readOnly, Collection<PartitionDimension> partitionDimensions, StatisticsRecorder statistics) {
 		this.hiveUri = hiveUri;
 		this.revision = revision;
 		this.readOnly = readOnly;
 		this.partitionDimensions = partitionDimensions;
 		this.statistics = statistics;
+		this.daemon = new HiveSyncDaemon(this);
+		this.dataSoure  = new HiveBasicDataSource(this.getHiveUri());
 	}
 	
 	/**
@@ -412,14 +417,13 @@ public class Hive {
 				secondaryIndex.getResource().getSecondaryIndexes(),
 				secondaryIndex);
 
-		BasicDataSource datasource = new HiveBasicDataSource(this.getHiveUri());
-		SecondaryIndexDao secondaryIndexDao = new SecondaryIndexDao(datasource);
+		SecondaryIndexDao secondaryIndexDao = new SecondaryIndexDao(dataSoure);
 		try {
 			secondaryIndexDao.update(secondaryIndex);
 		} catch (SQLException e) {
 			throw new HiveException("Problem persisting secondary index: " + e.getMessage());
 		}
-		incrementAndPersistHive(datasource);
+		incrementAndPersistHive(dataSoure);
 		
 		sync();
 		return secondaryIndex;
@@ -457,7 +461,7 @@ public class Hive {
 	
 	
 
-	private void incrementAndPersistHive(BasicDataSource datasource) throws HiveException {
+	private void incrementAndPersistHive(DataSource datasource) throws HiveException {
 		try {
 			new HiveSemaphoreDao(datasource).incrementAndPersist();
 		} catch (SQLException e) {
@@ -931,6 +935,22 @@ public class Hive {
 		return getSecondaryIndexKeysWithPrimaryKey(
 				getPartitionDimension(partitionDimensionName).getResource(resource).getSecondaryIndex(secondaryIndexName),
 				primaryIndexKey);
+	}
+
+	/**
+	 * Test if Hive has been installed at current JDBC URI
+	 *  
+	 * @return True if hive metadata has been installed
+	 * @throws HiveException
+	 * @throws SQLException
+	 */
+	public boolean exists() {
+		try {
+			new HiveSemaphoreDao(dataSoure).get();
+			return true;
+		} catch (Exception ex) {
+			return false;
+		}
 	}
 	
 	public Connection getConnection(String nodeUri) throws SQLException {
