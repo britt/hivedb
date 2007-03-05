@@ -22,6 +22,16 @@
 		<constructor-arg value="100" />
 	</bean>
 	
+	<bean name="NodePerformanceStatistics" class="org.hivedb.management.statistics.HivePerformanceStatisticsMBean">
+		<constructor-arg value="1000" />
+		<constructor-arg value="100" />
+	</bean>
+	
+	<bean name="HivePerformanceStatistics" class="org.hivedb.management.statistics.HivePerformanceStatisticsMBean">
+		<constructor-arg value="1000" />
+		<constructor-arg value="100" />
+	</bean>
+	
 	<bean id="exporter"
 		class="org.springframework.jmx.export.MBeanExporter"
 		lazy-init="false">
@@ -45,6 +55,12 @@
 				</entry>
 				<entry key="HiveDB:name=NodeFillStatistics">
 					<ref bean="NodeFillStatistics" />
+				</entry>
+				<entry key="HiveDB:name=NodePerformanceStatistics">
+					<ref bean="NodePerformanceStatistics" />
+				</entry>
+				<entry key="HiveDB:name=HivePerformanceStatistics">
+					<ref bean="HivePerformanceStatistics" />
 				</entry>
 			</map>
 		</property>
