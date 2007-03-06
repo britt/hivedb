@@ -1,10 +1,10 @@
-package org.hivedb.util;
+package org.hivedb.util.scenarioBuilder;
 
 import org.jmock.core.DynamicMockError;
 import org.jmock.core.Invocation;
 import org.jmock.core.InvocationMatcher;
 
-class MaximumInvocationCountMatcher implements InvocationMatcher {
+public class MaximumInvocationCountMatcher implements InvocationMatcher {
 	private int limit;
 	private int count=0;
 	public MaximumInvocationCountMatcher(int times) {

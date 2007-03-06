@@ -6,11 +6,6 @@ package org.hivedb.util.scenarioBuilder;
 import java.util.Collection;
 
 import org.apache.commons.dbcp.BasicDataSource;
-import org.hivedb.HiveException;
-import org.hivedb.management.JdbcKeyAuthority;
-import org.hivedb.management.KeyAuthority;
-import org.hivedb.meta.Access;
-import org.hivedb.meta.AccessType;
 import org.hivedb.meta.GlobalSchema;
 import org.hivedb.meta.Hive;
 import org.hivedb.meta.Node;
@@ -77,10 +72,10 @@ public class HiveScenarioMarauderConfig implements HiveScenarioConfig {
 		public Pirate getPrimaryIndexInstanceReference() { return this; }
 		public String getIdAsSecondaryIndexInstance() {	return pirateName;}
 		public Integer getPrimaryIndexIdAsSecondaryIndexInstance() { return id; } // self referencing
-		public String getSecondaryIdName()
-		{
-			return "name";
-		}
+		
+		public String getPartitionDimensionName() { return this.getClass().getSimpleName(); }
+		public String getResourceName() { return this.getClass().getSimpleName(); }
+		public String getSecondaryIdName() {return "name";	}
 	}
 	private static class Buccaneer implements PrimaryAndSecondaryIndexIdentifiable
 	{
@@ -94,15 +89,15 @@ public class HiveScenarioMarauderConfig implements HiveScenarioConfig {
 		public Buccaneer getPrimaryIndexInstanceReference() { return this; }
 		public String getIdAsSecondaryIndexInstance() {	return buccaneerName; }
 		public String getPrimaryIndexIdAsSecondaryIndexInstance() { return id; } // self referencing
-		public String getSecondaryIdName()
-		{
-			return "name";
-		}
+		
+		public String getPartitionDimensionName() { return this.getClass().getSimpleName(); }
+		public String getResourceName() { return this.getClass().getSimpleName(); }
+		public String getSecondaryIdName() { return "name";	}
 	}
 	
 	
 	// Resource and Secondary index classes that test all possible secondary index id types
-	private static class Treasure implements PrimaryAndSecondaryIndexIdentifiable
+	private static class Treasure implements SecondaryIndexIdentifiable
 	{
 		public static int idGenerator = 0;
 		protected int id;
@@ -115,12 +110,11 @@ public class HiveScenarioMarauderConfig implements HiveScenarioConfig {
 		public Pirate getPrimaryIndexInstanceReference() { return primaryResource; }
 		public Integer getIdAsSecondaryIndexInstance() { return id; }
 		public Integer getPrimaryIndexIdAsSecondaryIndexInstance() { return primaryResource.getIdAsPrimaryIndexInstance(); } 
-		public String getSecondaryIdName()
-		{
-			return "pirate_id";
-		}
+		
+		public String getResourceName() { return this.getClass().getSimpleName(); }
+		public String getSecondaryIdName() {return "pirate_id"; }
 	}	                      
-	private static class Booty implements PrimaryAndSecondaryIndexIdentifiable
+	private static class Booty implements SecondaryIndexIdentifiable
 	{
 		public static long idGenerator = 2^32;
 		protected long id;
@@ -134,12 +128,10 @@ public class HiveScenarioMarauderConfig implements HiveScenarioConfig {
 		public Long getIdAsSecondaryIndexInstance() { return id; }
 		public Integer getPrimaryIndexIdAsSecondaryIndexInstance() { return primaryResource.getIdAsPrimaryIndexInstance(); }
 		
-		public String getSecondaryIdName()
-		{
-			return "pirate_id";
-		}
+		public String getResourceName() { return this.getClass().getSimpleName(); }
+		public String getSecondaryIdName() { return "pirate_id"; }
 	}
-	private static class Loot implements PrimaryAndSecondaryIndexIdentifiable
+	private static class Loot implements SecondaryIndexIdentifiable
 	{
 		public static int idGenerator = 0;
 		protected int id;
@@ -152,12 +144,11 @@ public class HiveScenarioMarauderConfig implements HiveScenarioConfig {
 		public Pirate getPrimaryIndexInstanceReference() { return primaryResource; }
 		public Integer getIdAsSecondaryIndexInstance() { return id; }
 		public Integer getPrimaryIndexIdAsSecondaryIndexInstance() { return primaryResource.getIdAsPrimaryIndexInstance(); }
-		public String getSecondaryIdName()
-		{
-			return "pirate_id";
-		}
+		
+		public String getResourceName() { return this.getClass().getSimpleName(); }
+		public String getSecondaryIdName() { return "pirate_id"; }
 	}
-	private static class Stash implements PrimaryAndSecondaryIndexIdentifiable
+	private static class Stash implements SecondaryIndexIdentifiable
 	{
 		public static double idGenerator = 0d;
 		protected double id;
@@ -171,12 +162,11 @@ public class HiveScenarioMarauderConfig implements HiveScenarioConfig {
 		public Buccaneer getPrimaryIndexInstanceReference() { return primaryResource; }
 		public Double getIdAsSecondaryIndexInstance() { return id; }
 		public String getPrimaryIndexIdAsSecondaryIndexInstance() { return primaryResource.getIdAsPrimaryIndexInstance(); }
-		public String getSecondaryIdName()
-		{
-			return "bucaneer_id";
-		}
+		
+		public String getResourceName() { return this.getClass().getSimpleName(); }
+		public String getSecondaryIdName() { return "bucaneer_id"; }
 	}
-	private static class Chanty implements PrimaryAndSecondaryIndexIdentifiable
+	private static class Chanty implements SecondaryIndexIdentifiable
 	{
 		public static int idGenerator = 0;
 		protected String id;
@@ -189,12 +179,11 @@ public class HiveScenarioMarauderConfig implements HiveScenarioConfig {
 		public Buccaneer getPrimaryIndexInstanceReference() { return primaryResource; }
 		public String getIdAsSecondaryIndexInstance() { return id; }
 		public String getPrimaryIndexIdAsSecondaryIndexInstance() { return primaryResource.getIdAsPrimaryIndexInstance(); }
-		public String getSecondaryIdName()
-		{
-			return "bucaneer_id";
-		}
+		
+		public String getResourceName() { return this.getClass().getSimpleName(); }
+		public String getSecondaryIdName() { return "bucaneer_id"; }
 	}
-	private static class Bottle implements PrimaryAndSecondaryIndexIdentifiable
+	private static class Bottle implements SecondaryIndexIdentifiable
 	{	
 		static int current = 0;
 		protected int id;
@@ -204,13 +193,11 @@ public class HiveScenarioMarauderConfig implements HiveScenarioConfig {
 			this.primaryResource = primaryResource;
 			id = ++current;
 		}
-		public Integer getIdAsPrimaryIndexInstance() { return id;}
 		public Buccaneer getPrimaryIndexInstanceReference() { return primaryResource; }
 		public Integer getIdAsSecondaryIndexInstance() { return id; }
 		public String getPrimaryIndexIdAsSecondaryIndexInstance() { return primaryResource.getIdAsPrimaryIndexInstance(); }
-		public String getSecondaryIdName()
-		{
-			return "bucaneer_id";
-		}
+		
+		public String getResourceName() { return this.getClass().getSimpleName(); }
+		public String getSecondaryIdName() { return "bucaneer_id"; }
 	}
 }

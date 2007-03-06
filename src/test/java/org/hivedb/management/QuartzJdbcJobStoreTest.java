@@ -6,8 +6,8 @@ import java.io.File;
 import java.sql.ResultSet;
 import java.util.Date;
 
-import org.hivedb.util.DerbyTestCase;
 import org.hivedb.util.scenarioBuilder.DerbyUtils;
+import org.hivedb.util.DerbyTestCase;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerFactory;
@@ -17,6 +17,7 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
 
 public class QuartzJdbcJobStoreTest extends DerbyTestCase {
 	public QuartzJdbcJobStoreTest() {

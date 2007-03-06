@@ -3,7 +3,6 @@ package org.hivedb;
 import org.hivedb.util.DerbyTestCase;
 import org.hivedb.util.scenarioBuilder.HiveScenarioAlternativeConfig;
 import org.hivedb.util.scenarioBuilder.HiveScenarioMarauderConfig;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 

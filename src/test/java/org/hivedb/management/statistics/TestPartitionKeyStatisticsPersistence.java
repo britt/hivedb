@@ -28,9 +28,9 @@ import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
-import org.hivedb.util.DerbyTestCase;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import org.hivedb.util.DerbyTestCase;
 
 public class TestPartitionKeyStatisticsPersistence extends DerbyTestCase {
 	private DataSource ds;

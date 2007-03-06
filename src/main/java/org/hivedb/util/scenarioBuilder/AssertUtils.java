@@ -1,6 +1,5 @@
-package org.hivedb.util;
+package org.hivedb.util.scenarioBuilder;
 
-import org.hivedb.util.scenarioBuilder.Undoable;
 
 import junit.framework.TestCase;
 

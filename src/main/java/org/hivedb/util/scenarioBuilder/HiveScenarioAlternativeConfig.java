@@ -4,9 +4,6 @@ import java.util.Collection;
 import java.util.UUID;
 
 import org.apache.commons.dbcp.BasicDataSource;
-import org.hivedb.HiveException;
-import org.hivedb.meta.Access;
-import org.hivedb.meta.AccessType;
 import org.hivedb.meta.GlobalSchema;
 import org.hivedb.meta.Hive;
 import org.hivedb.meta.Node;
@@ -92,6 +89,9 @@ public class HiveScenarioAlternativeConfig implements HiveScenarioConfig {
 		public Integer getId() {
 			return this.id;
 		}
+		
+		public String getPartitionDimensionName() {	return this.getClass().getSimpleName();	}
+		public String getResourceName() { return this.getClass().getSimpleName(); }
 	}
 	public static class Product implements SecondaryIndexIdentifiable
 	{
@@ -115,6 +115,11 @@ public class HiveScenarioAlternativeConfig implements HiveScenarioConfig {
 			return member;
 		}
 
+		public String getResourceName()
+		{
+			return this.getClass().getSimpleName();
+		}
+		
 		public String getSecondaryIdName() {
 			return "member_id";
 		}
@@ -134,6 +139,8 @@ public class HiveScenarioAlternativeConfig implements HiveScenarioConfig {
 		{
 			return id;
 		}
+		public String getPartitionDimensionName() {	return this.getClass().getSimpleName();	}
+		public String getResourceName() { return this.getClass().getSimpleName(); }
 	}
 	public static class Token implements SecondaryIndexIdentifiable
 	{
@@ -158,6 +165,10 @@ public class HiveScenarioAlternativeConfig implements HiveScenarioConfig {
 
 		public String getSecondaryIdName() {
 			return "admin_id";
+		}
+		public String getResourceName()
+		{
+			return this.getClass().getSimpleName();
 		}
 		
 	}

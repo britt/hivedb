@@ -21,4 +21,11 @@ public interface PrimaryIndexIdentifiable
 	 * @return The id to be used as a primary index key.
 	 */
 	Object getIdAsPrimaryIndexInstance();
+	
+	/**
+	 * 
+	 * @return The name to use for the partition dimension represented by this class. Usually this.getClass().getSimpleName() will suffice,
+	 * unless you are extending a class and want to name the resource after the base class.
+	 */
+	String getPartitionDimensionName();
 }

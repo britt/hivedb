@@ -36,7 +36,14 @@ public interface SecondaryIndexIdentifiable
 	 * This will simply return this for an intra-class secondary index (e.g. foo.name -> foo.id, so return foo),
 	 * and will be the instance of a different class for an inter-class secondary index (e.g. foo.id -> bar.id, so return bar)
 	 */
-	Object getPrimaryIndexInstanceReference();
+	PrimaryIndexIdentifiable getPrimaryIndexInstanceReference();
+	
+	/**
+	 * 
+	 * @return The name to use for the resource represented by this class. Usually this.getClass().getSimpleName() will suffice,
+	 * unless you are extending a class and want to name the resource after the base class.
+	 */
+	String getResourceName();
 	
 	/**
 	 * @return The string to use in naming the secondary index table, 

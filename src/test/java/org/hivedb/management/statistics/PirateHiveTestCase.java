@@ -10,6 +10,7 @@ import org.hivedb.util.DerbyTestCase;
 import org.hivedb.util.scenarioBuilder.HiveScenario;
 import org.hivedb.util.scenarioBuilder.HiveScenarioMarauderConfig;
 
+
 public abstract class PirateHiveTestCase extends DerbyTestCase {
 	protected HiveScenario yeScenario = null;
 	

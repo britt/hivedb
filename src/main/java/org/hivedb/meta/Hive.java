@@ -52,7 +52,7 @@ public class Hive {
 	public static Hive load(String hiveDatabaseUri, boolean statisticsTrackingEnabled) throws HiveException
 	{
 		try {
-			DriverLoader.loadByDialect(GlobalSchema.discernDialect(hiveDatabaseUri));
+			DriverLoader.loadByDialect(DriverLoader.discernDialect(hiveDatabaseUri));
 		} catch (ClassNotFoundException e) {
 			throw new HiveException("Unable to load database driver: " + e.getMessage(), e);
 		}

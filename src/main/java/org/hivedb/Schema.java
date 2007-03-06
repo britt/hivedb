@@ -9,6 +9,7 @@ import java.util.Map;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.hivedb.meta.TableInfo;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
+import org.hivedb.util.DriverLoader;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.RowMapper;
@@ -33,7 +34,7 @@ public abstract class Schema extends JdbcDaoSupport {
 		if (!dataSources.containsKey(dbURI))
 			dataSources.put(dbURI, new HiveBasicDataSource(dbURI));
 		this.setDataSource(dataSources.get(dbURI));
-		this.dialect = discernDialect(dbURI);
+		this.dialect = DriverLoader.discernDialect(dbURI);
 	}
 	
 	/**
@@ -53,19 +54,7 @@ public abstract class Schema extends JdbcDaoSupport {
 			createTable(table);
 	}
 	
-	/**
-	 * From the connection URI determine the databhase type.
-	 * @param uri
-	 * @return 
-	 */
-	public static HiveDbDialect discernDialect(String uri)
-	{
-		if (uri.startsWith("jdbc:mysql:"))
-			return HiveDbDialect.MySql;
-		if (uri.startsWith("jdbc:derby:"))
-			return HiveDbDialect.Derby;
-		throw new UnsupportedDialectException("Could not discern the HiveDbDialect from the uri " + uri);
-	}
+
 	
 	/**
 	 * Boolean types vary from database to database, this method returns the smallest

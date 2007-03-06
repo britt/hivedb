@@ -13,9 +13,6 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.TreeSet;
 
-import org.apache.commons.dbcp.BasicDataSource;
-import org.hivedb.HiveException;
-import org.hivedb.HiveReadOnlyException;
 import org.hivedb.meta.Assigner;
 import org.hivedb.meta.ColumnInfo;
 import org.hivedb.meta.Hive;
@@ -23,11 +20,8 @@ import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
-import org.hivedb.meta.persistence.HiveBasicDataSource;
-import org.hivedb.meta.persistence.HiveSemaphoreDao;
-import org.hivedb.util.AssertUtils;
 import org.hivedb.util.JdbcTypeMapper;
-import org.hivedb.util.AssertUtils.UndoableToss;
+import org.hivedb.util.scenarioBuilder.AssertUtils;
 import org.hivedb.util.scenarioBuilder.Atom;
 import org.hivedb.util.scenarioBuilder.Filter;
 import org.hivedb.util.scenarioBuilder.HiveScenario;
@@ -39,9 +33,6 @@ import org.hivedb.util.scenarioBuilder.SecondaryIndexIdentifiable;
 import org.hivedb.util.scenarioBuilder.Transform;
 import org.hivedb.util.scenarioBuilder.Unary;
 import org.hivedb.util.scenarioBuilder.Undoable;
-import org.hivedb.util.scenarioBuilder.Filter.AllAllFilter;
-import org.hivedb.util.scenarioBuilder.Transform.IdentityFunction;
-import org.hivedb.util.scenarioBuilder.Undoable.Undo;
 
 public class HiveScenarioTest {
 	

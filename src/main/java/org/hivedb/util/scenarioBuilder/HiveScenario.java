@@ -48,16 +48,19 @@ public class HiveScenario {
 	
 	public static HiveScenario run(HiveScenarioConfig hiveScenarioConfig) throws HiveException {
 		HiveScenario hiveScenario = new HiveScenario(hiveScenarioConfig);
-		hiveScenarioConfig.getHive().sync();
+		hiveScenarioConfig.getHive().sync(); //Get the data that we've inserted so we can compare HiveScenario's data to the Hive's data
 		return hiveScenario;
 	}
 
 	protected HiveScenario(final HiveScenarioConfig hiveScenarioConfig) throws HiveException
 	{
 		final Hive hive = hiveScenarioConfig.getHive();
+		fill(hiveScenarioConfig, hive);
+	}
+	protected void fill(final HiveScenarioConfig hiveScenarioConfig, final Hive hive) throws HiveException {
 		graphTestClasses(hiveScenarioConfig);
 		Map<Class, PartitionDimension> partitionDimensionMap = configureHive(hiveScenarioConfig, hive);
-		populateHive(hiveScenarioConfig, hive, partitionDimensionMap);
+		populateData(hiveScenarioConfig, hive, partitionDimensionMap);
 	}
 	
 	private Map<Class, Collection<Class>> primaryToResourceMap = new DebugMap<Class,Collection<Class>>();
@@ -71,12 +74,12 @@ public class HiveScenario {
 					primaryToResourceMap.put(primaryClass, new ArrayList<Class>());
 				primaryToResourceMap.get(primaryClass).add(resourceClass);
 				resourceToPrimaryMap.put(resourceClass, primaryClass);
-			} catch (Exception e ) { throw new RuntimeException(e); }			
-			resourceNameToClassMap.put(resourceClass.getSimpleName(), resourceClass);
+				resourceNameToClassMap.put(getSecondaryIndexIdentifiablePrototype(primaryClass, resourceClass).getResourceName(), resourceClass);
+			} catch (Exception e ) { throw new RuntimeException(e); }						
 		}	
 	}
 
-	private void populateHive(final HiveScenarioConfig hiveScenarioConfig, final Hive hive, Map<Class, PartitionDimension> partitionDimensionMap) {
+	private void populateData(final HiveScenarioConfig hiveScenarioConfig, final Hive hive, Map<Class, PartitionDimension> partitionDimensionMap) {
 		// Create a number of instances for each of the primary PartitionIndex classes, distributing them among the nodes
 		Map<Class, Collection<PrimaryIndexIdentifiable>> primaryIndexInstanceMap = createPrimaryIndexInstances(hive, partitionDimensionMap, hiveScenarioConfig.getInstanceCountPerPrimaryIndex());
 		// Create a number of instances for each of the secondary PartitionIndex classes.
@@ -98,14 +101,16 @@ public class HiveScenario {
 			new Unary<Class, PartitionDimension>() {
 				public PartitionDimension f(final Class primaryClass) {
 					try {
+						final PrimaryIndexIdentifiable primaryInstancePrototype = getPrimaryIndexIdentifiablePrototype(primaryClass); 
 						return new PartitionDimension(
-							primaryClass.getSimpleName(),
+							primaryInstancePrototype.getPartitionDimensionName(),
 							JdbcTypeMapper.primitiveTypeToJdbcType(primaryClass.getMethod("getIdAsPrimaryIndexInstance").getReturnType()),
 							new NodeGroup(Transform.map(new Unary<Node,Node>() { public Node f(Node n) {return new Node(n.getUri(), n.isReadOnly());}}, hiveScenarioConfig.getNodes(hive))),
 							indexUriIterator.next(),
 							Transform.map(new Unary<Class, Resource>() {
-								public Resource f(Class classType) { 
-									return new Resource(classType.getSimpleName(), constructSecondaryIndexesOfResource(primaryClass, classType));
+								public Resource f(Class secondaryClass) { 
+									SecondaryIndexIdentifiable secondaryIndexIdentifiable = getSecondaryIndexIdentifiablePrototype(primaryClass, secondaryClass);									
+									return new Resource(secondaryIndexIdentifiable.getResourceName(), constructSecondaryIndexesOfResource(primaryClass, secondaryClass));
 								}},
 								primaryToResourceMap.get(primaryClass))
 						);
@@ -171,38 +176,6 @@ public class HiveScenario {
 		Object newInstance = constructSecondaryInstance(primaryIndexClass, secondaryIndexClass);
 		return (String)secondaryIndexClass.getMethod("getSecondaryIdName").invoke(newInstance);					
 	}
-
-	/**
-	 *  Constructs a SecondaryIndexInstance, taking into account whethter the secondary index class
-	 *  is also a primary index class (i.e. is a PrimaryAndSecondaryIndexIdentifiable)
-	 *  PrimaryAndSecondaryIndexIdentifiable classes construct with no arguments, since their secondary
-	 *  index is a reference from a field of the instances to its own id
-	 *  SecondaryIndexIdentifiable classes construct with a PrimaryIndexIdentifiable instance, whose
-	 *  id becomes the primary index key of the secondary index key
-	 * @param primaryIndexClass
-	 * @param secondaryIndexClass
-	 * @return
-	 * @throws NoSuchMethodException
-	 * @throws InstantiationException
-	 * @throws IllegalAccessException
-	 * @throws InvocationTargetException
-	 */
-	public static Object constructSecondaryInstance(Class primaryIndexClass, Class secondaryIndexClass) {
-		try {
-			// Choose the right constructor depending on whether the secondaryIndexClass is the same as the primary index class
-			Constructor constructor = secondaryIndexClass.equals(primaryIndexClass)
-				? secondaryIndexClass.getConstructor(new Class[] {})
-				: secondaryIndexClass.getConstructor(new Class[] {primaryIndexClass});
-			Object[] args = secondaryIndexClass.equals(primaryIndexClass)
-				? new Object[] {}
-				: new Object[] { primaryIndexClass.getConstructor(new Class[] {}).newInstance(new Object[] {}) };			
-			Object newInstance = constructor.newInstance(args);
-			return newInstance;
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}	
 	
 	protected Map<Class, Collection<PrimaryIndexIdentifiable>> createPrimaryIndexInstances(final Hive hive, Map<Class, PartitionDimension> partitionDimensionMap, final int countPerPrimaryIndex)
 	{	
@@ -261,8 +234,8 @@ public class HiveScenario {
 									new Unary<SecondaryIndex, Collection<SecondaryIndexIdentifiable>>() {				
 										public Collection<SecondaryIndexIdentifiable> f(final SecondaryIndex secondaryIndex) {
 											final boolean sameClass = (secondaryIndexClass.equals(primaryPartitionClass));
-											Collection<PrimaryIndexIdentifiable> primaryInstances = resourceNameToPrimaryIndexInstanceMap.get(secondaryIndexClass.getSimpleName());
-											// Make an RingIterable that iterates over the primary instancees,
+											Collection<PrimaryIndexIdentifiable> primaryInstances = resourceNameToPrimaryIndexInstanceMap.get(getSecondaryIndexIdentifiablePrototype(primaryPartitionClass, secondaryIndexClass).getResourceName());
+											// Make a RingIterable that iterates over the primary instancees,
 											// for countPerSecondaryIndex, but limit it it to the number of primaryInstances to prevent duplicate primary keys
 											// when the secondaryInstance is the same as the primaryInstance
 											final Iterable<PrimaryIndexIdentifiable> primaryPartitionIndexInstanceIterable = new RingIteratorable<PrimaryIndexIdentifiable>(
@@ -284,8 +257,8 @@ public class HiveScenario {
 													private SecondaryIndexIdentifiable generateAndInsertSameClassSecondaryIndexInstance(final Hive hive, final PartitionDimension partitionDimension, final Class secondaryIndexClass, SecondaryIndex secondaryIndex, PrimaryAndSecondaryIndexIdentifiable primaryIndexInstance) throws Exception {
 														// Construct a SecondaryIndex instance with a reference to a PrimaryIndex instance
 														// In this case, the types of the primary and secondary classes match, so make secondary index
-														// between getSecondaryId() and getId() values
-														persistSecondaryIndex(hive, secondaryIndex, primaryIndexInstance);
+														// between getSecondaryId() and getId() values										
+														persistSecondaryIndex(hive, secondaryIndex, primaryIndexInstance, primaryIndexInstance);
 														return primaryIndexInstance;
 													}
 														
@@ -296,7 +269,7 @@ public class HiveScenario {
 														SecondaryIndexIdentifiable secondaryIndexInstance = (SecondaryIndexIdentifiable)secondaryIndexClass
 																	.getConstructor(new Class[] {primaryIndexInstance.getClass()})
 																		.newInstance(new Object[] {primaryIndexInstance});														
-														hive.insertSecondaryIndexKey(secondaryIndex, secondaryIndexInstance.getIdAsSecondaryIndexInstance(), secondaryIndexInstance.getPrimaryIndexIdAsSecondaryIndexInstance());
+														persistSecondaryIndex(hive, secondaryIndex, secondaryIndexInstance, secondaryIndexInstance.getPrimaryIndexInstanceReference());													
 														return secondaryIndexInstance;
 													}	
 												}, primaryPartitionIndexInstanceIterable);
@@ -308,8 +281,46 @@ public class HiveScenario {
 			},
 			partitionDimensionMap.entrySet());
 	}
-	protected void persistSecondaryIndex(final Hive hive, SecondaryIndex secondaryIndex, PrimaryAndSecondaryIndexIdentifiable primaryIndexInstance) throws HiveException, SQLException {
-		hive.insertSecondaryIndexKey(secondaryIndex, primaryIndexInstance.getIdAsSecondaryIndexInstance(), primaryIndexInstance.getIdAsPrimaryIndexInstance());
+	protected void persistSecondaryIndex(final Hive hive, SecondaryIndex secondaryIndex, SecondaryIndexIdentifiable secondaryIndexInstance, PrimaryIndexIdentifiable primaryIndexInstance) throws HiveException, SQLException {
+		hive.insertSecondaryIndexKey(secondaryIndex, secondaryIndexInstance.getIdAsSecondaryIndexInstance(), primaryIndexInstance.getIdAsPrimaryIndexInstance());
+	}
+	
+	/**
+	 *  Constructs a SecondaryIndexInstance, taking into account whethter the secondary index class
+	 *  is also a primary index class (i.e. is a PrimaryAndSecondaryIndexIdentifiable)
+	 *  PrimaryAndSecondaryIndexIdentifiable classes construct with no arguments, since their secondary
+	 *  index is a reference from a field of the instances to its own id
+	 *  SecondaryIndexIdentifiable classes construct with a PrimaryIndexIdentifiable instance, whose
+	 *  id becomes the primary index key of the secondary index key
+	 * @param primaryIndexClass
+	 * @param secondaryIndexClass
+	 * @return
+	 * @throws NoSuchMethodException
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 * @throws InvocationTargetException
+	 */
+	public static SecondaryIndexIdentifiable constructSecondaryInstance(Class primaryIndexClass, Class secondaryIndexClass) {
+		try {
+			// Choose the right constructor depending on whether the secondaryIndexClass is the same as the primary index class
+			Constructor constructor = secondaryIndexClass.equals(primaryIndexClass)
+				? secondaryIndexClass.getConstructor(new Class[] {})
+				: secondaryIndexClass.getConstructor(new Class[] {primaryIndexClass});
+			Object[] args = secondaryIndexClass.equals(primaryIndexClass)
+				? new Object[] {}
+				: new Object[] { primaryIndexClass.getConstructor(new Class[] {}).newInstance(new Object[] {}) };			
+			SecondaryIndexIdentifiable newInstance = (SecondaryIndexIdentifiable) constructor.newInstance(args);
+			return newInstance;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}	
+	private PrimaryIndexIdentifiable getPrimaryIndexIdentifiablePrototype(final Class primaryClass) throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+		return (PrimaryIndexIdentifiable) primaryClass.getConstructor(new Class[] {}).newInstance(new Object[] {});
+	}
+	private SecondaryIndexIdentifiable getSecondaryIndexIdentifiablePrototype(final Class primaryClass, final Class secondaryClass) {
+		return constructSecondaryInstance(primaryClass, secondaryClass);
 	}
 }
 

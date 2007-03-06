@@ -28,7 +28,7 @@ public class TestHiveScenarioWithMySql {
 	 *  Fills a hive with metaday and indexes to validate CRUD operations
 	 *  This tests works but is commented out due to its slowness
 	 */
-//	@Test(groups={"mysql"})
+	//@Test(groups={"mysql"})
 	public void testPirateDomain() throws Exception {
 		String databaseName = "test";
 		recycleDatabase(databaseName, getDatabaseAgnosticConnectString());
@@ -38,7 +38,7 @@ public class TestHiveScenarioWithMySql {
 	/**
 	 *  An alternative object model
 	 */
-//	@Test(groups={"mysql"})
+	//@Test(groups={"mysql"})
 	public void testMemberDomain() throws Exception {
 		String databaseName = "alternative_test";
 		recycleDatabase(databaseName, getDatabaseAgnosticConnectString());

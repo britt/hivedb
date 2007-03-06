@@ -32,6 +32,7 @@ import org.hivedb.util.DerbyTestCase;
 import org.hivedb.util.TestObjectFactory;
 import org.testng.annotations.Test;
 
+
 public class NodeBalancerTest extends DerbyTestCase {
 	private static final double NODE_CAPACITY = 4.0;
 	
