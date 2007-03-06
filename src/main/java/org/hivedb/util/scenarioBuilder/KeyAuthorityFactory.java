@@ -35,6 +35,7 @@ public interface KeyAuthorityFactory {
 				public T nextAvailableKey() {
 					return increment();
 				}
+				@SuppressWarnings("unchecked")
 				private T increment()
 				{
 					return (T)incrementor.f();
@@ -54,6 +55,7 @@ public interface KeyAuthorityFactory {
 			this.databaseName = databaseName;
 			this.datasource = datasource;
 		}
+		@SuppressWarnings("unchecked")
 		public <T extends Number> KeyAuthority<T> create(Class keySpace, Class<T> returnType) {
 			return new MySqlKeyAuthority<T>(datasource, keySpace ,returnType);
 		}

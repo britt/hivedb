@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import javax.sql.DataSource;
+
+import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.scenarioBuilder.DerbyUtils;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -68,6 +71,10 @@ public abstract class DerbyTestCase {
 	
 	protected Connection getConnection() throws InstantiationException, SQLException {
 		return DerbyUtils.getConnection(databaseName, userName, password);
+	}
+	
+	protected DataSource getDataSource() {
+		return new HiveBasicDataSource(getConnectString());
 	}
 	
 	private void loadFromSqlScript() throws IOException, SQLException, InstantiationException {

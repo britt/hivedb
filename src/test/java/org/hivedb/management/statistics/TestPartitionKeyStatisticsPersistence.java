@@ -8,76 +8,55 @@ import static org.testng.AssertJUnit.fail;
 
 import java.sql.Date;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
-import javax.sql.DataSource;
-
-import org.hivedb.meta.Assigner;
-import org.hivedb.meta.ColumnInfo;
-import org.hivedb.meta.GlobalSchema;
+import org.hivedb.HiveException;
 import org.hivedb.meta.Hive;
-import org.hivedb.meta.IndexSchema;
-import org.hivedb.meta.Node;
-import org.hivedb.meta.NodeGroup;
-import org.hivedb.meta.PartitionDimension;
-import org.hivedb.meta.Resource;
-import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
-import org.hivedb.meta.persistence.HiveSemaphoreDao;
 import org.hivedb.util.DerbyTestCase;
+import org.hivedb.util.IndexSchemaTestScenario;
+import org.hivedb.util.scenarioBuilder.Atom;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 public class TestPartitionKeyStatisticsPersistence extends DerbyTestCase {
-	private DataSource ds;
+	private Collection<Integer> keys;
+	private IndexSchemaTestScenario index;
 	private Hive hive;
-	private ArrayList<Integer> keys;
-	private PartitionDimension dimension;
-	private SecondaryIndex secondaryIndex;
-
+	
 	@BeforeClass
-	public void setUp() {
-		ds = new HiveBasicDataSource(getConnectString());
-		keys = new ArrayList<Integer>();
-		dimension = partitionDimension();
-		IndexSchema schema = new IndexSchema(dimension);
+	public void setUp() throws Exception{
+		index = new IndexSchemaTestScenario((HiveBasicDataSource)getDataSource());
+		index.build();
 		try {
-			new GlobalSchema(getConnectString()).install();
-			new HiveSemaphoreDao(ds).create();
-			schema.install();
 			hive = Hive.load(getConnectString());
-			hive.addPartitionDimension(dimension);
-			Resource resource = resource();
-			secondaryIndex = secondaryIndex();
-			hive.addResource(dimension, resource);
-			hive.addSecondaryIndex(resource, secondaryIndex);
-
-			for (int i = 0; i < 5; i++) {
-				Integer key = randomIntegerKey();
-				keys.add(key);
-				hive.insertPrimaryIndexKey(dimension, key);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			fail("Exception while installing schema.");
+		} catch (HiveException e) {
+			fail("Error instantiating hive.");
+		}
+		
+		keys = new ArrayList<Integer>();
+		Random rand = new Random();
+		for(int i=0; i<5; i++) {
+			Integer key = new Integer(rand.nextInt());
+			hive.insertPrimaryIndexKey(index.partitionDimension(), key);
+			keys.add(key);
 		}
 	}
 	
 	@Test
 	public void testUpdate() {
-		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(ds);
+		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource());
 		PartitionKeyStatistics frozen = null;
 		PartitionKeyStatistics thawed = null;
 		try {
-			frozen = dao.findByPrimaryPartitionKey(dimension, keys.iterator()
+			frozen = dao.findByPrimaryPartitionKey(index.partitionDimension(), keys.iterator()
 					.next());
 			frozen.setChildRecordCount(23);
 			dao.update(frozen);
-			thawed = dao.findByPrimaryPartitionKey(partitionDimension(), frozen
+			thawed = dao.findByPrimaryPartitionKey(index.partitionDimension(), frozen
 					.getKey());
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -90,16 +69,16 @@ public class TestPartitionKeyStatisticsPersistence extends DerbyTestCase {
 	}
 
 	@Test
-	public void testFindByPartitionKey() {
-		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(ds);
-		PartitionKeyStatisticsBean frozen = dao.findByPrimaryPartitionKey(partitionDimension(), keys.get(0));
+	public void testFindByPartitionKey() throws Exception {
+		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource());
+		PartitionKeyStatisticsBean frozen = dao.findByPrimaryPartitionKey(index.partitionDimension(), Atom.getFirst(keys));
 		assertNotNull(frozen);
 	}
 
 	@Test
 	public void testIncrementChildRecords() {
-		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(ds);
-		PartitionKeyStatistics frozen = new PartitionKeyStatisticsBean(partitionDimension(), keys
+		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource());
+		PartitionKeyStatistics frozen = new PartitionKeyStatisticsBean(index.partitionDimension(), keys
 				.iterator().next(), new Date(System.currentTimeMillis()));
 		frozen.setChildRecordCount(21);
 		try {
@@ -118,8 +97,8 @@ public class TestPartitionKeyStatisticsPersistence extends DerbyTestCase {
 
 	@Test
 	public void testDecrementChildRecords() {
-		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(ds);
-		PartitionKeyStatistics frozen = new PartitionKeyStatisticsBean(partitionDimension(), keys
+		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource());
+		PartitionKeyStatistics frozen = new PartitionKeyStatisticsBean(index.partitionDimension(), keys
 				.iterator().next(), new Date(System.currentTimeMillis()));
 		frozen.setChildRecordCount(21);
 		try {
@@ -138,11 +117,11 @@ public class TestPartitionKeyStatisticsPersistence extends DerbyTestCase {
 	
 	@Test
 	public void testFindAllByNode() throws Exception {
-		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(ds);
+		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource());
 
 		List<PartitionKeyStatistics> stats = dao.findAllByNodeAndDimension(
-				dimension,
-				dimension.getNodeGroup().getNode(getConnectString()));
+				index.partitionDimension(),
+				index.node());
 		assertNotNull(stats);
 		assertEquals(5, stats.size());
 		for(PartitionKeyStatistics s : stats) {
@@ -155,50 +134,17 @@ public class TestPartitionKeyStatisticsPersistence extends DerbyTestCase {
 	public void testSecondaryIndexHooks() throws Exception {
 		Object key = keys.iterator().next();
 
-		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(ds);
-		PartitionKeyStatistics frozen = dao.findByPrimaryPartitionKey(dimension, key);
+		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource());
+		PartitionKeyStatistics frozen = dao.findByPrimaryPartitionKey(index.partitionDimension(), key);
 
-		hive.insertSecondaryIndexKey(secondaryIndex, new Integer(1), key);
-		hive.insertSecondaryIndexKey(secondaryIndex, new Integer(2), key);
-		hive.insertSecondaryIndexKey(secondaryIndex, new Integer(3), key);
+		hive.insertSecondaryIndexKey(index.secondaryIndex(), new Integer(1), key);
+		hive.insertSecondaryIndexKey(index.secondaryIndex(), new Integer(2), key);
+		hive.insertSecondaryIndexKey(index.secondaryIndex(), new Integer(3), key);
 
-		PartitionKeyStatistics thawed = dao.findByPrimaryPartitionKey(dimension,
+		PartitionKeyStatistics thawed = dao.findByPrimaryPartitionKey(index.partitionDimension(),
 				frozen.getKey());
 
 		assertEquals(frozen.getChildRecordCount() + 3, thawed
 				.getChildRecordCount());
 	}
-
-	private SecondaryIndex secondaryIndex() {
-		return new SecondaryIndex(new ColumnInfo("werd", Types.INTEGER));
-	}
-
-	private Resource resource() {
-		return new Resource(0, "aResource", new ArrayList<SecondaryIndex>());
-	}
-
-	private Node node() {
-		return new Node(0, getConnectString(), false);
-	}
-
-	private PartitionDimension partitionDimension() {
-		PartitionDimension dimension = new PartitionDimension(
-				"aSignificantDimension", Types.INTEGER);
-		dimension.setIndexUri(getConnectString());
-		dimension.setAssigner(new Assigner() {
-			public Node chooseNode(Collection<Node> nodes, Object value) {
-				return (Node) (nodes.iterator().hasNext() ? nodes.iterator()
-						.next() : nodes.toArray()[0]);
-			}
-		});
-		Collection<Node> nodes = new ArrayList<Node>();
-		nodes.add(node());
-		dimension.setNodeGroup(new NodeGroup(nodes));
-		return dimension;
-	}
-
-	private Integer randomIntegerKey() {
-		return new Integer(new Random().nextInt());
-	}
-
 }

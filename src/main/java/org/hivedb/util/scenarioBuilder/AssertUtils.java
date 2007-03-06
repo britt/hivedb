@@ -1,8 +1,7 @@
 package org.hivedb.util.scenarioBuilder;
 
-
 import junit.framework.TestCase;
-
+import org.hivedb.util.scenarioBuilder.Undoable;
 public class AssertUtils  {
 	public static interface Toss {
 		void f() throws Exception;
