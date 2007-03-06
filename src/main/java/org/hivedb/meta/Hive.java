@@ -45,12 +45,8 @@ public class Hive {
 	
 	/**
 	 *  System entry point.
-	 */ 
-	public static Hive load(String hiveDatabaseUri) throws HiveException { 
-		return load(hiveDatabaseUri, true); 
-	}
-	
-	public static Hive load(String hiveDatabaseUri, boolean statisticsTrackingEnabled) throws HiveException
+	 */ 	
+	public static Hive load(String hiveDatabaseUri) throws HiveException
 	{
 		try {
 			DriverLoader.loadByDialect(DriverLoader.discernDialect(hiveDatabaseUri));
@@ -58,7 +54,7 @@ public class Hive {
 			throw new HiveException("Unable to load database driver: " + e.getMessage(), e);
 		}
 		
-		PartitionKeyStatisticsDao tracker = statisticsTrackingEnabled ? new PartitionKeyStatisticsDao( new HiveBasicDataSource(hiveDatabaseUri)) : null;
+		PartitionKeyStatisticsDao tracker = new PartitionKeyStatisticsDao( new HiveBasicDataSource(hiveDatabaseUri));
 		
 		Hive hive = new Hive(hiveDatabaseUri, 0, false, new ArrayList<PartitionDimension>(), tracker);
 		return hive;
@@ -519,12 +515,10 @@ public class Hive {
 	public void insertSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey, Object primaryindexKey) throws HiveException, SQLException {
 		isWritable("Inserting a new secondary index key");
 		getDirectory(secondaryIndex.getResource().getPartitionDimension()).insertSecondaryIndexKey(secondaryIndex, secondaryIndexKey, primaryindexKey);	
-		if( isStatisticsTrackingEnabled()){
-			statistics.incrementChildRecordCount(
+		statistics.incrementChildRecordCount(
 					secondaryIndex.getResource().getPartitionDimension(), 
 					primaryindexKey, 
 					1);
-		}
 		sync();
 	}
 	
@@ -709,12 +703,10 @@ public class Hive {
 			throw new HiveException("Secondary index key " + secondaryIndexKey.toString() + " does not exist");
 			
 		getDirectory(secondaryIndex.getResource().getPartitionDimension()).deleteSecondaryIndexKey(secondaryIndex, secondaryIndexKey);	 
-		if( isStatisticsTrackingEnabled()){
-			statistics.decrementChildRecordCount(
+		statistics.decrementChildRecordCount(
 					secondaryIndex.getResource().getPartitionDimension(), 
 					primaryIndexKey, 
 					1);
-		}
 		sync();
 	}
 
@@ -976,10 +968,6 @@ public class Hive {
 											"HiveUri", 				getHiveUri(), 
 											"Revision", 			getRevision(), 
 											"PartitionDimensions", 	getPartitionDimensions());
-	}
-	
-	public boolean isStatisticsTrackingEnabled() { 
-		return statistics != null; 
 	}
 	
 	private<T extends IdAndNameIdentifiable> void isUnique(String errorMessage, Collection<T> collection, T item) throws HiveException

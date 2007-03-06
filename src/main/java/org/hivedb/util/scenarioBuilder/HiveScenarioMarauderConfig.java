@@ -24,7 +24,7 @@ public class HiveScenarioMarauderConfig implements HiveScenarioConfig {
 			}
 			BasicDataSource ds = new HiveBasicDataSource(connectString);
 			new HiveSemaphoreDao(ds).create();
-			hive = Hive.load(connectString, true);
+			hive = Hive.load(connectString);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
