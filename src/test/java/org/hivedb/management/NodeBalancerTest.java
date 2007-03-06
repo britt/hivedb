@@ -129,7 +129,7 @@ public class NodeBalancerTest extends DerbyTestCase {
 		hive.getPartitionDimension("aDimension").setAssigner(new RoundRobinAssigner());
 		NodeBalancer balancer = 
 			new NodeBalancerImpl(
-					hive.getPartitionDimension("aDimension"), 
+					dimension, 
 					TestObjectFactory.halfFullEstimator(), 
 					new HiveBasicDataSource(getConnectString()));
 		
@@ -141,9 +141,9 @@ public class NodeBalancerTest extends DerbyTestCase {
 		Integer fullKey2 = new Integer(9);
 		Integer emptyKey = new Integer(12);
 		//counting on the custom assigner and the fact that there are only 2 nodes here.
-		hive.insertPrimaryIndexKey("aDimension", fullKey1);
-		hive.insertPrimaryIndexKey("aDimension", emptyKey);
-		hive.insertPrimaryIndexKey("aDimension", fullKey2);
+		hive.insertPrimaryIndexKey(dimension, fullKey1);
+		hive.insertPrimaryIndexKey(dimension, emptyKey);
+		hive.insertPrimaryIndexKey(dimension, fullKey2);
 		
 		for(int i=0; i<NODE_CAPACITY/2; i++){
 			hive.insertSecondaryIndexKey(secondaryIndex, new Integer(++count), fullKey1);

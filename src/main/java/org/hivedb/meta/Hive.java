@@ -9,13 +9,13 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.NoSuchElementException;
 
 import javax.sql.DataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.hivedb.HiveException;
 import org.hivedb.HiveReadOnlyException;
-import org.hivedb.management.statistics.StatisticsRecorder;
 import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
@@ -38,9 +38,10 @@ public class Hive {
 	private int revision;
 	private boolean readOnly;
 	private Collection<PartitionDimension> partitionDimensions;
-	private StatisticsRecorder statistics;
+	private PartitionKeyStatisticsDao statistics;
+	private Collection<Directory> directories;
 	private HiveSyncDaemon daemon;
-	private DataSource dataSoure;
+	private DataSource dataSource;
 	
 	/**
 	 *  System entry point.
@@ -57,7 +58,7 @@ public class Hive {
 			throw new HiveException("Unable to load database driver: " + e.getMessage(), e);
 		}
 		
-		StatisticsRecorder tracker = statisticsTrackingEnabled ? new PartitionKeyStatisticsDao( new HiveBasicDataSource(hiveDatabaseUri)) : null;
+		PartitionKeyStatisticsDao tracker = statisticsTrackingEnabled ? new PartitionKeyStatisticsDao( new HiveBasicDataSource(hiveDatabaseUri)) : null;
 		
 		Hive hive = new Hive(hiveDatabaseUri, 0, false, new ArrayList<PartitionDimension>(), tracker);
 		return hive;
@@ -81,14 +82,18 @@ public class Hive {
 	 * @param revision
 	 * @param readOnly
 	 */
-	protected Hive(String hiveUri, int revision, boolean readOnly, Collection<PartitionDimension> partitionDimensions, StatisticsRecorder statistics) {
+	protected Hive(String hiveUri, int revision, boolean readOnly, Collection<PartitionDimension> partitionDimensions, PartitionKeyStatisticsDao statistics) {
 		this.hiveUri = hiveUri;
 		this.revision = revision;
 		this.readOnly = readOnly;
 		this.partitionDimensions = partitionDimensions;
 		this.statistics = statistics;
 		this.daemon = new HiveSyncDaemon(this);
-		this.dataSoure  = new HiveBasicDataSource(this.getHiveUri());
+		this.dataSource  = new HiveBasicDataSource(this.getHiveUri());
+		
+		this.directories = new ArrayList<Directory>();
+		for(PartitionDimension dimension : this.partitionDimensions)
+			this.directories.add(new Directory(dimension, this.dataSource));
 	}
 	
 	/**
@@ -203,7 +208,7 @@ public class Hive {
 		
 		if (partitionDimension.getIndexUri() == null)
 			partitionDimension.setIndexUri(this.hiveUri);
-		
+		this.directories.add(new Directory(partitionDimension, this.dataSource));
 		sync();
 		return partitionDimension;
 	}
@@ -317,7 +322,7 @@ public class Hive {
 	public PartitionDimension updatePartitionDimension(PartitionDimension partitionDimension) throws HiveException
 	{
 		isWritable("Updating partition dimension");
-		idMatchCheck(String.format("Partition dimension with id %s does not exist", partitionDimension.getId()),
+		isIdPresentInCollection(String.format("Partition dimension with id %s does not exist", partitionDimension.getId()),
 				getPartitionDimensions(),
 				partitionDimension);
 		isUnique(String.format("Partition dimension with name %s already exists", partitionDimension.getName()),
@@ -347,7 +352,7 @@ public class Hive {
 	public Node updateNode(Node node) throws HiveException
 	{
 		isWritable("Updating node");
-		idMatchCheck(String.format("Node with id %s does not exist", node.getUri()),
+		isIdPresentInCollection(String.format("Node with id %s does not exist", node.getUri()),
 				node.getNodeGroup().getNodes(),
 				node);
 		
@@ -377,7 +382,7 @@ public class Hive {
 	public Resource updateResource(Resource resource) throws HiveException
 	{
 		isWritable("Updating resource");
-		idMatchCheck(String.format("Resource with id %s does not exist", resource.getId()),
+		isIdPresentInCollection(String.format("Resource with id %s does not exist", resource.getId()),
 				resource.getPartitionDimension().getResources(),
 				resource);
 		isUnique(String.format("Resource with name %s already exists", resource.getName()),
@@ -410,20 +415,20 @@ public class Hive {
 	public SecondaryIndex updateSecondaryIndex(SecondaryIndex secondaryIndex) throws HiveException
 	{
 		isWritable("Updating secondary index");
-		idMatchCheck(String.format("Secondary index with id %s does not exist", secondaryIndex.getId()),
+		isIdPresentInCollection(String.format("Secondary index with id %s does not exist", secondaryIndex.getId()),
 				secondaryIndex.getResource().getSecondaryIndexes(),
 				secondaryIndex);
 		isUnique(String.format("Secondary index with name %s already exists", secondaryIndex.getName()),
 				secondaryIndex.getResource().getSecondaryIndexes(),
 				secondaryIndex);
 
-		SecondaryIndexDao secondaryIndexDao = new SecondaryIndexDao(dataSoure);
+		SecondaryIndexDao secondaryIndexDao = new SecondaryIndexDao(dataSource);
 		try {
 			secondaryIndexDao.update(secondaryIndex);
 		} catch (SQLException e) {
 			throw new HiveException("Problem persisting secondary index: " + e.getMessage());
 		}
-		incrementAndPersistHive(dataSoure);
+		incrementAndPersistHive(dataSource);
 		
 		sync();
 		return secondaryIndex;
@@ -484,8 +489,7 @@ public class Hive {
 		// TODO Consider redesign of NodeGroup to perform assignment, or at least provider direct iteration over Nodes
 		Node node = partitionDimension.getAssigner().chooseNode(partitionDimension.getNodeGroup().getNodes(),primaryIndexKey);
 		isWritable("Inserting a new primary index key", node);
-		IndexSchema indexSchema = new IndexSchema(partitionDimension);
-		indexSchema.insertPrimaryIndexKey(node, primaryIndexKey);
+		getDirectory(partitionDimension).insertPrimaryIndexKey(node, primaryIndexKey);
 		sync();
 	}
 
@@ -514,8 +518,7 @@ public class Hive {
 	 */
 	public void insertSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey, Object primaryindexKey) throws HiveException, SQLException {
 		isWritable("Inserting a new secondary index key");
-		IndexSchema indexSchema = new IndexSchema(secondaryIndex.getResource().getPartitionDimension());
-		indexSchema.insertSecondaryIndexKey(secondaryIndex, secondaryIndexKey, primaryindexKey);	
+		getDirectory(secondaryIndex.getResource().getPartitionDimension()).insertSecondaryIndexKey(secondaryIndex, secondaryIndexKey, primaryindexKey);	
 		if( isStatisticsTrackingEnabled()){
 			statistics.incrementChildRecordCount(
 					secondaryIndex.getResource().getPartitionDimension(), 
@@ -561,8 +564,7 @@ public class Hive {
 				primaryIndexKey,
 				getReadOnlyOfPrimaryIndexKey(partitionDimension, primaryIndexKey));
 		
-		IndexSchema indexSchema = new IndexSchema(partitionDimension);
-		indexSchema.updatePrimaryIndexKey(node, primaryIndexKey);
+		getDirectory(partitionDimension).updatePrimaryIndexKey(node, primaryIndexKey);
 		sync();
 	}
 
@@ -597,8 +599,7 @@ public class Hive {
 		isWritable("Updating primary index read-only");
 		// This query validates the existence of the primaryIndexKey
 		getNodeOfPrimaryIndexKey(partitionDimension, primaryIndexKey);
-		IndexSchema indexSchema = new IndexSchema(partitionDimension);
-		indexSchema.updatePrimaryIndexKeyReadOnly(primaryIndexKey, isReadOnly);
+		getDirectory(partitionDimension).updatePrimaryIndexKeyReadOnly(primaryIndexKey, isReadOnly);
 		sync();
 	}
 
@@ -631,8 +632,7 @@ public class Hive {
 	public void updatePrimaryIndexKeyOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey, Object primaryIndexKey) throws HiveException, SQLException {
 		isWritable("Updating primary index key of secondary index key");
 		getPrimaryIndexKeyOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
-		IndexSchema indexSchema = new IndexSchema(secondaryIndex.getResource().getPartitionDimension());
-		indexSchema.updatePrimaryIndexOfSecondaryKey(secondaryIndex, secondaryIndexKey, primaryIndexKey);	
+		getDirectory(secondaryIndex.getResource().getPartitionDimension()).updatePrimaryIndexOfSecondaryKey(secondaryIndex, secondaryIndexKey, primaryIndexKey);	
 		sync();
 	}
 
@@ -669,14 +669,13 @@ public class Hive {
 				getNodeOfPrimaryIndexKey(partitionDimension, primaryIndexKey),
 				primaryIndexKey,
 				getReadOnlyOfPrimaryIndexKey(partitionDimension, primaryIndexKey));
-		IndexSchema indexSchema = new IndexSchema(partitionDimension);
 		
 		for (Resource resource: partitionDimension.getResources())
 			for (SecondaryIndex secondaryIndex: resource.getSecondaryIndexes()) {
-				indexSchema.deleteAllSecondaryIndexKeysOfPrimaryIndexKey(secondaryIndex, primaryIndexKey);	  
+				getDirectory(partitionDimension).deleteAllSecondaryIndexKeysOfPrimaryIndexKey(secondaryIndex, primaryIndexKey);	  
 			}
 
-		indexSchema.deletePrimaryIndexKey(primaryIndexKey);	
+		getDirectory(partitionDimension).deletePrimaryIndexKey(primaryIndexKey);	
 		sync();
 	}
 
@@ -709,8 +708,7 @@ public class Hive {
 		if (!doesSecondaryIndexKeyExist(secondaryIndex, secondaryIndexKey))
 			throw new HiveException("Secondary index key " + secondaryIndexKey.toString() + " does not exist");
 			
-		IndexSchema indexSchema = new IndexSchema(secondaryIndex.getResource().getPartitionDimension());
-		indexSchema.deleteSecondaryIndexKey(secondaryIndex, secondaryIndexKey);	 
+		getDirectory(secondaryIndex.getResource().getPartitionDimension()).deleteSecondaryIndexKey(secondaryIndex, secondaryIndexKey);	 
 		if( isStatisticsTrackingEnabled()){
 			statistics.decrementChildRecordCount(
 					secondaryIndex.getResource().getPartitionDimension(), 
@@ -744,8 +742,7 @@ public class Hive {
 	 * @throws SQLException Throws if there is a persistence error
 	 */
 	public boolean doesPrimaryIndexKeyExist(PartitionDimension partitionDimension, Object primaryIndexKey) throws HiveException, SQLException {
-		IndexSchema indexSchema = new IndexSchema(partitionDimension);
-		return indexSchema.doesPrimaryIndexKeyExist(primaryIndexKey);
+		return getDirectory(partitionDimension).doesPrimaryIndexKeyExist(primaryIndexKey);
 	}
 
 	/**
@@ -769,9 +766,8 @@ public class Hive {
 	 * @throws SQLException Throws if there is a persistence error
 	 */
 	public Node getNodeOfPrimaryIndexKey(PartitionDimension partitionDimension, Object primaryIndexKey) throws HiveException, SQLException {
-		IndexSchema indexSchema = new IndexSchema(partitionDimension);
 		try {
-			return partitionDimension.getNodeGroup().getNode(indexSchema.getNodeIdOfPrimaryIndexKey(primaryIndexKey));
+			return partitionDimension.getNodeGroup().getNode(getDirectory(partitionDimension).getNodeIdOfPrimaryIndexKey(primaryIndexKey));
 		}
 		catch (Exception e) {
 			throw new HiveException(String.format("Primary index key %s of partition dimension %s not found.", primaryIndexKey.toString(), partitionDimension.getName()), e);
@@ -798,8 +794,7 @@ public class Hive {
 	 * @throws SQLException Throws if there is a persistence error
 	 */
 	public boolean getReadOnlyOfPrimaryIndexKey(PartitionDimension partitionDimension, Object primaryIndexKey) throws HiveException, SQLException {
-		IndexSchema indexSchema = new IndexSchema(partitionDimension);
-		Boolean readOnly = indexSchema.getReadOnlyOfPrimaryIndexKey(primaryIndexKey);
+		Boolean readOnly = getDirectory(partitionDimension).getReadOnlyOfPrimaryIndexKey(primaryIndexKey);
 		if (readOnly != null)
 			return readOnly;
 		throw new HiveException(String.format("Primary index key %s of partition dimension %s not found.", primaryIndexKey.toString(), partitionDimension.getName()));
@@ -825,7 +820,7 @@ public class Hive {
 	 * @throws SQLException Throws an exception if there is a persistence error
 	 */
 	public boolean doesSecondaryIndexKeyExist(SecondaryIndex secondaryIndex, Object secondaryIndexKey) throws SQLException {
-		return new IndexSchema(secondaryIndex.getResource().getPartitionDimension()).doesSecondaryIndexKeyExist(secondaryIndex, secondaryIndexKey);
+		return getDirectory(secondaryIndex.getResource().getPartitionDimension()).doesSecondaryIndexKeyExist(secondaryIndex, secondaryIndexKey);
 	}
 	/**
 	 * 
@@ -854,7 +849,7 @@ public class Hive {
 		PartitionDimension partitionDimension = secondaryIndex.getResource().getPartitionDimension();
 		try {
 			return partitionDimension.getNodeGroup().getNode(
-				new IndexSchema(secondaryIndex.getResource().getPartitionDimension()).getNodeIdOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey));
+				getDirectory(partitionDimension).getNodeIdOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey));
 		}
 		catch (Exception e) {
 			throw new HiveException(String.format("Secondary index key %s of partition dimension %s on secondary index %s not found.", secondaryIndex.toString(), partitionDimension.getName(), secondaryIndex.getName()), e);
@@ -886,7 +881,7 @@ public class Hive {
 	 */
 	public Object getPrimaryIndexKeyOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey) throws HiveException, SQLException {
 		PartitionDimension partitionDimension = secondaryIndex.getResource().getPartitionDimension();
-		Object primaryIndexKey = new IndexSchema(secondaryIndex.getResource().getPartitionDimension()).getPrimaryIndexKeyOfSecondaryindexKey(secondaryIndex, secondaryIndexKey);
+		Object primaryIndexKey = getDirectory(partitionDimension).getPrimaryIndexKeyOfSecondaryindexKey(secondaryIndex, secondaryIndexKey);
 		if (primaryIndexKey != null)
 			return primaryIndexKey;
 		throw new HiveException(String.format("Secondary index key %s of partition dimension %s on secondary index %s not found.", secondaryIndex.toString(), partitionDimension.getName(), secondaryIndex.getName()));
@@ -916,7 +911,7 @@ public class Hive {
 	 * @throws SQLException Throws if there is a persistence error.
 	 */
 	public Collection getSecondaryIndexKeysWithPrimaryKey(SecondaryIndex secondaryIndex, Object primaryIndexKey) throws SQLException {
-		return new IndexSchema(secondaryIndex.getResource().getPartitionDimension()).getSecondaryIndexKeysOfPrimaryIndexKey(secondaryIndex, primaryIndexKey);
+		return getDirectory(secondaryIndex.getResource().getPartitionDimension()).getSecondaryIndexKeysOfPrimaryIndexKey(secondaryIndex, primaryIndexKey);
 	}
 	/**
 	 * 
@@ -946,7 +941,7 @@ public class Hive {
 	 */
 	public boolean exists() {
 		try {
-			new HiveSemaphoreDao(dataSoure).get();
+			new HiveSemaphoreDao(dataSource).get();
 			return true;
 		} catch (Exception ex) {
 			return false;
@@ -998,7 +993,7 @@ public class Hive {
 				throw new HiveException(errorMessage + ", " + collectionItem.getId() + ", " + item.getId());
 		return;
 	}
-	private<T extends Identifiable> void idMatchCheck(String errorMessage, Collection<T> collection, T item) throws HiveException
+	private<T extends Identifiable> void isIdPresentInCollection(String errorMessage, Collection<T> collection, T item) throws HiveException
 	{
 		for (T collectionItem : collection)
 			if (item.getId() == collectionItem.getId())
@@ -1024,6 +1019,18 @@ public class Hive {
 		isWritable(errorMessage, node);
 		if (primaryIndexKeyReadOnly)
 			throw new HiveReadOnlyException(errorMessage + ". This operation is invalid becuase the primary index key " + primaryIndexKeyId.toString() + " is currently read-only.");
+	}
+	private Directory getDirectory(PartitionDimension dimension) {
+		for(Directory directory : directories)
+			if(dimension.getName().equals(directory.getPartitionDimension().getName()))
+				return directory;
+		
+		String msg = "Could not find directory for partition dimension "+ dimension.getName();
+		msg += "Looking for:\n" + dimension.toString();
+		msg += "In List: \n";
+		for(Directory dir : this.directories)
+			msg += dir.getPartitionDimension().toString() + "\n";
+		throw new NoSuchElementException(msg);
 	}
 }
 

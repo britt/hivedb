@@ -158,20 +158,20 @@ public abstract class Filter {
 			map.put(item, true);
 		return map.keySet();
 	}
-	public static class TruePredicate extends Predicate 
+	public static class TruePredicate implements Predicate 
 	{
 		public boolean f(Object item) {
 			return true;
 		}
 	}
-	public static class FalsePredicate extends Predicate 
+	public static class FalsePredicate implements Predicate 
 	{
 		public boolean f(Object item) {
 			return false;
 		}
 	}
 
-	public static class UniquePredicate<T> extends Predicate<T>
+	public static class UniquePredicate<T> implements Predicate<T>
 	{
 		private Map<T, Boolean> map = new Hashtable<T, Boolean>();
 		public boolean f(T item) {
@@ -187,7 +187,7 @@ public abstract class Filter {
 			return grep(new FirstOnlyPredicate<T>(), iterable);
 		}
 	}
-	public static class FirstOnlyPredicate<T> extends Predicate<T>
+	public static class FirstOnlyPredicate<T> implements Predicate<T>
 	{
 		private boolean first;
 		public boolean f(T item) {

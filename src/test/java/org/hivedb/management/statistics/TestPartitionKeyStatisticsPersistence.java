@@ -43,13 +43,13 @@ public class TestPartitionKeyStatisticsPersistence extends DerbyTestCase {
 	public void setUp() {
 		ds = new HiveBasicDataSource(getConnectString());
 		keys = new ArrayList<Integer>();
-		IndexSchema schema = new IndexSchema(partitionDimension());
+		dimension = partitionDimension();
+		IndexSchema schema = new IndexSchema(dimension);
 		try {
 			new GlobalSchema(getConnectString()).install();
 			new HiveSemaphoreDao(ds).create();
 			schema.install();
 			hive = Hive.load(getConnectString());
-			dimension = partitionDimension();
 			hive.addPartitionDimension(dimension);
 			Resource resource = resource();
 			secondaryIndex = secondaryIndex();

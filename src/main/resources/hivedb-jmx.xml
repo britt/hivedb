@@ -22,12 +22,17 @@
 		<constructor-arg value="100" />
 	</bean>
 	
-	<bean name="NodePerformanceStatistics" class="org.hivedb.management.statistics.HivePerformanceStatisticsMBean">
+	<bean name="NodeStatistics" class="org.hivedb.management.statistics.HivePerformanceStatisticsMBean">
 		<constructor-arg value="1000" />
 		<constructor-arg value="100" />
 	</bean>
 	
-	<bean name="HivePerformanceStatistics" class="org.hivedb.management.statistics.HivePerformanceStatisticsMBean">
+	<bean name="HiveStatistics" class="org.hivedb.management.statistics.HivePerformanceStatisticsMBean">
+		<constructor-arg value="1000" />
+		<constructor-arg value="100" />
+	</bean>
+	
+	<bean name="DirectoryStatistics" class="org.hivedb.management.statistics.HivePerformanceStatisticsMBean">
 		<constructor-arg value="1000" />
 		<constructor-arg value="100" />
 	</bean>
@@ -56,11 +61,14 @@
 				<entry key="HiveDB:name=NodeFillStatistics">
 					<ref bean="NodeFillStatistics" />
 				</entry>
-				<entry key="HiveDB:name=NodePerformanceStatistics">
-					<ref bean="NodePerformanceStatistics" />
+				<entry key="HiveDB:name=NodeStatistics">
+					<ref bean="NodeStatistics" />
 				</entry>
-				<entry key="HiveDB:name=HivePerformanceStatistics">
-					<ref bean="HivePerformanceStatistics" />
+				<entry key="HiveDB:name=DirectoryStatistics">
+					<ref bean="DirectoryStatistics" />
+				</entry>
+				<entry key="HiveDB:name=HiveStatistics">
+					<ref bean="HiveStatistics" />
 				</entry>
 			</map>
 		</property>

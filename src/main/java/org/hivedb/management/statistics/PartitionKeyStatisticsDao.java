@@ -23,7 +23,7 @@ import org.springframework.jdbc.core.support.JdbcDaoSupport;
  * @author Britt Crawford (bcrawford@cafepress.com)
  *
  */
-public class PartitionKeyStatisticsDao extends JdbcDaoSupport implements StatisticsRecorder {
+public class PartitionKeyStatisticsDao extends JdbcDaoSupport {
 	public PartitionKeyStatisticsDao(DataSource ds) {
 		this.setDataSource(ds);
 	}
@@ -33,7 +33,7 @@ public class PartitionKeyStatisticsDao extends JdbcDaoSupport implements Statist
 		
 		JdbcTemplate j = getJdbcTemplate();
 		PreparedStatementCreatorFactory factory = new PreparedStatementCreatorFactory(
-				selectSql(new IndexSchema(dimension).getPrimaryIndexTableName()), 
+				selectSql(IndexSchema.getPrimaryIndexTableName(dimension)), 
 				new int[] {dimension.getColumnType()});
 		
 		PartitionKeyStatisticsBean stats = null;
@@ -53,7 +53,7 @@ public class PartitionKeyStatisticsDao extends JdbcDaoSupport implements Statist
 		
 		JdbcTemplate j = getJdbcTemplate();
 		PreparedStatementCreatorFactory factory = new PreparedStatementCreatorFactory(
-				selectByNodeSql(new IndexSchema(dimension).getPrimaryIndexTableName()), 
+				selectByNodeSql(IndexSchema.getPrimaryIndexTableName(dimension)), 
 				new int[] {Types.INTEGER});
 		
 		List<PartitionKeyStatistics> results = j.query(factory.newPreparedStatementCreator(parameters), new PartitionKeyStatisticsRowMapper(dimension));
@@ -62,7 +62,6 @@ public class PartitionKeyStatisticsDao extends JdbcDaoSupport implements Statist
 	}
 
 	public void update(PartitionKeyStatistics stats) throws SQLException {
-		IndexSchema indexSchema = new IndexSchema(stats.getPartitionDimension());
 		Object[] parameters = new Object[] {
 				stats.getChildRecordCount(), 
 				new Date(System.currentTimeMillis()),
@@ -71,7 +70,7 @@ public class PartitionKeyStatisticsDao extends JdbcDaoSupport implements Statist
 		
 		JdbcTemplate j = getJdbcTemplate();
 		PreparedStatementCreatorFactory factory = new PreparedStatementCreatorFactory(
-				updateSql(indexSchema.getPrimaryIndexTableName()), 
+				updateSql(IndexSchema.getPrimaryIndexTableName(stats.getPartitionDimension())), 
 				new int[] {Types.INTEGER, Types.DATE, stats.getPartitionDimension().getColumnType()});
 		j.update(factory.newPreparedStatementCreator(parameters));
 	}
