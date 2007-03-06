@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Map;
+
 import org.hivedb.util.RollingAverage;
 
 public class RollingAverageStatisticsImpl implements RollingAverageStatistics {

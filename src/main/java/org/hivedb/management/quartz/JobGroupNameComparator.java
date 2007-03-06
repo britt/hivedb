@@ -1,6 +1,7 @@
 package org.hivedb.management.quartz;
 
 import java.util.Comparator;
+
 import org.quartz.JobDetail;
 
 public class JobGroupNameComparator implements Comparator<JobDetail> {

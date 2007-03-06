@@ -14,8 +14,8 @@ import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
-import org.testng.annotations.BeforeMethod;
 import org.hivedb.util.DerbyTestCase;
+import org.testng.annotations.BeforeMethod;
 
 /**
  * Prepares a Derby version of the Hive global schema. Also provides factory

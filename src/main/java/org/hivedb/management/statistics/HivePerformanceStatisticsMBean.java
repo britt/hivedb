@@ -1,6 +1,7 @@
 package org.hivedb.management.statistics;
 
 import java.util.Arrays;
+
 import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
 

@@ -6,8 +6,8 @@ import java.io.File;
 import java.sql.ResultSet;
 import java.util.Date;
 
-import org.hivedb.util.scenarioBuilder.DerbyUtils;
 import org.hivedb.util.DerbyTestCase;
+import org.hivedb.util.scenarioBuilder.DerbyUtils;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerFactory;

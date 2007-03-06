@@ -1,6 +1,6 @@
 package org.hivedb.meta;
 
-import static org.testng.AssertJUnit.*;
+import static org.testng.AssertJUnit.fail;
 
 import java.sql.SQLException;
 

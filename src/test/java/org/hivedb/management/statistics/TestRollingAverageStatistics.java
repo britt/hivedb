@@ -1,11 +1,11 @@
 package org.hivedb.management.statistics;
 
+import static org.testng.AssertJUnit.assertEquals;
+
 import java.util.ArrayList;
 import java.util.Collection;
 
 import org.testng.annotations.Test;
-
-import static org.testng.AssertJUnit.*;
 
 public class TestRollingAverageStatistics {
 	@Test

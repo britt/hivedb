@@ -1,10 +1,13 @@
 package org.hivedb;
 
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
+import static org.testng.AssertJUnit.assertTrue;
+import static org.testng.AssertJUnit.fail;
+
 import org.apache.commons.lang.time.DateUtils;
 import org.hivedb.util.RollingAverage;
 import org.testng.annotations.Test;
-
-import static org.testng.AssertJUnit.*;
 
 public class TestRollingAverage {
 	
