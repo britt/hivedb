@@ -15,6 +15,11 @@ public class ConfigurableEstimator implements MigrationEstimator {
 	private double averageRecordSize = 1.0;
 	private double averageMoveTimePerRecord = 1.0;
 	
+	public static ConfigurableEstimator getInstance() {
+		// TODO Make this load configuration from somewhere
+		return new ConfigurableEstimator(0.75, 1.0, 1.0, 1.0);
+	}
+	
 	public ConfigurableEstimator(
 			double safeFillLevel, 
 			double entriesPerRecord, 

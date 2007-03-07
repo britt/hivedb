@@ -3,20 +3,26 @@ package org.hivedb.management.quartz;
 import java.util.Calendar;
 import java.util.Collection;
 
+import javax.sql.DataSource;
+
+import org.hivedb.management.ConfigurableEstimator;
 import org.hivedb.management.Migration;
 import org.hivedb.management.MigrationEstimator;
+import org.hivedb.management.MigrationPlanningException;
 import org.hivedb.management.NodeBalancer;
+import org.hivedb.management.OverFillBalancer;
 import org.hivedb.management.statistics.PartitionKeyStatistics;
 import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
+import org.hivedb.meta.persistence.HiveBasicDataSource;
+import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
-import org.quartz.StatefulJob;
 import org.quartz.TriggerUtils;
 
 /**
@@ -25,21 +31,33 @@ import org.quartz.TriggerUtils;
  * @author britt
  *
  */
-public class NodeBalancingJob implements StatefulJob {
+public class NodeBalancingJob implements Job {
 	public static final char JOB_NAME_SEPARATOR = '.';
 	public static final String NODE_LIST_KEY = "Nodes";
+	private static final String DIMENSION_KEY = "PartitionDimension";
+	private static final String DIRECTORY_URI_KEY = "DirectoryUri";
+	
+	private PartitionKeyStatisticsDao statsDao;
 
-	// TODO populate these guys
+	private PartitionDimension dimension;
 	private NodeBalancer balancer;
 	private MigrationEstimator estimator;
-	private PartitionKeyStatisticsDao statsDao;
-	private PartitionDimension dimension;
 	
 	@SuppressWarnings("unchecked")
 	public void execute(JobExecutionContext context) throws JobExecutionException {
 		JobDataMap map = context.getMergedJobDataMap();
+		dimension = (PartitionDimension) map.get(DIMENSION_KEY);
 		Collection<Node> nodes = (Collection<Node>) map.get(NODE_LIST_KEY);
-		enqueueMoves(balancer.suggestMoves(nodes), context.getScheduler());
+		DataSource ds = new HiveBasicDataSource(map.get(DIRECTORY_URI_KEY).toString());
+		estimator = ConfigurableEstimator.getInstance();
+		balancer = new OverFillBalancer(dimension, estimator, ds);
+		
+		try {
+			Collection<Migration> movePlan = balancer.suggestMoves(nodes);
+			enqueueMoves(movePlan, context.getScheduler());
+		} catch( MigrationPlanningException e) {
+			throw new JobExecutionException(e);
+		}
 	}
 	
 	private void enqueueMoves(Collection<Migration> migrations, Scheduler scheduler) throws JobExecutionException {
@@ -47,7 +65,7 @@ public class NodeBalancingJob implements StatefulJob {
 		for(Migration migration : migrations){
 			PartitionKeyStatistics stats = statsDao.findByPrimaryPartitionKey(dimension, migration.getMigrantId());
 			long executionTime = estimator.estimateMoveTime(stats);
-			// TODO Multi-threaded delay computation
+			// TODO Better delay computation
 			delay += executionTime;
 			try {
 				scheduler.scheduleJob(
@@ -77,14 +95,16 @@ public class NodeBalancingJob implements StatefulJob {
 		return s.toString();
 	}
 	
-	private static JobDataMap buildJobDataMap(JobDataMap map, Collection<Node> nodeList) {
+	private static JobDataMap buildJobDataMap(JobDataMap map, Collection<Node> nodeList, PartitionDimension dimension, String directoryUri) {
+		map.put(DIRECTORY_URI_KEY, directoryUri);
 		map.put(NODE_LIST_KEY, nodeList);
+		map.put(DIMENSION_KEY, dimension);
 		return map;
 	}
 	
-	public static JobDetail createDetail(String name, String jobGroup, Collection<Node> nodeList) {
+	public static JobDetail createDetail(String name, String jobGroup, Collection<Node> nodeList, PartitionDimension dimension, String directoryUri) {
 		JobDetail detail = new JobDetail(name, jobGroup, NodeBalancingJob.class);
-		detail.setJobDataMap(buildJobDataMap(detail.getJobDataMap(), nodeList));
+		detail.setJobDataMap(buildJobDataMap(detail.getJobDataMap(), nodeList, dimension, directoryUri));
 		detail.setDurability(true);
 		detail.setVolatility(false);
 		detail.setRequestsRecovery(true);

@@ -18,19 +18,12 @@ import org.quartz.JobExecutionException;
 public class MigrationJob implements Job {
 	public static final String MIGRATION_KEY = "Migration";
 	
-	// TODO How is this injected?
-	private MoverFactory factory;
-	
 	@SuppressWarnings("unchecked")
 	public void execute(JobExecutionContext context) throws JobExecutionException {
 		JobDataMap map = context.getMergedJobDataMap();
 		Migration migration = (Migration) map.get(MIGRATION_KEY);
-		Mover<HivePersistable> mover = factory.getMoverForClass(migration.getMigrantId().getClass());
-		
-		//This call should definitely have some checked exceptions
+		Mover<HivePersistable> mover = MoverFactory.getMover();
 		mover.move(migration);
-		//Movers are responsible for controlling their own rate which makes me nervous, 
-		//but every other solution is hard.
 	}
 	
 	private static JobDataMap buildJobDataMap(JobDataMap map, Migration migration) {

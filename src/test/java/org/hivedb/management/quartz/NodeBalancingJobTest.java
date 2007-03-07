@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import org.hivedb.meta.Node;
+import org.hivedb.util.TestObjectFactory;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
@@ -34,7 +35,9 @@ public class NodeBalancingJobTest {
 		JobDetail balance = NodeBalancingJob.createDetail(
 				"aJob", 
 				"aGroup", 
-				new ArrayList<Node>());
+				new ArrayList<Node>(),
+				TestObjectFactory.partitionDimension(),
+				"directory:db:uri");
 		try {
 			runJob(balance, delayedTrigger(1), new StdSchedulerFactory());
 			Thread.sleep(500); 

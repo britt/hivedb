@@ -18,19 +18,19 @@ import org.hivedb.meta.PartitionDimension;
 // TODO Implement Partial Move plans
 // TODO Do more than just punt when a plan cannot be found
 
-public class NodeBalancerImpl implements NodeBalancer {
+public class OverFillBalancer implements NodeBalancer {
 	private PartitionDimension dimension;
 	private DataSource ds;
 	private SortedSet<NodeStatistics> startingState;
 	private MigrationEstimator estimator;
 	
-	public NodeBalancerImpl(PartitionDimension dimension, MigrationEstimator estimator, DataSource ds) {
+	public OverFillBalancer(PartitionDimension dimension, MigrationEstimator estimator, DataSource ds) {
 		this.dimension = dimension;
 		this.estimator = estimator;
 		this.ds = ds;
 	}
 	
-	public SortedSet<Migration> suggestMoves(Collection<Node> nodes) {
+	public SortedSet<Migration> suggestMoves(Collection<Node> nodes) throws MigrationPlanningException {
 		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(ds);
 		
 		//Build a list of node statistics sorted by fill level (descending).
@@ -47,11 +47,12 @@ public class NodeBalancerImpl implements NodeBalancer {
 			validDestinations.remove(stats);
 			moves.addAll( pairMigrantsWithDestinations(stats.getNode(), suggestKeysToMove(stats), validDestinations));
 		}
+		
 		MovePlanValidator validator = new MovePlanValidator(estimator);
 		if(validator.isValid(startingState, moves))
 			return moves;
 		else
-			throw new RuntimeException("Unable to compute a valid move plan.");
+			throw new MigrationPlanningException();
 	}
 	
 	public SortedSet<PartitionKeyStatistics> suggestKeysToMove(NodeStatistics nodeStats) {
@@ -69,13 +70,14 @@ public class NodeBalancerImpl implements NodeBalancer {
 		return keysToMove;
 	}
 	
-	public SortedSet<Migration> pairMigrantsWithDestinations(Node origin, SortedSet<PartitionKeyStatistics> migrants, SortedSet<NodeStatistics> destinations) {
+	public SortedSet<Migration> pairMigrantsWithDestinations(Node origin, SortedSet<PartitionKeyStatistics> migrants, SortedSet<NodeStatistics> destinations) throws MigrationPlanningException {
 		SortedSet<Migration> movePlan = new TreeSet<Migration>();
 		for(PartitionKeyStatistics migrant : migrants) {
-			// TODO test if the move puts the target into an overfull state
 			NodeStatistics destination = destinations.first();
-			destinations.first().addPartitionKey(migrant);
+			destination.addPartitionKey(migrant);
 			movePlan.add(new Migration(migrant.getKey(), origin, destination.getNode()));
+			if(estimator.howMuchDoINeedToMove(destination) > 0)
+				throw new MigrationPlanningException();
 		}
 		return movePlan;
 	}

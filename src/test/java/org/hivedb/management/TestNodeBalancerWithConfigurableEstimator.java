@@ -1,6 +1,8 @@
 package org.hivedb.management;
 
-import static org.testng.AssertJUnit.*;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
+import static org.testng.AssertJUnit.fail;
 
 import java.sql.Types;
 import java.util.ArrayList;
@@ -31,65 +33,13 @@ import org.hivedb.util.DerbyTestCase;
 import org.hivedb.util.TestObjectFactory;
 import org.testng.annotations.Test;
 
-
-public class NodeBalancerTest extends DerbyTestCase {
-	private static final double NODE_CAPACITY = 4.0;
-	
-	@Test
-	public void keySuggestionTest() {
-		OverFillBalancer balancer = 
-			new OverFillBalancer(TestObjectFactory.partitionDimension(), TestObjectFactory.halfFullEstimator(), null);
-		
-		NodeStatistics full = TestObjectFactory.filledNodeStatistics(NODE_CAPACITY, new ArrayList<PartitionKeyStatistics>());
-		
-		PartitionKeyStatisticsBean firstHalf = TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/2);
-		firstHalf.setKey(new Integer(7));
-		PartitionKeyStatisticsBean secondHalf = TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/2);
-		secondHalf.setKey(new Integer(12));
-		
-		full.addPartitionKey(firstHalf);
-		full.addPartitionKey(secondHalf);
-		
-		SortedSet<PartitionKeyStatistics> keysToMove = balancer.suggestKeysToMove(full);
-	
-		assertEquals(1, keysToMove.size());
-		assertEquals((int)NODE_CAPACITY/2, keysToMove.first().getChildRecordCount());
-	}
-	
-	@Test
-	public void suggestDestinationTest() throws MigrationPlanningException {
-		OverFillBalancer balancer = 
-			new OverFillBalancer(TestObjectFactory.partitionDimension(), TestObjectFactory.halfFullEstimator(), null);
-		
-		NodeStatistics empty = TestObjectFactory.filledNodeStatistics(NODE_CAPACITY, new ArrayList<PartitionKeyStatistics>());
-		NodeStatistics full = TestObjectFactory.filledNodeStatistics(NODE_CAPACITY, new ArrayList<PartitionKeyStatistics>());
-		
-		PartitionKeyStatisticsBean firstHalf = TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/2);
-		firstHalf.setKey(new Integer(7));
-		firstHalf.setChildRecordCount((int)NODE_CAPACITY/2);
-		PartitionKeyStatisticsBean secondHalf = TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/2);
-		secondHalf.setKey(new Integer(12));
-		secondHalf.setChildRecordCount((int)NODE_CAPACITY/2);
-		
-		full.addPartitionKey(firstHalf);
-		full.addPartitionKey(secondHalf);
-		
-		SortedSet<PartitionKeyStatistics> keysToMove = balancer.suggestKeysToMove(full);
-	
-		SortedSet<NodeStatistics> nodes = new TreeSet<NodeStatistics>();
-		nodes.add(full);
-		nodes.add(empty);
-		
-		SortedSet<Migration> moves = balancer.pairMigrantsWithDestinations(full.getNode(), keysToMove, nodes);
-		assertEquals(1, moves.size());
-		assertEquals(full.getNode(), moves.first().getOrigin());
-		assertEquals(empty.getNode(), moves.first().getDestination());
-	}
+public class TestNodeBalancerWithConfigurableEstimator extends DerbyTestCase {
+private static final double NODE_CAPACITY = 4.0;
 	
 	@Test
 	public void testSuggestionCorrectness() {
 		OverFillBalancer balancer = 
-			new OverFillBalancer(TestObjectFactory.partitionDimension(), TestObjectFactory.halfFullEstimator(), null);
+			new OverFillBalancer(TestObjectFactory.partitionDimension(), configurableEstimator(), null);
 		
 		NodeStatistics full = TestObjectFactory.filledNodeStatistics(NODE_CAPACITY, new ArrayList<PartitionKeyStatistics>());
 		
@@ -129,7 +79,7 @@ public class NodeBalancerTest extends DerbyTestCase {
 		NodeBalancer balancer = 
 			new OverFillBalancer(
 					dimension, 
-					TestObjectFactory.halfFullEstimator(), 
+					configurableEstimator(), 
 					new HiveBasicDataSource(getConnectString()));
 		
 		SecondaryIndex secondaryIndex = TestObjectFactory.secondaryIndex("werd");
@@ -156,11 +106,11 @@ public class NodeBalancerTest extends DerbyTestCase {
 		SortedSet<NodeStatistics> startingState = new TreeSet<NodeStatistics>();
 		for(Node node : nodes) {
 			List<PartitionKeyStatistics> stats = dao.findAllByNodeAndDimension(dimension, node);
-			startingState.add(new NodeStatisticsBean(node, stats, TestObjectFactory.halfFullEstimator()));
+			startingState.add(new NodeStatisticsBean(node, stats, configurableEstimator()));
 		}
 		
 		SortedSet<Migration> moves = balancer.suggestMoves(nodes);
-		MovePlanValidator validator = new MovePlanValidator(TestObjectFactory.halfFullEstimator());
+		MovePlanValidator validator = new MovePlanValidator(configurableEstimator());
 		
 		assertEquals(1, moves.size());
 		assertEquals(full, moves.first().getOrigin());
@@ -196,5 +146,9 @@ public class NodeBalancerTest extends DerbyTestCase {
 			ArrayList<Node> n = new ArrayList<Node>(nodes);
 			return n.get(++assignments % n.size());
 		}		
+	}
+	
+	private MigrationEstimator configurableEstimator() {
+		return new ConfigurableEstimator(0.5, 1.0, 1.0, 1.0);
 	}
 }
