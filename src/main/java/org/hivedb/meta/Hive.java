@@ -35,7 +35,7 @@ public class Hive {
 	public static String URI_SYSTEM_PROPERTY="org.hivedb.uri";
 	
 	private String hiveUri;
-	private int revision;
+	private int revision; 
 	private boolean readOnly;
 	private Collection<PartitionDimension> partitionDimensions;
 	private PartitionKeyStatisticsDao statistics;
@@ -873,7 +873,7 @@ public class Hive {
 	 */
 	public Object getPrimaryIndexKeyOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey) throws HiveException, SQLException {
 		PartitionDimension partitionDimension = secondaryIndex.getResource().getPartitionDimension();
-		Object primaryIndexKey = getDirectory(partitionDimension).getPrimaryIndexKeyOfSecondaryindexKey(secondaryIndex, secondaryIndexKey);
+		Object primaryIndexKey = getDirectory(partitionDimension).getPrimaryIndexKeyOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
 		if (primaryIndexKey != null)
 			return primaryIndexKey;
 		throw new HiveException(String.format("Secondary index key %s of partition dimension %s on secondary index %s not found.", secondaryIndex.toString(), partitionDimension.getName(), secondaryIndex.getName()));

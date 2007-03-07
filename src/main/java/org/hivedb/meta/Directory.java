@@ -195,7 +195,7 @@ public class Directory extends JdbcDaoSupport{
 			new Object[] { secondaryIndexKey });
 	}
 	@SuppressWarnings("unchecked")
-	public Object getPrimaryIndexKeyOfSecondaryindexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey)
+	public Object getPrimaryIndexKeyOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey)
 	{
 		JdbcTemplate j = getJdbcTemplate();
 		return j.queryForObject("select p.id from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
