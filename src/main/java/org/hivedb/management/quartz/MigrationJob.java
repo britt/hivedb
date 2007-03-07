@@ -1,6 +1,7 @@
 package org.hivedb.management.quartz;
 
 import org.hivedb.management.HivePersistable;
+import org.hivedb.management.Migration;
 import org.hivedb.management.Mover;
 import org.hivedb.management.MoverFactory;
 import org.quartz.Job;
@@ -27,16 +28,9 @@ public class MigrationJob implements Job {
 		Mover<HivePersistable> mover = factory.getMoverForClass(migration.getMigrantId().getClass());
 		
 		//This call should definitely have some checked exceptions
-		mover.move(
-				migration, 
-				getRate());
+		mover.move(migration);
 		//Movers are responsible for controlling their own rate which makes me nervous, 
 		//but every other solution is hard.
-	}
-	
-	private int getRate() {
-		// TODO Auto-generated method stub
-		return 0;
 	}
 	
 	private static JobDataMap buildJobDataMap(JobDataMap map, Migration migration) {

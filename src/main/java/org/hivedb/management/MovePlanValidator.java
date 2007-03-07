@@ -1,4 +1,4 @@
-package org.hivedb.management.quartz;
+package org.hivedb.management;
 
 import java.util.Collection;
 import java.util.Hashtable;
@@ -7,6 +7,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.hivedb.management.statistics.NodeStatistics;
+import org.hivedb.management.statistics.NodeStatisticsBean;
 import org.hivedb.management.statistics.PartitionKeyStatistics;
 import org.hivedb.meta.Node;
 
@@ -47,6 +48,13 @@ public class MovePlanValidator {
 	}
 
 	public boolean isValid(SortedSet<NodeStatistics> state, SortedSet<Migration> moves) {
-		return isBalanced(computeResultingState(state, moves));
+		return isBalanced(computeResultingState(cloneNodeStatisticsList(state), moves));
+	}
+	
+	public static SortedSet<NodeStatistics> cloneNodeStatisticsList(SortedSet<NodeStatistics> original) {
+		SortedSet<NodeStatistics> copy = new TreeSet<NodeStatistics>();
+		for(NodeStatistics obj : original)
+			copy.add(((NodeStatisticsBean)obj).clone());
+		return copy;
 	}
 }

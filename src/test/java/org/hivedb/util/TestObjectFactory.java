@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
-import org.hivedb.management.quartz.MigrationEstimator;
+import org.hivedb.management.MigrationEstimator;
 import org.hivedb.management.statistics.NodeStatistics;
 import org.hivedb.management.statistics.NodeStatisticsBean;
 import org.hivedb.management.statistics.PartitionKeyStatistics;
@@ -27,7 +27,13 @@ public class TestObjectFactory {
 	}
 	
 	public static Node node() {
-		return new Node("aNode" + new Random().nextInt(), false);
+		return node(0.0);
+	}
+	
+	public static Node node(double capacity) {
+		Node node = new Node("aNode" + new Random().nextInt(), false);
+		node.setCapacity(capacity);
+		return node;
 	}
 	
 	public static PartitionKeyStatisticsBean partitionKeyStats(int fill){
@@ -56,9 +62,9 @@ public class TestObjectFactory {
 			}
 
 			public double howMuchDoINeedToMove(NodeStatistics stats) {
-				return stats.getFillLevel() > stats.getCapacity()/2 ? 
-						stats.getFillLevel() - stats.getCapacity()/2 
-						: 0;
+				return stats.getFillLevel() > stats.getCapacity()/2.0 ? 
+						stats.getFillLevel() - stats.getCapacity()/2.0 
+						: 0.0;
 			}
 		};
 	}

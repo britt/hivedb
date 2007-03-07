@@ -1,4 +1,4 @@
-package org.hivedb.management.quartz;
+package org.hivedb.management;
 
 import java.util.Collection;
 import java.util.SortedSet;

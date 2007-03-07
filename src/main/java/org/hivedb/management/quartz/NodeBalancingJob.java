@@ -3,6 +3,9 @@ package org.hivedb.management.quartz;
 import java.util.Calendar;
 import java.util.Collection;
 
+import org.hivedb.management.Migration;
+import org.hivedb.management.MigrationEstimator;
+import org.hivedb.management.NodeBalancer;
 import org.hivedb.management.statistics.PartitionKeyStatistics;
 import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
 import org.hivedb.meta.Node;

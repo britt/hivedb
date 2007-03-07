@@ -1,22 +1,21 @@
 package org.hivedb.management;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.fail;
+import static org.testng.AssertJUnit.*;
 
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
 import javax.sql.DataSource;
 
-import org.hivedb.management.quartz.Migration;
-import org.hivedb.management.quartz.NodeBalancer;
-import org.hivedb.management.quartz.NodeBalancerImpl;
 import org.hivedb.management.statistics.NodeStatistics;
+import org.hivedb.management.statistics.NodeStatisticsBean;
 import org.hivedb.management.statistics.PartitionKeyStatistics;
 import org.hivedb.management.statistics.PartitionKeyStatisticsBean;
+import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
 import org.hivedb.meta.Assigner;
 import org.hivedb.meta.GlobalSchema;
 import org.hivedb.meta.Hive;
@@ -115,8 +114,8 @@ public class NodeBalancerTest extends DerbyTestCase {
 	@Test
 	public void moveSuggestionTest() throws Exception {
 		Collection<Node> nodes = new ArrayList<Node>();
-		nodes.add(TestObjectFactory.node());
-		nodes.add(TestObjectFactory.node());
+		nodes.add(TestObjectFactory.node(4.0));
+		nodes.add(TestObjectFactory.node(4.0));
 		
 		Collection<Resource> resources = new ArrayList<Resource>();
 		resources.add(TestObjectFactory.resource());
@@ -153,11 +152,21 @@ public class NodeBalancerTest extends DerbyTestCase {
 		Node full = hive.getNodeOfPrimaryIndexKey(dimension, fullKey1);
 		Node empty = hive.getNodeOfPrimaryIndexKey(dimension, emptyKey);
 		
+		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource());
+		SortedSet<NodeStatistics> startingState = new TreeSet<NodeStatistics>();
+		for(Node node : nodes) {
+			List<PartitionKeyStatistics> stats = dao.findAllByNodeAndDimension(dimension, node);
+			startingState.add(new NodeStatisticsBean(node, stats, TestObjectFactory.halfFullEstimator()));
+		}
+		
 		SortedSet<Migration> moves = balancer.suggestMoves(nodes);
+		MovePlanValidator validator = new MovePlanValidator(TestObjectFactory.halfFullEstimator());
 		
 		assertEquals(1, moves.size());
 		assertEquals(full, moves.first().getOrigin());
 		assertEquals(empty, moves.first().getDestination());
+		assertTrue(fullKey1.equals(moves.first().getMigrantId()) || fullKey2.equals(moves.first().getMigrantId()));
+		assertTrue(validator.isValid(startingState, moves));
 	}
 	
 	public Hive initializeHive(Collection<Node> nodes, Collection<Resource> resources, PartitionDimension dimension) {

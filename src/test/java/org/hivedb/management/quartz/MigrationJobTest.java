@@ -9,6 +9,7 @@ import static org.testng.AssertJUnit.fail;
 import java.util.Date;
 
 import org.hivedb.management.HivePersistable;
+import org.hivedb.management.Migration;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.quartz.JobDetail;

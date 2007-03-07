@@ -1,4 +1,4 @@
-package org.hivedb.management.quartz;
+package org.hivedb.management;
 
 import org.hivedb.management.statistics.NodeStatistics;
 import org.hivedb.management.statistics.PartitionKeyStatistics;

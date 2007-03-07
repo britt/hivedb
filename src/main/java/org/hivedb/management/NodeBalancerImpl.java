@@ -1,4 +1,4 @@
-package org.hivedb.management.quartz;
+package org.hivedb.management;
 
 import java.util.Collection;
 import java.util.List;
@@ -15,8 +15,8 @@ import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 
 // TODO I don't like the Impl naming
-// TODO Add move plan validation
-// TODO Determine what to do when  a valid plan cannot be found
+// TODO Implement Partial Move plans
+// TODO Do more than just punt when a plan cannot be found
 
 public class NodeBalancerImpl implements NodeBalancer {
 	private PartitionDimension dimension;
@@ -43,18 +43,15 @@ public class NodeBalancerImpl implements NodeBalancer {
 		//Compute the moves needed to balance each node
 		SortedSet<Migration> moves = new TreeSet<Migration>();
 		for(NodeStatistics stats : startingState){
-			SortedSet<NodeStatistics> validDestinations = cloneNodeStatsList(startingState);
+			SortedSet<NodeStatistics> validDestinations = MovePlanValidator.cloneNodeStatisticsList(startingState);
 			validDestinations.remove(stats);
 			moves.addAll( pairMigrantsWithDestinations(stats.getNode(), suggestKeysToMove(stats), validDestinations));
 		}
-		return moves;
-	}
-
-	private SortedSet<NodeStatistics> cloneNodeStatsList(SortedSet<NodeStatistics> original) {
-		SortedSet<NodeStatistics> copy = new TreeSet<NodeStatistics>();
-		for(NodeStatistics obj : original)
-			copy.add(((NodeStatisticsBean)obj).clone());
-		return copy;
+		MovePlanValidator validator = new MovePlanValidator(estimator);
+		if(validator.isValid(startingState, moves))
+			return moves;
+		else
+			throw new RuntimeException("Unable to compute a valid move plan.");
 	}
 	
 	public SortedSet<PartitionKeyStatistics> suggestKeysToMove(NodeStatistics nodeStats) {
@@ -74,8 +71,8 @@ public class NodeBalancerImpl implements NodeBalancer {
 	
 	public SortedSet<Migration> pairMigrantsWithDestinations(Node origin, SortedSet<PartitionKeyStatistics> migrants, SortedSet<NodeStatistics> destinations) {
 		SortedSet<Migration> movePlan = new TreeSet<Migration>();
-		
 		for(PartitionKeyStatistics migrant : migrants) {
+			// TODO test if the move puts the target into an overfull state
 			NodeStatistics destination = destinations.first();
 			destinations.first().addPartitionKey(migrant);
 			movePlan.add(new Migration(migrant.getKey(), origin, destination.getNode()));
