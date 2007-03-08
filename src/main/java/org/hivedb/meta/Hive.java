@@ -14,6 +14,7 @@ import java.util.NoSuchElementException;
 import javax.sql.DataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
+import org.hivedb.HiveDbDialect;
 import org.hivedb.HiveException;
 import org.hivedb.HiveReadOnlyException;
 import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
@@ -44,8 +45,15 @@ public class Hive {
 	private DataSource dataSource;
 	
 	/**
-	 *  System entry point.
-	 */ 	
+	 * System entry point.  Factory method for all Hive interaction.  If the first attempt
+	 * to load the Hive throws any exception, the Hive class will attempt to install the database
+	 * schema at the target URI, and then attempt to reload that schema one time before throwing
+	 * a HiveException. 
+	 * 
+	 * @param hiveDatabaseUri Target hive
+	 * @return Hive (existing or new) located at hiveDatabaseUri
+	 * @throws HiveException
+	 */
 	public static Hive load(String hiveDatabaseUri) throws HiveException
 	{
 		try {
@@ -54,9 +62,20 @@ public class Hive {
 			throw new HiveException("Unable to load database driver: " + e.getMessage(), e);
 		}
 		
-		PartitionKeyStatisticsDao tracker = new PartitionKeyStatisticsDao( new HiveBasicDataSource(hiveDatabaseUri));
-		
-		Hive hive = new Hive(hiveDatabaseUri, 0, false, new ArrayList<PartitionDimension>(), tracker);
+		Hive hive = null;
+		try {
+			PartitionKeyStatisticsDao tracker = new PartitionKeyStatisticsDao( new HiveBasicDataSource(hiveDatabaseUri));		
+			hive = new Hive(hiveDatabaseUri, 0, false, new ArrayList<PartitionDimension>(), tracker);
+		} catch (Exception ex) {
+			try {
+				GlobalSchema schema = new GlobalSchema(hiveDatabaseUri);
+				schema.install();
+				PartitionKeyStatisticsDao tracker = new PartitionKeyStatisticsDao( new HiveBasicDataSource(hiveDatabaseUri));		
+				hive = new Hive(hiveDatabaseUri, 0, false, new ArrayList<PartitionDimension>(), tracker);
+			} catch (Exception ex2) {
+				throw new HiveException("Unable to find or install Hive at URI " + hiveDatabaseUri + ": " + ex2.getMessage(),ex2);
+			}
+		}
 		return hive;
 	}
 	
