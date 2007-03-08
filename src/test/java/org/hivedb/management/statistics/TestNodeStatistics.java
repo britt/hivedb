@@ -14,7 +14,7 @@ public class TestNodeStatistics {
 	public void fillLevelTest(){
 		NodeStatistics node = new NodeStatisticsBean(TestObjectFactory.node(), new ArrayList<PartitionKeyStatistics>(), TestObjectFactory.halfFullEstimator());
 		node.getNode().setCapacity(NODE_CAPACITY);
-		node.addPartitionKey(TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY));
+		node.addPartitionKeyStatistics(TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY));
 		assertEquals(NODE_CAPACITY, node.getFillLevel());
 	}
 	
@@ -23,7 +23,7 @@ public class TestNodeStatistics {
 		NodeStatistics node = new NodeStatisticsBean(TestObjectFactory.node(), new ArrayList<PartitionKeyStatistics>(), TestObjectFactory.halfFullEstimator());
 		node.getNode().setCapacity(NODE_CAPACITY);
 		PartitionKeyStatisticsBean key = TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY);
-		node.addPartitionKey(key);
+		node.addPartitionKeyStatistics(key);
 		assertEquals(1, node.getStats().size());
 		assertEquals(NODE_CAPACITY, node.getFillLevel());
 		node.removeParititonKey(key.getKey());

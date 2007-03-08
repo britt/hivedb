@@ -47,8 +47,8 @@ public class NodeBalancerTest extends DerbyTestCase {
 		PartitionKeyStatisticsBean secondHalf = TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/2);
 		secondHalf.setKey(new Integer(12));
 		
-		full.addPartitionKey(firstHalf);
-		full.addPartitionKey(secondHalf);
+		full.addPartitionKeyStatistics(firstHalf);
+		full.addPartitionKeyStatistics(secondHalf);
 		
 		SortedSet<PartitionKeyStatistics> keysToMove = balancer.suggestKeysToMove(full);
 	
@@ -67,12 +67,14 @@ public class NodeBalancerTest extends DerbyTestCase {
 		PartitionKeyStatisticsBean firstHalf = TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/2);
 		firstHalf.setKey(new Integer(7));
 		firstHalf.setChildRecordCount((int)NODE_CAPACITY/2);
+		firstHalf.setPartitionDimension(TestObjectFactory.partitionDimension());
 		PartitionKeyStatisticsBean secondHalf = TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/2);
 		secondHalf.setKey(new Integer(12));
 		secondHalf.setChildRecordCount((int)NODE_CAPACITY/2);
+		secondHalf.setPartitionDimension(TestObjectFactory.partitionDimension());
 		
-		full.addPartitionKey(firstHalf);
-		full.addPartitionKey(secondHalf);
+		full.addPartitionKeyStatistics(firstHalf);
+		full.addPartitionKeyStatistics(secondHalf);
 		
 		SortedSet<PartitionKeyStatistics> keysToMove = balancer.suggestKeysToMove(full);
 	
@@ -82,8 +84,8 @@ public class NodeBalancerTest extends DerbyTestCase {
 		
 		SortedSet<Migration> moves = balancer.pairMigrantsWithDestinations(full.getNode(), keysToMove, nodes);
 		assertEquals(1, moves.size());
-		assertEquals(full.getNode(), moves.first().getOrigin());
-		assertEquals(empty.getNode(), moves.first().getDestination());
+		assertEquals(full.getNode().getUri(), moves.first().getOriginUri());
+		assertEquals(empty.getNode().getUri(), moves.first().getDestinationUri());
 	}
 	
 	@Test
@@ -100,9 +102,9 @@ public class NodeBalancerTest extends DerbyTestCase {
 		PartitionKeyStatisticsBean lastHalf = TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/2);
 		lastHalf.setKey(new Integer(12));
 		
-		full.addPartitionKey(firstQuarter);
-		full.addPartitionKey(secondQuarter);
-		full.addPartitionKey(lastHalf);
+		full.addPartitionKeyStatistics(firstQuarter);
+		full.addPartitionKeyStatistics(secondQuarter);
+		full.addPartitionKeyStatistics(lastHalf);
 		
 		SortedSet<PartitionKeyStatistics> keysToMove = balancer.suggestKeysToMove(full);
 	
@@ -130,7 +132,7 @@ public class NodeBalancerTest extends DerbyTestCase {
 			new OverFillBalancer(
 					dimension, 
 					TestObjectFactory.halfFullEstimator(), 
-					new HiveBasicDataSource(getConnectString()));
+					getConnectString());
 		
 		SecondaryIndex secondaryIndex = TestObjectFactory.secondaryIndex("werd");
 		secondaryIndex.setResource(resources.iterator().next());
@@ -163,9 +165,9 @@ public class NodeBalancerTest extends DerbyTestCase {
 		MovePlanValidator validator = new MovePlanValidator(TestObjectFactory.halfFullEstimator());
 		
 		assertEquals(1, moves.size());
-		assertEquals(full, moves.first().getOrigin());
-		assertEquals(empty, moves.first().getDestination());
-		assertTrue(fullKey1.equals(moves.first().getMigrantId()) || fullKey2.equals(moves.first().getMigrantId()));
+		assertEquals(full.getUri(), moves.first().getOriginUri());
+		assertEquals(empty.getUri(), moves.first().getDestinationUri());
+		assertTrue(fullKey1.equals(moves.first().getPrimaryIndexKey()) || fullKey2.equals(moves.first().getPrimaryIndexKey()));
 		assertTrue(validator.isValid(startingState, moves));
 	}
 	

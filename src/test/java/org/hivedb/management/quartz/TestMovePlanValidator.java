@@ -22,9 +22,9 @@ public class TestMovePlanValidator {
 		NodeStatistics firstQuarter = TestObjectFactory.filledNodeStatistics(NODE_CAPACITY, new ArrayList<PartitionKeyStatistics>());
 		NodeStatistics secondQuarter = TestObjectFactory.filledNodeStatistics(NODE_CAPACITY, new ArrayList<PartitionKeyStatistics>());
 		NodeStatistics full = TestObjectFactory.filledNodeStatistics(NODE_CAPACITY, new ArrayList<PartitionKeyStatistics>());
-		firstQuarter.addPartitionKey(TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/4));
-		secondQuarter.addPartitionKey(TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/4));
-		full.addPartitionKey(TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY));
+		firstQuarter.addPartitionKeyStatistics(TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/4));
+		secondQuarter.addPartitionKeyStatistics(TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/4));
+		full.addPartitionKeyStatistics(TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY));
 		
 		SortedSet<NodeStatistics> balanced = new TreeSet<NodeStatistics>();
 		balanced.add(firstQuarter);
@@ -50,15 +50,15 @@ public class TestMovePlanValidator {
 		PartitionKeyStatistics secondHalf = TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/2);
 		secondHalf.setKey(new Integer(12));
 		
-		full.addPartitionKey(firstHalf);
-		full.addPartitionKey(secondHalf);
+		full.addPartitionKeyStatistics(firstHalf);
+		full.addPartitionKeyStatistics(secondHalf);
 		
 		SortedSet<NodeStatistics> startingState = new TreeSet<NodeStatistics>();
 		startingState.add(full);
 		startingState.add(empty);
 		
 		SortedSet<Migration> movePlan = new TreeSet<Migration>();
-		Migration move = new Migration(new Integer(7), full.getNode(), empty.getNode());
+		Migration move = new Migration(firstHalf.getKey(), "dimension", full.getNode().getUri(), empty.getNode().getUri() ,"");
 		movePlan.add(move);
 		SortedSet<NodeStatistics> resultingState = validator.computeResultingState(startingState, movePlan);
 		assertTrue(validator.isBalanced(resultingState));

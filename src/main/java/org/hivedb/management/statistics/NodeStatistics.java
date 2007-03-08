@@ -12,7 +12,7 @@ public interface NodeStatistics {
 
 	public abstract List<PartitionKeyStatistics> getStats();
 
-	public abstract void addPartitionKey(PartitionKeyStatistics keyStats);
+	public abstract void addPartitionKeyStatistics(PartitionKeyStatistics keyStats);
 
 	public abstract PartitionKeyStatistics removeParititonKey(Object key);
 

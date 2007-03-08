@@ -9,8 +9,6 @@ import java.util.TreeSet;
 import org.hivedb.management.statistics.NodeStatistics;
 import org.hivedb.management.statistics.NodeStatisticsBean;
 import org.hivedb.management.statistics.PartitionKeyStatistics;
-import org.hivedb.meta.Node;
-
 
 public class MovePlanValidator {
 	private MigrationEstimator estimator;
@@ -20,17 +18,17 @@ public class MovePlanValidator {
 	}
 	
 	public SortedSet<NodeStatistics> computeResultingState(SortedSet<NodeStatistics> state, SortedSet<Migration> moves) {
-		Map<Node, NodeStatistics> stateMap = new Hashtable<Node, NodeStatistics>();
+		Map<String, NodeStatistics> stateMap = new Hashtable<String, NodeStatistics>();
 		for(NodeStatistics nodeStats : state)
-			stateMap.put(nodeStats.getNode(), nodeStats);
+			stateMap.put(nodeStats.getNode().getUri(), nodeStats);
 		
 		for(Migration move: moves) {
-			NodeStatistics origin = stateMap.get(move.getOrigin());
-			NodeStatistics destination = stateMap.get(move.getDestination());
-			PartitionKeyStatistics stats = origin.removeParititonKey(move.getMigrantId());
-			destination.addPartitionKey(stats);
-			stateMap.put(origin.getNode(), origin);
-			stateMap.put(destination.getNode(), destination);
+			NodeStatistics origin = stateMap.get(move.getOriginUri());
+			NodeStatistics destination = stateMap.get(move.getDestinationUri());
+			PartitionKeyStatistics stats = origin.removeParititonKey(move.getPrimaryIndexKey());
+			destination.addPartitionKeyStatistics(stats);
+			stateMap.put(move.getOriginUri(), origin);
+			stateMap.put(move.getDestinationUri(), destination);
 		}
 		
 		SortedSet<NodeStatistics> resultingState = new TreeSet<NodeStatistics>();

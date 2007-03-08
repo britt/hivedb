@@ -57,7 +57,7 @@ public class NodeStatisticsBean implements Comparable, Cloneable, NodeStatistics
 	/* (non-Javadoc)
 	 * @see org.hivedb.management.statistics.INodeStats#addPartitionKey(org.hivedb.management.statistics.PartitionKeyStatistics)
 	 */
-	public void addPartitionKey(PartitionKeyStatistics keyStats) {
+	public void addPartitionKeyStatistics(PartitionKeyStatistics keyStats) {
 		this.stats.add(keyStats);
 	}
 	
@@ -102,7 +102,7 @@ public class NodeStatisticsBean implements Comparable, Cloneable, NodeStatistics
 	public NodeStatistics clone() {
 		NodeStatistics clone = new NodeStatisticsBean(getNode(), new ArrayList<PartitionKeyStatistics>(),estimator);
 		for(PartitionKeyStatistics s : getStats())
-			clone.addPartitionKey(((PartitionKeyStatisticsBean) s).clone());
+			clone.addPartitionKeyStatistics(((PartitionKeyStatisticsBean) s).clone());
 		return clone;
 	}
 }

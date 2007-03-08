@@ -50,9 +50,9 @@ private static final double NODE_CAPACITY = 4.0;
 		PartitionKeyStatisticsBean lastHalf = TestObjectFactory.partitionKeyStats((int)NODE_CAPACITY/2);
 		lastHalf.setKey(new Integer(12));
 		
-		full.addPartitionKey(firstQuarter);
-		full.addPartitionKey(secondQuarter);
-		full.addPartitionKey(lastHalf);
+		full.addPartitionKeyStatistics(firstQuarter);
+		full.addPartitionKeyStatistics(secondQuarter);
+		full.addPartitionKeyStatistics(lastHalf);
 		
 		SortedSet<PartitionKeyStatistics> keysToMove = balancer.suggestKeysToMove(full);
 	
@@ -80,7 +80,7 @@ private static final double NODE_CAPACITY = 4.0;
 			new OverFillBalancer(
 					dimension, 
 					configurableEstimator(), 
-					new HiveBasicDataSource(getConnectString()));
+					getConnectString());
 		
 		SecondaryIndex secondaryIndex = TestObjectFactory.secondaryIndex("werd");
 		secondaryIndex.setResource(resources.iterator().next());
@@ -113,9 +113,9 @@ private static final double NODE_CAPACITY = 4.0;
 		MovePlanValidator validator = new MovePlanValidator(configurableEstimator());
 		
 		assertEquals(1, moves.size());
-		assertEquals(full, moves.first().getOrigin());
-		assertEquals(empty, moves.first().getDestination());
-		assertTrue(fullKey1.equals(moves.first().getMigrantId()) || fullKey2.equals(moves.first().getMigrantId()));
+		assertEquals(full.getUri(), moves.first().getOriginUri());
+		assertEquals(empty.getUri(), moves.first().getDestinationUri());
+		assertTrue(fullKey1.equals(moves.first().getPrimaryIndexKey()) || fullKey2.equals(moves.first().getPrimaryIndexKey()));
 		assertTrue(validator.isValid(startingState, moves));
 	}
 	

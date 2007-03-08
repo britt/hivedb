@@ -24,7 +24,10 @@ import org.testng.annotations.Test;
 public class MigrationJobTest {
 	@Test
 	public void testJobDetailCreation() {
-		JobDetail detail = MigrationJob.createDetail("aDetail", "aGroup", new Migration(getEmigre(), mockOrigin(), mockDestination()));
+		JobDetail detail = MigrationJob.createDetail(
+				"aDetail", 
+				"aGroup", 
+				new Migration(getEmigre(), "dimension", mockOrigin(), mockDestination(), "hiveUri"));
 		assertNotNull(detail);
 		assertEquals("aDetail", detail.getName());
 		assertEquals("aGroup", detail.getGroup());
@@ -37,7 +40,7 @@ public class MigrationJobTest {
 		JobDetail migration = MigrationJob.createDetail(
 				"aJob", 
 				"aGroup", 
-				new Migration(getEmigre(), mockOrigin(), mockDestination()));
+				new Migration(getEmigre(),"dimension", mockOrigin(), mockDestination(), "hiveUri"));
 		try {
 			runJob(migration, delayedTrigger(1), new StdSchedulerFactory());
 			Thread.sleep(500); 
@@ -49,29 +52,16 @@ public class MigrationJobTest {
 		}
 	}
 	
-	private HivePersistable getEmigre() {
-		return new HivePersistable() {
-			public Object getId() {
-				return null;
-			}
-
-			public PartitionDimension getPartitionDimension() {
-				return null;
-			}
-
-			public Object getPartitioningKey() {
-				return null;
-			}
-			
-		};
+	private Object getEmigre() {
+		return "emigre";
 	}
 	
-	private Node mockDestination() {
-		return new Node(0, "destination", false);
+	private String mockDestination() {
+		return "destination";
 	}
 	
-	private Node mockOrigin() {
-		return new Node(0, "origin", false);
+	private String mockOrigin() {
+		return "origin";
 	}
 	
 	private void runJob(JobDetail job, Trigger trigger, SchedulerFactory factory) throws SchedulerException {

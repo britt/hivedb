@@ -3,8 +3,6 @@ package org.hivedb.management.quartz;
 import java.util.Calendar;
 import java.util.Collection;
 
-import javax.sql.DataSource;
-
 import org.hivedb.management.ConfigurableEstimator;
 import org.hivedb.management.Migration;
 import org.hivedb.management.MigrationEstimator;
@@ -15,7 +13,6 @@ import org.hivedb.management.statistics.PartitionKeyStatistics;
 import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
-import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -48,9 +45,8 @@ public class NodeBalancingJob implements Job {
 		JobDataMap map = context.getMergedJobDataMap();
 		dimension = (PartitionDimension) map.get(DIMENSION_KEY);
 		Collection<Node> nodes = (Collection<Node>) map.get(NODE_LIST_KEY);
-		DataSource ds = new HiveBasicDataSource(map.get(DIRECTORY_URI_KEY).toString());
 		estimator = ConfigurableEstimator.getInstance();
-		balancer = new OverFillBalancer(dimension, estimator, ds);
+		balancer = new OverFillBalancer(dimension, estimator, map.get(DIRECTORY_URI_KEY).toString());
 		
 		try {
 			Collection<Migration> movePlan = balancer.suggestMoves(nodes);
@@ -63,7 +59,7 @@ public class NodeBalancingJob implements Job {
 	private void enqueueMoves(Collection<Migration> migrations, Scheduler scheduler) throws JobExecutionException {
 		long delay = 0;
 		for(Migration migration : migrations){
-			PartitionKeyStatistics stats = statsDao.findByPrimaryPartitionKey(dimension, migration.getMigrantId());
+			PartitionKeyStatistics stats = statsDao.findByPrimaryPartitionKey(dimension, migration.getPrimaryIndexKey());
 			long executionTime = estimator.estimateMoveTime(stats);
 			// TODO Better delay computation
 			delay += executionTime;

@@ -5,33 +5,31 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import javax.sql.DataSource;
-
 import org.hivedb.management.statistics.NodeStatistics;
 import org.hivedb.management.statistics.NodeStatisticsBean;
 import org.hivedb.management.statistics.PartitionKeyStatistics;
 import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
+import org.hivedb.meta.persistence.HiveBasicDataSource;
 
-// TODO I don't like the Impl naming
 // TODO Implement Partial Move plans
 // TODO Do more than just punt when a plan cannot be found
 
 public class OverFillBalancer implements NodeBalancer {
 	private PartitionDimension dimension;
-	private DataSource ds;
+	private String uri;
 	private SortedSet<NodeStatistics> startingState;
 	private MigrationEstimator estimator;
 	
-	public OverFillBalancer(PartitionDimension dimension, MigrationEstimator estimator, DataSource ds) {
+	public OverFillBalancer(PartitionDimension dimension, MigrationEstimator estimator, String uri) {
 		this.dimension = dimension;
 		this.estimator = estimator;
-		this.ds = ds;
+		this.uri = uri;
 	}
 	
 	public SortedSet<Migration> suggestMoves(Collection<Node> nodes) throws MigrationPlanningException {
-		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(ds);
+		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(new HiveBasicDataSource(uri));
 		
 		//Build a list of node statistics sorted by fill level (descending).
 		startingState = new TreeSet<NodeStatistics>();
@@ -74,8 +72,8 @@ public class OverFillBalancer implements NodeBalancer {
 		SortedSet<Migration> movePlan = new TreeSet<Migration>();
 		for(PartitionKeyStatistics migrant : migrants) {
 			NodeStatistics destination = destinations.first();
-			destination.addPartitionKey(migrant);
-			movePlan.add(new Migration(migrant.getKey(), origin, destination.getNode()));
+			destination.addPartitionKeyStatistics(migrant);
+			movePlan.add(new Migration(migrant.getKey(), migrant.getPartitionDimension().getName(), origin.getUri(), destination.getNode().getUri(), uri));
 			if(estimator.howMuchDoINeedToMove(destination) > 0)
 				throw new MigrationPlanningException();
 		}
