@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Date;
 
+import org.hivedb.HiveDbDialect;
 import org.hivedb.HiveException;
 import org.hivedb.HiveRuntimeException;
 
@@ -147,5 +148,22 @@ public class JdbcTypeMapper {
 			return resultSet.getString(index);
 		}
 		throw new HiveRuntimeException("No known JDBC type: " + jdbcType, null);
+	}
+	public static String jdbcTypeToSqlTypeString(int jdbcType, HiveDbDialect hiveDbDialect)
+	{
+		if (hiveDbDialect.equals(HiveDbDialect.MySql)) {
+			switch (jdbcType) {
+				case Types.BIGINT:
+					return "bigint(20) unsigned";
+				case Types.INTEGER:
+					return "int(10) unsigned";
+				case Types.DATE:
+					return "datetime";
+				default:
+					throw new RuntimeException("Type " + jdbcType + " not supported. Add it here");
+			}
+		}
+		else
+			throw new RuntimeException("Only mysql supported here for now");
 	}
 }

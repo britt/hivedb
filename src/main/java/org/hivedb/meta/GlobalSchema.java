@@ -89,7 +89,6 @@ public class GlobalSchema extends Schema {
 		super.install();
 		BasicDataSource ds = new BasicDataSource();
 		ds.setUrl(this.dbURI);
-		new HiveSemaphoreDao(ds).create();
 	}
 
 	public String[] getCreateStatements() {
