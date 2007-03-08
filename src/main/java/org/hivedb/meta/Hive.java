@@ -26,6 +26,7 @@ import org.hivedb.meta.persistence.ResourceDao;
 import org.hivedb.meta.persistence.SecondaryIndexDao;
 import org.hivedb.util.DriverLoader;
 import org.hivedb.util.HiveUtils;
+import org.hivedb.util.InstallHiveGlobalSchema;
 
 /**
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
@@ -68,8 +69,7 @@ public class Hive {
 			hive = new Hive(hiveDatabaseUri, 0, false, new ArrayList<PartitionDimension>(), tracker);
 		} catch (Exception ex) {
 			try {
-				GlobalSchema schema = new GlobalSchema(hiveDatabaseUri);
-				schema.install();
+				InstallHiveGlobalSchema.install(hiveDatabaseUri);
 				PartitionKeyStatisticsDao tracker = new PartitionKeyStatisticsDao( new HiveBasicDataSource(hiveDatabaseUri));		
 				hive = new Hive(hiveDatabaseUri, 0, false, new ArrayList<PartitionDimension>(), tracker);
 			} catch (Exception ex2) {
