@@ -29,9 +29,8 @@ public class IndexSchemaTestScenario {
 		PartitionDimension dimension = partitionDimension();
 		IndexSchema schema = new IndexSchema(dimension);
 		try {
-			new GlobalSchema(ds.getUrl()).install();
+			Hive hive = InstallHiveGlobalSchema.install(ds.getUrl());
 			schema.install();
-			Hive hive = Hive.load(ds.getUrl());
 			hive.addPartitionDimension(dimension);
 			Resource resource = resource();
 			SecondaryIndex secondaryIndex = secondaryIndex();

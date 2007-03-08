@@ -20,6 +20,7 @@ import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.util.InstallHiveIndexSchema;
 import org.hivedb.util.JdbcTypeMapper;
 import org.hivedb.util.scenarioBuilder.AssertUtils;
 import org.hivedb.util.scenarioBuilder.Atom;
@@ -390,7 +391,7 @@ public class HiveScenarioTest {
 					hive.updateHiveReadOnly(false);
 				}};
 				hive.insertSecondaryIndexKey(secondaryIndex,
-					HiveScenario.constructSecondaryInstance(primaryIndexInstance.getClass(), secondaryIndexInstance.getClass()),
+					InstallHiveIndexSchema.constructSecondaryInstance(primaryIndexInstance.getClass(), secondaryIndexInstance.getClass()),
 					primaryIndexInstance.getIdAsPrimaryIndexInstance());
 			}}, HiveReadOnlyException.class);	
 			

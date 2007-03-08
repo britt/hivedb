@@ -1,6 +1,7 @@
 package org.hivedb.util.scenarioBuilder;
 
 import java.util.Collection;
+import java.util.Map;
 
 import org.hivedb.meta.Hive;
 import org.hivedb.meta.Node;
@@ -24,4 +25,9 @@ public interface HiveScenarioConfig {
 	Collection<Node> getNodes(Hive hive);
 	Hive getHive();
 	
+	// Map relationships between the primary and resource classes
+	Map<Class, Collection<Class>> getPrimaryToResourceMap();
+	Map<Class, Class> getResourceToPrimaryMap();
+	// This can probably be refactored out
+	Map<String, Class> getResourceNameToClassMap();
 }

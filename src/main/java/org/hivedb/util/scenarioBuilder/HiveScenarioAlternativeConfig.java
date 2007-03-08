@@ -1,6 +1,7 @@
 package org.hivedb.util.scenarioBuilder;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.commons.dbcp.BasicDataSource;
@@ -9,24 +10,13 @@ import org.hivedb.meta.Hive;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
+import org.hivedb.util.InstallHiveGlobalSchema;
 
 public class HiveScenarioAlternativeConfig implements HiveScenarioConfig {
 	
 	private Hive hive;
 	public HiveScenarioAlternativeConfig(String connectString) {
-		try {
-			try {
-				new GlobalSchema(connectString).install();
-				
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-			BasicDataSource ds = new HiveBasicDataSource(connectString);
-			new HiveSemaphoreDao(ds).create();
-			hive = Hive.load(connectString);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		hive = InstallHiveGlobalSchema.install(connectString);
 	}
 	public Hive getHive()
 	{
@@ -171,5 +161,15 @@ public class HiveScenarioAlternativeConfig implements HiveScenarioConfig {
 			return this.getClass().getSimpleName();
 		}
 		
+	}
+	HiveScenarioClassRelationships hiveScenarioClassRelationships = new HiveScenarioClassRelationships(this);
+	public Map<Class, Collection<Class>> getPrimaryToResourceMap() {
+		return hiveScenarioClassRelationships.getPrimaryToResourceMap();
+	}
+	public Map<String, Class> getResourceNameToClassMap() {
+		return hiveScenarioClassRelationships.getResourceNameToClassMap();
+	}
+	public Map<Class, Class> getResourceToPrimaryMap() {
+		return hiveScenarioClassRelationships.getResourceToPrimaryMap();
 	}
 }
