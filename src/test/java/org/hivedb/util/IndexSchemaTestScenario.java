@@ -8,7 +8,6 @@ import java.util.Collection;
 
 import org.hivedb.meta.Assigner;
 import org.hivedb.meta.ColumnInfo;
-import org.hivedb.meta.GlobalSchema;
 import org.hivedb.meta.Hive;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.Node;

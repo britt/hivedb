@@ -4,12 +4,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.commons.dbcp.BasicDataSource;
-import org.hivedb.meta.GlobalSchema;
 import org.hivedb.meta.Hive;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.persistence.HiveBasicDataSource;
-import org.hivedb.meta.persistence.HiveSemaphoreDao;
 import org.hivedb.util.InstallHiveGlobalSchema;
 
 public class HiveScenarioAlternativeConfig implements HiveScenarioConfig {
