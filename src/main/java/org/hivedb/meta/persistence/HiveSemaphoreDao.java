@@ -23,6 +23,15 @@ public class HiveSemaphoreDao extends JdbcDaoSupport {
 	}
 
 	public HiveSemaphore get() throws SQLException {
+		try {
+			return getSemaphore();
+		} catch (Exception ex) {
+			create();
+			return getSemaphore();			
+		}
+	}
+
+	private HiveSemaphore getSemaphore() throws SQLException {
 		JdbcTemplate t = getJdbcTemplate();
 		HiveSemaphore result;
 		try {
@@ -40,7 +49,7 @@ public class HiveSemaphoreDao extends JdbcDaoSupport {
 	public HiveSemaphore create() throws SQLException {
 		try {
 			// check to see if it already exists
-			return get();
+			return getSemaphore();
 		} catch (SQLException e) {
 			JdbcTemplate j = getJdbcTemplate();
 			Object[] parameters = new Object[] { 0, 1 };
