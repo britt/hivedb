@@ -2,6 +2,7 @@ package org.hivedb.management.quartz;
 
 import org.hivedb.management.HivePersistable;
 import org.hivedb.management.Migration;
+import org.hivedb.management.MigrationException;
 import org.hivedb.management.Mover;
 import org.hivedb.management.MoverFactory;
 import org.quartz.Job;
@@ -23,7 +24,11 @@ public class MigrationJob implements Job {
 		JobDataMap map = context.getMergedJobDataMap();
 		Migration migration = (Migration) map.get(MIGRATION_KEY);
 		Mover<HivePersistable> mover = MoverFactory.getMover();
-		mover.move(migration);
+		try {
+			mover.move(migration);
+		} catch (MigrationException e) {
+			throw new JobExecutionException(e);
+		}
 	}
 	
 	private static JobDataMap buildJobDataMap(JobDataMap map, Migration migration) {
