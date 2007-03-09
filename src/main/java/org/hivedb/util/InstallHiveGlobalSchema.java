@@ -9,8 +9,7 @@ import org.hivedb.meta.persistence.HiveSemaphoreDao;
 
 public class InstallHiveGlobalSchema {
 	/**
-	 *  Convenience method to install a hive. If the hive already exists
-	 *  this method will return it and do nothing.
+	 * This is going away
 	 * @param connectString
 	 * @return
 	 */
@@ -24,8 +23,13 @@ public class InstallHiveGlobalSchema {
 				throw new RuntimeException(e);
 			}
 			BasicDataSource ds = new HiveBasicDataSource(connectString);
-			new HiveSemaphoreDao(ds).create();
+			try {
+				Hive.load(connectString);
+			} catch (Exception e) {
+				new HiveSemaphoreDao(ds).create();
+			}
 			return Hive.load(connectString);
+			
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

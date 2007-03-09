@@ -14,7 +14,6 @@ import java.util.NoSuchElementException;
 import javax.sql.DataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
-import org.hivedb.HiveDbDialect;
 import org.hivedb.HiveException;
 import org.hivedb.HiveReadOnlyException;
 import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
