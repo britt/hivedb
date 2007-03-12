@@ -18,7 +18,7 @@ import org.hivedb.util.HiveUtils;
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
  * @author Andy Likuski (alikuski@cafepress.com)
  */
-public class NodeGroup {
+public class NodeGroup implements Finder {
 	private int id;
 	private Collection<Node> nodes;
 	private PartitionDimension partitionDimension;
@@ -67,6 +67,11 @@ public class NodeGroup {
 	public Collection<Node> getNodes() {
 		return nodes;
 	}
+	@SuppressWarnings("unchecked")
+	public <T extends Nameable> Collection<T> findCollection(Class<T> forClass) {
+		return (Collection<T>) getNodes();
+	}
+	
 	public void setNodes(Collection<Node> nodes) {
 		this.nodes = nodes;
 	}
@@ -83,6 +88,9 @@ public class NodeGroup {
 			if (node.getUri().equals(nodeUri))
 				return node;
 		throw new HiveException("Node with uri " + nodeUri + " is not in this node group");
+	}
+	public Node findByName(Class<Node> forClass, String name) throws HiveException {
+		return getNode(name);
 	}
 
 	/**
@@ -110,4 +118,11 @@ public class NodeGroup {
 											"Id", 	 getId(), 
 											"Nodes", getNodes());
 	}
+
+	public <T extends Nameable> T findByName(Class<T> forClass, String name) throws HiveException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
 }

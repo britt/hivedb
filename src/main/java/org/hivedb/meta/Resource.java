@@ -16,7 +16,7 @@ import org.hivedb.util.HiveUtils;
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
  * @author Andy Likuski (alikuski@cafepress.com)
  */
-public class Resource implements Comparable<Resource>, IdAndNameIdentifiable {
+public class Resource implements Comparable<Resource>, IdAndNameIdentifiable, Finder {
 	private int id;
 	private String name;
 	private PartitionDimension partitionDimension;
@@ -92,6 +92,15 @@ public class Resource implements Comparable<Resource>, IdAndNameIdentifiable {
 				secondaryIndexName,
 				getName(),
 				getPartitionDimension().getName()));
+	}
+	
+	@SuppressWarnings("unchecked")
+	public <T extends Nameable> T findByName(Class<T> forClass, String name) throws HiveException {
+		return (T)getSecondaryIndex(name);
+	}
+	@SuppressWarnings("unchecked")
+	public <T extends Nameable> Collection<T> findCollection(Class<T> forClass) {
+		return (Collection<T>)getSecondaryIndexes();
 	}
 
 	/**

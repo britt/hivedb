@@ -7,14 +7,12 @@ package org.hivedb.meta;
 import org.hivedb.util.HiveUtils;
 
 /**
- * Node models a database instance suitable for storage partitioned Data.
- * 
- * Node does not currently model a database suitable for Index storage.
+ * Node models a database instance suitable for storage of partitioned Data.
  * 
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
  * @author Andy Likuski (alikuski@cafepress.com)
  */
-public class Node implements Comparable<Node>, Cloneable, Identifiable {
+public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable {
 	private int id;
 	private String uri;
 	private NodeGroup nodeGroup;
@@ -115,5 +113,9 @@ public class Node implements Comparable<Node>, Cloneable, Identifiable {
 	public Object clone()
 	{
 		return new Node(uri,readOnly);
+	}
+
+	public String getName() {
+		return getUri();
 	}
 }

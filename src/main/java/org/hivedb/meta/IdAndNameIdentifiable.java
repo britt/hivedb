@@ -1,5 +1,5 @@
 package org.hivedb.meta;
 
-public interface IdAndNameIdentifiable extends Identifiable {
-	String getName();
+public interface IdAndNameIdentifiable extends Identifiable, Nameable {
+
 }

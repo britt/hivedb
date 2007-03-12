@@ -20,7 +20,7 @@ import org.hivedb.util.JdbcTypeMapper;
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
  * @author Andy Likuski (alikuski@cafepress.com)
  */
-public class PartitionDimension implements Comparable<PartitionDimension>, Cloneable, IdAndNameIdentifiable {
+public class PartitionDimension implements Comparable<PartitionDimension>, Cloneable, IdAndNameIdentifiable, Finder {
 	private int id;
 	private String name;
 	private int columnType;
@@ -140,6 +140,22 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 
 	public NodeGroup getNodeGroup() {
 		return nodeGroup;
+	}
+	@SuppressWarnings("unchecked")
+	public<T extends Nameable> T findByName(Class<T> forClass, String name) throws HiveException {
+		if (forClass.equals(Resource.class))
+			return (T)getResource(name);
+		if (forClass.equals(Node.class))
+			return (T)getNodeGroup().getNode(name);
+		throw new RuntimeException("Invalid type " + forClass.getName());
+	}
+	@SuppressWarnings("unchecked")
+	public<T extends Nameable> Collection<T> findCollection(Class<T> forClass) {
+		if (forClass.equals(Resource.class))
+			return (Collection<T>)getResources();
+		if (forClass.equals(Node.class))
+			return (Collection<T>)getNodeGroup().getNodes();
+		throw new RuntimeException("Invalid type " + forClass.getName());
 	}
 
 	public void setNodeGroup(NodeGroup nodeGroup) {

@@ -31,7 +31,7 @@ import org.hivedb.util.InstallHiveGlobalSchema;
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
  * @author Andy Likuski (alikuski@cafepress.com)
  */
-public class Hive {
+public class Hive implements Finder {
 	public static final int NEW_OBJECT_ID = 0;
 	public static String URI_SYSTEM_PROPERTY="org.hivedb.uri";
 	
@@ -179,7 +179,11 @@ public class Hive {
 	public Collection<PartitionDimension> getPartitionDimensions() {
 		return partitionDimensions;
 	}
-
+	@SuppressWarnings("unchecked")
+	public <T extends Nameable> Collection<T> findCollection(Class<T> forClass) {
+		return (Collection<T>) getPartitionDimensions();
+	}
+	
 	/**
 	 * Gets a partition dimension by name.
 	 * @param name The user-defined name of a partition dimension
@@ -191,6 +195,10 @@ public class Hive {
 			if (partitionDimension.getName().equals(name))
 				return partitionDimension;
 		throw new HiveException("PartitionDimension with name " + name + " not found.");
+	}
+	@SuppressWarnings("unchecked")
+	public <T extends Nameable> T findByName(Class<T> forClass, String name) throws HiveException {
+		return (T) getPartitionDimension(name);
 	}
 	
 	/**
@@ -1038,6 +1046,14 @@ public class Hive {
 			msg += dir.getPartitionDimension().toString() + "\n";
 		throw new NoSuchElementException(msg);
 	}
+
+	public PartitionKeyStatisticsDao getStatistics() {
+		return statistics;
+	}
+
+
+
+
 }
 
 

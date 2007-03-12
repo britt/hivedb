@@ -6,7 +6,6 @@ import java.sql.SQLException;
 import org.hivedb.util.scenarioBuilder.HiveScenarioAlternativeConfig;
 import org.hivedb.util.scenarioBuilder.HiveScenarioMarauderConfig;
 import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
 
 public class TestHiveScenarioWithMySql {
 	
