@@ -8,6 +8,8 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
+import org.hivedb.HiveException;
+import org.hivedb.HiveRuntimeException;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
 import org.hivedb.meta.persistence.PartitionDimensionDao;
@@ -16,11 +18,17 @@ public class HiveSyncDaemon extends Thread {
 
 	// members
 	long lastRun = 0;
+
 	private Hive hive = null;
 
 	public HiveSyncDaemon(Hive hive) {
 		this.hive = hive;
-		synchronize();
+		try {
+			synchronize();
+		} catch (HiveException ex) {
+			throw new HiveRuntimeException(
+					"HiveSyncDaemon unable to start due to sync error in underlying Hive: " + ex.getMessage(),ex);
+		}
 	}
 
 	private DataSource cachedDataSource = null;
@@ -33,16 +41,16 @@ public class HiveSyncDaemon extends Thread {
 	}
 
 	// TODO is this the right place for this unique operation?
-	public void setReadOnly(boolean readOnly) throws SQLException
-	{
-		new HiveSemaphoreDao(getDataSource()).update(new HiveSemaphore(readOnly, hive.getRevision()));
+	public void setReadOnly(boolean readOnly) throws SQLException {
+		new HiveSemaphoreDao(getDataSource()).update(new HiveSemaphore(
+				readOnly, hive.getRevision()));
 	}
-	
-	public void forceSynchronize()
-	{
+
+	public void forceSynchronize() throws HiveException {
 		this.synchronize();
 	}
-	public void synchronize() {
+
+	public void synchronize() throws HiveException {
 		// update revision & locking, optionally triggering remaining sync
 		// activies
 		HiveSemaphoreDao hsd = new HiveSemaphoreDao(getDataSource());
@@ -61,8 +69,8 @@ public class HiveSyncDaemon extends Thread {
 				hive.setReadOnly(hs.isReadOnly());
 			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new HiveException(
+					"Semaphore not found; make sure Hive is installed");
 		}
 	}
 
@@ -74,21 +82,24 @@ public class HiveSyncDaemon extends Thread {
 				sleep(getConfiguredSleepPeriodMs());
 			} catch (InterruptedException e) {
 				// just don't care
+			} catch (HiveException ex) {
+				throw new HiveRuntimeException("Unable to synchronize due to problem with underlying Hive: " + ex.getMessage(),ex);
 			}
 		}
 	}
 
-	public Hive getHive() { 
+	public Hive getHive() {
 		return this.hive;
 	}
-	
+
 	/**
-	 * Reports true if the sync thread has run within the last (2 * getConfiguredSleepPeriodMs()).
+	 * Reports true if the sync thread has run within the last (2 *
+	 * getConfiguredSleepPeriodMs()).
 	 */
 	public boolean isRunning() {
-		return ( (System.currentTimeMillis() - lastRun) < 2 * getConfiguredSleepPeriodMs());
+		return ((System.currentTimeMillis() - lastRun) < 2 * getConfiguredSleepPeriodMs());
 	}
-	
+
 	public int getConfiguredSleepPeriodMs() {
 		// TODO we haven't set any configuration standards yet,
 		// and 5 seconds is a pretty good guess -- these systems

@@ -12,16 +12,25 @@ import org.hivedb.HiveRuntimeException;
 
 public class JdbcTypeMapper {
 	public static String BIGINT = "BIGINT";
+
 	public static String CHAR = "CHAR";
+
 	public static String DATE = "DATE";
+
 	public static String DOUBLE = "DOUBLE";
+
 	public static String FLOAT = "FLOAT";
+
 	public static String INTEGER = "INTEGER";
+
 	public static String SMALLINT = "SMALLINT";
+
 	public static String TIMESTAMP = "TIMESTAMP";
+
 	public static String TINYINT = "TINYINT";
+
 	public static String VARCHAR = "VARCHAR";
-	
+
 	public static String jdbcTypeToString(int jdbcType) {
 		switch (jdbcType) {
 		case Types.BIGINT:
@@ -91,33 +100,40 @@ public class JdbcTypeMapper {
 		throw new HiveRuntimeException("No known database type for class "
 				+ classType.getCanonicalName(), null);
 	}
-	
-	public static void insertJdbcTypeParameter(PreparedStatement preparedStatement, int index, Object value) throws SQLException
-	{
+
+	public static void insertJdbcTypeParameter(
+			PreparedStatement preparedStatement, int index, Object value)
+			throws SQLException {
 		Class classType = value.getClass();
 		if (classType.equals(int.class) || classType.equals(Integer.class))
-			preparedStatement.setInt(index, (Integer)value);
+			preparedStatement.setInt(index, (Integer) value);
 		else if (classType.equals(long.class) || classType.equals(Long.class))
-			preparedStatement.setLong(index, (Long)value);
+			preparedStatement.setLong(index, (Long) value);
 		else if (classType.equals(float.class) || classType.equals(Float.class))
-			preparedStatement.setFloat(index, (Float)value);
-		else if (classType.equals(double.class) || classType.equals(Double.class))
-			preparedStatement.setDouble(index, (Double)value);
+			preparedStatement.setFloat(index, (Float) value);
+		else if (classType.equals(double.class)
+				|| classType.equals(Double.class))
+			preparedStatement.setDouble(index, (Double) value);
 		else if (classType.equals(String.class))
-			preparedStatement.setString(index, (String)value);
+			preparedStatement.setString(index, (String) value);
 		else if (classType.equals(Date.class))
-			preparedStatement.setDate(index, new java.sql.Date(((Date)value).getTime()));
-		else if (classType.equals(char.class) || classType.equals(Character.class))
+			preparedStatement.setDate(index, new java.sql.Date(((Date) value)
+					.getTime()));
+		else if (classType.equals(char.class)
+				|| classType.equals(Character.class))
 			preparedStatement.setString(index, value.toString());
-		else if (classType.equals(boolean.class) || classType.equals(Boolean.class))
-			preparedStatement.setBoolean(index, (Boolean)value);
+		else if (classType.equals(boolean.class)
+				|| classType.equals(Boolean.class))
+			preparedStatement.setBoolean(index, (Boolean) value);
 		else
 			throw new HiveRuntimeException("No known database type for class "
-				+ classType.getCanonicalName(), null);
+					+ classType.getCanonicalName(), null);
 	}
 
 	/**
-	 *  This method exists instead of use resultSet.getObject() to give us more control over the resulting Java type
+	 * This method exists instead of use resultSet.getObject() to give us more
+	 * control over the resulting Java type
+	 * 
 	 * @param resultSet
 	 * @param index
 	 * @param jdbcType
@@ -125,13 +141,14 @@ public class JdbcTypeMapper {
 	 * @throws HiveException
 	 * @throws SQLException
 	 */
-	public static Object getJdbcTypeResult(ResultSet resultSet, int index, int jdbcType) throws SQLException {
+	public static Object getJdbcTypeResult(ResultSet resultSet, int index,
+			int jdbcType) throws SQLException {
 		switch (jdbcType) {
 		case Types.BIGINT:
 			return resultSet.getLong(index);
 		case Types.CHAR:
 			String str = resultSet.getString(index);
-			return (str.length() == 1)? str.toCharArray()[0] : null;
+			return (str.length() == 1) ? str.toCharArray()[0] : null;
 		case Types.DATE:
 			return new Date(resultSet.getDate(index).getTime());
 		case Types.DOUBLE:
@@ -149,21 +166,34 @@ public class JdbcTypeMapper {
 		}
 		throw new HiveRuntimeException("No known JDBC type: " + jdbcType, null);
 	}
-	public static String jdbcTypeToSqlTypeString(int jdbcType, HiveDbDialect hiveDbDialect)
-	{
+
+	public static String jdbcTypeToSqlTypeString(int jdbcType,
+			HiveDbDialect hiveDbDialect) {
 		if (hiveDbDialect.equals(HiveDbDialect.MySql)) {
 			switch (jdbcType) {
-				case Types.BIGINT:
-					return "bigint(20) unsigned";
-				case Types.INTEGER:
-					return "int(10) unsigned";
-				case Types.DATE:
-					return "datetime";
-				default:
-					throw new RuntimeException("Type " + jdbcType + " not supported. Add it here");
+			case Types.BIGINT:
+				return "bigint(20) unsigned";
+			case Types.INTEGER:
+				return "int(10) unsigned";
+			case Types.DATE:
+				return "datetime";
+			default:
+				throw new RuntimeException("Type " + jdbcType
+						+ " not supported. Add it here");
 			}
-		}
-		else
-			throw new RuntimeException("Only mysql supported here for now");
+		} else if (hiveDbDialect.equals(HiveDbDialect.Derby)) {
+			switch (jdbcType) {
+			case Types.BIGINT:
+			case Types.INTEGER:
+				return "int";
+			case Types.DATE:
+				return "datetime";
+			default:
+				throw new RuntimeException("Type " + jdbcType
+						+ " not supported. Add it here");
+			}
+		} else
+			throw new RuntimeException("Unsupported database dialect: "
+					+ hiveDbDialect.toString());
 	}
 }
