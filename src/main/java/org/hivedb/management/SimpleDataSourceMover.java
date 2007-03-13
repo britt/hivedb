@@ -12,9 +12,9 @@ import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.RowMapper;
 
 public abstract class SimpleDataSourceMover<T> implements Mover {
-	private RowMapper rowMapper;
-	private String table, idColumn;
-	private int primaryIndexKeyType = Types.INTEGER;
+	protected RowMapper rowMapper;
+	protected String table, idColumn;
+	protected int primaryIndexKeyType = Types.INTEGER;
 	
 	public SimpleDataSourceMover(RowMapper rowMapper, String table, String idColumn, int primaryIndexKeyType) {
 		this.rowMapper = rowMapper;
@@ -23,23 +23,26 @@ public abstract class SimpleDataSourceMover<T> implements Mover {
 		this.primaryIndexKeyType = primaryIndexKeyType;
 	}
 	
+	// TODO Add record locking...you forgot
 	public MoveReport move(Migration migration) throws MigrationException{
 		DataSource origin = new HiveBasicDataSource(migration.getOriginUri());
 		DataSource destination = new HiveBasicDataSource(migration.getDestinationUri());
-		
+		Hive hive = null;
 		try {
+			hive = Hive.load(migration.getHiveUri());
+			hive.updatePrimaryIndexReadOnly(migration.getPartitionDimension(), migration.getPrimaryIndexKey(), true);
 			Collection<T> migrants = findByPrimaryIndexKey(migration.getPrimaryIndexKey(),origin);
 			save(migrants, destination);
-			Hive hive = Hive.load(migration.getHiveUri());
 			hive.updatePrimaryIndexNode(
 					migration.getPartitionDimension(), 
 					migration.getPrimaryIndexKey(), 
 					migration.getDestinationUri()
 			);
+			hive.updatePrimaryIndexReadOnly(migration.getPartitionDimension(), migration.getPrimaryIndexKey(), false);
 			delete(migration.getPrimaryIndexKey(), origin);
 		} catch(Exception e) {
 			throw new MigrationException(e);
-		}
+		} 
 		return null;
 	}
 
@@ -51,6 +54,22 @@ public abstract class SimpleDataSourceMover<T> implements Mover {
 				deleteByPrimaryIndexKeySql(), 
 				new int[] {primaryIndexKeyType});
 		j.update(factory.newPreparedStatementCreator(parameters));
+	}
+
+	public String getIdColumn() {
+		return idColumn;
+	}
+
+	public int getPrimaryIndexKeyType() {
+		return primaryIndexKeyType;
+	}
+
+	public RowMapper getRowMapper() {
+		return rowMapper;
+	}
+
+	public String getTable() {
+		return table;
 	}
 
 	private void save(Collection<T> migrants, DataSource destination) {
@@ -78,13 +97,5 @@ public abstract class SimpleDataSourceMover<T> implements Mover {
 	
 	private String deleteByPrimaryIndexKeySql() {
 		return "delete from "+ table +" where "+ idColumn +" = ? ";
-	}
-	
-	private String deleteFailureMessage(Object id, String nodeUri) {
-		StringBuilder msg = new StringBuilder("Error occurred while deleting migrated records.  Orphan records with partition key ");
-		msg.append(id);
-		msg.append(" remain on node with uri ");
-		msg.append(nodeUri);
-		return msg.toString();
 	}
 }
