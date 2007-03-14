@@ -18,9 +18,9 @@ public class TestSecondaryIndexPersistence extends DaoTestCase {
 	public void testDelete() throws Exception {
 		SecondaryIndexDao d = new SecondaryIndexDao(ds);
 		assertEquals(0,d.loadAll().size());
-		d.create(createSecondaryIndex());
+		int id = d.create(createSecondaryIndex());
 		assertEquals(1,d.loadAll().size());
-		SecondaryIndex s = createSecondaryIndex();
+		SecondaryIndex s = createSecondaryIndex(id);
 		s.setResource(createResource());
 		d.delete(s);
 		assertEquals(0,d.loadAll().size());

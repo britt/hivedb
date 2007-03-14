@@ -87,6 +87,19 @@ public class NodeDao extends JdbcDaoSupport implements DataAccessObject<Node,Int
 		if (rows != 1)
 			throw new SQLException("Unable to update node with id: " + node.getId());
 	}
+	
+	public void delete(Node node) throws SQLException {
+		Object[] parameters;
+		parameters = new Object[] { node.getId()};
+		JdbcTemplate j = getJdbcTemplate();
+		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
+				"DELETE from node_metadata where id=?",
+				new int[] { Types.INTEGER });
+		int rows = j.update(creatorFactory
+				.newPreparedStatementCreator(parameters));
+		if (rows != 1)
+			throw new SQLException("Unable to delete node for id: " + node.getId());
+	}
 
 	protected class NodeRowMapper implements RowMapper {
 		public Object mapRow(ResultSet rs, int rowNumber) throws SQLException {

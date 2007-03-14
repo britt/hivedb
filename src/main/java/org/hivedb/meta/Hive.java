@@ -158,11 +158,15 @@ public class Hive implements Finder {
 	}
 
 	/**
-	 * Hives are uniquely hashed by their URI, revision, and read-only state.
+	 * Hives are uniquely hashed by their URI, revision, partition dimensions, and read-only state
 	 */
 	public int hashCode() {
-		return HiveUtils.makeHashCode(new Object[] { hiveUri, revision,
-				readOnly });
+		return HiveUtils.makeHashCode(new Object[] { 
+				hiveUri, revision, getPartitionDimensions(), readOnly });
+	}
+	public boolean equals(Object obj)
+	{
+		return hashCode() == obj.hashCode();
 	}
 
 	/**
@@ -566,51 +570,69 @@ public class Hive implements Finder {
 		return secondaryIndex;
 	}
 
-	public PartitionDimension deletePartitionDimension(
-			PartitionDimension partitionDimension) throws HiveException {
-		isWritable(String.format("Deleting partition dimension %s",
-				partitionDimension.getName()));
-		existenceCheck(
-				String
-						.format(
-								"Partition dimension %s does not match any partition dimension in the hive",
-								partitionDimension.getName()),
-				getPartitionDimensions(), partitionDimension);
-
-		throw new RuntimeException("Delete is not yet implemented");
+	public PartitionDimension deletePartitionDimension(PartitionDimension partitionDimension) throws HiveException
+	{
+		isWritable(String.format("Deleting partition dimension %s", partitionDimension.getName()));
+		existenceCheck(String.format("Partition dimension %s does not match any partition dimension in the hive", partitionDimension.getName()),
+			getPartitionDimensions(),
+			partitionDimension);
+		BasicDataSource datasource = new HiveBasicDataSource(getHiveUri());
+		PartitionDimensionDao partitionDimensionDao = new PartitionDimensionDao(datasource);
+		try {
+			partitionDimensionDao.delete(partitionDimension);
+		} catch (SQLException e) {
+			throw new HiveException("Problem deletng the partition dimension", e);
+		}
+		return partitionDimension;
 	}
 
 	public Node deleteNode(Node node) throws HiveException {
 		isWritable(String.format("Deleting node %s", node.getUri()));
-		existenceCheck(
-				String
-						.format(
-								"Node %s does not match any node in the partition dimenesion %s",
-								node.getUri(), node.getNodeGroup()
-										.getPartitionDimension().getName()),
-				node.getNodeGroup().getPartitionDimension().getNodeGroup()
-						.getNodes(), node);
-
-		throw new RuntimeException("Delete is not yet implemented");
+		existenceCheck(String.format("Node %s does not match any node in the partition dimenesion %s", node.getUri(), node.getNodeGroup().getPartitionDimension().getName()),
+			node.getNodeGroup().getPartitionDimension().getNodeGroup().getNodes(),
+			node);
+		BasicDataSource datasource = new HiveBasicDataSource(getHiveUri());
+		NodeDao nodeDao = new NodeDao(datasource);
+		try {
+			nodeDao.delete(node);
+		} catch (SQLException e) {
+			throw new HiveException("Problem deletng the node", e);
+		}
+		return node;
 	}
 
-	public SecondaryIndex deleteSecondaryIndex(SecondaryIndex secondaryIndex)
-			throws HiveException {
-		isWritable(String.format("Deleting secondary index %s", secondaryIndex
-				.getName()));
-		existenceCheck(
-				String
-						.format(
-								"Secondary index %s does not match any node in the resource %s",
-								secondaryIndex.getName(), secondaryIndex
-										.getResource()), secondaryIndex
-						.getResource().getSecondaryIndexes(), secondaryIndex);
-
-		throw new RuntimeException("Delete is not yet implemented");
+	public Resource deleteResource(Resource resource) throws HiveException
+	{
+		isWritable(String.format("Deleting resource %s", resource.getName()));
+		existenceCheck(String.format("Resource %s does not match any resource in the partition dimenesion %s", resource.getName(), resource.getPartitionDimension().getName()),
+			resource.getPartitionDimension().getResources(),
+			resource);
+		BasicDataSource datasource = new HiveBasicDataSource(getHiveUri());
+		ResourceDao resourceDao = new ResourceDao(datasource);
+		try {
+			resourceDao.delete(resource);
+		} catch (SQLException e) {
+			throw new HiveException("Problem deletng the resource", e);
+		}
+		return resource;
+	}
+	public SecondaryIndex deleteSecondaryIndex(SecondaryIndex secondaryIndex) throws HiveException
+	{
+		isWritable(String.format("Deleting secondary index %s", secondaryIndex.getName()));
+		existenceCheck(String.format("Secondary index %s does not match any node in the resource %s", secondaryIndex.getName(), secondaryIndex.getResource()),
+			secondaryIndex.getResource().getSecondaryIndexes(),
+			secondaryIndex);
+		BasicDataSource datasource = new HiveBasicDataSource(getHiveUri());
+		SecondaryIndexDao secondaryindexDao = new SecondaryIndexDao(datasource);
+		try {
+			secondaryindexDao.delete(secondaryIndex);
+		} catch (SQLException e) {
+			throw new HiveException("Problem deletng the secondary index", e);
+		}
+		return secondaryIndex;
 	}
 
-	private void incrementAndPersistHive(DataSource datasource)
-			throws HiveException {
+	private void incrementAndPersistHive(DataSource datasource) throws HiveException {
 		try {
 			new HiveSemaphoreDao(datasource).incrementAndPersist();
 		} catch (SQLException e) {

@@ -142,8 +142,8 @@ public class HiveScenarioTest {
 	{
 		final Hive hive = hiveScenario.getHive();
 		for (final PartitionDimension partitionDimension : hiveScenario.getCreatedPartitionDimensions()) {
-			updatePimaryIndexIdentifiables(hive, hiveScenario, partitionDimension, new Filter.AllAllFilter());
-			updateSecondaryIndexIdentifiables(hive, hiveScenario, partitionDimension, new Filter.AllAllFilter());			
+			updatePimaryIndexIdentifiables(hive, hiveScenario, partitionDimension, new Filter.AllowAllFilter());
+			updateSecondaryIndexIdentifiables(hive, hiveScenario, partitionDimension, new Filter.AllowAllFilter());			
 		}
 		PartitionDimension anyPartitionDimension = null;
 		try {

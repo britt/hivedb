@@ -57,17 +57,6 @@ public class SecondaryIndexDao extends JdbcDaoSupport implements
 	
 		return new Integer(newObject.getId());
 	}
-	
-	public Integer delete(SecondaryIndex deleted) throws SQLException {
-		Object[] parameters = new Object[] {deleted.getResource().getId(),deleted.getColumnInfo().getName()};
-		
-		JdbcTemplate j = getJdbcTemplate();
-		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
-				"DELETE FROM secondary_index_metadata WHERE resource_id = ? and column_name = ?",
-				new int[] { Types.INTEGER, Types.VARCHAR});
-		int rows = j.update(creatorFactory.newPreparedStatementCreator(parameters));
-		return new Integer(rows);
-	}
 
 	public List<SecondaryIndex> loadAll() {
 		JdbcTemplate t = getJdbcTemplate();
@@ -114,6 +103,19 @@ public class SecondaryIndexDao extends JdbcDaoSupport implements
 				.newPreparedStatementCreator(parameters), generatedKey);
 		if (rows != 1)
 			throw new SQLException("Unable to update secondary index: " + secondaryIndex.getId());
+	}
+	
+	public void delete(SecondaryIndex secondaryIndex) throws SQLException {
+		Object[] parameters;
+		parameters = new Object[] { secondaryIndex.getId()};
+		JdbcTemplate j = getJdbcTemplate();
+		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
+				"DELETE from secondary_index_metadata where id=?",
+				new int[] { Types.INTEGER });
+		int rows = j.update(creatorFactory
+				.newPreparedStatementCreator(parameters));
+		if (rows != 1)
+			throw new SQLException("Unable to delete secondary index for id: " + secondaryIndex.getId());
 	}
 
 	public List<SecondaryIndex> findByResource(int id) {

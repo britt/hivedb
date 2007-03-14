@@ -51,6 +51,12 @@ public abstract class DaoTestCase extends DerbyTestCase {
 		index.setResource(createResource());
 		return index;
 	}
+	protected SecondaryIndex createSecondaryIndex(int id) {
+		SecondaryIndex index = new SecondaryIndex(id, new ColumnInfo("FOO",
+				java.sql.Types.VARCHAR));
+		index.setResource(createResource());
+		return index;
+	}
 
 	protected Node createNode() {
 		return new Node("jdbc:foo:foodb@localhost", false);

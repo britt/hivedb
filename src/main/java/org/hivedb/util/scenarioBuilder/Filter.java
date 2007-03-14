@@ -84,6 +84,13 @@ public abstract class Filter {
 		Predicate<T> doesThisSupersetItemMatchAnySubsetItem = makeDoesSupersetItemMatchAnySubsetItem(subset, new EqualFunction<T>());
 		return grep(doesThisSupersetItemMatchAnySubsetItem, superset);
 	}
+	public static<T> boolean grepItemAgainstList(final T subItem, Iterable<T> superset)
+	{
+		List<T> list = new ArrayList<T>(1);
+		list.add(subItem);
+		Predicate<T> doesThisSupersetItemMatchAnySubsetItem = makeDoesSupersetItemMatchAnySubsetItem(list, new EqualFunction<T>());
+		return isMatch(doesThisSupersetItemMatchAnySubsetItem, superset);
+	}
 	// Passes through all superset items that match a subset item
 	// The match is determined by passing all permutations needed of subset and superset item to CompareFunction, which returns true to indicate a match and false otherwise.
 	// Using Grep.EqualsFunction is the same as not passing in any CompareFunction
@@ -93,15 +100,36 @@ public abstract class Filter {
 		Predicate<SUP> doesThisSupersetItemMatchAnySubsetItem = makeDoesSupersetItemMatchAnySubsetItem(subset, compareFunction);
 		return grep(doesThisSupersetItemMatchAnySubsetItem, superset);
 	}
+	public static<SUP,SUB> boolean grepItemAgainstList(final SUB subItem, Iterable<SUP> superset, CompareFunction<SUB, SUP> compareFunction)
+	{
+		List<SUB> list = new ArrayList<SUB>(1);
+		list.add(subItem);
+		Predicate<SUP> doesThisSupersetItemMatchAnySubsetItem = makeDoesSupersetItemMatchAnySubsetItem(list,compareFunction);
+		return isMatch(doesThisSupersetItemMatchAnySubsetItem, superset);
+	}
 	
 	public static<T> Collection<T> grepFalseAgainstList(final Iterable<T> subset, Iterable<T> superset)
 	{
 		Predicate<T> doesThisSupersetItemNotMatchAnySubsetItem = makeDoesSupersetItemNotMatchAnySubsetItem(subset, new EqualFunction<T>());
 		return grep(doesThisSupersetItemNotMatchAnySubsetItem, superset);
 	}
+	public static<T> Collection<T> grepItemFalseAgainstList(final T subItem, Iterable<T> superset)
+	{
+		List<T> list = new ArrayList<T>();
+		list.add(subItem);
+		Predicate<T> doesThisSupersetItemNotMatchAnySubsetItem = makeDoesSupersetItemNotMatchAnySubsetItem(list, new EqualFunction<T>());
+		return grep(doesThisSupersetItemNotMatchAnySubsetItem, superset);
+	}
 	public static<SUP,SUB> Collection<SUP> grepFalseAgainstList(final Iterable<SUB> subset, Iterable<SUP> superset, CompareFunction<SUB, SUP> compareFunction)
 	{
 		Predicate<SUP> doesThisSupersetItemNotMatchAnySubsetItem = makeDoesSupersetItemNotMatchAnySubsetItem(subset, compareFunction);
+		return grep(doesThisSupersetItemNotMatchAnySubsetItem, superset);
+	}
+	public static<SUP,SUB> Collection<SUP> grepItemFalseAgainstList(final SUB subItem, Iterable<SUP> superset, CompareFunction<SUB, SUP> compareFunction)
+	{
+		List<SUB> list = new ArrayList<SUB>();
+		list.add(subItem);
+		Predicate<SUP> doesThisSupersetItemNotMatchAnySubsetItem = makeDoesSupersetItemNotMatchAnySubsetItem(list, compareFunction);
 		return grep(doesThisSupersetItemNotMatchAnySubsetItem, superset);
 	}
 	
@@ -197,7 +225,7 @@ public abstract class Filter {
 			return true;
 		}
 	}
-	public static class AllAllFilter extends Filter
+	public static class AllowAllFilter extends Filter
 	{
 		@SuppressWarnings("unchecked")
 		public <T> Collection<T> f(Iterable<T> iterable) {
@@ -210,7 +238,14 @@ public abstract class Filter {
 			return new ArrayList<T>();
 		}
 	}
-	
+	public static<T> Collection<T> removeItemAtIndex(int index, Collection<T> collection) {
+		List<T>list =  new ArrayList<T>(collection);
+		list.remove(index);
+		return list;
+	}
+	public static<T> Object getItemAtIndex(int index, Collection<T> collection) {
+		return new ArrayList<T>(collection).get(index);
+	}
 	
 	public static abstract class CompareFunction<T,S> {public abstract boolean f(final T item1, S item2 );}
 	
@@ -231,10 +266,7 @@ public abstract class Filter {
 		}
 	}
 
-	
-	
-	
-	
 }
+
     
 

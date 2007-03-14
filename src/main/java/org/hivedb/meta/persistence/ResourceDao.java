@@ -60,7 +60,7 @@ public class ResourceDao extends JdbcDaoSupport implements
 			throw new SQLException("Unable to retrieve generated primary key");
 		newObject.updateId(generatedKey.getKey().intValue());
 		
-		// depend
+		// dependencies
 		for (SecondaryIndex si : newObject.getSecondaryIndexes())
 			new SecondaryIndexDao(ds).create(si);
 			
@@ -79,6 +79,23 @@ public class ResourceDao extends JdbcDaoSupport implements
 				.newPreparedStatementCreator(parameters), generatedKey);
 		if (rows != 1)
 			throw new SQLException("Unable to update Resource: " + resource.getId());
+	}
+	
+	public void delete(Resource resource) throws SQLException {
+		// dependencies
+		for (SecondaryIndex si : resource.getSecondaryIndexes())
+			new SecondaryIndexDao(ds).create(si);
+		
+		Object[] parameters;
+		parameters = new Object[] { resource.getId()};
+		JdbcTemplate j = getJdbcTemplate();
+		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
+				"DELETE from resource_metadata where id=?",
+				new int[] { Types.INTEGER });
+		int rows = j.update(creatorFactory
+				.newPreparedStatementCreator(parameters));
+		if (rows != 1)
+			throw new SQLException("Unable to delete resource for id: " + resource.getId());
 	}
 
 	protected class ResourceRowMapper implements RowMapper {

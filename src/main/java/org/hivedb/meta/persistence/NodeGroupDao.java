@@ -6,6 +6,7 @@ package org.hivedb.meta.persistence;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,7 +75,24 @@ public class NodeGroupDao extends JdbcDaoSupport implements
 	}
 
 	public void update(NodeGroup object) throws SQLException {
-		// TODO Auto-generated method stub
+		// nothing to do
+	}
+	
+	public void delete(NodeGroup nodeGroup) throws SQLException {
+		// dependencies
+		for (Node node : nodeGroup.getNodes())
+			new NodeDao(ds).delete(node);
+		
+		Object[] parameters;
+		parameters = new Object[] { nodeGroup.getId()};
+		JdbcTemplate j = getJdbcTemplate();
+		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
+				"DELETE from node_group_metadata where id=?",
+				new int[] { Types.INTEGER });
+		int rows = j.update(creatorFactory
+				.newPreparedStatementCreator(parameters));
+		if (rows != 1)
+			throw new SQLException("Unable to delete node group for id: " + nodeGroup.getId());
 	}
 
 	public NodeGroup get(int id) {

@@ -119,4 +119,20 @@ public class PartitionDimensionDao extends JdbcDaoSupport implements DataAccessO
 			throw new SQLException("Unable to update Partition Dimension for id: " + partitionDimension.getId());
 	}
 
+	public void delete(PartitionDimension partitionDimension) throws SQLException {
+		// dependencies
+		new NodeGroupDao(ds).delete(partitionDimension.getNodeGroup());
+		for (Resource r : partitionDimension.getResources())
+			new ResourceDao(ds).delete(r);
+		
+		Object[] parameters;
+		parameters = new Object[] { partitionDimension.getId()};
+		JdbcTemplate j = getJdbcTemplate();
+		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
+				"DELETE from partition_dimension_metadata where id=?",
+				new int[] { Types.INTEGER });
+		int rows = j.update(creatorFactory.newPreparedStatementCreator(parameters));
+		if (rows != 1)
+			throw new SQLException("Unable to delete Partition Dimension for id: " + partitionDimension.getId());	
+	}
 }
