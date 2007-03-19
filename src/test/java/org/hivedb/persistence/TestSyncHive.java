@@ -14,7 +14,6 @@ import org.hivedb.util.scenarioBuilder.HiveScenario;
 import org.hivedb.util.scenarioBuilder.HiveScenarioAlternativeConfig;
 import org.testng.Assert;
 import org.testng.annotations.BeforeSuite;
-import org.testng.annotations.Test;
 
 public class TestSyncHive extends DerbyTestCase {
 	@BeforeSuite

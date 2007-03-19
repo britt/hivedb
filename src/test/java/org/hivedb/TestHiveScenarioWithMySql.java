@@ -1,27 +1,20 @@
 package org.hivedb;
 
-import java.sql.DriverManager;
-import java.sql.SQLException;
-
+import org.hivedb.util.MysqlTestCase;
 import org.hivedb.util.scenarioBuilder.HiveScenarioAlternativeConfig;
 import org.hivedb.util.scenarioBuilder.HiveScenarioMarauderConfig;
 import org.testng.annotations.BeforeTest;
 
-public class TestHiveScenarioWithMySql {
+public class TestHiveScenarioWithMySql extends MysqlTestCase {
 	
+	private String database = "test";
 	@BeforeTest
 	public void setUp() {
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
+			recycleDatabase(database, getDatabaseAgnosticConnectString());
 		} 
 		catch (Exception e) { throw new RuntimeException("Failed to load driver class"); }
-	}
-
-	public String getDatabaseAgnosticConnectString() {
-		return "jdbc:mysql://localhost/?user=test&password=test";
-	}
-	public String getConnectString(String database) {
-		return "jdbc:mysql://localhost/"+database+"?user=test&password=test";
 	}
 	
 	/**
@@ -30,9 +23,7 @@ public class TestHiveScenarioWithMySql {
 	 */
 	//@Test(groups={"mysql"})
 	public void testPirateDomain() throws Exception {
-		String databaseName = "test";
-		recycleDatabase(databaseName, getDatabaseAgnosticConnectString());
-		new HiveScenarioTest(new HiveScenarioMarauderConfig(getConnectString(databaseName))).performTest();
+		new HiveScenarioTest(new HiveScenarioMarauderConfig(getConnectString(database))).performTest();
 	}
 
 	/**
@@ -40,18 +31,6 @@ public class TestHiveScenarioWithMySql {
 	 */
 	//@Test(groups={"mysql"})
 	public void testMemberDomain() throws Exception {
-		String databaseName = "alternative_test";
-		recycleDatabase(databaseName, getDatabaseAgnosticConnectString());
-		new HiveScenarioTest(new HiveScenarioAlternativeConfig(getConnectString(databaseName))).performTest();
-	}
-	
-	private static void recycleDatabase(String databaseName, String databaseAgnosticConnectionString) throws SQLException {
-		java.sql.Connection connection  = DriverManager.getConnection( databaseAgnosticConnectionString );
-		try {
-			connection.prepareStatement("drop database " + databaseName).execute();
-		}
-		catch (Exception e) {}
-		connection.prepareStatement("create database " + databaseName).execute();
-		connection.close();
+		new HiveScenarioTest(new HiveScenarioAlternativeConfig(getConnectString(database))).performTest();
 	}
 }
