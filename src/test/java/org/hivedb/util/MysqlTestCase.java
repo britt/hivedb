@@ -1,28 +1,45 @@
 package org.hivedb.util;
 
 import java.sql.DriverManager;
-import java.sql.SQLException;
+
+import org.testng.annotations.BeforeMethod;
 
 public class MysqlTestCase {
+	
+	@BeforeMethod
+	public void setUp() {
+		recycleDatabase();
+	}
 	
 	protected String getDatabaseName() {
 		return "test";
 	}
-	protected void recycleDatabase(String databaseName, String databaseAgnosticConnectionString) throws SQLException {
-		java.sql.Connection connection  = DriverManager.getConnection( databaseAgnosticConnectionString );
+	
+	protected void recycleDatabase() {
+		java.sql.Connection connection = null;
 		try {
-			connection.prepareStatement("drop database " + databaseName).execute();
+			Class.forName("com.mysql.jdbc.Driver");
+			connection = DriverManager.getConnection( getDatabaseAgnosticConnectString() );
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		try {
+			connection.prepareStatement("drop database " + getDatabaseName()).execute();
 		}
 		catch (Exception e) {}
-		connection.prepareStatement("create database " + databaseName).execute();
-		connection.close();
+		try{
+			connection.prepareStatement("create database " + getDatabaseName()).execute();
+			connection.close();
+		}
+		catch (Exception e) {  }
 	}
 	
 	protected String getDatabaseAgnosticConnectString() {
 		return "jdbc:mysql://localhost/?user=test&password=test";
 	}
 	
-	protected String getConnectString(String database) {
-		return "jdbc:mysql://localhost/"+database+"?user=test&password=test";
+	protected String getConnectString() {
+		return "jdbc:mysql://localhost/"+getDatabaseName()+"?user=test&password=test";
 	}
 }

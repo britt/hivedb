@@ -7,12 +7,11 @@ import org.testng.annotations.BeforeTest;
 
 public class TestHiveScenarioWithMySql extends MysqlTestCase {
 	
-	private String database = "test";
 	@BeforeTest
 	public void setUp() {
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
-			recycleDatabase(database, getDatabaseAgnosticConnectString());
+			recycleDatabase();
 		} 
 		catch (Exception e) { throw new RuntimeException("Failed to load driver class"); }
 	}
@@ -23,7 +22,7 @@ public class TestHiveScenarioWithMySql extends MysqlTestCase {
 	 */
 	//@Test(groups={"mysql"})
 	public void testPirateDomain() throws Exception {
-		new HiveScenarioTest(new HiveScenarioMarauderConfig(getConnectString(database))).performTest();
+		new HiveScenarioTest(new HiveScenarioMarauderConfig(getConnectString())).performTest();
 	}
 
 	/**
@@ -31,6 +30,6 @@ public class TestHiveScenarioWithMySql extends MysqlTestCase {
 	 */
 	//@Test(groups={"mysql"})
 	public void testMemberDomain() throws Exception {
-		new HiveScenarioTest(new HiveScenarioAlternativeConfig(getConnectString(database))).performTest();
+		new HiveScenarioTest(new HiveScenarioAlternativeConfig(getConnectString())).performTest();
 	}
 }
