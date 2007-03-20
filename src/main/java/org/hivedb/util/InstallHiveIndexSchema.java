@@ -36,17 +36,22 @@ public class InstallHiveIndexSchema {
 				public PartitionDimension f(final Class primaryClass) {
 					try {
 						final PrimaryIndexIdentifiable primaryInstancePrototype = getPrimaryIndexIdentifiablePrototype(primaryClass); 
+						final int primitiveTypeToJdbcType = JdbcTypeMapper.primitiveTypeToJdbcType(primaryClass.getMethod("getIdAsPrimaryIndexInstance").getReturnType());
+						final NodeGroup nodeGroup = new NodeGroup(Transform.map(new Unary<Node,Node>() { public Node f(Node n) {return new Node(n.getUri(), n.isReadOnly());}}, hiveScenarioConfig.getDataNodes(hive)));
+						final Map<Class, Collection<Class>> primaryToResourceMap = hiveScenarioConfig.getPrimaryToResourceMap();
+						final Collection<Class> collectionOfResourceClasses = primaryToResourceMap.get(primaryClass);
+						final Collection<Resource> map = Transform.map(new Unary<Class, Resource>() {
+														public Resource f(Class resourceClass) { 
+															ResourceIdentifiable resourceIdentifiable = getResourceIdentifiablePrototype(primaryClass, resourceClass);									
+															return new Resource(resourceIdentifiable.getResourceName(), constructSecondaryIndexesOfResource(resourceIdentifiable));
+														}},
+														collectionOfResourceClasses);
 						return new PartitionDimension(
 							primaryInstancePrototype.getPartitionDimensionName(),
-							JdbcTypeMapper.primitiveTypeToJdbcType(primaryClass.getMethod("getIdAsPrimaryIndexInstance").getReturnType()),
-							new NodeGroup(Transform.map(new Unary<Node,Node>() { public Node f(Node n) {return new Node(n.getUri(), n.isReadOnly());}}, hiveScenarioConfig.getDataNodes(hive))),
+							primitiveTypeToJdbcType,
+							nodeGroup,
 							indexUriIterator.next(),
-							Transform.map(new Unary<Class, Resource>() {
-								public Resource f(Class resourceClass) { 
-									ResourceIdentifiable resourceIdentifiable = getResourceIdentifiablePrototype(primaryClass, resourceClass);									
-									return new Resource(resourceIdentifiable.getResourceName(), constructSecondaryIndexesOfResource(resourceIdentifiable));
-								}},
-								hiveScenarioConfig.getPrimaryToResourceMap().get(primaryClass))
+							map
 						);
 					} catch (Exception e) {
 						throw new RuntimeException(e);
@@ -77,7 +82,7 @@ public class InstallHiveIndexSchema {
 								return new SecondaryIndex(
 										new ColumnInfo(
 											secondaryIndexIdentifiable.getSecondaryIdName(),											
-											JdbcTypeMapper.primitiveTypeToJdbcType(secondaryIndexIdentifiable.getClass().getMethod("getIdAsSecondaryIndexInstance").getReturnType())));
+											JdbcTypeMapper.primitiveTypeToJdbcType(secondaryIndexIdentifiable.getIdClass())));
 							} catch (Exception e) {
 								throw new RuntimeException(e);
 							}

@@ -31,6 +31,7 @@ public interface SecondaryIndexIdentifiable
 	 */
 	Object getPrimaryIndexIdAsSecondaryIndexInstance();
 	
+	Class getIdClass();
 	/**
 	 * 
 	 * @return The class that is the primary class of this secondary class. If a class is both a primary and secondary class

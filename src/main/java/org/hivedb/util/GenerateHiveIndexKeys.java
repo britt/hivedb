@@ -1,6 +1,7 @@
 package org.hivedb.util;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -16,6 +17,7 @@ import org.hivedb.util.scenarioBuilder.HiveScenarioConfig;
 import org.hivedb.util.scenarioBuilder.NumberIterator;
 import org.hivedb.util.scenarioBuilder.PrimaryAndSecondaryIndexIdentifiable;
 import org.hivedb.util.scenarioBuilder.PrimaryIndexIdentifiable;
+import org.hivedb.util.scenarioBuilder.ResourceIdentifiable;
 import org.hivedb.util.scenarioBuilder.RingIteratorable;
 import org.hivedb.util.scenarioBuilder.SecondaryIndexIdentifiable;
 import org.hivedb.util.scenarioBuilder.Transform;
@@ -91,10 +93,18 @@ public class GenerateHiveIndexKeys {
 											try { 
 												return  Transform.map(new Unary<PrimaryIndexIdentifiable, SecondaryIndexIdentifiable>() {	
 													public SecondaryIndexIdentifiable f(PrimaryIndexIdentifiable primaryIndexInstance) {	
-														try {														
-															return  sameClass
+														//TODO fix
+														try {
+															ResourceIdentifiable resourceIdentifiable = (ResourceIdentifiable)secondaryIndexClass
+															.getConstructor(new Class[] {primaryIndexInstance.getClass()})
+																.newInstance(new Object[] {primaryIndexInstance});
+															
+													
+															
+															//TODO Fifx
+															return  (SecondaryIndexIdentifiable) (sameClass
 																? generateAndInsertSameClassSecondaryIndexInstance(hive, partitionDimension, secondaryIndexClass, secondaryIndex, (PrimaryAndSecondaryIndexIdentifiable)primaryIndexInstance)								
-																: generateAndInsertDifferentClassSecondaryIndexInstance(hive, partitionDimension, secondaryIndexClass, secondaryIndex, primaryIndexInstance);
+																: new ArrayList<SecondaryIndexIdentifiable>(generateAndInsertDifferentClassSecondaryIndexInstance(hive, partitionDimension, resourceIdentifiable, secondaryIndexClass, secondaryIndex, primaryIndexInstance)).get(0));
 														}
 														catch ( Exception e) { throw new RuntimeException(e); }
 													}
@@ -103,19 +113,18 @@ public class GenerateHiveIndexKeys {
 														// Construct a SecondaryIndex instance with a reference to a PrimaryIndex instance
 														// In this case, the types of the primary and secondary classes match, so make secondary index
 														// between getSecondaryId() and getId() values										
-														persistSecondaryIndex(hive, secondaryIndex, primaryIndexInstance, primaryIndexInstance);
+														persistSecondaryIndex(hive, secondaryIndex, primaryIndexInstance, primaryIndexInstance, (ResourceIdentifiable)primaryIndexInstance);
 														return primaryIndexInstance;
 													}
 														
-													private SecondaryIndexIdentifiable generateAndInsertDifferentClassSecondaryIndexInstance(final Hive hive, final PartitionDimension partitionDimension, final Class secondaryIndexClass, SecondaryIndex secondaryIndex, PrimaryIndexIdentifiable primaryIndexInstance) throws Exception {
+													private Collection<SecondaryIndexIdentifiable> generateAndInsertDifferentClassSecondaryIndexInstance(final Hive hive, final PartitionDimension partitionDimension, final ResourceIdentifiable resourceIdentifiable, final Class secondaryIndexIndentifiableClass, SecondaryIndex secondaryIndex, PrimaryIndexIdentifiable primaryIndexInstance) throws Exception {
 														// Construct a SecondaryIndex instance with a reference to a PrimaryIndex instance
 														// In this case, the types of the primary and secondary classes are different, so make a secondary index
 														// between getId() of the secondary class and the getId() of the primary class
-														SecondaryIndexIdentifiable secondaryIndexInstance = (SecondaryIndexIdentifiable)secondaryIndexClass
-																	.getConstructor(new Class[] {primaryIndexInstance.getClass()})
-																		.newInstance(new Object[] {primaryIndexInstance});														
-														persistSecondaryIndex(hive, secondaryIndex, secondaryIndexInstance, secondaryIndexInstance.getPrimaryIndexInstanceReference());													
-														return secondaryIndexInstance;
+														
+														for (SecondaryIndexIdentifiable secondaryIndexInstance : resourceIdentifiable.getSecondaryIndexIdentifiables())
+															persistSecondaryIndex(hive, secondaryIndex, secondaryIndexInstance, secondaryIndexInstance.getPrimaryIndexInstanceReference(), resourceIdentifiable);													
+														return resourceIdentifiable.getSecondaryIndexIdentifiables();
 													}	
 												}, primaryPartitionIndexInstanceIterable);
 											}
@@ -126,7 +135,7 @@ public class GenerateHiveIndexKeys {
 			},
 			partitionDimensionMap.entrySet());
 	}
-	protected void persistSecondaryIndex(final Hive hive, SecondaryIndex secondaryIndex, SecondaryIndexIdentifiable secondaryIndexInstance, PrimaryIndexIdentifiable primaryIndexInstance) throws HiveException, SQLException {
+	protected void persistSecondaryIndex(final Hive hive, SecondaryIndex secondaryIndex, SecondaryIndexIdentifiable secondaryIndexInstance, PrimaryIndexIdentifiable primaryIndexInstance, ResourceIdentifiable resourceIdentifiable) throws HiveException, SQLException {
 		hive.insertSecondaryIndexKey(secondaryIndex, secondaryIndexInstance.getIdAsSecondaryIndexInstance(), primaryIndexInstance.getIdAsPrimaryIndexInstance());
 	}
 }
