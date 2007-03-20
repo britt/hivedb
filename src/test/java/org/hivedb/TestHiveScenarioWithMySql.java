@@ -29,7 +29,7 @@ public class TestHiveScenarioWithMySql extends MysqlTestCase {
 	/**
 	 *  An alternative object model
 	 */
-	@Test(groups={"mysql"})
+	//@Test(groups={"mysql"})
 	public void testMemberDomain() throws Exception {
 		new HiveScenarioTest(new HiveScenarioMemberConfig(getConnectString())).performTest();
 	}
