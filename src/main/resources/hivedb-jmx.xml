@@ -13,7 +13,7 @@
 		depends-on="rmiRegistry">
 		<property name="objectName" value="connector:name=rmi" />
 		<property name="serviceUrl"
-			value="service:jmx:rmi://localhost/jndi/rmi://localhost:1099/myconnector" />
+			value="service:jmx:rmi://localhost/jndi/rmi://localhost:1099/anything" />
 	</bean>
 	
 	<bean name="NodeFillStatistics" class="org.hivedb.management.statistics.NodeFillStatisticsMBean">
@@ -45,7 +45,7 @@
 				<entry key="Server:name=HttpAdaptorFormatted">
 					<bean class="mx4j.tools.adaptor.http.HttpAdaptor">
 						<property name="port" value="9000" />
-						<property name="host" value="0.0.0.0" />
+						<property name="host" value="127.0.0.1" />
 						<property name="processor">
 							<bean
 								class="mx4j.tools.adaptor.http.XSLTProcessor" />
@@ -55,7 +55,7 @@
 				<entry key="Server:name=HttpAdaptorRaw">
 					<bean class="mx4j.tools.adaptor.http.HttpAdaptor">
 						<property name="port" value="9001" />
-						<property name="host" value="0.0.0.0" />
+						<property name="host" value="127.0.0.1" />
 					</bean>
 				</entry>
 				<entry key="HiveDB:name=NodeFillStatistics">

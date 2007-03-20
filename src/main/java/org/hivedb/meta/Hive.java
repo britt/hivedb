@@ -15,6 +15,7 @@ import javax.sql.DataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.log4j.Logger;
+import org.hivedb.HiveDbDialect;
 import org.hivedb.HiveException;
 import org.hivedb.HiveReadOnlyException;
 import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
@@ -149,12 +150,18 @@ public class Hive implements Finder {
 	}
 
 	/**
-	 * 
-	 * @return the URI of the hive database where all meta data is stored for
+	 * the URI of the hive database where all meta data is stored for
 	 *         this hive.
 	 */
 	public String getHiveUri() {
 		return hiveUri;
+	}
+
+	/**
+	 * A member of the HiveDbDialect enumeration corresponding to the underlying database type
+	 */
+	public HiveDbDialect getDialect() {
+		return DriverLoader.discernDialect(hiveUri);
 	}
 
 	/**
