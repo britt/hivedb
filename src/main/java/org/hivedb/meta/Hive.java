@@ -61,7 +61,7 @@ public class Hive implements Finder {
 	 * attempt to load the Hive throws any exception, the Hive class will
 	 * attempt to install the database schema at the target URI, and then
 	 * attempt to reload that schema one time before throwing a HiveException.
-	 * 
+	 *
 	 * @param hiveDatabaseUri
 	 *            Target hive
 	 * @return Hive (existing or new) located at hiveDatabaseUri
@@ -120,7 +120,8 @@ public class Hive implements Finder {
 	/**
 	 * Explicitly syncs the hive with the persisted data, rather than waiting
 	 * for the periodic sync.
-	 * @throws HiveException 
+	 * 
+	 * @throws HiveException
 	 * 
 	 */
 	public void sync() throws HiveException {
@@ -150,29 +151,30 @@ public class Hive implements Finder {
 	}
 
 	/**
-	 * the URI of the hive database where all meta data is stored for
-	 *         this hive.
+	 * the URI of the hive database where all meta data is stored for this hive.
 	 */
 	public String getHiveUri() {
 		return hiveUri;
 	}
 
 	/**
-	 * A member of the HiveDbDialect enumeration corresponding to the underlying database type
+	 * A member of the HiveDbDialect enumeration corresponding to the underlying
+	 * database type
 	 */
 	public HiveDbDialect getDialect() {
 		return DriverLoader.discernDialect(hiveUri);
 	}
 
 	/**
-	 * Hives are uniquely hashed by their URI, revision, partition dimensions, and read-only state
+	 * Hives are uniquely hashed by their URI, revision, partition dimensions,
+	 * and read-only state
 	 */
 	public int hashCode() {
-		return HiveUtils.makeHashCode(new Object[] { 
-				hiveUri, revision, getPartitionDimensions(), readOnly });
+		return HiveUtils.makeHashCode(new Object[] { hiveUri, revision,
+				getPartitionDimensions(), readOnly });
 	}
-	public boolean equals(Object obj)
-	{
+
+	public boolean equals(Object obj) {
 		return hashCode() == obj.hashCode();
 	}
 
@@ -235,34 +237,52 @@ public class Hive implements Finder {
 	public Collection<PartitionDimension> getPartitionDimensions() {
 		return partitionDimensions;
 	}
+
 	@SuppressWarnings("unchecked")
 	public <T extends Nameable> Collection<T> findCollection(Class<T> forClass) {
 		return (Collection<T>) getPartitionDimensions();
 	}
-	
+
 	/**
 	 * Gets a partition dimension by name.
 	 * 
 	 * @param name
 	 *            The user-defined name of a partition dimension
 	 * @return
-	 * @throws HiveException
+	 * @throws IllegalArgumentException
 	 *             Thrown if no parition dimension with the given name exists.
+	 *             To avoid this exception, test for existence first with
 	 */
-	public PartitionDimension getPartitionDimension(String name)
-			throws HiveException {
+	public PartitionDimension getPartitionDimension(String name) {
+		PartitionDimension dimension = getPartitionDimensionUnchecked(name);
+		if (dimension == null)
+			throw new IllegalArgumentException("PartitionDimension with name "
+					+ name + " not found.");
+		return dimension;
+	}
+	
+	/**
+	 * Test for existence of this partition dimension name
+	 * @param name Name of partition dimension
+	 * @return True if partition dimension exists
+	 */
+	public boolean containsPartitionDimension(String name) {
+		return getPartitionDimensionUnchecked(name) != null;
+	}
+
+	private PartitionDimension getPartitionDimensionUnchecked(String name) {
 		for (PartitionDimension partitionDimension : getPartitionDimensions())
 			if (partitionDimension.getName().equals(name))
 				return partitionDimension;
-		throw new HiveException("PartitionDimension with name " + name
-				+ " not found.");
+		return null;
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T extends Nameable> T findByName(Class<T> forClass, String name) throws HiveException {
+	public <T extends Nameable> T findByName(Class<T> forClass, String name)
+			throws HiveException {
 		return (T) getPartitionDimension(name);
 	}
-	
+
 	/**
 	 * Adds a new partition dimension to the hive. The partition dimension
 	 * persists to the database along with its NodeGroup, Nodes, Resources, and
@@ -577,27 +597,38 @@ public class Hive implements Finder {
 		return secondaryIndex;
 	}
 
-	public PartitionDimension deletePartitionDimension(PartitionDimension partitionDimension) throws HiveException
-	{
-		isWritable(String.format("Deleting partition dimension %s", partitionDimension.getName()));
-		existenceCheck(String.format("Partition dimension %s does not match any partition dimension in the hive", partitionDimension.getName()),
-			getPartitionDimensions(),
-			partitionDimension);
+	public PartitionDimension deletePartitionDimension(
+			PartitionDimension partitionDimension) throws HiveException {
+		isWritable(String.format("Deleting partition dimension %s",
+				partitionDimension.getName()));
+		existenceCheck(
+				String
+						.format(
+								"Partition dimension %s does not match any partition dimension in the hive",
+								partitionDimension.getName()),
+				getPartitionDimensions(), partitionDimension);
 		BasicDataSource datasource = new HiveBasicDataSource(getHiveUri());
-		PartitionDimensionDao partitionDimensionDao = new PartitionDimensionDao(datasource);
+		PartitionDimensionDao partitionDimensionDao = new PartitionDimensionDao(
+				datasource);
 		try {
 			partitionDimensionDao.delete(partitionDimension);
 		} catch (SQLException e) {
-			throw new HiveException("Problem deletng the partition dimension", e);
+			throw new HiveException("Problem deletng the partition dimension",
+					e);
 		}
 		return partitionDimension;
 	}
 
 	public Node deleteNode(Node node) throws HiveException {
 		isWritable(String.format("Deleting node %s", node.getUri()));
-		existenceCheck(String.format("Node %s does not match any node in the partition dimenesion %s", node.getUri(), node.getNodeGroup().getPartitionDimension().getName()),
-			node.getNodeGroup().getPartitionDimension().getNodeGroup().getNodes(),
-			node);
+		existenceCheck(
+				String
+						.format(
+								"Node %s does not match any node in the partition dimenesion %s",
+								node.getUri(), node.getNodeGroup()
+										.getPartitionDimension().getName()),
+				node.getNodeGroup().getPartitionDimension().getNodeGroup()
+						.getNodes(), node);
 		BasicDataSource datasource = new HiveBasicDataSource(getHiveUri());
 		NodeDao nodeDao = new NodeDao(datasource);
 		try {
@@ -608,12 +639,15 @@ public class Hive implements Finder {
 		return node;
 	}
 
-	public Resource deleteResource(Resource resource) throws HiveException
-	{
+	public Resource deleteResource(Resource resource) throws HiveException {
 		isWritable(String.format("Deleting resource %s", resource.getName()));
-		existenceCheck(String.format("Resource %s does not match any resource in the partition dimenesion %s", resource.getName(), resource.getPartitionDimension().getName()),
-			resource.getPartitionDimension().getResources(),
-			resource);
+		existenceCheck(
+				String
+						.format(
+								"Resource %s does not match any resource in the partition dimenesion %s",
+								resource.getName(), resource
+										.getPartitionDimension().getName()),
+				resource.getPartitionDimension().getResources(), resource);
 		BasicDataSource datasource = new HiveBasicDataSource(getHiveUri());
 		ResourceDao resourceDao = new ResourceDao(datasource);
 		try {
@@ -623,12 +657,18 @@ public class Hive implements Finder {
 		}
 		return resource;
 	}
-	public SecondaryIndex deleteSecondaryIndex(SecondaryIndex secondaryIndex) throws HiveException
-	{
-		isWritable(String.format("Deleting secondary index %s", secondaryIndex.getName()));
-		existenceCheck(String.format("Secondary index %s does not match any node in the resource %s", secondaryIndex.getName(), secondaryIndex.getResource()),
-			secondaryIndex.getResource().getSecondaryIndexes(),
-			secondaryIndex);
+
+	public SecondaryIndex deleteSecondaryIndex(SecondaryIndex secondaryIndex)
+			throws HiveException {
+		isWritable(String.format("Deleting secondary index %s", secondaryIndex
+				.getName()));
+		existenceCheck(
+				String
+						.format(
+								"Secondary index %s does not match any node in the resource %s",
+								secondaryIndex.getName(), secondaryIndex
+										.getResource()), secondaryIndex
+						.getResource().getSecondaryIndexes(), secondaryIndex);
 		BasicDataSource datasource = new HiveBasicDataSource(getHiveUri());
 		SecondaryIndexDao secondaryindexDao = new SecondaryIndexDao(datasource);
 		try {
@@ -639,7 +679,8 @@ public class Hive implements Finder {
 		return secondaryIndex;
 	}
 
-	private void incrementAndPersistHive(DataSource datasource) throws HiveException {
+	private void incrementAndPersistHive(DataSource datasource)
+			throws HiveException {
 		try {
 			new HiveSemaphoreDao(datasource).incrementAndPersist();
 		} catch (SQLException e) {
@@ -1526,8 +1567,5 @@ public class Hive implements Finder {
 	public PartitionKeyStatisticsDao getStatistics() {
 		return statistics;
 	}
-
-
-
 
 }
