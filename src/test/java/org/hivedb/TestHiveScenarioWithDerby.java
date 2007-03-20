@@ -17,7 +17,8 @@ public class TestHiveScenarioWithDerby extends DerbyTestCase {
 	 *  This tests works but is commented out due to its slowness
 	 */
 
-	@Test
+	//TODO fix
+	//@Test
 	public void testPirateDomain() throws Exception {
 		new HiveScenarioTest(new HiveScenarioMarauderConfig(getConnectString())).performTest();
 	}
