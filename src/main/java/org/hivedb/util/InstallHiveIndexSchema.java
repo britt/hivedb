@@ -16,6 +16,7 @@ import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.scenarioBuilder.HiveScenarioConfig;
 import org.hivedb.util.scenarioBuilder.PrimaryIndexIdentifiable;
+import org.hivedb.util.scenarioBuilder.ResourceIdentifiable;
 import org.hivedb.util.scenarioBuilder.RingIteratorable;
 import org.hivedb.util.scenarioBuilder.SecondaryIndexIdentifiable;
 import org.hivedb.util.scenarioBuilder.Transform;
@@ -38,12 +39,12 @@ public class InstallHiveIndexSchema {
 						return new PartitionDimension(
 							primaryInstancePrototype.getPartitionDimensionName(),
 							JdbcTypeMapper.primitiveTypeToJdbcType(primaryClass.getMethod("getIdAsPrimaryIndexInstance").getReturnType()),
-							new NodeGroup(Transform.map(new Unary<Node,Node>() { public Node f(Node n) {return new Node(n.getUri(), n.isReadOnly());}}, hiveScenarioConfig.getNodes(hive))),
+							new NodeGroup(Transform.map(new Unary<Node,Node>() { public Node f(Node n) {return new Node(n.getUri(), n.isReadOnly());}}, hiveScenarioConfig.getDataNodes(hive))),
 							indexUriIterator.next(),
 							Transform.map(new Unary<Class, Resource>() {
-								public Resource f(Class secondaryClass) { 
-									SecondaryIndexIdentifiable secondaryIndexIdentifiable = getSecondaryIndexIdentifiablePrototype(primaryClass, secondaryClass);									
-									return new Resource(secondaryIndexIdentifiable.getResourceName(), constructSecondaryIndexesOfResource(primaryClass, secondaryClass));
+								public Resource f(Class resourceClass) { 
+									ResourceIdentifiable resourceIdentifiable = getResourceIdentifiablePrototype(primaryClass, resourceClass);									
+									return new Resource(resourceIdentifiable.getResourceName(), constructSecondaryIndexesOfResource(resourceIdentifiable));
 								}},
 								hiveScenarioConfig.getPrimaryToResourceMap().get(primaryClass))
 						);
@@ -66,29 +67,33 @@ public class InstallHiveIndexSchema {
 		return partitionDimensionMap;
 	}
 	
-	public static Collection<SecondaryIndex> constructSecondaryIndexesOfResource(Class primaryIndexClass, Class secondaryIndexClass) {	
+	public static Collection<SecondaryIndex> constructSecondaryIndexesOfResource(final ResourceIdentifiable resourceIdentifiable) {	
 		try {
 			return 
-				Arrays.asList(new SecondaryIndex[] {			
-					new SecondaryIndex(
-						new ColumnInfo(
-							getNameOfSecondaryIndex(primaryIndexClass, secondaryIndexClass),											
-							JdbcTypeMapper.primitiveTypeToJdbcType(secondaryIndexClass.getMethod("getIdAsSecondaryIndexInstance").getReturnType())))		
-				});
+				Transform.map(
+					new Unary<SecondaryIndexIdentifiable, SecondaryIndex>() {
+						public SecondaryIndex f(SecondaryIndexIdentifiable secondaryIndexIdentifiable) {
+							try {
+								return new SecondaryIndex(
+										new ColumnInfo(
+											secondaryIndexIdentifiable.getSecondaryIdName(),											
+											JdbcTypeMapper.primitiveTypeToJdbcType(secondaryIndexIdentifiable.getClass().getMethod("getIdAsSecondaryIndexInstance").getReturnType())));
+							} catch (Exception e) {
+								throw new RuntimeException(e);
+							}
+					}}, 
+					resourceIdentifiable.getSecondaryIndexIdentifiables());
+					
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}		
-	}
-	private static String getNameOfSecondaryIndex(Class primaryIndexClass, Class secondaryIndexClass) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, InstantiationException {
-		Object newInstance = constructSecondaryInstance(primaryIndexClass, secondaryIndexClass);
-		return (String)secondaryIndexClass.getMethod("getSecondaryIdName").invoke(newInstance);					
 	}
 
 	public static PrimaryIndexIdentifiable getPrimaryIndexIdentifiablePrototype(final Class primaryClass) throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
 		return (PrimaryIndexIdentifiable) primaryClass.getConstructor(new Class[] {}).newInstance(new Object[] {});
 	}
-	public static SecondaryIndexIdentifiable getSecondaryIndexIdentifiablePrototype(final Class primaryClass, final Class secondaryClass) {
-		return constructSecondaryInstance(primaryClass, secondaryClass);
+	public static ResourceIdentifiable getResourceIdentifiablePrototype(final Class primaryClass, final Class resourceClass) {
+		return constructResourceInstance(primaryClass, resourceClass);
 	}
 	
 	/**
@@ -99,23 +104,23 @@ public class InstallHiveIndexSchema {
 	 *  SecondaryIndexIdentifiable classes construct with a PrimaryIndexIdentifiable instance, whose
 	 *  id becomes the primary index key of the secondary index key
 	 * @param primaryIndexClass
-	 * @param secondaryIndexClass
+	 * @param resourceClass
 	 * @return
 	 * @throws NoSuchMethodException
 	 * @throws InstantiationException
 	 * @throws IllegalAccessException
 	 * @throws InvocationTargetException
 	 */
-	public static SecondaryIndexIdentifiable constructSecondaryInstance(Class primaryIndexClass, Class secondaryIndexClass) {
+	public static ResourceIdentifiable constructResourceInstance(Class primaryIndexClass, Class resourceClass) {
 		try {
 			// Choose the right constructor depending on whether the secondaryIndexClass is the same as the primary index class
-			Constructor constructor = secondaryIndexClass.equals(primaryIndexClass)
-				? secondaryIndexClass.getConstructor(new Class[] {})
-				: secondaryIndexClass.getConstructor(new Class[] {primaryIndexClass});
-			Object[] args = secondaryIndexClass.equals(primaryIndexClass)
+			Constructor constructor = resourceClass.equals(primaryIndexClass)
+				? resourceClass.getConstructor(new Class[] {})
+				: resourceClass.getConstructor(new Class[] {primaryIndexClass});
+			Object[] args = resourceClass.equals(primaryIndexClass)
 				? new Object[] {}
 				: new Object[] { primaryIndexClass.getConstructor(new Class[] {}).newInstance(new Object[] {}) };			
-			SecondaryIndexIdentifiable newInstance = (SecondaryIndexIdentifiable) constructor.newInstance(args);
+			ResourceIdentifiable newInstance = (ResourceIdentifiable) constructor.newInstance(args);
 			return newInstance;
 		}
 		catch (Exception e) {

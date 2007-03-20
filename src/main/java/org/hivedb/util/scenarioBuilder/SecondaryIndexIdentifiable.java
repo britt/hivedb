@@ -30,6 +30,14 @@ public interface SecondaryIndexIdentifiable
 	 * and will be the id from some other class's instance for an inter-class secondary index (e.g. foo.id -> bar.id).
 	 */
 	Object getPrimaryIndexIdAsSecondaryIndexInstance();
+	
+	/**
+	 * 
+	 * @return The class that is the primary class of this secondary class. If a class is both a primary and secondary class
+	 * then this will reference its own class.
+	 */
+	Class<? extends PrimaryIndexIdentifiable> getPrimaryIndexClass();
+	
 	/**
 	 * 
 	 * @return A reference to the instance identified by getPrimaryIndexIdAsSecondaryIndexInstance().

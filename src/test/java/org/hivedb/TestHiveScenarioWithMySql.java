@@ -1,9 +1,10 @@
 package org.hivedb;
 
 import org.hivedb.util.MysqlTestCase;
-import org.hivedb.util.scenarioBuilder.HiveScenarioAlternativeConfig;
+import org.hivedb.util.scenarioBuilder.HiveScenarioMemberConfig;
 import org.hivedb.util.scenarioBuilder.HiveScenarioMarauderConfig;
 import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Test;
 
 public class TestHiveScenarioWithMySql extends MysqlTestCase {
 	
@@ -28,8 +29,8 @@ public class TestHiveScenarioWithMySql extends MysqlTestCase {
 	/**
 	 *  An alternative object model
 	 */
-	//@Test(groups={"mysql"})
+	@Test(groups={"mysql"})
 	public void testMemberDomain() throws Exception {
-		new HiveScenarioTest(new HiveScenarioAlternativeConfig(getConnectString())).performTest();
+		new HiveScenarioTest(new HiveScenarioMemberConfig(getConnectString())).performTest();
 	}
 }

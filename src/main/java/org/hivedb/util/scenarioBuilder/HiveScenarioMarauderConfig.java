@@ -32,7 +32,7 @@ public class HiveScenarioMarauderConfig implements HiveScenarioConfig {
 	// a property of class, such as name, which will reference the id of the class (an intra-class reference.)
 	// If the classes are no also primary classes, then the secondary index created will be
 	// the class's id which references the id of another class (an inter-class reference)
-	public Class[] getResourceAndSecondaryIndexClasses() {
+	public Class[] getResourceClasses() {
 		return  new Class[] {
 			HiveScenarioMarauderClasses.Pirate.class, 
 			HiveScenarioMarauderClasses.Buccaneer.class, 
@@ -49,7 +49,7 @@ public class HiveScenarioMarauderConfig implements HiveScenarioConfig {
 			public String f() { return hive.getHiveUri(); }}, new NumberIterator(2));
 	}
 		// The nodes of representing the data storage databases. These may be nonunique as well.
-	public Collection<Node> getNodes(final Hive hive) {
+	public Collection<Node> getDataNodes(final Hive hive) {
 		return Generate.create(new Generator<Node>(){
 			public Node f() { return new Node(  hive.getHiveUri(), 										
 												false); }},

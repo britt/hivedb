@@ -391,7 +391,7 @@ public class HiveScenarioTest {
 					hive.updateHiveReadOnly(false);
 				}};
 				hive.insertSecondaryIndexKey(secondaryIndex,
-					InstallHiveIndexSchema.constructSecondaryInstance(primaryIndexInstance.getClass(), secondaryIndexInstance.getClass()),
+					InstallHiveIndexSchema.constructResourceInstance(primaryIndexInstance.getClass(), secondaryIndexInstance.getClass()),
 					primaryIndexInstance.getIdAsPrimaryIndexInstance());
 			}}, HiveReadOnlyException.class);	
 			

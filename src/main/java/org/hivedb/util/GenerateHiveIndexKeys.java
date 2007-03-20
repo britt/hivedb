@@ -79,7 +79,7 @@ public class GenerateHiveIndexKeys {
 										public Collection<SecondaryIndexIdentifiable> f(final SecondaryIndex secondaryIndex) {
 											final boolean sameClass = (secondaryIndexClass.equals(primaryPartitionClass));
 											Map<String, Collection<PrimaryIndexIdentifiable>> resourceNameToPrimaryIndexInstanceMap = Transform.connectMaps(Transform.connectMaps(hiveScenarioConfig.getResourceNameToClassMap(), hiveScenarioConfig.getResourceToPrimaryMap()), primaryIndexInstanceMap);
-											Collection<PrimaryIndexIdentifiable> primaryInstances = resourceNameToPrimaryIndexInstanceMap.get(InstallHiveIndexSchema.getSecondaryIndexIdentifiablePrototype(primaryPartitionClass, secondaryIndexClass).getResourceName());
+											Collection<PrimaryIndexIdentifiable> primaryInstances = resourceNameToPrimaryIndexInstanceMap.get(InstallHiveIndexSchema.getResourceIdentifiablePrototype(primaryPartitionClass, secondaryIndexClass).getResourceName());
 											// Make a RingIterable that iterates over the primary instancees,
 											// for countPerSecondaryIndex, but limit it it to the number of primaryInstances to prevent duplicate primary keys
 											// when the secondaryInstance is the same as the primaryInstance

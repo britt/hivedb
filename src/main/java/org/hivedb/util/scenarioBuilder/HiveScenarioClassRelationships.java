@@ -14,14 +14,15 @@ public class HiveScenarioClassRelationships {
 	
 	public HiveScenarioClassRelationships(HiveScenarioConfig hiveScenarioConfig)
 	{
-		for (Class resourceClass : hiveScenarioConfig.getResourceAndSecondaryIndexClasses()) {
+		for (Class<ResourceIdentifiable> resourceClass : hiveScenarioConfig.getResourceClasses()) {
 			try {
-				Class primaryClass = resourceClass.getMethod("getPrimaryIndexInstanceReference").getReturnType();
+				Class primaryClass = resourceClass.getConstructor().newInstance().getPrimaryIndexClass();
 				if (!primaryToResourceMap.containsKey(primaryClass))
 					primaryToResourceMap.put(primaryClass, new ArrayList<Class>());
 				primaryToResourceMap.get(primaryClass).add(resourceClass);
+				
 				resourceToPrimaryMap.put(resourceClass, primaryClass);
-				resourceNameToClassMap.put(InstallHiveIndexSchema.getSecondaryIndexIdentifiablePrototype(primaryClass, resourceClass).getResourceName(), resourceClass);
+				resourceNameToClassMap.put(InstallHiveIndexSchema.getResourceIdentifiablePrototype(primaryClass, resourceClass).getResourceName(), resourceClass);
 			} catch (Exception e ) { throw new RuntimeException(e); }						
 		}	
 	}

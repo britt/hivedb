@@ -1,7 +1,7 @@
 package org.hivedb;
 
 import org.hivedb.util.DerbyTestCase;
-import org.hivedb.util.scenarioBuilder.HiveScenarioAlternativeConfig;
+import org.hivedb.util.scenarioBuilder.HiveScenarioMemberConfig;
 import org.hivedb.util.scenarioBuilder.HiveScenarioMarauderConfig;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -27,6 +27,6 @@ public class TestHiveScenarioWithDerby extends DerbyTestCase {
 	 */
 	@Test
 	public void testMemberDomain() throws Exception {
-		new HiveScenarioTest(new HiveScenarioAlternativeConfig(getConnectString())).performTest();
+		new HiveScenarioTest(new HiveScenarioMemberConfig(getConnectString())).performTest();
 	}
 }
