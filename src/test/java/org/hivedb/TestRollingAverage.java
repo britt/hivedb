@@ -149,7 +149,6 @@ public class TestRollingAverage {
 			if (i != numIntervals - 1) {
 				long start = System.nanoTime();
 				Thread.sleep(wait);
-				System.out.println("Adding after sleeping: " + (System.nanoTime() - start) / 1000000);
 			}
 		}
 
@@ -160,12 +159,9 @@ public class TestRollingAverage {
 		// data should fall out in order added
 		int sumInWindow = totalAdded;
 		int countInWindow = numIntervals;
-		System.out.println("Starting with " + ra.getCount() + " items summing to " + ra.getSum());
 		for (int i = 0, value = 0; i < numIntervals; i++) {
-			System.out.println("waiting (" + wait + ") for rollout " + i + " (" + ra + ")");
 			long start = System.nanoTime();
 			Thread.sleep(wait);
-			System.out.println("Actually waited " + (System.nanoTime() - start) / 1000000 + " millis ");
 			sumInWindow -= value;
 			countInWindow--;
 			value++;

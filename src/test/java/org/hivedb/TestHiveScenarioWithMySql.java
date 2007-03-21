@@ -1,14 +1,12 @@
 package org.hivedb;
 
 import org.hivedb.util.MysqlTestCase;
-import org.hivedb.util.scenarioBuilder.HiveScenarioMemberConfig;
 import org.hivedb.util.scenarioBuilder.HiveScenarioMarauderConfig;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
+import org.hivedb.util.scenarioBuilder.HiveScenarioMemberConfig;
 
 public class TestHiveScenarioWithMySql extends MysqlTestCase {
 	
-	@BeforeTest
+	//@BeforeTest
 	public void setUp() {
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
