@@ -69,7 +69,7 @@ public class TestRollingAverageStatistics {
 		
 		assertEquals(10, stats.getMin(key));
 		assertEquals(50, stats.getMax(key));
-		assertEquals(200.0, stats.getVariance(key));
+		assertEquals(200.0, stats.getVariance(key), 0.1);
 	}
 	
 	private Collection<String> testKeys() {
