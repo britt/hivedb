@@ -89,8 +89,11 @@ public class Hive implements Finder {
 				log.debug("Successfully loaded Hive from " + hiveDatabaseUri);
 		} catch (Exception ex) {
 			log
-					.warn("No HiveDB global schema detected, attempting installation to "
+					.warn("No HiveDB global schema detected (" + ex.getMessage() +  "), attempting installation to "
 							+ hiveDatabaseUri);
+			for (StackTraceElement s : ex.getStackTrace())
+				log.warn(s.toString());
+			
 			try {
 				InstallHiveGlobalSchema.install(hiveDatabaseUri);
 				PartitionKeyStatisticsDao tracker = new PartitionKeyStatisticsDao(
