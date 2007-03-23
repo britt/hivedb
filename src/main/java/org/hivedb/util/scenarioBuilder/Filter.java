@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 public abstract class Filter {
+	
 	/**
 	 *  Extend Filter to make an anoymouse filter function
 	 * @param <T>
@@ -33,12 +34,19 @@ public abstract class Filter {
 	
 	public static<T> T grepSingle(Predicate<T> filterer, Iterable<T> iterable) throws NoSuchElementException
 	{
-		return getFirst(grep(filterer, iterable));
+		T match = grepSingleOrNull(filterer, iterable);
+		if (match != null)
+			return match;
+		throw new RuntimeException("No match found");
 	}
-	public static<T> T grepSingle(Predicate<T> filterer, T[] array)
+	public static<T> T grepSingleOrNull(Predicate<T> filterer, Iterable<T> iterable) throws NoSuchElementException
 	{
-		return grepSingle(filterer, Arrays.asList(array));
+		for (T item : iterable)
+			if (filterer.f(item))
+				return item;
+		return null;
 	}
+
 	
 	public static<T> T getFirst(Iterable<T> iterable) throws NoSuchElementException
 	{
@@ -225,6 +233,12 @@ public abstract class Filter {
 			return true;
 		}
 	}
+	public static class NotNullPredicate<T> implements Predicate<T> {
+		public boolean f(T item) {
+			return item != null;
+		}
+	}
+	
 	public static class AllowAllFilter extends Filter
 	{
 		@SuppressWarnings("unchecked")
@@ -238,6 +252,7 @@ public abstract class Filter {
 			return new ArrayList<T>();
 		}
 	}
+	
 	public static<T> Collection<T> removeItemAtIndex(int index, Collection<T> collection) {
 		List<T>list =  new ArrayList<T>(collection);
 		list.remove(index);
@@ -265,7 +280,6 @@ public abstract class Filter {
 			return !item1.equals(item2);
 		}
 	}
-
 }
 
     

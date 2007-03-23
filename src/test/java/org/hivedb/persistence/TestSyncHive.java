@@ -11,7 +11,7 @@ import org.hivedb.util.HiveConfiguration;
 import org.hivedb.util.scenarioBuilder.Atom;
 import org.hivedb.util.scenarioBuilder.Filter;
 import org.hivedb.util.scenarioBuilder.HiveScenario;
-import org.hivedb.util.scenarioBuilder.HiveScenarioMemberConfig;
+import org.hivedb.util.scenarioBuilder.HiveScenarioMarauderConfig;
 import org.testng.Assert;
 import org.testng.annotations.BeforeSuite;
 
@@ -26,7 +26,7 @@ public class TestSyncHive extends DerbyTestCase {
 	public void insertPartitionDimensionAndSync() {
 		try {
 			final Hive hive = loadHive();
-			final HiveScenario hiveScenario = HiveScenario.run(new HiveScenarioMemberConfig(getConnectString()));
+			final HiveScenario hiveScenario = HiveScenario.run(new HiveScenarioMarauderConfig(getConnectString()));
 			final HiveConfiguration hiveConfiguration = new HiveConfiguration(hive);
 			cyclePartitionDimension(hive, hiveScenario, hiveConfiguration);
 		} catch (HiveException e) {
@@ -39,7 +39,7 @@ public class TestSyncHive extends DerbyTestCase {
 		Hive hive;
 		try {
 			hive = loadHive();
-			final HiveScenario hiveScenario = HiveScenario.run(new HiveScenarioMemberConfig(getConnectString()));
+			final HiveScenario hiveScenario = HiveScenario.run(new HiveScenarioMarauderConfig(getConnectString()));
 			final HiveConfiguration hiveConfiguration = new HiveConfiguration(hive);
 			cycleNode(hive, hiveScenario, hiveConfiguration);
 		} catch (HiveException e) {
@@ -51,7 +51,7 @@ public class TestSyncHive extends DerbyTestCase {
 	public void insertResourceAndSync() {
 		try {
 			final Hive hive = loadHive();
-			final HiveScenario hiveScenario = HiveScenario.run(new HiveScenarioMemberConfig(getConnectString()));
+			final HiveScenario hiveScenario = HiveScenario.run(new HiveScenarioMarauderConfig(getConnectString()));
 			final HiveConfiguration hiveConfiguration = new HiveConfiguration(hive);
 			cycleResource(hive, hiveScenario, hiveConfiguration);
 		} catch (HiveException e) {
@@ -63,7 +63,7 @@ public class TestSyncHive extends DerbyTestCase {
 	public void insertSecondaryIndexAndSync() {
 		try {
 			final Hive hive = loadHive();
-			final HiveScenario hiveScenario = HiveScenario.run(new HiveScenarioMemberConfig(getConnectString()));
+			final HiveScenario hiveScenario = HiveScenario.run(new HiveScenarioMarauderConfig(getConnectString()));
 			final HiveConfiguration hiveConfiguration = new HiveConfiguration(hive);
 			cycleSecondaryIndex(hive, hiveScenario, hiveConfiguration);
 		} catch (HiveException e) {

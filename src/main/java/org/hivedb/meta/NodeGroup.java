@@ -89,8 +89,9 @@ public class NodeGroup implements Finder {
 				return node;
 		throw new HiveException("Node with uri " + nodeUri + " is not in this node group");
 	}
-	public Node findByName(Class<Node> forClass, String name) throws HiveException {
-		return getNode(name);
+
+	public <T extends Nameable> T findByName(Class<T> forClass, String name) throws HiveException {
+		return findByName(forClass, name);
 	}
 
 	/**
@@ -118,11 +119,4 @@ public class NodeGroup implements Finder {
 											"Id", 	 getId(), 
 											"Nodes", getNodes());
 	}
-
-	public <T extends Nameable> T findByName(Class<T> forClass, String name) throws HiveException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
 }

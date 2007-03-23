@@ -4,14 +4,8 @@ package org.hivedb.util.scenarioBuilder;
 /**
  * 
  * For use by HiveScenario.
- * Classes used to model only resources/secondary indexes, not primary indexes, implement this interface.
- * You should only use this interface directly for inter-class secondary indexes (e.g. foo.id -> bar.id)
- * since for inner-class secondary indexes (e.g. foo.name -> foo.id) the class also has to implement
- * PrimaryIndexIndifiable, and should therefore implement the composit Identifiable.
  * 
- * Although this interface can't enforce it, you must have a one-argument constructor that takes the
- * primary index instance as an argument (the same instance that will be returned by getPrimaryIndexIdAsSecondaryIndexInstance().
- * This allows HiveScenario to construct instances.
+ * You must define a zero-argument constructor for use by HiveScenario.
  * 
  * @author Andy alikuski@cafepress.com
  *
@@ -19,47 +13,39 @@ package org.hivedb.util.scenarioBuilder;
 public interface SecondaryIndexIdentifiable
 {
 	/**
+	 * This is real constructor of the class. HiveScenario will create an instance with the no argument constructor and then call this method, creating a new instance.
+	 * @param resourceIdentifiable - The ResourceIdentifiable instance referenced by this instance. The instance uses this to know the hive resource to which it belongs,
+	 * and the partition dimension and primary index key to which it belongs and refers, respectively.
+	 * @return
+	 */
+	SecondaryIndexIdentifiable construct(ResourceIdentifiable resourceIdentifiable);
+	/**
 	 *  
-	 * @return The id to be used as a secondary index key.
-	 */
-	Object getIdAsSecondaryIndexInstance();
-	/**
+	 * @return The secondary index key represented by this instance. Make sure that this never returns null, use the default value instead.
 	 * 
-	 * @return The id to be used as the correspoding primary index key of the secondary index key.
-	 * This will be the same id as getIdAsPrimaryIndexInstance() for an intra-class secondary index (e.g. foo.name -> foo.id),
-	 * and will be the id from some other class's instance for an inter-class secondary index (e.g. foo.id -> bar.id).
+	 * For an intra-class secondary index where Foo is the primary index class and resource class, for the secondary index foo.name to foo.id then this key will be foo.getName()
+	 * For an inter-class secondary index, where Foo is the primary index class and Bar the resource class, for the secondary index bar.id to foo.id this key will be bar.getId()
 	 */
-	Object getPrimaryIndexIdAsSecondaryIndexInstance();
-	
-	Class getIdClass();
-	/**
-	 * 
-	 * @return The class that is the primary class of this secondary class. If a class is both a primary and secondary class
-	 * then this will reference its own class.
-	 */
-	Class<? extends PrimaryIndexIdentifiable> getPrimaryIndexClass();
-	
-	/**
-	 * 
-	 * @return A reference to the instance identified by getPrimaryIndexIdAsSecondaryIndexInstance().
-	 * This will simply return this for an intra-class secondary index (e.g. foo.name -> foo.id, so return foo),
-	 * and will be the instance of a different class for an inter-class secondary index (e.g. foo.id -> bar.id, so return bar)
-	 */
-	PrimaryIndexIdentifiable getPrimaryIndexInstanceReference();
+	Object getSecondaryIndexKey();
 	
 	/**
 	 * 
 	 * @return The name to use for the resource represented by this class. Usually this.getClass().getSimpleName() will suffice,
 	 * unless you are extending a class and want to name the resource after the base class.
 	 */
-	String getResourceName();
+	ResourceIdentifiable getResourceIdentifiable();
+	
+	String getSecondaryIndexColumnName();
 	
 	/**
-	 * @return The string to use in naming the secondary index table, 
-	 * For an intra-class secondary index, this will be the name of the field being indexed (e.g. for foo.name -> foo.id, 
-	 * this should return "name" and the secondary secondary index table will be named hive_secondary_foo_name)
-	 * For an inter-class secondary index, this will be the named of the id being indexed (e.g. for foo.id -> bar.id,
-	 * this should return something like "barid" 
+	 * @return The name of the column of the secondary index. This name is used to form the SecondaryIndex's full name which is structured as "resource.name_column_name"
+	 * 
+	 * This name could be calculated, but it's clearer to restate it here.
+	 * 
+	 * For an intra-class secondary index where Foo is the primary index class and resource class, 
+	 * the secondary index that maps foo.name to foo.id would have a column name of "name" and a secondary index name of "foo.name"
+	 * For an inter-class secondary index, where Foo is the primary index class and bar the resource class,
+	 * the secondary index that maps bar.id to foo.id would have a column name of "id" and secondary index name of "bar.id"
 	 */
-	String getSecondaryIdName();
+	String getSecondaryIndexName();
 }

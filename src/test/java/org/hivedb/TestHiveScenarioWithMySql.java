@@ -2,11 +2,12 @@ package org.hivedb;
 
 import org.hivedb.util.MysqlTestCase;
 import org.hivedb.util.scenarioBuilder.HiveScenarioMarauderConfig;
-import org.hivedb.util.scenarioBuilder.HiveScenarioMemberConfig;
+import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Test;
 
 public class TestHiveScenarioWithMySql extends MysqlTestCase {
 	
-	//@BeforeTest
+	@BeforeTest
 	public void setUp() {
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
@@ -19,16 +20,8 @@ public class TestHiveScenarioWithMySql extends MysqlTestCase {
 	 *  Fills a hive with metaday and indexes to validate CRUD operations
 	 *  This tests works but is commented out due to its slowness
 	 */
-	//@Test(groups={"mysql"})
+	@Test(groups={"mysql"})
 	public void testPirateDomain() throws Exception {
 		new HiveScenarioTest(new HiveScenarioMarauderConfig(getConnectString())).performTest();
-	}
-
-	/**
-	 *  An alternative object model
-	 */
-	//@Test(groups={"mysql"})
-	public void testMemberDomain() throws Exception {
-		new HiveScenarioTest(new HiveScenarioMemberConfig(getConnectString())).performTest();
 	}
 }

@@ -147,7 +147,7 @@ public class TestRollingAverage {
 			ra.add(value++);
 			assertEquals(totalAdded, ra.getSum());
 			if (i != numIntervals - 1) {
-				long start = System.nanoTime();
+				System.nanoTime();
 				Thread.sleep(wait);
 			}
 		}
@@ -160,7 +160,7 @@ public class TestRollingAverage {
 		int sumInWindow = totalAdded;
 		int countInWindow = numIntervals;
 		for (int i = 0, value = 0; i < numIntervals; i++) {
-			long start = System.nanoTime();
+			System.nanoTime();
 			Thread.sleep(wait);
 			sumInWindow -= value;
 			countInWindow--;

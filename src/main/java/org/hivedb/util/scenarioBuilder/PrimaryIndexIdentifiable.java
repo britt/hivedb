@@ -3,6 +3,8 @@
  */
 package org.hivedb.util.scenarioBuilder;
 
+import java.util.Collection;
+
 /**
  * 
  * For use by HiveScenario.
@@ -17,10 +19,22 @@ package org.hivedb.util.scenarioBuilder;
 public interface PrimaryIndexIdentifiable
 {
 	/**
-	 *  
-	 * @return The id to be used as a primary index key.
+	 *  Used by HiveScenario to construct a new instance of this PrimaryIndexIdentifiable based on a prototype instance
+	 * @return
 	 */
-	Object getIdAsPrimaryIndexInstance();
+	PrimaryIndexIdentifiable construct();
+	
+	/**
+	 *  Returns a list of prototype ResourceIdentifiable instances whose construct method will be used to create real instances.
+	 * @return
+	 */
+	Collection<ResourceIdentifiable> getResourceIdentifiables();
+	
+	/**
+	 *  
+	 * @return The id to be used as a primary index key. Make sure that this never returns null, use the default value instead.
+	 */
+	Object getPrimaryIndexKey();
 	
 	/**
 	 * 

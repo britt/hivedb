@@ -1,219 +1,123 @@
 package org.hivedb.util.scenarioBuilder;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 public class HiveScenarioMarauderClasses {
-	public static class Pirate implements PrimaryAndSecondaryIndexIdentifiable, ResourceIdentifiable
+	public static class Pirate implements PrimaryIndexIdentifiable, ResourceIdentifiable, SecondaryIndexIdentifiable
 	{
 		public static int idGenerator = 0;
 		public Pirate() { 
 			id = ++idGenerator;
 			pirateName = "name"+id; }		
 		protected int id;
-		public Collection<SecondaryIndexIdentifiable> getSecondaryIndexIdentifiables()
-		{
-			return Arrays.asList(new SecondaryIndexIdentifiable[] { this });
-		}
 		String pirateName;
-		public Integer getIdAsPrimaryIndexInstance() { return id; }
-		public Pirate getPrimaryIndexInstanceReference() { return this; }
-		public String getIdAsSecondaryIndexInstance() {	return pirateName;}
-		public Integer getPrimaryIndexIdAsSecondaryIndexInstance() { return id; } // self referencing
+		public String getSecondaryIndexKey() {	return pirateName;}
 		
-		public String getPartitionDimensionName() { return this.getClass().getSimpleName(); }
-		public String getResourceName() { return this.getClass().getSimpleName(); }
-		public String getSecondaryIdName() {return "name";	}
-		public Class<? extends PrimaryIndexIdentifiable> getPrimaryIndexClass() {
-			return Pirate.class;
+		/* PrimaryIndexIdentifiable METHODS */
+		
+		// construct from a prototype instance
+		public PrimaryIndexIdentifiable construct() {
+			return new Pirate();
 		}
-		public Class getIdClass() { return Integer.class; }
-	}
-	public static class Buccaneer implements PrimaryAndSecondaryIndexIdentifiable, ResourceIdentifiable
-	{
-		public static int idGenerator = 0;
-		public Buccaneer() { 
-			id = new Integer(++idGenerator).toString();
-			buccaneerName = "name"+id;};
-		protected String id;
+		
+		public Collection<ResourceIdentifiable> getResourceIdentifiables()
+		{
+			List<ResourceIdentifiable> list = new ArrayList<ResourceIdentifiable>();
+			list.add(new Treasure(this));
+			return list;
+		}
+		
+		public Integer getPrimaryIndexKey() { return id; }
+		public String getPartitionDimensionName() { return this.getClass().getSimpleName().toLowerCase(); }
+		
+		/* ResourceIdentifiable METHODS */
+		
+		// Because Pirate is also a PrimaryIndexIdentifiable the argument is equal to this.
+		public ResourceIdentifiable construct(PrimaryIndexIdentifiable primaryIndexIdentifiable) {
+			
+			if (this != primaryIndexIdentifiable)
+				throw new RuntimeException("Excpected equality here");
+			return this;
+		}
+		
+		// Because Pirate is also a SecondaryIndexIdentifiable we just return this as our only SecondaryIndexIdentifiable
 		public Collection<SecondaryIndexIdentifiable> getSecondaryIndexIdentifiables()
 		{
 			return Arrays.asList(new SecondaryIndexIdentifiable[] { this });
 		}
-		String buccaneerName;
-		public String getIdAsPrimaryIndexInstance() { return id; }
-		public Buccaneer getPrimaryIndexInstanceReference() { return this; }
-		public String getIdAsSecondaryIndexInstance() {	return buccaneerName; }
-		public String getPrimaryIndexIdAsSecondaryIndexInstance() { return id; } // self referencing
 		
-		public String getPartitionDimensionName() { return this.getClass().getSimpleName(); }
-		public String getResourceName() { return this.getClass().getSimpleName(); }
-		public String getSecondaryIdName() { return "name";	}
-		public Class<? extends PrimaryIndexIdentifiable> getPrimaryIndexClass() {
-			return Buccaneer.class;
+		public Pirate getPrimaryIndexIdentifiable() { return this; }
+		public Class<? extends PrimaryIndexIdentifiable> getPrimaryIndexIdentifiableClass() {
+			return Pirate.class;
 		}
-		public Class getIdClass() { return String.class; }
+		
+		public String getResourceName() { return this.getClass().getSimpleName().toLowerCase(); }
+		
+		/* SecondaryIndex METHODS */
+		
+		// Since Pirate is also a ResourceIdentifiable the argument is equal to this
+		public SecondaryIndexIdentifiable construct(ResourceIdentifiable resourceIdentifiable) {
+			if (this != resourceIdentifiable)
+				throw new RuntimeException("Excpected equality here");
+			return this;
+		}
+		
+		public ResourceIdentifiable getResourceIdentifiable() {
+			return this;
+		}
+		
+		public String getSecondaryIndexColumnName() {
+			return "name"; // since we're mapping Pirate.name to Pirate.id
+		}
+		
+		// Our Secondary Index maps pirate's name to it's id;
+		public String getSecondaryIndexName() {
+			return getResourceName() + "." + getSecondaryIndexColumnName();
+		}
 	}
 	
-	
-	// Resource and Secondary index classes that test all possible secondary index id types
-	public static class Treasure implements SecondaryIndexIdentifiable, ResourceIdentifiable
+	public static class Treasure implements ResourceIdentifiable, SecondaryIndexIdentifiable 
 	{
 		public static int idGenerator = 0;
 		protected int id;
-		Pirate primaryResource;
-		public Treasure() {} // Prototype constructor
-		public Treasure(Pirate primaryResource) {
+		Pirate pirate;
+
+		public Treasure(Pirate pirate) {
 			id = ++idGenerator;
-			this.primaryResource = primaryResource;
+			this.pirate = pirate;
 		}
+		
+		/* ResourceIdentifiable Methods */
+	
+		public ResourceIdentifiable construct(PrimaryIndexIdentifiable pirate) {
+			return new Treasure((Pirate)pirate);
+		}
+		
+		public Pirate getPrimaryIndexIdentifiable() { return pirate; }
+		public String getResourceName() { return this.getClass().getSimpleName().toLowerCase(); }
+	
+		// Since Treasure is also a SecondaryIndexIdentifiable, return this as the only item
 		public Collection<SecondaryIndexIdentifiable> getSecondaryIndexIdentifiables()
 		{
 			return Arrays.asList(new SecondaryIndexIdentifiable[] { this });
 		}
-		public Integer getIdAsPrimaryIndexInstance() { return id; }
-		public Pirate getPrimaryIndexInstanceReference() { return primaryResource; }
-		public Integer getIdAsSecondaryIndexInstance() { return id; }
-		public Integer getPrimaryIndexIdAsSecondaryIndexInstance() { return primaryResource.getIdAsPrimaryIndexInstance(); } 
 		
-		public String getResourceName() { return this.getClass().getSimpleName(); }
-		public String getSecondaryIdName() {return "pirate_id"; }
-		public Class<? extends PrimaryIndexIdentifiable> getPrimaryIndexClass() {
-			return Pirate.class;
+		/* SecondaryIndexIdentifiable Methods */
+		
+		// Since Treasure is also a ResourceIdentifiable, return this instead of creating a new instance
+		public SecondaryIndexIdentifiable construct(ResourceIdentifiable resourceIdentifiable) {
+			if (this != resourceIdentifiable)
+				throw new RuntimeException("Expected equality here");
+			return this;
 		}
-		public Class getIdClass() { return Integer.class; }
+		public Integer getSecondaryIndexKey() { return id; }
+		public ResourceIdentifiable getResourceIdentifiable() {
+			return this;
+		}
+		public String getSecondaryIndexColumnName() { return "id"; }
+		public String getSecondaryIndexName() {return getResourceName() + "." + getSecondaryIndexColumnName(); }		
 	}	                      
-	public static class Booty implements SecondaryIndexIdentifiable, ResourceIdentifiable
-	{
-		public static long idGenerator = 2^32;
-		protected long id;
-		Pirate primaryResource;
-		public Booty() {} // Prototype constructor
-		public Booty(Pirate primaryResource) {
-			id = ++idGenerator;
-			this.primaryResource = primaryResource;
-		}
-		public Collection<SecondaryIndexIdentifiable> getSecondaryIndexIdentifiables()
-		{
-			return Arrays.asList(new SecondaryIndexIdentifiable[] { this });
-		}
-		public Long getIdAsPrimaryIndexInstance() { return id; }
-		public Pirate getPrimaryIndexInstanceReference() { return primaryResource; }
-		public Long getIdAsSecondaryIndexInstance() { return id; }
-		public Integer getPrimaryIndexIdAsSecondaryIndexInstance() { return primaryResource.getIdAsPrimaryIndexInstance(); }
-		
-		public String getResourceName() { return this.getClass().getSimpleName(); }
-		public String getSecondaryIdName() { return "pirate_id"; }
-		public Class<? extends PrimaryIndexIdentifiable> getPrimaryIndexClass() {
-			return Pirate.class;
-		}
-		public Class getIdClass() {
-			// TODO Auto-generated method stub
-			return null;
-		}
-	}
-	public static class Loot implements SecondaryIndexIdentifiable, ResourceIdentifiable
-	{
-		public static int idGenerator = 0;
-		protected int id;
-		Pirate primaryResource;
-		public Loot() {} // Prototype constructor
-		public Loot(Pirate primaryResource) {
-			this.id = ++idGenerator;
-			this.primaryResource = primaryResource;
-		}
-		public Collection<SecondaryIndexIdentifiable> getSecondaryIndexIdentifiables()
-		{
-			return Arrays.asList(new SecondaryIndexIdentifiable[] { this });
-		}
-		public Integer getIdAsPrimaryIndexInstance() { return id; }
-		public Pirate getPrimaryIndexInstanceReference() { return primaryResource; }
-		public Integer getIdAsSecondaryIndexInstance() { return id; }
-		public Integer getPrimaryIndexIdAsSecondaryIndexInstance() { return primaryResource.getIdAsPrimaryIndexInstance(); }
-		
-		public String getResourceName() { return this.getClass().getSimpleName(); }
-		public String getSecondaryIdName() { return "pirate_id"; }
-		public Class<? extends PrimaryIndexIdentifiable> getPrimaryIndexClass() {
-			return Pirate.class;
-		}
-		public Class getIdClass() { return Integer.class; }
-	}
-	public static class Stash implements SecondaryIndexIdentifiable, ResourceIdentifiable
-	{
-		public static double idGenerator = 0d;
-		protected double id;
-		Buccaneer primaryResource;
-		public Stash() {} // Prototype constructor
-		public Stash(Buccaneer primaryResource) {
-			idGenerator += 1.1;
-			this.id = idGenerator;
-			this.primaryResource = primaryResource;
-		}
-		public Collection<SecondaryIndexIdentifiable> getSecondaryIndexIdentifiables()
-		{
-			return Arrays.asList(new SecondaryIndexIdentifiable[] { this });
-		}
-		public Double getIdAsPrimaryIndexInstance() { return id; }
-		public Buccaneer getPrimaryIndexInstanceReference() { return primaryResource; }
-		public Double getIdAsSecondaryIndexInstance() { return id; }
-		public String getPrimaryIndexIdAsSecondaryIndexInstance() { return primaryResource.getIdAsPrimaryIndexInstance(); }
-		
-		public String getResourceName() { return this.getClass().getSimpleName(); }
-		public String getSecondaryIdName() { return "bucaneer_id"; }
-		public Class<? extends PrimaryIndexIdentifiable> getPrimaryIndexClass() {
-			return Buccaneer.class;
-		}
-		public Class getIdClass() { return Double.class; }
-	}
-	public static class Chanty implements SecondaryIndexIdentifiable, ResourceIdentifiable
-	{
-		public static int idGenerator = 0;
-		protected String id;
-		Buccaneer primaryResource;
-		public Chanty() {} // Prototype constructor
-		public Chanty(Buccaneer primaryResource) {
-			this.id = new Integer(++idGenerator).toString(); 
-			this.primaryResource = primaryResource;
-		}
-		public Collection<SecondaryIndexIdentifiable> getSecondaryIndexIdentifiables()
-		{
-			return Arrays.asList(new SecondaryIndexIdentifiable[] { this });
-		}
-		public String getIdAsPrimaryIndexInstance() { return id; }
-		public Buccaneer getPrimaryIndexInstanceReference() { return primaryResource; }
-		public String getIdAsSecondaryIndexInstance() { return id; }
-		public String getPrimaryIndexIdAsSecondaryIndexInstance() { return primaryResource.getIdAsPrimaryIndexInstance(); }
-		
-		public String getResourceName() { return this.getClass().getSimpleName(); }
-		public String getSecondaryIdName() { return "bucaneer_id"; }
-		public Class<? extends PrimaryIndexIdentifiable> getPrimaryIndexClass() {
-			return Buccaneer.class;
-		}
-		public Class getIdClass() { return String.class; }
-	}
-	public static class Bottle implements SecondaryIndexIdentifiable, ResourceIdentifiable
-	{	
-		static int current = 0;
-		protected int id;
-		Buccaneer primaryResource;
-		public Bottle() {} // Prototype constructor
-		public Bottle(Buccaneer primaryResource) {
-			this.primaryResource = primaryResource;
-			id = ++current;
-		}
-		public Collection<SecondaryIndexIdentifiable> getSecondaryIndexIdentifiables()
-		{
-			return Arrays.asList(new SecondaryIndexIdentifiable[] { this });
-		}
-		public Buccaneer getPrimaryIndexInstanceReference() { return primaryResource; }
-		public Integer getIdAsSecondaryIndexInstance() { return id; }
-		public String getPrimaryIndexIdAsSecondaryIndexInstance() { return primaryResource.getIdAsPrimaryIndexInstance(); }
-		
-		public String getResourceName() { return this.getClass().getSimpleName(); }
-		public String getSecondaryIdName() { return "bucaneer_id"; }
-		public Class<? extends PrimaryIndexIdentifiable> getPrimaryIndexClass() {
-			return Buccaneer.class;
-		}
-		public Class getIdClass() { return Integer.class; }
-	}
 }

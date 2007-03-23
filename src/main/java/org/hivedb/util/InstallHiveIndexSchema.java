@@ -1,8 +1,5 @@
 package org.hivedb.util;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 
@@ -23,44 +20,45 @@ import org.hivedb.util.scenarioBuilder.Transform;
 import org.hivedb.util.scenarioBuilder.Unary;
 
 public class InstallHiveIndexSchema {
-	public static Map<Class, PartitionDimension> install(
+	public static Map<PrimaryIndexIdentifiable, PartitionDimension> install(
 			final HiveScenarioConfig hiveScenarioConfig,
 			final Hive hive) throws HiveException {
 		
 		final RingIteratorable<String> indexUriIterator = new RingIteratorable<String>(hiveScenarioConfig.getIndexUris(hive));
 	
-		// Create partition dimensions and their its subordinate NodeGroup, primary Node, Resources, and SecondaryIndexes
-		Map<Class, PartitionDimension> partitionDimensionMap = Transform.toMap(
-			new Transform.IdentityFunction<Class>(),
-			new Unary<Class, PartitionDimension>() {
-				public PartitionDimension f(final Class primaryClass) {
+		// Create partition dimensions and its subordinate NodeGroup, primary Node, Resources, and SecondaryIndexes
+		Map<PrimaryIndexIdentifiable, PartitionDimension> partitionDimensionMap = Transform.toMap(
+			new Transform.IdentityFunction<PrimaryIndexIdentifiable>(),
+			new Unary<PrimaryIndexIdentifiable, PartitionDimension>() {
+				public PartitionDimension f(final PrimaryIndexIdentifiable primaryIndexIdentifiable) {
 					try {
-						final PrimaryIndexIdentifiable primaryInstancePrototype = getPrimaryIndexIdentifiablePrototype(primaryClass); 
-						final int primitiveTypeToJdbcType = JdbcTypeMapper.primitiveTypeToJdbcType(primaryClass.getMethod("getIdAsPrimaryIndexInstance").getReturnType());
-						final NodeGroup nodeGroup = new NodeGroup(Transform.map(new Unary<Node,Node>() { public Node f(Node n) {return new Node(n.getUri(), n.isReadOnly());}}, hiveScenarioConfig.getDataNodes(hive)));
-						final Map<Class, Collection<Class>> primaryToResourceMap = hiveScenarioConfig.getPrimaryToResourceMap();
-						final Collection<Class> collectionOfResourceClasses = primaryToResourceMap.get(primaryClass);
-						final Collection<Resource> map = Transform.map(new Unary<Class, Resource>() {
-														public Resource f(Class resourceClass) { 
-															ResourceIdentifiable resourceIdentifiable = getResourceIdentifiablePrototype(primaryClass, resourceClass);									
-															return new Resource(resourceIdentifiable.getResourceName(), constructSecondaryIndexesOfResource(resourceIdentifiable));
-														}},
-														collectionOfResourceClasses);
-						return new PartitionDimension(
-							primaryInstancePrototype.getPartitionDimensionName(),
-							primitiveTypeToJdbcType,
+						
+						final NodeGroup nodeGroup = new NodeGroup(
+							Transform.map(new Unary<Node,Node>() {
+								public Node f(Node n) {
+									return new Node(n.getUri(), n.isReadOnly());}}, 
+							hiveScenarioConfig.getDataNodes(hive)));
+						
+						final Collection<Resource> resources = 
+							Transform.map(new Unary<ResourceIdentifiable, Resource>() {
+								public Resource f(ResourceIdentifiable resourceIdentifiable) { 
+									return new Resource(resourceIdentifiable.getResourceName(), constructSecondaryIndexesOfResource(resourceIdentifiable));
+								}},
+								primaryIndexIdentifiable.getResourceIdentifiables());
+						PartitionDimension partitionDimension = new PartitionDimension(
+							primaryIndexIdentifiable.getPartitionDimensionName(),
+							JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexIdentifiable.getPrimaryIndexKey().getClass()),
 							nodeGroup,
 							indexUriIterator.next(),
-							map
+							resources
 						);
+						hive.addPartitionDimension(partitionDimension);
+						return partitionDimension;
 					} catch (Exception e) {
 						throw new RuntimeException(e);
 					}
 				}},
-				Arrays.asList(hiveScenarioConfig.getPrimaryClasses()));
-		
-		for (PartitionDimension partitionDimension : partitionDimensionMap.values())
-			hive.addPartitionDimension(partitionDimension);
+				hiveScenarioConfig.getPrimaryInstanceIdentifiables());
 		
 		try {
 			hive.create();
@@ -81,8 +79,8 @@ public class InstallHiveIndexSchema {
 							try {
 								return new SecondaryIndex(
 										new ColumnInfo(
-											secondaryIndexIdentifiable.getSecondaryIdName(),											
-											JdbcTypeMapper.primitiveTypeToJdbcType(secondaryIndexIdentifiable.getIdClass())));
+											secondaryIndexIdentifiable.getSecondaryIndexColumnName(),											
+											JdbcTypeMapper.primitiveTypeToJdbcType(secondaryIndexIdentifiable.getSecondaryIndexKey().getClass())));
 							} catch (Exception e) {
 								throw new RuntimeException(e);
 							}
@@ -93,43 +91,4 @@ public class InstallHiveIndexSchema {
 			throw new RuntimeException(e);
 		}		
 	}
-
-	public static PrimaryIndexIdentifiable getPrimaryIndexIdentifiablePrototype(final Class primaryClass) throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
-		return (PrimaryIndexIdentifiable) primaryClass.getConstructor(new Class[] {}).newInstance(new Object[] {});
-	}
-	public static ResourceIdentifiable getResourceIdentifiablePrototype(final Class primaryClass, final Class resourceClass) {
-		return constructResourceInstance(primaryClass, resourceClass);
-	}
-	
-	/**
-	 *  Constructs a SecondaryIndexInstance, taking into account whethter the secondary index class
-	 *  is also a primary index class (i.e. is a PrimaryAndSecondaryIndexIdentifiable)
-	 *  PrimaryAndSecondaryIndexIdentifiable classes construct with no arguments, since their secondary
-	 *  index is a reference from a field of the instances to its own id
-	 *  SecondaryIndexIdentifiable classes construct with a PrimaryIndexIdentifiable instance, whose
-	 *  id becomes the primary index key of the secondary index key
-	 * @param primaryIndexClass
-	 * @param resourceClass
-	 * @return
-	 * @throws NoSuchMethodException
-	 * @throws InstantiationException
-	 * @throws IllegalAccessException
-	 * @throws InvocationTargetException
-	 */
-	public static ResourceIdentifiable constructResourceInstance(Class primaryIndexClass, Class resourceClass) {
-		try {
-			// Choose the right constructor depending on whether the secondaryIndexClass is the same as the primary index class
-			Constructor constructor = resourceClass.equals(primaryIndexClass)
-				? resourceClass.getConstructor(new Class[] {})
-				: resourceClass.getConstructor(new Class[] {primaryIndexClass});
-			Object[] args = resourceClass.equals(primaryIndexClass)
-				? new Object[] {}
-				: new Object[] { primaryIndexClass.getConstructor(new Class[] {}).newInstance(new Object[] {}) };			
-			ResourceIdentifiable newInstance = (ResourceIdentifiable) constructor.newInstance(args);
-			return newInstance;
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}	
 }

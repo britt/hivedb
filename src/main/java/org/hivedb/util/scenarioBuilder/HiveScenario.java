@@ -7,7 +7,6 @@ import org.hivedb.HiveException;
 import org.hivedb.meta.Hive;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
-import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.GenerateHiveIndexKeys;
 import org.hivedb.util.InstallHiveIndexSchema;
 
@@ -50,27 +49,28 @@ public class HiveScenario {
 		fill(hiveScenarioConfig, hive);
 	}
 	private void fill(final HiveScenarioConfig hiveScenarioConfig, final Hive hive) throws HiveException {
-		Map<Class, PartitionDimension> partitionDimensionMap = InstallHiveIndexSchema.install(hiveScenarioConfig, hive);
+		Map<PrimaryIndexIdentifiable, PartitionDimension> partitionDimensionMap = InstallHiveIndexSchema.install(hiveScenarioConfig, hive);
+		this.partitionDimensionMap = partitionDimensionMap;
 		populateData(hiveScenarioConfig, hive, partitionDimensionMap);
 	}
-	private void populateData(final HiveScenarioConfig hiveScenarioConfig, final Hive hive, Map<Class, PartitionDimension> partitionDimensionMap) {
-		GenerateHiveIndexKeys generateIndexKeys = new GenerateHiveIndexKeys();
-		// Create a number of instances for each of the primary PartitionIndex classes, distributing them among the nodes
-		Map<Class, Collection<PrimaryIndexIdentifiable>> primaryIndexInstanceMap = generateIndexKeys.createPrimaryIndexInstances(hive, partitionDimensionMap, hiveScenarioConfig.getInstanceCountPerPrimaryIndex());
-		// Create a number of instances for each of the secondary PartitionIndex classes.
-		// Each secondary instances references a primary instance, with classes according to secondaryToPrimaryMap
-		Map<Class, Map<Resource, Map<SecondaryIndex, Collection<SecondaryIndexIdentifiable>>>> secondaryIndexInstances = generateIndexKeys.createSecondaryIndexInstances(hiveScenarioConfig, hive, partitionDimensionMap, primaryIndexInstanceMap);
+	private void populateData(final HiveScenarioConfig hiveScenarioConfig, final Hive hive, Map<PrimaryIndexIdentifiable, PartitionDimension> partitionDimensionMap) {
+		GenerateHiveIndexKeys generateHiveIndexKeys = new GenerateHiveIndexKeys();
+		Map<PrimaryIndexIdentifiable, Collection<PrimaryIndexIdentifiable>> primaryIndexIdentifiableMap = 
+			generateHiveIndexKeys.createPrimaryIndexInstances(hive, hiveScenarioConfig);
+		
+		Map<PrimaryIndexIdentifiable, Map<ResourceIdentifiable, Collection<ResourceIdentifiable>>> secondaryIndexInstanceMap
+			= generateHiveIndexKeys.createSecondaryIndexInstances(hive, hiveScenarioConfig, primaryIndexIdentifiableMap);
 	
 		this.hive = hive;
-		this.partitionDimensionMap = partitionDimensionMap;
-		this.primaryIndexInstanceMap = primaryIndexInstanceMap;
-		this.secondaryIndexInstances = secondaryIndexInstances;
+		
+		this.primaryIndexIdentifiableMap = primaryIndexIdentifiableMap;
+		this.resourceIdentifiableMap = secondaryIndexInstanceMap;
 	}
 	
 	Hive hive;
-	Map<Class, PartitionDimension> partitionDimensionMap;
-	Map<Class, Collection<PrimaryIndexIdentifiable>> primaryIndexInstanceMap;
-	Map<Class, Map<Resource, Map<SecondaryIndex, Collection<SecondaryIndexIdentifiable>>>> secondaryIndexInstances;
+	Map<PrimaryIndexIdentifiable, PartitionDimension> partitionDimensionMap;
+	Map<PrimaryIndexIdentifiable, Collection<PrimaryIndexIdentifiable>>  primaryIndexIdentifiableMap;
+	Map<PrimaryIndexIdentifiable, Map<ResourceIdentifiable, Collection<ResourceIdentifiable>>> resourceIdentifiableMap;
 	public Hive getHive() {
 		return hive;
 	}	
@@ -80,15 +80,39 @@ public class HiveScenario {
 	}
 	public Collection<PrimaryIndexIdentifiable> getPrimaryIndexInstancesCreatedByThisPartitionDimension(PartitionDimension partitionDimension)
 	{
-		return primaryIndexInstanceMap.get(Transform.reverseMap(partitionDimensionMap).get(partitionDimension));
+		return primaryIndexIdentifiableMap.get(Transform.reverseMap(partitionDimensionMap).get(partitionDimension));
 	}
-	public Collection<Resource> getResourcesOfThisPartitionDimension(PartitionDimension partitionDimension)
-	{
-		return secondaryIndexInstances.get(Transform.reverseMap(partitionDimensionMap).get(partitionDimension)).keySet();
+
+	public Collection<ResourceIdentifiable> getResourceIdentifiableInstancesForThisResource(final Resource resource) {
+		final Map<ResourceIdentifiable, Collection<ResourceIdentifiable>> resourceIdentifiableToResourceIdentifiableInstancesMap = 
+				resourceIdentifiableMap.get(Transform.reverseMap(partitionDimensionMap).get(resource.getPartitionDimension()));
+		
+		return resourceIdentifiableToResourceIdentifiableInstancesMap.get(
+			Filter.grepSingle(new Predicate<ResourceIdentifiable>() {
+				public boolean f(ResourceIdentifiable resourceIdentifiable) {
+					return resourceIdentifiable.getResourceName().equals(resource.getName());
+				}},
+				resourceIdentifiableToResourceIdentifiableInstancesMap.keySet())
+		);
 	}
-	public Collection<SecondaryIndexIdentifiable> getSecondaryIndexInstancesForThisPartitionDimensionAndResource(PartitionDimension partitionDimension, Resource resource, SecondaryIndex secondaryIndex)
-	{
-		return secondaryIndexInstances.get(Transform.reverseMap(partitionDimensionMap).get(partitionDimension)).get(resource).get(secondaryIndex);
+	
+	public Collection<Resource> getResourcesOfThisPartitionDimension(PartitionDimension partitionDimension) {
+		return Transform.map(
+				new Unary<ResourceIdentifiable, Resource>() {
+					public Resource f(ResourceIdentifiable resourceIdentifiable) {
+						
+						try {
+							return hive.getPartitionDimension(getPartitionDimensionName(resourceIdentifiable)).getResource(resourceIdentifiable.getResourceName());
+						} catch (HiveException e) {
+							throw new RuntimeException(e);
+						}
+					}
+				},
+				resourceIdentifiableMap.get(Transform.reverseMap(partitionDimensionMap).get(partitionDimension)).keySet());
 	}
+	private String getPartitionDimensionName(ResourceIdentifiable resourceIdentifiable) {
+		return resourceIdentifiable.getPrimaryIndexIdentifiable().getPartitionDimensionName();
+	}
+
 }
 
