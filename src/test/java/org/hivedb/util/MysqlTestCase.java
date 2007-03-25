@@ -36,10 +36,10 @@ public class MysqlTestCase {
 	}
 	
 	protected String getDatabaseAgnosticConnectString() {
-		return "jdbc:mysql://192.168.0.100/?user=test&password=test";
+		return "jdbc:mysql://localhost/?user=test&password=test";
 	}
 	
 	protected String getConnectString() {
-		return "jdbc:mysql://192.168.0.100/"+getDatabaseName()+"?user=test&password=test";
+		return "jdbc:mysql://localhost/"+getDatabaseName()+"?user=test&password=test";
 	}
 }
