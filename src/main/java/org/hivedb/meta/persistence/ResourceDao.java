@@ -36,7 +36,7 @@ public class ResourceDao extends JdbcDaoSupport implements
 	public List<Resource> loadAll() {
 		JdbcTemplate t = getJdbcTemplate();
 		ArrayList<Resource> results = new ArrayList<Resource>();
-		for (Object si : t.query("SELECT * FROM RESOURCE_METADATA",
+		for (Object si : t.query("SELECT * FROM resource_metadata",
 				new ResourceRowMapper())) {
 			results.add((Resource) si);
 		}
@@ -72,7 +72,7 @@ public class ResourceDao extends JdbcDaoSupport implements
 		KeyHolder generatedKey = new GeneratedKeyHolder();
 		JdbcTemplate j = getJdbcTemplate();
 		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
-				"UPDATE resource_metadata set name=?,dimension_id=? where id=?",
+				"UPDATE resource_metadata SET name=?,dimension_id=? WHERE id=?",
 				new int[] {Types.VARCHAR,Types.INTEGER,Types.INTEGER});
 		creatorFactory.setReturnGeneratedKeys(true);
 		int rows = j.update(creatorFactory
@@ -90,7 +90,7 @@ public class ResourceDao extends JdbcDaoSupport implements
 		parameters = new Object[] { resource.getId()};
 		JdbcTemplate j = getJdbcTemplate();
 		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
-				"DELETE from resource_metadata where id=?",
+				"DELETE FROM resource_metadata WHERE id=?",
 				new int[] { Types.INTEGER });
 		int rows = j.update(creatorFactory
 				.newPreparedStatementCreator(parameters));
@@ -109,7 +109,7 @@ public class ResourceDao extends JdbcDaoSupport implements
 	public List<Resource> findByDimension(int id) {
 		JdbcTemplate t = getJdbcTemplate();
 		ArrayList<Resource> results = new ArrayList<Resource>();
-		for (Object r : t.query("SELECT * FROM RESOURCE_METADATA WHERE DIMENSION_ID = ?",
+		for (Object r : t.query("SELECT * FROM resource_metadata WHERE dimension_id = ?",
 				new Object[] { id },
 				new ResourceRowMapper())) {
 			results.add((Resource) r);

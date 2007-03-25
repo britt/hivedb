@@ -61,7 +61,7 @@ public class SecondaryIndexDao extends JdbcDaoSupport implements
 	public List<SecondaryIndex> loadAll() {
 		JdbcTemplate t = getJdbcTemplate();
 		ArrayList<SecondaryIndex> results = new ArrayList<SecondaryIndex>();
-		for (Object si : t.query("SELECT * FROM SECONDARY_INDEX_METADATA",
+		for (Object si : t.query("SELECT * FROM secondary_index_metadata",
 				new SecondaryIndexRowMapper())) {
 			results.add((SecondaryIndex) si);
 		}
@@ -96,7 +96,7 @@ public class SecondaryIndexDao extends JdbcDaoSupport implements
 		KeyHolder generatedKey = new GeneratedKeyHolder();
 		JdbcTemplate j = getJdbcTemplate();
 		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
-				"UPDATE secondary_index_metadata set resource_id=?,column_name=?,db_type=? where id=?",
+				"UPDATE secondary_index_metadata SET resource_id=?,column_name=?,db_type=? WHERE id=?",
 				new int[] { Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.INTEGER });
 		creatorFactory.setReturnGeneratedKeys(true);
 		int rows = j.update(creatorFactory
@@ -110,7 +110,7 @@ public class SecondaryIndexDao extends JdbcDaoSupport implements
 		parameters = new Object[] { secondaryIndex.getId()};
 		JdbcTemplate j = getJdbcTemplate();
 		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
-				"DELETE from secondary_index_metadata where id=?",
+				"DELETE FROM secondary_index_metadata WHERE id=?",
 				new int[] { Types.INTEGER });
 		int rows = j.update(creatorFactory
 				.newPreparedStatementCreator(parameters));
@@ -121,7 +121,7 @@ public class SecondaryIndexDao extends JdbcDaoSupport implements
 	public List<SecondaryIndex> findByResource(int id) {
 		JdbcTemplate t = getJdbcTemplate();
 		ArrayList<SecondaryIndex> results = new ArrayList<SecondaryIndex>();
-		for (Object si : t.query("SELECT * FROM SECONDARY_INDEX_METADATA WHERE RESOURCE_ID = ?",
+		for (Object si : t.query("SELECT * FROM secondary_index_metadata WHERE resource_id = ?",
 				new Object[] { id },
 				new SecondaryIndexRowMapper())) {
 			results.add((SecondaryIndex) si);

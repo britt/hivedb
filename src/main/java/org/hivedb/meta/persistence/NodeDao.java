@@ -54,7 +54,7 @@ public class NodeDao extends JdbcDaoSupport implements DataAccessObject<Node,Int
 	public List<Node> loadAll() throws SQLException {
 		JdbcTemplate t = getJdbcTemplate();
 		ArrayList<Node> results = new ArrayList<Node>();
-		for (Object result : t.query("SELECT * FROM NODE_METADATA",
+		for (Object result : t.query("SELECT * FROM node_metadata",
 				new NodeRowMapper())) {
 			results.add((Node) result);
 		}
@@ -64,7 +64,7 @@ public class NodeDao extends JdbcDaoSupport implements DataAccessObject<Node,Int
 	public List<Node> findByGroup(int id) {
 		JdbcTemplate t = getJdbcTemplate();
 		ArrayList<Node> results = new ArrayList<Node>();
-		for (Object result : t.query("SELECT * FROM NODE_METADATA WHERE node_group_id = ?", new Object[] { id },
+		for (Object result : t.query("SELECT * FROM node_metadata WHERE node_group_id = ?", new Object[] { id },
 				new NodeRowMapper())) {
 			results.add((Node) result);
 		}
