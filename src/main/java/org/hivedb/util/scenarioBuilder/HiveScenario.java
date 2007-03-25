@@ -39,7 +39,6 @@ public class HiveScenario {
 	
 	public static HiveScenario run(HiveScenarioConfig hiveScenarioConfig) throws HiveException {
 		HiveScenario hiveScenario = new HiveScenario(hiveScenarioConfig);
-		hiveScenarioConfig.getHive().sync(); //Get the data that we've inserted so we can compare HiveScenario's data to the Hive's data
 		return hiveScenario;
 	}
 
