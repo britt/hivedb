@@ -18,19 +18,13 @@ import org.hivedb.meta.persistence.PartitionDimensionDao;
 public class HiveSyncDaemon extends Thread {
 	Logger log = Logger.getLogger(HiveSyncDaemon.class);
 
-	// members
 	long lastRun = 0;
 
 	private Hive hive = null;
 
 	public HiveSyncDaemon(Hive hive) {
 		this.hive = hive;
-		try {
-			synchronize();
-		} catch (HiveException ex) {
-			throw new HiveRuntimeException(
-					"HiveSyncDaemon unable to start due to sync error in underlying Hive: " + ex.getMessage(),ex);
-		}
+		synchronize();
 	}
 
 	private DataSource cachedDataSource = null;
@@ -52,7 +46,7 @@ public class HiveSyncDaemon extends Thread {
 		this.synchronize();
 	}
 
-	public void synchronize() throws HiveException {
+	public void synchronize() {
 		// update revision & locking, optionally triggering remaining sync
 		// activies
 		HiveSemaphoreDao hsd = new HiveSemaphoreDao(getDataSource());
@@ -71,11 +65,10 @@ public class HiveSyncDaemon extends Thread {
 				hive.setReadOnly(hs.isReadOnly());
 			}
 		} catch (Exception e) {
+			log.error("Semaphore not found; make sure Hive is installed");
 			log.error(e.getMessage());
 			for (StackTraceElement element : e.getStackTrace())
 				log.error(element);
-			throw new HiveException(
-					"Semaphore not found; make sure Hive is installed (" + e.getMessage() + ")");
 		}
 	}
 
@@ -87,8 +80,6 @@ public class HiveSyncDaemon extends Thread {
 				sleep(getConfiguredSleepPeriodMs());
 			} catch (InterruptedException e) {
 				// just don't care
-			} catch (HiveException ex) {
-				throw new HiveRuntimeException("Unable to synchronize due to problem with underlying Hive: " + ex.getMessage(),ex);
 			}
 		}
 	}
