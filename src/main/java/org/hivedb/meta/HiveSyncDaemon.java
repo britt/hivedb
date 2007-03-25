@@ -8,6 +8,7 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
+import org.apache.log4j.Logger;
 import org.hivedb.HiveException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
@@ -15,6 +16,7 @@ import org.hivedb.meta.persistence.HiveSemaphoreDao;
 import org.hivedb.meta.persistence.PartitionDimensionDao;
 
 public class HiveSyncDaemon extends Thread {
+	Logger log = Logger.getLogger(HiveSyncDaemon.class);
 
 	// members
 	long lastRun = 0;
@@ -69,8 +71,11 @@ public class HiveSyncDaemon extends Thread {
 				hive.setReadOnly(hs.isReadOnly());
 			}
 		} catch (Exception e) {
+			log.error(e.getMessage());
+			for (StackTraceElement element : e.getStackTrace())
+				log.error(element);
 			throw new HiveException(
-					"Semaphore not found; make sure Hive is installed");
+					"Semaphore not found; make sure Hive is installed (" + e.getMessage() + ")");
 		}
 	}
 
