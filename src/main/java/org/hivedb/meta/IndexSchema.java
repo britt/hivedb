@@ -8,6 +8,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.hivedb.HiveDbDialect;
 import org.hivedb.HiveException;
 import org.hivedb.Schema;
 import org.hivedb.util.JdbcTypeMapper;
@@ -53,7 +54,8 @@ public class IndexSchema extends Schema{
 			+ " secondary_index_count INTEGER not null, "
 			+ " last_updated "+ JdbcTypeMapper.jdbcTypeToString(Types.DATE) +" not null, "
 			+ " read_only " +  GlobalSchema.getBooleanTypeForDialect(dialect) + " default 0"			
-			+ " )";
+			+ " ) "
+			+ (dialect.equals(HiveDbDialect.MySql) ? "ENGINE=InnoDB" : "");
 	}
 	
 	/**
@@ -67,7 +69,8 @@ public class IndexSchema extends Schema{
 			+ " ( "
 			+ " id " +  addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(secondaryIndex.getColumnInfo().getColumnType())) + " primary key not null, "
 			+ " pkey " + addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(partitionDimension.getColumnType())) + " not null"
-			+ " )";
+			+ " ) " 
+			+ (dialect.equals(HiveDbDialect.MySql) ? "ENGINE=InnoDB" : "");
 	}
 	
 	/**
