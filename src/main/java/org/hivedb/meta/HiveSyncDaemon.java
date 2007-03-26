@@ -24,7 +24,13 @@ public class HiveSyncDaemon extends Thread {
 
 	public HiveSyncDaemon(Hive hive) {
 		this.hive = hive;
-		synchronize();
+		try {
+			synchronize();
+		} catch (Exception ex) {
+			// suppress, as Hive may be installing.  Exception will be thrown 
+			// when synchronize() is called after next waiting period.
+			log.debug(this.getClass().getName() + " unable to sync Hive in constructor");
+		}
 	}
 
 	private DataSource cachedDataSource = null;
@@ -46,7 +52,7 @@ public class HiveSyncDaemon extends Thread {
 		this.synchronize();
 	}
 
-	public void synchronize() {
+	public void synchronize() throws HiveException {
 		// update revision & locking, optionally triggering remaining sync
 		// activies
 		HiveSemaphoreDao hsd = new HiveSemaphoreDao(getDataSource());
@@ -69,6 +75,8 @@ public class HiveSyncDaemon extends Thread {
 			log.error(e.getMessage());
 			for (StackTraceElement element : e.getStackTrace())
 				log.error(element);
+			throw new HiveException(
+					"Semaphore not found; make sure Hive is installed", e);
 		}
 	}
 
@@ -78,7 +86,7 @@ public class HiveSyncDaemon extends Thread {
 				synchronize();
 				lastRun = System.currentTimeMillis();
 				sleep(getConfiguredSleepPeriodMs());
-			} catch (InterruptedException e) {
+			} catch (Exception e) {
 				// just don't care
 			}
 		}
