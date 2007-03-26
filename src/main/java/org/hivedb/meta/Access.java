@@ -43,8 +43,6 @@ public class Access {
 			return AccessType.ReadWrite;
 		if (AccessType.Read.toString().equals(accessTypeString))
 			return AccessType.Read;
-		if (AccessType.Write.toString().equals(accessTypeString))
-			return AccessType.Write;
 		throw new HiveException("Unknown access type: " + accessTypeString);
 	}
 	public int hashCode() {
