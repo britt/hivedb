@@ -11,6 +11,5 @@ package org.hivedb.meta;
  */
 public enum AccessType {
 	Read,
-	Write,
 	ReadWrite
 }
