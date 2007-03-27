@@ -18,6 +18,7 @@ import org.apache.log4j.Logger;
 import org.hivedb.HiveDbDialect;
 import org.hivedb.HiveException;
 import org.hivedb.HiveReadOnlyException;
+import org.hivedb.management.statistics.HivePerformanceStatistics;
 import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
@@ -56,6 +57,8 @@ public class Hive implements Finder {
 
 	private DataSource dataSource;
 
+//	private HivePerformanceStatistics stats;
+	
 	/**
 	 * System entry point. Factory method for all Hive interaction. If the first
 	 * attempt to load the Hive throws any exception, the Hive class will
@@ -604,7 +607,7 @@ public class Hive implements Finder {
 			PartitionDimension partitionDimension) throws HiveException {
 		isWritable(String.format("Deleting partition dimension %s",
 				partitionDimension.getName()));
-		existenceCheck(
+		itemExistsInCollection(
 				String
 						.format(
 								"Partition dimension %s does not match any partition dimension in the hive",
@@ -624,7 +627,7 @@ public class Hive implements Finder {
 
 	public Node deleteNode(Node node) throws HiveException {
 		isWritable(String.format("Deleting node %s", node.getUri()));
-		existenceCheck(
+		itemExistsInCollection(
 				String
 						.format(
 								"Node %s does not match any node in the partition dimenesion %s",
@@ -644,7 +647,7 @@ public class Hive implements Finder {
 
 	public Resource deleteResource(Resource resource) throws HiveException {
 		isWritable(String.format("Deleting resource %s", resource.getName()));
-		existenceCheck(
+		itemExistsInCollection(
 				String
 						.format(
 								"Resource %s does not match any resource in the partition dimenesion %s",
@@ -665,7 +668,7 @@ public class Hive implements Finder {
 			throws HiveException {
 		isWritable(String.format("Deleting secondary index %s", secondaryIndex
 				.getName()));
-		existenceCheck(
+		itemExistsInCollection(
 				String
 						.format(
 								"Secondary index %s does not match any node in the resource %s",
@@ -835,8 +838,8 @@ public class Hive implements Finder {
 	public void updatePrimaryIndexNode(PartitionDimension partitionDimension,
 			Object primaryIndexKey, Node node) throws HiveException,
 			SQLException {
-		isWritable("Updating primary index node", getNodeOfPrimaryIndexKey(
-				partitionDimension, primaryIndexKey), primaryIndexKey,
+		isWritable("Updating primary index node", partitionDimension.getNodeGroup().getNode(getNodeSemaphoreOfPrimaryIndexKey(
+				partitionDimension, primaryIndexKey).getId()), primaryIndexKey,
 				getReadOnlyOfPrimaryIndexKey(partitionDimension,
 						primaryIndexKey));
 
@@ -894,7 +897,7 @@ public class Hive implements Finder {
 			boolean isReadOnly) throws HiveException, SQLException {
 		isWritable("Updating primary index read-only");
 		// This query validates the existence of the primaryIndexKey
-		getNodeOfPrimaryIndexKey(partitionDimension, primaryIndexKey);
+		getNodeSemaphoreOfPrimaryIndexKey(partitionDimension, primaryIndexKey);
 		getDirectory(partitionDimension).updatePrimaryIndexKeyReadOnly(
 				primaryIndexKey, isReadOnly);
 		sync();
@@ -1002,8 +1005,8 @@ public class Hive implements Finder {
 		if (!doesPrimaryIndexKeyExist(partitionDimension, primaryIndexKey))
 			throw new HiveException("The primary index key " + primaryIndexKey
 					+ " does not exist");
-		isWritable("Deleting primary index key", getNodeOfPrimaryIndexKey(
-				partitionDimension, primaryIndexKey), primaryIndexKey,
+		isWritable("Deleting primary index key", partitionDimension.getNodeGroup().getNode(getNodeSemaphoreOfPrimaryIndexKey(
+				partitionDimension, primaryIndexKey).getId()), primaryIndexKey,
 				getReadOnlyOfPrimaryIndexKey(partitionDimension,
 						primaryIndexKey));
 
@@ -1155,8 +1158,21 @@ public class Hive implements Finder {
 			Object primaryIndexKey) throws HiveException, SQLException {
 		try {
 			return partitionDimension.getNodeGroup().getNode(
-					getDirectory(partitionDimension)
-							.getNodeIdOfPrimaryIndexKey(primaryIndexKey));
+					getDirectory(partitionDimension).getNodeSemamphoreOfPrimaryIndexKey(primaryIndexKey).getId());
+		} catch (Exception e) {
+			throw new HiveException(
+					String
+							.format(
+									"Primary index key %s of partition dimension %s not found.",
+									primaryIndexKey.toString(),
+									partitionDimension.getName()), e);
+		}
+	}
+	
+	public NodeSemaphore getNodeSemaphoreOfPrimaryIndexKey(PartitionDimension partitionDimension,
+			Object primaryIndexKey) throws HiveException, SQLException {
+		try {
+			return getDirectory(partitionDimension).getNodeSemamphoreOfPrimaryIndexKey(primaryIndexKey);
 		} catch (Exception e) {
 			throw new HiveException(
 					String
@@ -1181,9 +1197,9 @@ public class Hive implements Finder {
 	 * @throws SQLException
 	 *             Throws if there is a persistence error
 	 */
-	public Node getNodeOfPrimaryIndexKey(String partitionDimensionName,
+	public NodeSemaphore getNodeSemaphoreOfPrimaryIndexKey(String partitionDimensionName,
 			Object primaryIndexKey) throws HiveException, SQLException {
-		return getNodeOfPrimaryIndexKey(
+		return getNodeSemaphoreOfPrimaryIndexKey(
 				getPartitionDimension(partitionDimensionName), primaryIndexKey);
 	}
 
@@ -1293,15 +1309,28 @@ public class Hive implements Finder {
 	 * @throws SQLException
 	 *             Throws if there is a persistence error
 	 */
-	public Node getNodeOfSecondaryIndexKey(SecondaryIndex secondaryIndex,
+	public Node getNodeOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey) throws HiveException, SQLException {
+		PartitionDimension partitionDimension = secondaryIndex.getResource().getPartitionDimension();
+		try {
+			return partitionDimension.getNodeGroup().getNode(
+					getDirectory(partitionDimension).getNodeSemaphoreOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey).getId());
+		} catch (Exception e) {
+			throw new HiveException(
+					String
+							.format(
+									"Secondary index key %s of partition dimension %s on secondary index %s not found.",
+									secondaryIndex.toString(),
+									partitionDimension.getName(),
+									secondaryIndex.getName()), e);
+		}
+	}
+	
+	public NodeSemaphore getNodeSemaphoreOfSecondaryIndexKey(SecondaryIndex secondaryIndex,
 			Object secondaryIndexKey) throws HiveException, SQLException {
 		PartitionDimension partitionDimension = secondaryIndex.getResource()
 				.getPartitionDimension();
 		try {
-			return partitionDimension.getNodeGroup().getNode(
-					getDirectory(partitionDimension)
-							.getNodeIdOfSecondaryIndexKey(secondaryIndex,
-									secondaryIndexKey));
+			return getDirectory(partitionDimension).getNodeSemaphoreOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
 		} catch (Exception e) {
 			throw new HiveException(
 					String
@@ -1333,10 +1362,10 @@ public class Hive implements Finder {
 	 * @throws SQLException
 	 *             Throws if there is a persistence error
 	 */
-	public Node getNodeOfSecondaryIndexKey(String partitionDimensionName,
+	public NodeSemaphore getNodeSemaphoreOfSecondaryIndexKey(String partitionDimensionName,
 			String resourceName, String secondaryIndexName,
 			Object secondaryIndexKey) throws HiveException, SQLException {
-		return getNodeOfSecondaryIndexKey(getPartitionDimension(
+		return getNodeSemaphoreOfSecondaryIndexKey(getPartitionDimension(
 				partitionDimensionName).getResource(resourceName)
 				.getSecondaryIndex(secondaryIndexName), secondaryIndexKey);
 	}
@@ -1458,21 +1487,52 @@ public class Hive implements Finder {
 			return false;
 		}
 	}
-
-	public Connection getConnection(String nodeUri) throws SQLException {
-		return DriverManager.getConnection(nodeUri);
+	
+	private Connection getConnection(PartitionDimension partitionDimension, NodeSemaphore semaphore, AccessType intention) throws SQLException, HiveException {
+		try{
+			if( intention == AccessType.ReadWrite && isKeyReadOnly(partitionDimension, semaphore))
+				throw new HiveReadOnlyException("The key/node/hive requested cannot be written to at this time.");
+			
+			Connection conn = DriverManager.getConnection(partitionDimension.getNodeGroup().getNode(semaphore.getId()).getUri());
+			conn.setReadOnly(isKeyReadOnly(partitionDimension, semaphore));
+			return conn;
+		} catch (SQLException e) {
+//			stats.incrementConnectionFailures();
+			throw e;
+		} catch( RuntimeException e) {
+//			stats.incrementConnectionFailures();
+			throw e;
+		} catch (HiveException e) {
+//			stats.incrementConnectionFailures();
+			throw e;
+		}
+	}
+	
+	private boolean isKeyReadOnly(PartitionDimension partitionDimension, NodeSemaphore semaphore) throws HiveException {
+		return isReadOnly() || partitionDimension.getNodeGroup().getNode(semaphore.getId()).isReadOnly() || semaphore.isReadOnly();
+	}
+	
+	public Connection getConnection(PartitionDimension partitionDimension,
+			Object primaryIndexKey, AccessType intent) throws HiveException, SQLException {
+		return getConnection(partitionDimension, getNodeSemaphoreOfPrimaryIndexKey(partitionDimension, primaryIndexKey), intent);
+	}
+	
+	public Connection getConnection(SecondaryIndex secondaryIndex,
+			Object secondaryIndexKey, AccessType intent) throws HiveException, SQLException {
+		return getConnection(
+				secondaryIndex.getResource().getPartitionDimension(), 
+				getNodeSemaphoreOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey), 
+				intent);
 	}
 
 	public Connection getConnection(PartitionDimension partitionDimension,
 			Object primaryIndexKey) throws HiveException, SQLException {
-		return DriverManager.getConnection(getNodeOfPrimaryIndexKey(
-				partitionDimension, primaryIndexKey).getUri());
+		return getConnection(partitionDimension, primaryIndexKey, AccessType.ReadWrite);
 	}
 
 	public Connection getConnection(SecondaryIndex secondaryIndex,
 			Object secondaryIndexKey) throws HiveException, SQLException {
-		return DriverManager.getConnection(getNodeOfSecondaryIndexKey(
-				secondaryIndex, secondaryIndexKey).getUri());
+		return getConnection(secondaryIndex, secondaryIndexKey, AccessType.ReadWrite);
 	}
 
 	// Facade methods that are short cuts over digging into the object graph
@@ -1516,7 +1576,7 @@ public class Hive implements Finder {
 		throw new HiveException(errorMessage);
 	}
 
-	private <T> void existenceCheck(String errorMessage,
+	private <T> void itemExistsInCollection(String errorMessage,
 			Collection<T> collection, T item) throws HiveException {
 		// All classes implement Comparable, so this does a deep compare on all
 		// objects owned by the item.

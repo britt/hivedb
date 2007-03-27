@@ -25,7 +25,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * <p>
  * Increasing the number of intervals increases the resolution at the cost of
  * memory usage and performance. The current implementation internally allocates
- * two long[] whose length are each equal to the number of intervals.
+ * four long[] whose length are each equal to the number of intervals.
  * 
  * <p>
  * This implementation relies on the use of {@link System#nanoTime()} as an
@@ -44,16 +44,22 @@ public class RollingAverage {
 	/** resolution at which data is collected/discarded */
 	private final long intervalInNanos;
 
-	/** sum of the values in each window interval */
+	/** sum of all data points for each window interval */
 	private final long[] sums;
 
-	/** counts of data points recorded in each window interval */
+	/** number of data points recorded in each window interval */
 	private final long[] counts;
+
+	/** min data point for each window interval */
+	private final long[] mins;
+
+	/** max data point for each window interval */
+	private final long[] maxs;
 
 	/** total sum of all values across all window intervals */
 	private long sumsTotal;
 
-	/** total number of items across all window intervals */
+	/** total number of data points across all window intervals */
 	private long countsTotal;
 
 	/** window interval currently being added to */
@@ -79,6 +85,9 @@ public class RollingAverage {
 
 		sums = new long[intervalCount];
 		counts = new long[intervalCount];
+		mins = new long[intervalCount];
+		maxs = new long[intervalCount];
+
 		sumsTotal = 0;
 		countsTotal = 0;
 		curBeginTimeInNanos = System.nanoTime();
@@ -103,7 +112,7 @@ public class RollingAverage {
 	 * <p>
 	 * Increasing the number of intervals increases the resolution at the cost
 	 * of memory usage and performance. The current implementation internally
-	 * allocates two long[] whose length are each equal to the number of
+	 * allocates four long[] whose length are each equal to the number of
 	 * intervals.
 	 * 
 	 * <p>
@@ -158,7 +167,7 @@ public class RollingAverage {
 	 * <p>
 	 * Increasing the number of intervals increases the resolution at the cost
 	 * of memory usage and performance. The current implementation internally
-	 * allocates two long[] whose length are each equal to the number of
+	 * allocates four long[] whose length are each equal to the number of
 	 * intervals.
 	 * 
 	 * @param windowSizeInMillis
@@ -183,6 +192,8 @@ public class RollingAverage {
 			lock.lock();
 			Arrays.fill(sums, 0);
 			Arrays.fill(counts, 0);
+			Arrays.fill(mins, 0);
+			Arrays.fill(maxs, 0);
 			sumsTotal = 0;
 			countsTotal = 0;
 			curBeginTimeInNanos = System.nanoTime();
@@ -200,6 +211,12 @@ public class RollingAverage {
 			reconcileExistingData();
 			sums[curIndex] += value;
 			sumsTotal += value;
+			if (value > maxs[curIndex] || counts[curIndex] == 0)
+				maxs[curIndex] = value;
+			if (value < mins[curIndex] || counts[curIndex] == 0)
+				mins[curIndex] = value;
+
+			// must do counts last
 			counts[curIndex]++;
 			countsTotal++;
 		} finally {
@@ -208,7 +225,7 @@ public class RollingAverage {
 	}
 
 	/**
-	 * Note the accuracy of this value is constrained by the window's interval
+	 * Note: the accuracy of this value is constrained by the window's interval
 	 * size ({@link RollingAverage#getIntervalSize()}) and by the accuracy of
 	 * {@link System#nanoTime()}
 	 * 
@@ -220,7 +237,7 @@ public class RollingAverage {
 	}
 
 	/**
-	 * Note the accuracy of this value is constrained by the window's interval
+	 * Note: the accuracy of this value is constrained by the window's interval
 	 * size ({@link RollingAverage#getIntervalSize()}) and by the accuracy of
 	 * {@link System#nanoTime()}
 	 * 
@@ -238,7 +255,7 @@ public class RollingAverage {
 	}
 
 	/**
-	 * Note the accuracy of this value is constrained by the window's interval
+	 * Note: the accuracy of this value is constrained by the window's interval
 	 * size ({@link RollingAverage#getIntervalSize()}) and by the accuracy of
 	 * {@link System#nanoTime()}
 	 * 
@@ -256,7 +273,77 @@ public class RollingAverage {
 	}
 
 	/**
-	 * Note the accuracy of this value is constrained by the window's interval
+	 * Minimum data value within the window.
+	 * 
+	 * <p>
+	 * A value of <code>0L</code> indicates that either the max value added
+	 * was <code>0L</code> or that no data was added. These two possibilities
+	 * can be differentiated by checking whether
+	 * {@link RollingAverage#getCount()} == 0.
+	 * 
+	 * <p>
+	 * Note: the accuracy of this value is constrained by the window's interval
+	 * size ({@link RollingAverage#getIntervalSize()}) and by the accuracy of
+	 * {@link System#nanoTime()}
+	 * 
+	 * @return the minimum data value added within the last
+	 *         <code>windowSize</code> milliseconds
+	 */
+	public long getMin() {
+		try {
+			lock.lock();
+			reconcileExistingData();
+			if (countsTotal == 0)
+				return 0;
+			
+			long windowMin = Long.MAX_VALUE;
+			for (int i = 0; i < mins.length; i++) {
+				if (mins[i] < windowMin && counts[i] != 0)
+					windowMin = mins[i];
+			}
+			return windowMin;
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	/**
+	 * Maximum data value within the window.
+	 * 
+	 * <p>
+	 * A value of <code>0L</code> indicates that either the max value added
+	 * was <code>0L</code> or that no data was added. These two possibilities
+	 * can be differentiated by checking whether
+	 * {@link RollingAverage#getCount()} == 0.
+	 * 
+	 * <p>
+	 * Note: the accuracy of this value is constrained by the window's interval
+	 * size ({@link RollingAverage#getIntervalSize()}) and by the accuracy of
+	 * {@link System#nanoTime()}
+	 * 
+	 * @return the maximum data value added within the last
+	 *         <code>windowSize</code> milliseconds
+	 */
+	public long getMax() {
+		try {
+			lock.lock();
+			reconcileExistingData();
+			if (countsTotal == 0)
+				return 0;
+			
+			long windowMax = 0;
+			for (long max : maxs) {
+				if (max > windowMax)
+					windowMax = max;
+			}
+			return windowMax;
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	/**
+	 * Note: the accuracy of this value is constrained by the window's interval
 	 * size ({@link RollingAverage#getIntervalSize()}) and by the accuracy of
 	 * {@link System#nanoTime()}
 	 * 
@@ -296,21 +383,29 @@ public class RollingAverage {
 	public int getIntervalCount() {
 		return sums.length;
 	}
-	
-	/** 
-	 * @return The sum and observation count for each interval recorded
+
+	/**
+	 * @return The observation data for every interval <b>containing data</b>
 	 */
 	public Collection<ObservationInterval> getIntervalData() {
-		ArrayList<ObservationInterval> observations = new ArrayList<ObservationInterval>();
-		for(int i=0; i<sums.length; i++)
-			if(counts[i] != 0)
-				observations.add(new ObservationInterval(sums[i], counts[i]));
-		return observations;
+		try {
+			lock.lock();
+			reconcileExistingData();
+
+			ArrayList<ObservationInterval> observations = new ArrayList<ObservationInterval>();
+			for (int i = 0; i < sums.length; i++)
+				if (counts[i] != 0)
+					observations.add(new ObservationInterval(sums[i], counts[i], mins[i], maxs[i]));
+			return observations;
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	/**
-	 * Handles discarding expired data, updating countsTotal/sumsTotal, and
-	 * correctly increments the curIndex value.
+	 * Reconciles any existing data based on the current time -- handles
+	 * discarding expired data, updating countsTotal/sumsTotal, and correctly
+	 * increments the curIndex value.
 	 */
 	private void reconcileExistingData() {
 		try {
@@ -331,6 +426,8 @@ public class RollingAverage {
 					sums[curIndex] = 0;
 					countsTotal -= counts[curIndex];
 					counts[curIndex] = 0;
+					mins[curIndex] = 0;
+					maxs[curIndex] = 0;
 				}
 				// this can be adjusted all at once
 				curBeginTimeInNanos += (intervalInNanos * intervalsToClear);
@@ -338,7 +435,6 @@ public class RollingAverage {
 		} finally {
 			lock.unlock();
 		}
-
 	}
 
 	@Override
@@ -362,23 +458,37 @@ public class RollingAverage {
 			lock.unlock();
 		}
 	}
-	
+
 	/**
 	 * A tuple for passing observation data.
+	 * 
 	 * @author bcrawford
-	 *
 	 */
 	public class ObservationInterval {
-		private long sum, count;
+
+		private long sum, count, min, max;
+
 		public long getCount() {
 			return count;
 		}
+
 		public long getSum() {
 			return sum;
 		}
-		public ObservationInterval(long sum, long count) {
+
+		public long getMin() {
+			return min;
+		}
+
+		public long getMax() {
+			return max;
+		}
+
+		public ObservationInterval(long sum, long count, long min, long max) {
 			this.sum = sum;
 			this.count = count;
+			this.min = min;
+			this.max = max;
 		}
 	}
 }

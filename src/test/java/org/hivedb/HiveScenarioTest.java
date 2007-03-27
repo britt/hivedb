@@ -19,6 +19,7 @@ import org.hivedb.meta.Assigner;
 import org.hivedb.meta.ColumnInfo;
 import org.hivedb.meta.Hive;
 import org.hivedb.meta.Node;
+import org.hivedb.meta.NodeSemaphore;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
@@ -75,7 +76,7 @@ public class HiveScenarioTest {
 			
 			// Assert that primary index keys got to the persistence
 			for (PrimaryIndexIdentifiable primaryIndexInstance : hiveScenario.getPrimaryIndexInstancesCreatedByThisPartitionDimension(partitionDimension))
-				assertNotNull(hive.getNodeOfPrimaryIndexKey(partitionDimension, primaryIndexInstance.getPrimaryIndexKey()));
+				assertNotNull(hive.getNodeSemaphoreOfPrimaryIndexKey(partitionDimension, primaryIndexInstance.getPrimaryIndexKey()));
 			
 			// Validate that the hive has the created resources
 			assertEquals(new TreeSet<Resource>(hiveScenario.getResourcesOfThisPartitionDimension(partitionDimension)),
@@ -100,12 +101,12 @@ public class HiveScenarioTest {
 						
 						assertTrue(secondaryIndexKeys.contains(secondaryIndexIdentifiable.getSecondaryIndexKey()));
 										
-						Node nodeOfSecondaryIndexKey = hive.getNodeOfSecondaryIndexKey(
+						NodeSemaphore nodeSemaphoreOfSecondaryIndexKey = hive.getNodeSemaphoreOfSecondaryIndexKey(
 								partitionDimension.getName(),
 								resource.getName(),
 								secondaryIndex.getName(),
 								secondaryIndexIdentifiable.getSecondaryIndexKey());
-						assertNotNull(nodeOfSecondaryIndexKey);
+						assertNotNull(nodeSemaphoreOfSecondaryIndexKey);
 							
 							// Assert that querying for the primary key of the secondary index key yields what we expect
 							Object expectedPrimaryIndexKey = secondaryIndexIdentifiable.getResourceIdentifiable().getPrimaryIndexIdentifiable().getPrimaryIndexKey();
@@ -117,10 +118,10 @@ public class HiveScenarioTest {
 							assertEquals(expectedPrimaryIndexKey, actualPrimaryIndexKey);
 							
 							// Assert that the node of the secondary index key is the same as that of the primary index key
-							Node nodeOfPrimaryIndexKey = hive.getNodeOfPrimaryIndexKey(
+							NodeSemaphore nodeSemaphoreOfPrimaryIndexKey = hive.getNodeSemaphoreOfPrimaryIndexKey(
 																						partitionDimension.getName(),
 																						actualPrimaryIndexKey);
-							assertEquals(nodeOfSecondaryIndexKey, nodeOfPrimaryIndexKey);						
+							assertEquals(nodeSemaphoreOfSecondaryIndexKey, nodeSemaphoreOfPrimaryIndexKey);						
 					}
 				}	
 			}
@@ -171,7 +172,7 @@ public class HiveScenarioTest {
 							partitionDimension,
 							primaryIndexInstance.getPrimaryIndexKey(),
 							mapToNewNode.get(fromNode)); // note, using Node instead of node uri since our tests use duplicate node uris
-					assertEquals(mapToNewNode.get(fromNode).getId(), hive.getNodeOfPrimaryIndexKey(partitionDimension, primaryIndexInstance.getPrimaryIndexKey()).getId());
+					assertEquals(mapToNewNode.get(fromNode).getId(), hive.getNodeSemaphoreOfPrimaryIndexKey(partitionDimension, primaryIndexInstance.getPrimaryIndexKey()).getId());
 				}
 				private void updateReadOnly(PrimaryIndexIdentifiable primaryIndexInstance, boolean toBool) throws HiveException, SQLException {
 					hive.updatePrimaryIndexReadOnly(

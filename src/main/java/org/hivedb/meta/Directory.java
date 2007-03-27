@@ -159,13 +159,20 @@ public class Directory extends JdbcDaoSupport{
 			new Object[] { primaryIndexKey },
 			new IntRowMapper()).size() == 1;
 	}
-
 	
 	public int getNodeIdOfPrimaryIndexKey(Object primaryIndexKey) {
 		JdbcTemplate j = getJdbcTemplate();
 		return j.queryForInt("select node from " + IndexSchema.getPrimaryIndexTableName(partitionDimension)														 
 			 + " where id = ?",		
 			new Object[] { primaryIndexKey });
+	}
+	
+	public NodeSemaphore getNodeSemamphoreOfPrimaryIndexKey(Object primaryIndexKey) {
+		JdbcTemplate j = getJdbcTemplate();
+		return (NodeSemaphore) j.query("select node,read_only from " + IndexSchema.getPrimaryIndexTableName(partitionDimension)														 
+				 + " where id = ?",		
+				new Object[] { primaryIndexKey },
+				new NodeSemaphoreRowMapper()).get(0);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -194,6 +201,17 @@ public class Directory extends JdbcDaoSupport{
 			+ " where s.id =  ?",
 			new Object[] { secondaryIndexKey });
 	}
+	
+	public NodeSemaphore getNodeSemaphoreOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey)
+	{
+		JdbcTemplate j = getJdbcTemplate();
+		return (NodeSemaphore) j.query("select p.node,p.read_only from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
+			+ " join " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex) + " s on s.pkey = p.id"
+			+ " where s.id =  ?",
+			new Object[] { secondaryIndexKey },
+			new NodeSemaphoreRowMapper()).get(0);
+	}
+	
 	@SuppressWarnings("unchecked")
 	public Object getPrimaryIndexKeyOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey)
 	{
@@ -217,17 +235,17 @@ public class Directory extends JdbcDaoSupport{
 			new ObjectRowMapper(secondaryIndex.getColumnInfo().getColumnType()));
 	}
 	
-	public class IntRowMapper implements RowMapper {
+	private class IntRowMapper implements RowMapper {
 		public Object mapRow(ResultSet rs, int rowNumber) throws SQLException {
 			return rs.getInt(1);		
 		}
 	}
-	public class BooleanRowMapper implements RowMapper {
+	private class BooleanRowMapper implements RowMapper {
 		public Object mapRow(ResultSet rs, int rowNumber) throws SQLException {
 			return rs.getBoolean(1);		
 		}
 	}
-	public class ObjectRowMapper implements RowMapper {
+	private class ObjectRowMapper implements RowMapper {
 		int jdbcType;
 		public ObjectRowMapper(int jdbcType)
 		{
@@ -238,9 +256,16 @@ public class Directory extends JdbcDaoSupport{
 			return rs.getObject(1);		
 		}
 	}
-	public static class TrueRowMapper implements RowMapper {
+	private static class TrueRowMapper implements RowMapper {
 		public Object mapRow(ResultSet rs, int rowNumber) throws SQLException {
 			return true;
 		}
+	}
+	
+	private class NodeSemaphoreRowMapper implements RowMapper {
+		public Object mapRow(ResultSet rs, int arg1) throws SQLException {
+			return new NodeSemaphore(rs.getInt("node"), rs.getBoolean("read_only"));
+		}
+		
 	}
 }

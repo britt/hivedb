@@ -62,4 +62,33 @@ public interface HivePerformanceStatistics {
 	public void incrementWriteTime();
 	public void decrementWriteTime();
 	
+	public long getAverageNewReadConnections();
+	public long getMinNewReadConnections();
+	public long getMaxNewReadConnections();
+	public double getVarianceNewReadConnections();
+	public long getWindowNewReadConnections();
+	public long getIntervalNewReadConnections();
+	public void addToNewReadConnections(long value);
+	public void incrementNewReadConnections();
+	public void decrementNewReadConnections();
+	
+	public long getAverageNewWriteConnections();
+	public long getMinNewWriteConnections();
+	public long getMaxNewWriteConnections();
+	public double getVarianceNewWriteConnections();
+	public long getWindowNewWriteConnections();
+	public long getIntervalNewWriteConnections();
+	public void addToNewWriteConnections(long value);
+	public void incrementNewWriteConnections();
+	public void decrementNewWriteConnections();
+	
+	public long getAverageConnectionFailures();
+	public long getMinConnectionFailures();
+	public long getMaxConnectionFailures();
+	public double getVarianceConnectionFailures();
+	public long getWindowConnectionFailures();
+	public long getIntervalConnectionFailures();
+	public void addToConnectionFailures(long value);
+	public void incrementConnectionFailures();
+	public void decrementConnectionFailures();
 }

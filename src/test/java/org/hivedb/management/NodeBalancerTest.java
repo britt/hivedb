@@ -1,6 +1,8 @@
 package org.hivedb.management;
 
-import static org.testng.AssertJUnit.*;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
+import static org.testng.AssertJUnit.fail;
 
 import java.sql.Types;
 import java.util.ArrayList;
@@ -153,7 +155,7 @@ public class NodeBalancerTest extends DerbyTestCase {
 		
 		Node full = hive.getNodeOfPrimaryIndexKey(dimension, fullKey1);
 		Node empty = hive.getNodeOfPrimaryIndexKey(dimension, emptyKey);
-		
+	
 		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource());
 		SortedSet<NodeStatistics> startingState = new TreeSet<NodeStatistics>();
 		for(Node node : nodes) {

@@ -10,7 +10,6 @@ import javax.sql.DataSource;
 
 import org.apache.log4j.Logger;
 import org.hivedb.HiveException;
-import org.hivedb.HiveRuntimeException;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
 import org.hivedb.meta.persistence.PartitionDimensionDao;
@@ -43,6 +42,7 @@ public class HiveSyncDaemon extends Thread {
 	}
 
 	// TODO is this the right place for this unique operation?
+	// A:  I think Hive.java might be a more appropriate place for this operation. --britt
 	public void setReadOnly(boolean readOnly) throws SQLException {
 		new HiveSemaphoreDao(getDataSource()).update(new HiveSemaphore(
 				readOnly, hive.getRevision()));

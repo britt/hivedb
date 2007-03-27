@@ -20,6 +20,12 @@ public class HivePerformanceStatisticsMBean extends StandardMBean implements
 
 	private static final String WRITETIME = "WriteTime";
 
+	private static final String READCONNECTIONS = "ReadConenctions";
+	
+	private static final String WRITECONNECTIONS = "WriteConnections";
+	
+	private static final String CONNECTIONFAILURES = "ConnetionFailures";
+	
 	private RollingAverageStatistics stats;
 
 	public HivePerformanceStatisticsMBean(long window, long interval)
@@ -246,5 +252,112 @@ public class HivePerformanceStatisticsMBean extends StandardMBean implements
 	public void incrementWriteTime() {
 		stats.increment(WRITETIME);
 	}
+	
+	public void addToNewReadConnections(long value) {
+		stats.add(READCONNECTIONS, value);
+	}
 
+	public void decrementNewReadConnections() {
+		stats.decrement(READCONNECTIONS);
+	}
+
+	public long getAverageNewReadConnections() {
+		return stats.getAverage(READCONNECTIONS);
+	}
+
+	public long getIntervalNewReadConnections() {
+		return stats.getInterval(READCONNECTIONS);
+	}
+
+	public long getMaxNewReadConnections() {
+		return stats.getMax(READCONNECTIONS);
+	}
+
+	public long getMinNewReadConnections() {
+		return stats.getMin(READCONNECTIONS);
+	}
+
+	public double getVarianceNewReadConnections() {
+		return stats.getVariance(READCONNECTIONS);
+	}
+
+	public long getWindowNewReadConnections() {
+		return stats.getWindow(READCONNECTIONS);
+	}
+
+	public void incrementNewReadConnections() {
+		stats.increment(READCONNECTIONS);
+	}
+	
+	public void addToNewWriteConnections(long value) {
+		stats.add(WRITECONNECTIONS, value);
+	}
+
+	public void decrementNewWriteConnections() {
+		stats.decrement(WRITECONNECTIONS);
+	}
+
+	public long getAverageNewWriteConnections() {
+		return stats.getAverage(WRITECONNECTIONS);
+	}
+
+	public long getIntervalNewWriteConnections() {
+		return stats.getInterval(WRITECONNECTIONS);
+	}
+
+	public long getMaxNewWriteConnections() {
+		return stats.getMax(WRITECONNECTIONS);
+	}
+
+	public long getMinNewWriteConnections() {
+		return stats.getMin(WRITECONNECTIONS);
+	}
+
+	public double getVarianceNewWriteConnections() {
+		return stats.getVariance(WRITECONNECTIONS);
+	}
+
+	public long getWindowNewWriteConnections() {
+		return stats.getWindow(WRITECONNECTIONS);
+	}
+
+	public void incrementNewWriteConnections() {
+		stats.increment(WRITECONNECTIONS);
+	}
+	
+	public void addToConnectionFailures(long value) {
+		stats.add(CONNECTIONFAILURES, value);
+	}
+
+	public void decrementConnectionFailures() {
+		stats.decrement(CONNECTIONFAILURES);
+	}
+
+	public long getAverageConnectionFailures() {
+		return stats.getAverage(CONNECTIONFAILURES);
+	}
+
+	public long getIntervalConnectionFailures() {
+		return stats.getInterval(CONNECTIONFAILURES);
+	}
+
+	public long getMaxConnectionFailures() {
+		return stats.getMax(CONNECTIONFAILURES);
+	}
+
+	public long getMinConnectionFailures() {
+		return stats.getMin(CONNECTIONFAILURES);
+	}
+
+	public double getVarianceConnectionFailures() {
+		return stats.getVariance(CONNECTIONFAILURES);
+	}
+
+	public long getWindowConnectionFailures() {
+		return stats.getWindow(CONNECTIONFAILURES);
+	}
+
+	public void incrementConnectionFailures() {
+		stats.increment(CONNECTIONFAILURES);
+	}
 }

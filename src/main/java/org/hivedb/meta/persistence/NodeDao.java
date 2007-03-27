@@ -71,6 +71,11 @@ public class NodeDao extends JdbcDaoSupport implements DataAccessObject<Node,Int
 		return results;
 	}
 
+	public Node findById(int id) {
+		JdbcTemplate t = getJdbcTemplate();
+		return (Node) t.queryForObject("SELECT * FROM node_metadata WHERE id = ?", new Object[] { id }, new NodeRowMapper());
+	}
+	
 	public void update(Node node) throws SQLException {
 		Object[] parameters = new Object[] { 
 				node.getNodeGroup().getId(),
