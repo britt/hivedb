@@ -1494,7 +1494,8 @@ public class Hive implements Finder {
 				throw new HiveReadOnlyException("The key/node/hive requested cannot be written to at this time.");
 			
 			Connection conn = DriverManager.getConnection(partitionDimension.getNodeGroup().getNode(semaphore.getId()).getUri());
-			conn.setReadOnly(isKeyReadOnly(partitionDimension, semaphore));
+			if(intention == AccessType.Read)
+				conn.setReadOnly(true);
 			return conn;
 		} catch (SQLException e) {
 //			stats.incrementConnectionFailures();

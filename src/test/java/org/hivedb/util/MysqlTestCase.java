@@ -27,12 +27,16 @@ public class MysqlTestCase {
 		try {
 			connection.prepareStatement("drop database " + getDatabaseName()).execute();
 		}
-		catch (Exception e) {}
+		catch (Exception e) {
+			throw new RuntimeException("Unable to drop database " + getDatabaseName(),e);
+		}
 		try{
 			connection.prepareStatement("create database " + getDatabaseName()).execute();
 			connection.close();
 		}
-		catch (Exception e) {  }
+		catch (Exception e) {
+			throw new RuntimeException("Unable to drop database " + getDatabaseName(),e);
+		}
 	}
 	
 	protected String getDatabaseAgnosticConnectString() {

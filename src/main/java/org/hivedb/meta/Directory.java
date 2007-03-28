@@ -169,10 +169,10 @@ public class Directory extends JdbcDaoSupport{
 	
 	public NodeSemaphore getNodeSemamphoreOfPrimaryIndexKey(Object primaryIndexKey) {
 		JdbcTemplate j = getJdbcTemplate();
-		return (NodeSemaphore) j.query("select node,read_only from " + IndexSchema.getPrimaryIndexTableName(partitionDimension)														 
+		return (NodeSemaphore) j.queryForObject("select node,read_only from " + IndexSchema.getPrimaryIndexTableName(partitionDimension)														 
 				 + " where id = ?",		
 				new Object[] { primaryIndexKey },
-				new NodeSemaphoreRowMapper()).get(0);
+				new NodeSemaphoreRowMapper());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -205,11 +205,11 @@ public class Directory extends JdbcDaoSupport{
 	public NodeSemaphore getNodeSemaphoreOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey)
 	{
 		JdbcTemplate j = getJdbcTemplate();
-		return (NodeSemaphore) j.query("select p.node,p.read_only from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
+		return (NodeSemaphore) j.queryForObject("select p.node,p.read_only from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
 			+ " join " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex) + " s on s.pkey = p.id"
 			+ " where s.id =  ?",
 			new Object[] { secondaryIndexKey },
-			new NodeSemaphoreRowMapper()).get(0);
+			new NodeSemaphoreRowMapper());
 	}
 	
 	@SuppressWarnings("unchecked")
