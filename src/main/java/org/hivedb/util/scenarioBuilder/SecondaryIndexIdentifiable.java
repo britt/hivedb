@@ -16,9 +16,10 @@ public interface SecondaryIndexIdentifiable
 	 * This is real constructor of the class. HiveScenario will create an instance with the no argument constructor and then call this method, creating a new instance.
 	 * @param resourceIdentifiable - The ResourceIdentifiable instance referenced by this instance. The instance uses this to know the hive resource to which it belongs,
 	 * and the partition dimension and primary index key to which it belongs and refers, respectively.
+	 * @param id - The primary key of this secondary index instance
 	 * @return
 	 */
-	SecondaryIndexIdentifiable construct(ResourceIdentifiable resourceIdentifiable);
+	SecondaryIndexIdentifiable construct(ResourceIdentifiable resourceIdentifiable, Object id);
 	/**
 	 *  
 	 * @return The secondary index key represented by this instance. Make sure that this never returns null, use the default value instead.
@@ -34,7 +35,7 @@ public interface SecondaryIndexIdentifiable
 	 * unless you are extending a class and want to name the resource after the base class.
 	 */
 	ResourceIdentifiable getResourceIdentifiable();
-	
+	Object getRepresentedResourceFieldValue();
 	String getSecondaryIndexColumnName();
 	
 	/**

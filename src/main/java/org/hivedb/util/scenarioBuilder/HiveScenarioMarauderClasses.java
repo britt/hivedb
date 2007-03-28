@@ -59,7 +59,7 @@ public class HiveScenarioMarauderClasses {
 		/* SecondaryIndex METHODS */
 		
 		// Since Pirate is also a ResourceIdentifiable the argument is equal to this
-		public SecondaryIndexIdentifiable construct(ResourceIdentifiable resourceIdentifiable) {
+		public SecondaryIndexIdentifiable construct(ResourceIdentifiable resourceIdentifiable, Object id) {
 			if (this != resourceIdentifiable)
 				throw new RuntimeException("Excpected equality here");
 			return this;
@@ -76,6 +76,10 @@ public class HiveScenarioMarauderClasses {
 		// Our Secondary Index maps pirate's name to it's id;
 		public String getSecondaryIndexName() {
 			return getResourceName() + "." + getSecondaryIndexColumnName();
+		}
+
+		public Object getRepresentedResourceFieldValue() {
+			return pirateName;
 		}
 	}
 	
@@ -108,7 +112,7 @@ public class HiveScenarioMarauderClasses {
 		/* SecondaryIndexIdentifiable Methods */
 		
 		// Since Treasure is also a ResourceIdentifiable, return this instead of creating a new instance
-		public SecondaryIndexIdentifiable construct(ResourceIdentifiable resourceIdentifiable) {
+		public SecondaryIndexIdentifiable construct(ResourceIdentifiable resourceIdentifiable, Object id) {
 			if (this != resourceIdentifiable)
 				throw new RuntimeException("Expected equality here");
 			return this;
@@ -118,6 +122,10 @@ public class HiveScenarioMarauderClasses {
 			return this;
 		}
 		public String getSecondaryIndexColumnName() { return "id"; }
-		public String getSecondaryIndexName() {return getResourceName() + "." + getSecondaryIndexColumnName(); }		
+		public String getSecondaryIndexName() {return getResourceName() + "." + getSecondaryIndexColumnName(); }
+
+		public Object getRepresentedResourceFieldValue() {
+			return id;
+		}		
 	}	                      
 }

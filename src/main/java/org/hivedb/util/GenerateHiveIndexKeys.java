@@ -148,13 +148,25 @@ public class GenerateHiveIndexKeys {
 			public ResourceIdentifiable f(PrimaryIndexIdentifiable primaryIndexIdentifiable) {
 				ResourceIdentifiable resourceIdentifiable = resourceIdentifiablePrototype.construct(primaryIndexIdentifiable);
 				resourceIdentifiable = persistResourceInstance(hive, resourceIdentifiable);
-				for (SecondaryIndexIdentifiable secondaryIndexIdentifiable : resourceIdentifiable.getSecondaryIndexIdentifiables())
-					try {
-						persistSecondaryIndexKey(hive, secondaryIndexIdentifiable);
-					} catch (Exception e) {
-						throw new RuntimeException(e);
-					}
+				for (SecondaryIndexIdentifiable secondaryIndexIdentifiable : resourceIdentifiable.getSecondaryIndexIdentifiables()) {
+					Object value = secondaryIndexIdentifiable.getRepresentedResourceFieldValue();
+					if (value instanceof Collection)
+						// Many-to-many field
+						for (Object item : (Collection)value)
+							persistSecondaryIndexKey(hive, secondaryIndexIdentifiable.construct(resourceIdentifiable, item));
+					else
+						// Many-to-one field
+						persistSecondaryIndexKey(hive, secondaryIndexIdentifiable.construct(resourceIdentifiable, value));
+				}
 				return resourceIdentifiable;
+		}
+
+		private void persistSecondaryIndexKey(final Hive hive, SecondaryIndexIdentifiable secondaryIndexIdentifiable) {
+			try {
+				persistSecondaryIndexKey(hive, secondaryIndexIdentifiable);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
 		}};
 	}
 	protected ResourceIdentifiable persistResourceInstance(Hive hive, ResourceIdentifiable resourceIdentifiable) {
