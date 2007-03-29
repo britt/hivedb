@@ -6,6 +6,8 @@ import java.util.Map;
 
 import org.hivedb.HiveException;
 import org.hivedb.meta.Hive;
+import org.hivedb.meta.PartitionDimension;
+import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.scenarioBuilder.Filter;
 import org.hivedb.util.scenarioBuilder.Generate;
@@ -153,17 +155,22 @@ public class GenerateHiveIndexKeys {
 					if (value instanceof Collection)
 						// Many-to-many field
 						for (Object item : (Collection)value)
-							proxyPersistSecondaryIndexKey(hive, secondaryIndexIdentifiable.construct(resourceIdentifiable, item));
+							persistSecondaryIndexKey(hive, secondaryIndexIdentifiable.construct(resourceIdentifiable, item));
 					else
 						// Many-to-one field
-						proxyPersistSecondaryIndexKey(hive, secondaryIndexIdentifiable.construct(resourceIdentifiable, value));
+						persistSecondaryIndexKey(hive, secondaryIndexIdentifiable.construct(resourceIdentifiable, value));
 				}
 				return resourceIdentifiable;
 		}
 
-		private void proxyPersistSecondaryIndexKey(final Hive hive, SecondaryIndexIdentifiable secondaryIndexIdentifiable) {
+		private void persistSecondaryIndexKey(final Hive hive, SecondaryIndexIdentifiable secondaryIndexIdentifiable) {
 			try {
-				persistSecondaryIndexKey(hive, secondaryIndexIdentifiable);
+				PartitionDimension partitionDimension = hive.getPartitionDimension(secondaryIndexIdentifiable.getResourceIdentifiable().getPrimaryIndexIdentifiable().getPartitionDimensionName());
+				Resource resource = partitionDimension.getResource(secondaryIndexIdentifiable.getResourceIdentifiable().getResourceName());
+				
+				hive.insertSecondaryIndexKey(
+						resource.getSecondaryIndex(secondaryIndexIdentifiable.getSecondaryIndexName()), secondaryIndexIdentifiable.getSecondaryIndexKey(), secondaryIndexIdentifiable.getResourceIdentifiable().getPrimaryIndexIdentifiable().getPrimaryIndexKey());
+			
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}

@@ -18,7 +18,6 @@ import org.apache.log4j.Logger;
 import org.hivedb.HiveDbDialect;
 import org.hivedb.HiveException;
 import org.hivedb.HiveReadOnlyException;
-import org.hivedb.management.statistics.HivePerformanceStatistics;
 import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
