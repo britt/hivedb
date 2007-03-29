@@ -72,9 +72,9 @@ public class HiveSyncDaemon extends Thread {
 			}
 		} catch (Exception e) {
 			log.error("Semaphore not found; make sure Hive is installed");
-			log.error(e.getMessage());
+			log.debug(e.getMessage());
 			for (StackTraceElement element : e.getStackTrace())
-				log.error(element);
+				log.debug(element);
 			throw new HiveException(
 					"Semaphore not found; make sure Hive is installed", e);
 		}
