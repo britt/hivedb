@@ -53,6 +53,13 @@ public interface RollingAverageStatistics {
 	public long getMax(String key);
 	
 	/**
+	 * Get the total of all samples taken during the window
+	 * @param key The name of statistic being fetched.
+	 * @return
+	 */
+	public long getSum(String key);
+	
+	/**
 	 * Add the value to the current sample.
 	 * @param key The name of statistic being fetched.
 	 * @param value 
@@ -78,4 +85,12 @@ public interface RollingAverageStatistics {
 	 * @param interval
 	 */
 	public void registerCounter(String name, long window, long interval);
+	
+	/**
+	 * Get a time average rather than a per observation average.
+	 * @param key The name of statistic being fetched.
+	 * @param periodInMillis
+	 * @return
+	 */
+	public long getTimeAverage(String key, long periodInMillis);
 }

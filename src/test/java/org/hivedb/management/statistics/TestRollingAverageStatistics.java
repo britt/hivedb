@@ -58,8 +58,7 @@ public class TestRollingAverageStatistics {
 			assertEquals(0, stats.getAverage(key));
 	}
 	
-	//@Test
-	// TODO: this was failing on some Windows machines
+	@Test
 	public void testComputedStatistics() throws Exception{
 		RollingAverageStatistics stats = new RollingAverageStatisticsImpl(testKeys(), 1000, 10);
 		String key = testKeys().iterator().next();
@@ -69,9 +68,10 @@ public class TestRollingAverageStatistics {
 			Thread.sleep(11);
 		}
 		
-		assertEquals(10, stats.getMin(key));
-		assertEquals(50, stats.getMax(key));
+		assertEquals(10l, stats.getMin(key));
+		assertEquals(50l, stats.getMax(key));
 		assertEquals(200.0, stats.getVariance(key), 0.1f);
+		assertEquals(150l, stats.getTimeAverage(key, 1000));
 	}
 	
 	private Collection<String> testKeys() {

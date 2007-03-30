@@ -83,4 +83,12 @@ public class RollingAverageStatisticsImpl implements RollingAverageStatistics {
 	public void registerCounter(String name, long window, long interval) {
 		this.stats.put(name, RollingAverage.getInstanceByIntervalSize(window, interval));
 	}
+
+	public long getSum(String key) {
+		return this.stats.get(key).getSum();
+	}
+
+	public long getTimeAverage(String key, long periodInMillis) {
+		return Math.round( (double) stats.get(key).getSum() / ((double) stats.get(key).getWindowSize() / periodInMillis) );
+	}
 }

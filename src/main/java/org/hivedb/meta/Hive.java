@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 
+import javax.management.NotCompliantMBeanException;
 import javax.sql.DataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
@@ -18,6 +19,8 @@ import org.apache.log4j.Logger;
 import org.hivedb.HiveDbDialect;
 import org.hivedb.HiveException;
 import org.hivedb.HiveReadOnlyException;
+import org.hivedb.management.statistics.HivePerformanceStatistics;
+import org.hivedb.management.statistics.HivePerformanceStatisticsMBean;
 import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
@@ -56,7 +59,8 @@ public class Hive implements Finder {
 
 	private DataSource dataSource;
 
-//	private HivePerformanceStatistics stats;
+	//TODO: This will not stay public.  Its merely that way for testing
+	public HivePerformanceStatistics stats;
 	
 	/**
 	 * System entry point. Factory method for all Hive interaction. If the first
@@ -79,7 +83,7 @@ public class Hive implements Finder {
 			throw new HiveException("Unable to load database driver: "
 					+ e.getMessage(), e);
 		}
-
+		
 		Hive hive = null;
 		try {
 			PartitionKeyStatisticsDao tracker = new PartitionKeyStatisticsDao(
@@ -151,6 +155,14 @@ public class Hive implements Finder {
 		this.dataSource = new HiveBasicDataSource(this.getHiveUri());
 
 		this.directories = new ArrayList<Directory>();
+		
+		try {
+			stats = new HivePerformanceStatisticsMBean(1000, 100);
+		} catch (NotCompliantMBeanException e) {
+			// TODO: How should this exception be handled?
+			throw new RuntimeException(e);
+		}
+		
 		for (PartitionDimension dimension : this.partitionDimensions)
 			this.directories.add(new Directory(dimension, this.dataSource));
 	}
@@ -1493,17 +1505,21 @@ public class Hive implements Finder {
 				throw new HiveReadOnlyException("The key/node/hive requested cannot be written to at this time.");
 			
 			Connection conn = DriverManager.getConnection(partitionDimension.getNodeGroup().getNode(semaphore.getId()).getUri());
-			if(intention == AccessType.Read)
+			if(intention == AccessType.Read) {
 				conn.setReadOnly(true);
+				stats.incrementNewReadConnections();
+			} else if( intention == AccessType.ReadWrite){
+				stats.incrementNewWriteConnections();
+			}
 			return conn;
 		} catch (SQLException e) {
-//			stats.incrementConnectionFailures();
+			stats.incrementConnectionFailures();
 			throw e;
 		} catch( RuntimeException e) {
-//			stats.incrementConnectionFailures();
+			stats.incrementConnectionFailures();
 			throw e;
 		} catch (HiveException e) {
-//			stats.incrementConnectionFailures();
+			stats.incrementConnectionFailures();
 			throw e;
 		}
 	}

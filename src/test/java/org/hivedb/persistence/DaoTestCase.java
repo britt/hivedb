@@ -59,7 +59,7 @@ public abstract class DaoTestCase extends DerbyTestCase {
 	}
 
 	protected Node createNode() {
-		return new Node("jdbc:foo:foodb@localhost", false);
+		return new Node(getConnectString(), false);
 	}
 
 	protected NodeGroup createPopulatedNodeGroup() {
@@ -75,14 +75,16 @@ public abstract class DaoTestCase extends DerbyTestCase {
 	}
 
 	protected PartitionDimension createPopulatedPartitionDimension() {
-		return new PartitionDimension("member", Types.INTEGER,
-				createEmptyNodeGroup(), "jdbc:foo:mysql:bar", createResources());
+		return new PartitionDimension(partitionDimensionName(), Types.INTEGER,
+				createEmptyNodeGroup(), getConnectString(), createResources());
 	}
 	protected PartitionDimension createEmptyPartitionDimension() {
-		return new PartitionDimension("member", Types.INTEGER,
-				createEmptyNodeGroup(), "jdbc:foo:mysql:bar", new ArrayList<Resource>());
+		return new PartitionDimension(partitionDimensionName(), Types.INTEGER,
+				createEmptyNodeGroup(), getConnectString(), new ArrayList<Resource>());
 	}
-	
+	protected String partitionDimensionName() {
+		return "member";
+	}
 	protected HiveSemaphore createHiveSemaphore() {
 		return new HiveSemaphore(false,54321);
 	}

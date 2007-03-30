@@ -36,7 +36,7 @@ public class HiveSemaphoreDao extends JdbcDaoSupport {
 		HiveSemaphore result;
 		try {
 			result = (HiveSemaphore) t.queryForObject(
-					"SELECT * FROM semaphore_metadata", new Object[0],
+					"SELECT * FROM semaphore_metadata", 
 					new HiveSemaphoreRowMapper());
 		} catch (Exception ex) {
 			throw new SQLException(
