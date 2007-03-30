@@ -5,8 +5,8 @@ package org.hivedb.util.scenarioBuilder;
  * 
  * For use by HiveScenario.
  * 
- * You must define a zero-argument constructor for use by HiveScenario.
- * 
+ * Represents a secondary index of a Hive resource. SecondaryIndexIdentifiable instances always
+ * belong to a ResourceIdentifiable instance.
  * @author Andy alikuski@cafepress.com
  *
  */
@@ -14,12 +14,11 @@ public interface SecondaryIndexIdentifiable
 {
 	/**
 	 * This is real constructor of the class. HiveScenario will create an instance with the no argument constructor and then call this method, creating a new instance.
-	 * @param resourceIdentifiable - The ResourceIdentifiable instance referenced by this instance. The instance uses this to know the hive resource to which it belongs,
-	 * and the partition dimension and primary index key to which it belongs and refers, respectively.
-	 * @param id - The primary key of this secondary index instance
+	 * @param resourceIdentifiable - The ResourceIdentifiable instance by the generated instance, probably also a generated instance
+	 * @param id - The primary key of this secondary index instance.
 	 * @return
 	 */
-	SecondaryIndexIdentifiable construct(ResourceIdentifiable resourceIdentifiable, Object id);
+	SecondaryIndexIdentifiable generate(ResourceIdentifiable resourceIdentifiable, Object id);
 	/**
 	 *  
 	 * @return The secondary index key represented by this instance. Make sure that this never returns null, use the default value instead.

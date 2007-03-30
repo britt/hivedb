@@ -19,7 +19,7 @@ public class HiveScenarioMarauderClasses {
 		/* PrimaryIndexIdentifiable METHODS */
 		
 		// construct from a prototype instance
-		public PrimaryIndexIdentifiable construct() {
+		public PrimaryIndexIdentifiable generate() {
 			return new Pirate();
 		}
 		
@@ -36,7 +36,7 @@ public class HiveScenarioMarauderClasses {
 		/* ResourceIdentifiable METHODS */
 		
 		// Because Pirate is also a PrimaryIndexIdentifiable the argument is equal to this.
-		public ResourceIdentifiable construct(PrimaryIndexIdentifiable primaryIndexIdentifiable) {
+		public ResourceIdentifiable generate(PrimaryIndexIdentifiable primaryIndexIdentifiable) {
 			
 			if (this != primaryIndexIdentifiable)
 				throw new RuntimeException("Excpected equality here");
@@ -59,7 +59,7 @@ public class HiveScenarioMarauderClasses {
 		/* SecondaryIndex METHODS */
 		
 		// Since Pirate is also a ResourceIdentifiable the argument is equal to this
-		public SecondaryIndexIdentifiable construct(ResourceIdentifiable resourceIdentifiable, Object id) {
+		public SecondaryIndexIdentifiable generate(ResourceIdentifiable resourceIdentifiable, Object id) {
 			if (this != resourceIdentifiable)
 				throw new RuntimeException("Excpected equality here");
 			return this;
@@ -96,7 +96,7 @@ public class HiveScenarioMarauderClasses {
 		
 		/* ResourceIdentifiable Methods */
 	
-		public ResourceIdentifiable construct(PrimaryIndexIdentifiable pirate) {
+		public ResourceIdentifiable generate(PrimaryIndexIdentifiable pirate) {
 			return new Treasure((Pirate)pirate);
 		}
 		
@@ -112,7 +112,7 @@ public class HiveScenarioMarauderClasses {
 		/* SecondaryIndexIdentifiable Methods */
 		
 		// Since Treasure is also a ResourceIdentifiable, return this instead of creating a new instance
-		public SecondaryIndexIdentifiable construct(ResourceIdentifiable resourceIdentifiable, Object id) {
+		public SecondaryIndexIdentifiable generate(ResourceIdentifiable resourceIdentifiable, Object id) {
 			if (this != resourceIdentifiable)
 				throw new RuntimeException("Expected equality here");
 			return this;

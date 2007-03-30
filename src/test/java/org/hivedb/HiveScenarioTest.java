@@ -387,7 +387,7 @@ public class HiveScenarioTest {
 					hive.updateHiveReadOnly(false);
 				}};
 				hive.insertSecondaryIndexKey(secondaryIndex,
-					Atom.getFirst(secondaryIndexIdentifiable.getResourceIdentifiable().construct(primaryIndexInstance).getSecondaryIndexIdentifiables()).getSecondaryIndexKey(),
+					Atom.getFirst(secondaryIndexIdentifiable.getResourceIdentifiable().generate(primaryIndexInstance).getSecondaryIndexIdentifiables()).getSecondaryIndexKey(),
 					primaryIndexInstance.getPrimaryIndexKey());
 			}}, HiveReadOnlyException.class);	
 			

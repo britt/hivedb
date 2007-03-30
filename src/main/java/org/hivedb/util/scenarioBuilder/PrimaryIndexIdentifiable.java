@@ -7,11 +7,7 @@ import java.util.Collection;
 
 /**
  * 
- * For use by HiveScenario.
- * Classes used to model only primary indexes, not resources/secondary indexes implement this interface.
- * 
- * Although this interface can't enforce it, you must have a no-argument constructor on your implementor.
- * This allows HiveScenario to construct instances.
+ * This interface is used by a class that is a primary index in a Hive database.
  * 
  * @author Andy alikuski@cafepress.com
  *
@@ -19,10 +15,10 @@ import java.util.Collection;
 public interface PrimaryIndexIdentifiable
 {
 	/**
-	 *  Used by HiveScenario to construct a new instance of this PrimaryIndexIdentifiable based on a prototype instance
+	 *  Used to generate a new instance of this PrimaryIndexIdentifiable based on a prototype instance
 	 * @return
 	 */
-	PrimaryIndexIdentifiable construct();
+	PrimaryIndexIdentifiable generate();
 	
 	/**
 	 *  Returns a list of prototype ResourceIdentifiable instances whose construct method will be used to create real instances.

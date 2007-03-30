@@ -6,8 +6,6 @@ import java.util.Map;
 
 import org.hivedb.HiveException;
 import org.hivedb.meta.Hive;
-import org.hivedb.meta.PartitionDimension;
-import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.scenarioBuilder.Filter;
 import org.hivedb.util.scenarioBuilder.Generate;
@@ -44,7 +42,7 @@ public class GenerateHiveIndexKeys {
 					return Generate.create(new Generator<PrimaryIndexIdentifiable>() { 
 						public PrimaryIndexIdentifiable f() {
 							try {
-								final PrimaryIndexIdentifiable newPrimaryIndexIdentifiable = primaryIndexIdentifiablePrototype.construct();
+								final PrimaryIndexIdentifiable newPrimaryIndexIdentifiable = primaryIndexIdentifiablePrototype.generate();
 								persistPrimaryIndexKey(hive, newPrimaryIndexIdentifiable);						
 								return newPrimaryIndexIdentifiable;
 							} catch (Exception e) { throw new RuntimeException(e); }
@@ -149,7 +147,7 @@ public class GenerateHiveIndexKeys {
 	private Unary<PrimaryIndexIdentifiable, ResourceIdentifiable> makeResourceIdentifiableGrower(final Hive hive, final HiveScenarioConfig hiveScenarioConfig, final ResourceIdentifiable resourceIdentifiablePrototype, final boolean sameClass) {
 		return new Unary<PrimaryIndexIdentifiable, ResourceIdentifiable>() { 
 			public ResourceIdentifiable f(PrimaryIndexIdentifiable primaryIndexIdentifiable) {
-				ResourceIdentifiable resourceIdentifiable = resourceIdentifiablePrototype.construct(primaryIndexIdentifiable);
+				ResourceIdentifiable resourceIdentifiable = resourceIdentifiablePrototype.generate(primaryIndexIdentifiable);
 				resourceIdentifiable = persistResourceInstance(hive, resourceIdentifiable);
 				for (SecondaryIndexIdentifiable secondaryIndexIdentifiable : resourceIdentifiable.getSecondaryIndexIdentifiables()) {
 					persist(hive, secondaryIndexIdentifiable);
