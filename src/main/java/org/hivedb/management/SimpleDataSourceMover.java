@@ -5,7 +5,7 @@ import java.util.Collection;
 
 import javax.sql.DataSource;
 
-import org.hivedb.meta.Hive;
+import org.hivedb.Hive;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;

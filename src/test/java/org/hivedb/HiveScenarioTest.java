@@ -17,7 +17,6 @@ import java.util.TreeSet;
 
 import org.hivedb.meta.Assigner;
 import org.hivedb.meta.ColumnInfo;
-import org.hivedb.meta.Hive;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.NodeSemaphore;
 import org.hivedb.meta.PartitionDimension;

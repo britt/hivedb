@@ -1,8 +1,8 @@
 package org.hivedb.meta.command;
 
+import org.hivedb.Hive;
 import org.hivedb.HiveException;
 import org.hivedb.HiveRuntimeException;
-import org.hivedb.meta.Hive;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.util.JdbcTypeMapper;
 

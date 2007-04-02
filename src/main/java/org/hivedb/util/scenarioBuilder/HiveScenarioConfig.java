@@ -2,7 +2,7 @@ package org.hivedb.util.scenarioBuilder;
 
 import java.util.Collection;
 
-import org.hivedb.meta.Hive;
+import org.hivedb.Hive;
 import org.hivedb.meta.Node;
 
 /**

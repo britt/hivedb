@@ -4,10 +4,10 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.hivedb.Hive;
 import org.hivedb.HiveException;
 import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
 import org.hivedb.meta.Finder;
-import org.hivedb.meta.Hive;
 import org.hivedb.meta.Nameable;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;

@@ -1,6 +1,6 @@
 package org.hivedb.meta.command;
 
-import org.hivedb.meta.Hive;
+import org.hivedb.Hive;
 
 /**
  * @author Justin McCarthy (jmccarty@cafepress.com)

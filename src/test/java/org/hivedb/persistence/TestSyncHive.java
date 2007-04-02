@@ -1,7 +1,7 @@
 package org.hivedb.persistence;
 
+import org.hivedb.Hive;
 import org.hivedb.HiveException;
-import org.hivedb.meta.Hive;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;

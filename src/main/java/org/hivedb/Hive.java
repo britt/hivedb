@@ -2,7 +2,7 @@
  * HiveDB is an Open Source (LGPL) system for creating large, high-transaction-volume
  * data storage systems.
  */
-package org.hivedb.meta;
+package org.hivedb;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -16,12 +16,22 @@ import javax.sql.DataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.log4j.Logger;
-import org.hivedb.HiveDbDialect;
-import org.hivedb.HiveException;
-import org.hivedb.HiveReadOnlyException;
 import org.hivedb.management.statistics.HivePerformanceStatistics;
 import org.hivedb.management.statistics.HivePerformanceStatisticsMBean;
 import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
+import org.hivedb.meta.AccessType;
+import org.hivedb.meta.Directory;
+import org.hivedb.meta.Finder;
+import org.hivedb.meta.HiveSyncDaemon;
+import org.hivedb.meta.IdAndNameIdentifiable;
+import org.hivedb.meta.Identifiable;
+import org.hivedb.meta.IndexSchema;
+import org.hivedb.meta.Nameable;
+import org.hivedb.meta.Node;
+import org.hivedb.meta.NodeSemaphore;
+import org.hivedb.meta.PartitionDimension;
+import org.hivedb.meta.Resource;
+import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
 import org.hivedb.meta.persistence.NodeDao;

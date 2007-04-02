@@ -13,8 +13,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
+import org.hivedb.Hive;
 import org.hivedb.HiveException;
-import org.hivedb.meta.Hive;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.DerbyTestCase;
 import org.hivedb.util.IndexSchemaTestScenario;

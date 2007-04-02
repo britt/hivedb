@@ -3,8 +3,8 @@ package org.hivedb.util.scenarioBuilder;
 import java.util.Collection;
 import java.util.Map;
 
+import org.hivedb.Hive;
 import org.hivedb.HiveException;
-import org.hivedb.meta.Hive;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.util.GenerateHiveIndexKeys;

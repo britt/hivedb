@@ -4,9 +4,9 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.hivedb.Hive;
 import org.hivedb.HiveException;
 import org.hivedb.meta.AccessType;
-import org.hivedb.meta.Hive;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.persistence.DaoTestCase;
 import org.testng.Assert;

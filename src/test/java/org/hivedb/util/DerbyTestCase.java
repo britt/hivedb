@@ -32,7 +32,7 @@ public abstract class DerbyTestCase {
 		if( cleanupOnLoad ) 
 			deleteDerbyDb();
 		try {
-			DerbyUtils.createDatabase(databaseName, userName, password);
+			DerbyUtils.createDatabase(getDatabaseName(), userName, password);
 			if( loadScript != null && !"".equals(loadScript))
 				loadFromSqlScript();
 		} catch (IOException e) {
@@ -66,11 +66,11 @@ public abstract class DerbyTestCase {
 
 	
 	protected String getConnectString()  {
-		return DerbyUtils.connectString(databaseName);
+		return DerbyUtils.connectString(getDatabaseName());
 	}
 	
 	protected Connection getConnection() throws InstantiationException, SQLException {
-		return DerbyUtils.getConnection(databaseName, userName, password);
+		return DerbyUtils.getConnection(getDatabaseName(), userName, password);
 	}
 	
 	protected DataSource getDataSource() {
@@ -79,16 +79,16 @@ public abstract class DerbyTestCase {
 	
 	private void loadFromSqlScript() throws IOException, SQLException, InstantiationException {
 		String sql = readFileAsString( relativePathToFullPath(loadScript));
-		DerbyUtils.executeScript(sql, DerbyUtils.getConnection(databaseName, userName, password));
+		DerbyUtils.executeScript(sql, DerbyUtils.getConnection(getDatabaseName(), userName, password));
 	}
 	
 	private void deleteDerbyDb() {
 		String path;
 		try {
-			path = new File(".").getCanonicalPath() + File.separator + databaseName;
+			path = new File(".").getCanonicalPath() + File.separator + getDatabaseName();
 			File db = new File(path);
 			if( db.exists())
-				DerbyUtils.deleteDatabase(new File(".").getCanonicalPath(), databaseName);
+				DerbyUtils.deleteDatabase(new File(".").getCanonicalPath(), getDatabaseName());
 		} catch (IOException e) {
 			throw new DerbyTestCaseException("Error deleting database", e);
 		}
@@ -123,5 +123,9 @@ public abstract class DerbyTestCase {
 			super(message == null || "".equals(message) ? t.getMessage() : message);
 			innerException = t;
 		}
+	}
+	
+	public String getDatabaseName() {
+		return databaseName;
 	}
 }

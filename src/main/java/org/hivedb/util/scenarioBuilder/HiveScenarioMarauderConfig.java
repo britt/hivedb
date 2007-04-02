@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.hivedb.meta.Hive;
+import org.hivedb.Hive;
 import org.hivedb.meta.Node;
 import org.hivedb.util.InstallHiveGlobalSchema;
 

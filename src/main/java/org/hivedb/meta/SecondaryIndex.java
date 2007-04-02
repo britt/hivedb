@@ -4,6 +4,7 @@
  */
 package org.hivedb.meta;
 
+import org.hivedb.Hive;
 import org.hivedb.util.HiveUtils;
 
 /**

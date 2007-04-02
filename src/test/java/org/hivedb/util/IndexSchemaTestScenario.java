@@ -6,9 +6,9 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.hivedb.Hive;
 import org.hivedb.meta.Assigner;
 import org.hivedb.meta.ColumnInfo;
-import org.hivedb.meta.Hive;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.NodeGroup;

@@ -4,8 +4,8 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Map;
 
+import org.hivedb.Hive;
 import org.hivedb.HiveException;
-import org.hivedb.meta.Hive;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.scenarioBuilder.Filter;
 import org.hivedb.util.scenarioBuilder.Generate;

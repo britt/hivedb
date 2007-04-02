@@ -13,6 +13,7 @@ import java.util.TreeSet;
 
 import javax.sql.DataSource;
 
+import org.hivedb.Hive;
 import org.hivedb.management.statistics.NodeStatistics;
 import org.hivedb.management.statistics.NodeStatisticsBean;
 import org.hivedb.management.statistics.PartitionKeyStatistics;
@@ -20,7 +21,6 @@ import org.hivedb.management.statistics.PartitionKeyStatisticsBean;
 import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
 import org.hivedb.meta.Assigner;
 import org.hivedb.meta.GlobalSchema;
-import org.hivedb.meta.Hive;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.NodeGroup;

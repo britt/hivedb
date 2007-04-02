@@ -6,6 +6,7 @@ package org.hivedb.meta;
 
 import java.util.Collection;
 
+import org.hivedb.Hive;
 import org.hivedb.HiveException;
 import org.hivedb.util.HiveUtils;
 

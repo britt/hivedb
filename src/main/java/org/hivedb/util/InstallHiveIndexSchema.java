@@ -3,9 +3,9 @@ package org.hivedb.util;
 import java.util.Collection;
 import java.util.Map;
 
+import org.hivedb.Hive;
 import org.hivedb.HiveException;
 import org.hivedb.meta.ColumnInfo;
-import org.hivedb.meta.Hive;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.NodeGroup;
 import org.hivedb.meta.PartitionDimension;

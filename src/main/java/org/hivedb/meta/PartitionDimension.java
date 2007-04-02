@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Random;
 
+import org.hivedb.Hive;
 import org.hivedb.HiveException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.util.HiveUtils;

@@ -9,8 +9,8 @@ package org.hivedb.util;
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
 
+import org.hivedb.Hive;
 import org.hivedb.HiveException;
-import org.hivedb.meta.Hive;
 import org.hivedb.meta.command.AddPartitionDimensionCommand;
 import org.hivedb.meta.command.CreateHiveCommand;
 

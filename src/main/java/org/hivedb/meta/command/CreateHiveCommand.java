@@ -2,9 +2,9 @@ package org.hivedb.meta.command;
 
 import gnu.getopt.LongOpt;
 
+import org.hivedb.Hive;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.meta.GlobalSchema;
-import org.hivedb.meta.Hive;
 
 /**
  * @author Justin McCarthy (jmccarty@cafepress.com)
