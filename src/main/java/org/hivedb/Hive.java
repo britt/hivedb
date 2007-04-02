@@ -22,7 +22,6 @@ import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.Directory;
 import org.hivedb.meta.Finder;
-import org.hivedb.meta.HiveSyncDaemon;
 import org.hivedb.meta.IdAndNameIdentifiable;
 import org.hivedb.meta.Identifiable;
 import org.hivedb.meta.IndexSchema;
@@ -45,6 +44,7 @@ import org.hivedb.util.InstallHiveGlobalSchema;
 /**
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
  * @author Andy Likuski (alikuski@cafepress.com)
+ * @author Britt Crawford (bcrawford@cafepress.com)
  */
 public class Hive implements Finder {
 	private static Logger log = Logger.getLogger(Hive.class);
@@ -221,7 +221,7 @@ public class Hive implements Finder {
 	 * 
 	 * @param readOnly
 	 */
-	public void setReadOnly(boolean readOnly) {
+	protected void setReadOnly(boolean readOnly) {
 		this.readOnly = readOnly;
 	}
 
@@ -251,7 +251,7 @@ public class Hive implements Finder {
 	 * 
 	 * @param revision
 	 */
-	public void setRevision(int revision) {
+	protected void setRevision(int revision) {
 		this.revision = revision;
 	}
 
