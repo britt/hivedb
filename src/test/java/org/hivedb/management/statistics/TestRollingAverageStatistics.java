@@ -58,7 +58,7 @@ public class TestRollingAverageStatistics {
 			assertEquals(0, stats.getAverage(key));
 	}
 	
-	@Test
+//	@Test
 	public void testComputedStatistics() throws Exception{
 		RollingAverageStatistics stats = new RollingAverageStatisticsImpl(testKeys(), 1000, 10);
 		String key = testKeys().iterator().next();
