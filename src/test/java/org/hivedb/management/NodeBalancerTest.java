@@ -153,8 +153,8 @@ public class NodeBalancerTest extends DerbyTestCase {
 			hive.insertSecondaryIndexKey(secondaryIndex, new Integer(++count), fullKey2);
 		}
 		
-		Node full = hive.getNodeOfPrimaryIndexKey(dimension, fullKey1);
-		Node empty = hive.getNodeOfPrimaryIndexKey(dimension, emptyKey);
+		Node full = group.getNodes().toArray(new Node[group.getNodes().size()])[0];
+		Node empty = group.getNodes().toArray(new Node[group.getNodes().size()])[1];
 	
 		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource());
 		SortedSet<NodeStatistics> startingState = new TreeSet<NodeStatistics>();

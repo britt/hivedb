@@ -18,6 +18,7 @@ import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 
 public class IndexSchemaTestScenario {
+	public static final String DIMENSION = "aSignificantDimension";
 	private HiveBasicDataSource ds;
 	
 	public IndexSchemaTestScenario(HiveBasicDataSource ds) {
@@ -59,7 +60,7 @@ public class IndexSchemaTestScenario {
 
 	public PartitionDimension partitionDimension() {
 		PartitionDimension dimension = new PartitionDimension(
-				"aSignificantDimension", Types.INTEGER);
+				DIMENSION, Types.INTEGER);
 		dimension.setIndexUri(ds.getUrl());
 		dimension.setAssigner(new Assigner() {
 			public Node chooseNode(Collection<Node> nodes, Object value) {

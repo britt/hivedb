@@ -36,7 +36,7 @@ public class TestHivePerformanceStatistics extends DaoTestCase{
 		Collection<Connection> connections = new ArrayList<Connection>();
 		
 		for(int i=0; i<5; i++)
-			connections.add( hive.getConnection( hive.getPartitionDimension(partitionDimensionName()), intKey()));
+			connections.add( hive.getConnection( hive.getPartitionDimension(partitionDimensionName()), intKey(), AccessType.ReadWrite));
 		
 		Assert.assertEquals(connections.size(), hive.stats.getSumNewWriteConnections());
 	}

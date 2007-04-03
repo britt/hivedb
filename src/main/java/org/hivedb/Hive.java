@@ -9,7 +9,11 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.management.NotCompliantMBeanException;
 import javax.sql.DataSource;
@@ -22,7 +26,6 @@ import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.Directory;
 import org.hivedb.meta.Finder;
-import org.hivedb.meta.HiveSyncDaemon;
 import org.hivedb.meta.IdAndNameIdentifiable;
 import org.hivedb.meta.Identifiable;
 import org.hivedb.meta.IndexSchema;
@@ -45,31 +48,24 @@ import org.hivedb.util.InstallHiveGlobalSchema;
 /**
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
  * @author Andy Likuski (alikuski@cafepress.com)
+ * @author Britt Crawford (bcrawford@cafepress.com)
  */
-public class Hive implements Finder {
+public class Hive implements Finder, Synchronizeable {
 	private static Logger log = Logger.getLogger(Hive.class);
-
 	public static final int NEW_OBJECT_ID = 0;
-
 	public static String URI_SYSTEM_PROPERTY = "org.hivedb.uri";
-
 	private String hiveUri;
-
 	private int revision;
-
 	private boolean readOnly;
-
 	private Collection<PartitionDimension> partitionDimensions;
-
 	private PartitionKeyStatisticsDao statistics;
-
 	private Collection<Directory> directories;
-
 	private HiveSyncDaemon daemon;
-
 	private DataSource dataSource;
+	private Map<String, HiveDataSourceCacheImpl> dataSourceCaches;
 
 	//TODO: This will not stay public.  Its merely that way for testing
+	// and while decisions are made.
 	public HivePerformanceStatistics stats;
 	
 	/**
@@ -145,6 +141,23 @@ public class Hive implements Finder {
 	 */
 	public void sync() throws HiveException {
 		daemon.forceSynchronize();
+		
+		Collection<String> dimensionNames = new ArrayList<String>();
+		for(PartitionDimension dimension : getPartitionDimensions())
+			dimensionNames.add(dimension.getName());
+		Set<String> exclusions = new HashSet<String>(dataSourceCaches.keySet());
+		exclusions.removeAll(dimensionNames);
+		
+		for(String name : exclusions)
+			dataSourceCaches.remove(name);
+		
+		for(String name : dimensionNames) {
+			if(dataSourceCaches.containsKey(name))
+				dataSourceCaches.get(name).sync();
+			else {
+				dataSourceCaches.put(name, new HiveDataSourceCacheImpl(name, this));
+			}
+		}
 	}
 
 	/**
@@ -172,9 +185,12 @@ public class Hive implements Finder {
 			// TODO: How should this exception be handled?
 			throw new RuntimeException(e);
 		}
-		
-		for (PartitionDimension dimension : this.partitionDimensions)
+
+		dataSourceCaches = new ConcurrentHashMap<String, HiveDataSourceCacheImpl>();
+		for (PartitionDimension dimension : this.partitionDimensions) {
 			this.directories.add(new Directory(dimension, this.dataSource));
+			dataSourceCaches.put(dimension.getName(), new HiveDataSourceCacheImpl(dimension.getName(), this));
+		}
 	}
 
 	/**
@@ -265,6 +281,9 @@ public class Hive implements Finder {
 		return partitionDimensions;
 	}
 
+	/**
+	 * Required by Finder interface
+	 */
 	@SuppressWarnings("unchecked")
 	public <T extends Nameable> Collection<T> findCollection(Class<T> forClass) {
 		return (Collection<T>) getPartitionDimensions();
@@ -304,6 +323,9 @@ public class Hive implements Finder {
 		return null;
 	}
 
+	/**
+	 * Required by Finder interface
+	 */
 	@SuppressWarnings("unchecked")
 	public <T extends Nameable> T findByName(Class<T> forClass, String name)
 			throws HiveException {
@@ -643,6 +665,10 @@ public class Hive implements Finder {
 			throw new HiveException("Problem deletng the partition dimension",
 					e);
 		}
+		
+		//Destroy the corresponding DataSourceCache
+		this.dataSourceCaches.remove(partitionDimension.getName());
+		
 		return partitionDimension;
 	}
 
@@ -663,6 +689,10 @@ public class Hive implements Finder {
 		} catch (SQLException e) {
 			throw new HiveException("Problem deletng the node", e);
 		}
+		
+		//Synchronize the DataSourceCache
+		this.dataSourceCaches.get(node.getNodeGroup().getPartitionDimension().getName()).sync();
+		
 		return node;
 	}
 
@@ -1175,7 +1205,7 @@ public class Hive implements Finder {
 	 * @throws SQLException
 	 *             Throws if there is a persistence error
 	 */
-	public Node getNodeOfPrimaryIndexKey(PartitionDimension partitionDimension,
+	protected Node getNodeOfPrimaryIndexKey(PartitionDimension partitionDimension,
 			Object primaryIndexKey) throws HiveException, SQLException {
 		try {
 			return partitionDimension.getNodeGroup().getNode(
@@ -1189,8 +1219,21 @@ public class Hive implements Finder {
 									partitionDimension.getName()), e);
 		}
 	}
-	
-	public NodeSemaphore getNodeSemaphoreOfPrimaryIndexKey(PartitionDimension partitionDimension,
+	/**
+	 * Returns the node assigned to the given primary index key
+	 * 
+	 * @param partitionDimensionName
+	 *            The name of a partition dimension in the hive
+	 * @param primaryIndexKey
+	 *            A primary index key belonging to the partition dimension
+	 * @return
+	 * @throws HiveException
+	 *             Throws if the partition dimension or primary index key does
+	 *             not exist
+	 * @throws SQLException
+	 *             Throws if there is a persistence error
+	 */
+	protected NodeSemaphore getNodeSemaphoreOfPrimaryIndexKey(PartitionDimension partitionDimension,
 			Object primaryIndexKey) throws HiveException, SQLException {
 		try {
 			return getDirectory(partitionDimension).getNodeSemamphoreOfPrimaryIndexKey(primaryIndexKey);
@@ -1218,7 +1261,7 @@ public class Hive implements Finder {
 	 * @throws SQLException
 	 *             Throws if there is a persistence error
 	 */
-	public NodeSemaphore getNodeSemaphoreOfPrimaryIndexKey(String partitionDimensionName,
+	protected NodeSemaphore getNodeSemaphoreOfPrimaryIndexKey(String partitionDimensionName,
 			Object primaryIndexKey) throws HiveException, SQLException {
 		return getNodeSemaphoreOfPrimaryIndexKey(
 				getPartitionDimension(partitionDimensionName), primaryIndexKey);
@@ -1330,7 +1373,7 @@ public class Hive implements Finder {
 	 * @throws SQLException
 	 *             Throws if there is a persistence error
 	 */
-	public Node getNodeOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey) throws HiveException, SQLException {
+	protected Node getNodeOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey) throws HiveException, SQLException {
 		PartitionDimension partitionDimension = secondaryIndex.getResource().getPartitionDimension();
 		try {
 			return partitionDimension.getNodeGroup().getNode(
@@ -1346,7 +1389,7 @@ public class Hive implements Finder {
 		}
 	}
 	
-	public NodeSemaphore getNodeSemaphoreOfSecondaryIndexKey(SecondaryIndex secondaryIndex,
+	protected NodeSemaphore getNodeSemaphoreOfSecondaryIndexKey(SecondaryIndex secondaryIndex,
 			Object secondaryIndexKey) throws HiveException, SQLException {
 		PartitionDimension partitionDimension = secondaryIndex.getResource()
 				.getPartitionDimension();
@@ -1383,7 +1426,7 @@ public class Hive implements Finder {
 	 * @throws SQLException
 	 *             Throws if there is a persistence error
 	 */
-	public NodeSemaphore getNodeSemaphoreOfSecondaryIndexKey(String partitionDimensionName,
+	protected NodeSemaphore getNodeSemaphoreOfSecondaryIndexKey(String partitionDimensionName,
 			String resourceName, String secondaryIndexName,
 			Object secondaryIndexKey) throws HiveException, SQLException {
 		return getNodeSemaphoreOfSecondaryIndexKey(getPartitionDimension(
@@ -1500,7 +1543,7 @@ public class Hive implements Finder {
 	 * @throws HiveException
 	 * @throws SQLException
 	 */
-	public boolean exists() {
+	public boolean isInstalled() {
 		try {
 			new HiveSemaphoreDao(dataSource).get();
 			return true;
@@ -1550,25 +1593,13 @@ public class Hive implements Finder {
 				getNodeSemaphoreOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey), 
 				intent);
 	}
-
-	public Connection getConnection(PartitionDimension partitionDimension,
-			Object primaryIndexKey) throws HiveException, SQLException {
-		return getConnection(partitionDimension, primaryIndexKey, AccessType.ReadWrite);
+	
+	public HiveDataSourceCache getDataSourceCache(PartitionDimension partitionDimension) {
+		return this.getDataSourceCache(partitionDimension.getName());
 	}
-
-	public Connection getConnection(SecondaryIndex secondaryIndex,
-			Object secondaryIndexKey) throws HiveException, SQLException {
-		return getConnection(secondaryIndex, secondaryIndexKey, AccessType.ReadWrite);
-	}
-
-	// Facade methods that are short cuts over digging into the object graph
-	public Collection<String> getNodeUrisForPartitionDimension(
-			String partitionDimensionName) throws HiveException {
-		Collection<String> collection = new ArrayList<String>();
-		for (Node node : getPartitionDimension(partitionDimensionName)
-				.getNodeGroup().getNodes())
-			collection.add(node.getUri());
-		return collection;
+	
+	public HiveDataSourceCache getDataSourceCache(String partitionDimensionName) {
+		return this.dataSourceCaches.get(partitionDimensionName);
 	}
 
 	public String toString() {
@@ -1653,6 +1684,7 @@ public class Hive implements Finder {
 		throw new NoSuchElementException(msg);
 	}
 
+	// TODO: Rename this method
 	public PartitionKeyStatisticsDao getStatistics() {
 		return statistics;
 	}
