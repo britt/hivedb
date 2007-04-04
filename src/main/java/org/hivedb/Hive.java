@@ -1266,7 +1266,7 @@ public class Hive implements Finder, Synchronizeable {
 		return getNodeSemaphoreOfPrimaryIndexKey(
 				getPartitionDimension(partitionDimensionName), primaryIndexKey);
 	}
-
+	
 	/**
 	 * Returns true is the given primary index key is read-only
 	 * 

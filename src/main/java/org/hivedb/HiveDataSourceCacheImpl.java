@@ -119,4 +119,17 @@ public class HiveDataSourceCacheImpl implements HiveDataSourceCache, Synchronize
 			this.setDataSource(ds);
 		}
 	}
+
+	/**
+	 * IMPORTANT -- This bypasses the locking mechanism.  You should only use this
+	 * to install schema before data nodes have been populated.
+	 */
+	public JdbcDaoSupport getUnsafe(Node node) throws HiveReadOnlyException {
+		try {
+			NodeSemaphore semaphore = new NodeSemaphore(node.getId(), node.isReadOnly());
+			return get(semaphore, AccessType.ReadWrite);
+		} catch (HiveException e) {
+			throw new RuntimeException(e);
+		}
+	}
 }
