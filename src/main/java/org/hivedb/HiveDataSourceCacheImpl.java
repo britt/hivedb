@@ -20,6 +20,7 @@ public class HiveDataSourceCacheImpl implements HiveDataSourceCache, Synchronize
 	private Hive hive;
 	private String partitionDimension;
 	private Map<Integer, JdbcDaoSupport> jdbcDaoSupports;
+	private int revision = Integer.MIN_VALUE;
 	
 	public HiveDataSourceCacheImpl(String partitionDimension, Hive hive) {
 		this.partitionDimension = partitionDimension;
@@ -38,11 +39,14 @@ public class HiveDataSourceCacheImpl implements HiveDataSourceCache, Synchronize
 	 * @throws HiveException
 	 */
 	public void sync() throws HiveException {
-		jdbcDaoSupports.clear();
-		for(Node node : hive.getPartitionDimension(partitionDimension).getNodeGroup().getNodes()) {
-			jdbcDaoSupports.put(hash(node.getId(), AccessType.Read), new DataNodeJdbcDaoSupport(node.getUri(), true));
-			if( !hive.isReadOnly() && !node.isReadOnly() )
-				addDataSource(node.getId(), AccessType.ReadWrite);
+		if(hive.getRevision() != revision) {
+			jdbcDaoSupports.clear();
+			for(Node node : hive.getPartitionDimension(partitionDimension).getNodeGroup().getNodes()) {
+				jdbcDaoSupports.put(hash(node.getId(), AccessType.Read), new DataNodeJdbcDaoSupport(node.getUri(), true));
+				if( !hive.isReadOnly() && !node.isReadOnly() )
+					addDataSource(node.getId(), AccessType.ReadWrite);
+			}
+			revision = hive.getRevision();
 		}
 	}
 	
@@ -131,5 +135,9 @@ public class HiveDataSourceCacheImpl implements HiveDataSourceCache, Synchronize
 		} catch (HiveException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public String getPartitionDimension() {
+		return partitionDimension;
 	}
 }
