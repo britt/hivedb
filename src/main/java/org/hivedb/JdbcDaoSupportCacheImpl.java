@@ -16,13 +16,13 @@ import org.springframework.jdbc.core.support.JdbcDaoSupport;
  * @author Britt Crawford (bcrawford@cafepress.com)
  *
  */
-public class HiveDataSourceCacheImpl implements HiveDataSourceCache, Synchronizeable{
+public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronizeable{
 	private Hive hive;
 	private String partitionDimension;
 	private Map<Integer, JdbcDaoSupport> jdbcDaoSupports;
 	private int revision = Integer.MIN_VALUE;
 	
-	public HiveDataSourceCacheImpl(String partitionDimension, Hive hive) {
+	public JdbcDaoSupportCacheImpl(String partitionDimension, Hive hive) {
 		this.partitionDimension = partitionDimension;
 		this.hive = hive;
 		this.jdbcDaoSupports = new ConcurrentHashMap<Integer, JdbcDaoSupport>();

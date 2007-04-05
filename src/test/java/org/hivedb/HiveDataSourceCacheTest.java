@@ -28,7 +28,7 @@ public class HiveDataSourceCacheTest extends DaoTestCase {
 	@Test
 	public void testDataSourceCacheCreation() throws HiveException, SQLException{
 		Hive hive = Hive.load(getConnectString());
-		HiveDataSourceCacheImpl cache = new HiveDataSourceCacheImpl(partitionDimensionName(), hive);
+		JdbcDaoSupportCacheImpl cache = new JdbcDaoSupportCacheImpl(partitionDimensionName(), hive);
 		JdbcDaoSupport read = cache.get(intKey(), AccessType.Read);
 		JdbcDaoSupport readWrite = cache.get(intKey(), AccessType.ReadWrite);
 		
@@ -39,7 +39,7 @@ public class HiveDataSourceCacheTest extends DaoTestCase {
 	@Test
 	public void testReadOnlyEnforcement() throws Exception {
 		Hive hive = Hive.load(getConnectString());
-		HiveDataSourceCacheImpl cache = new HiveDataSourceCacheImpl(partitionDimensionName(), hive);
+		JdbcDaoSupportCacheImpl cache = new JdbcDaoSupportCacheImpl(partitionDimensionName(), hive);
 		JdbcDaoSupport read = cache.get(intKey(), AccessType.Read);
 		JdbcDaoSupport readWrite = cache.get(intKey(), AccessType.ReadWrite);
 		
@@ -58,7 +58,7 @@ public class HiveDataSourceCacheTest extends DaoTestCase {
 		Hive hive = Hive.load(getConnectString());
 		PartitionDimension dimension = hive.deletePartitionDimension(hive.getPartitionDimension(partitionDimensionName()));
 		try {
-			hive.getDataSourceCache(dimension);
+			hive.getJdbcDaoSupportCache(dimension);
 		} catch (Exception e) {
 			assertNotNull(e);
 		}

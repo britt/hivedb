@@ -62,7 +62,7 @@ public class Hive implements Finder, Synchronizeable {
 	private Collection<Directory> directories;
 	private HiveSyncDaemon daemon;
 	private DataSource dataSource;
-	private Map<String, HiveDataSourceCacheImpl> dataSourceCaches;
+	private Map<String, JdbcDaoSupportCacheImpl> dataSourceCaches;
 
 	//TODO: This will not stay public.  Its merely that way for testing
 	// and while decisions are made.
@@ -155,7 +155,7 @@ public class Hive implements Finder, Synchronizeable {
 			if(dataSourceCaches.containsKey(name))
 				dataSourceCaches.get(name).sync();
 			else {
-				dataSourceCaches.put(name, new HiveDataSourceCacheImpl(name, this));
+				dataSourceCaches.put(name, new JdbcDaoSupportCacheImpl(name, this));
 			}
 		}
 	}
@@ -187,10 +187,10 @@ public class Hive implements Finder, Synchronizeable {
 			throw new RuntimeException(e);
 		}
 
-		dataSourceCaches = new ConcurrentHashMap<String, HiveDataSourceCacheImpl>();
+		dataSourceCaches = new ConcurrentHashMap<String, JdbcDaoSupportCacheImpl>();
 		for (PartitionDimension dimension : this.partitionDimensions) {
 			this.directories.add(new Directory(dimension, this.dataSource));
-			dataSourceCaches.put(dimension.getName(), new HiveDataSourceCacheImpl(dimension.getName(), this));
+			dataSourceCaches.put(dimension.getName(), new JdbcDaoSupportCacheImpl(dimension.getName(), this));
 		}
 	}
 
@@ -1595,11 +1595,11 @@ public class Hive implements Finder, Synchronizeable {
 				intent);
 	}
 	
-	public HiveDataSourceCache getDataSourceCache(PartitionDimension partitionDimension) {
-		return this.getDataSourceCache(partitionDimension.getName());
+	public JdbcDaoSupportCache getJdbcDaoSupportCache(PartitionDimension partitionDimension) {
+		return this.getJdbcDaoSupportCache(partitionDimension.getName());
 	}
 	
-	public HiveDataSourceCache getDataSourceCache(String partitionDimensionName) {
+	public JdbcDaoSupportCache getJdbcDaoSupportCache(String partitionDimensionName) {
 		return this.dataSourceCaches.get(partitionDimensionName);
 	}
 
