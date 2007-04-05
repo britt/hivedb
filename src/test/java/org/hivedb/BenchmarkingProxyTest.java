@@ -6,7 +6,7 @@ import static org.testng.AssertJUnit.*;
 
 public class BenchmarkingProxyTest {
 	
-	@Test
+	//@Test
 	public void testRuntimeMeasurement() throws Exception {
 		Nap nap = new Nap();
 		nap.execute();
