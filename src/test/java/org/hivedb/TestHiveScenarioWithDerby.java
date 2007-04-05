@@ -16,7 +16,7 @@ public class TestHiveScenarioWithDerby extends DerbyTestCase {
 	 */
 
 	//TODO fix
-	//@Test
+//	@Test
 	public void testPirateDomain() throws Exception {
 		new HiveScenarioTest(new HiveScenarioMarauderConfig(getConnectString())).performTest();
 	}

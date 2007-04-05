@@ -180,6 +180,7 @@ public class Hive implements Finder, Synchronizeable {
 		this.directories = new ArrayList<Directory>();
 		
 		try {
+			// TODO: Configurable instiantion 
 			stats = new HivePerformanceStatisticsMBean(1000, 100);
 		} catch (NotCompliantMBeanException e) {
 			// TODO: How should this exception be handled?

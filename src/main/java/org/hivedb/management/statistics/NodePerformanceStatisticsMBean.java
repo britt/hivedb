@@ -4,7 +4,7 @@ import java.util.Arrays;
 import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
 
-public class NodePerformanceStatisticsMBean extends StandardMBean implements NodePerformanceStatistics {
+public class NodePerformanceStatisticsMBean extends StandardMBean implements NodePerformanceStatistics, Counter {
 	
 	private static final String READCOUNT = "ReadCount";
 	
@@ -201,4 +201,15 @@ public class NodePerformanceStatisticsMBean extends StandardMBean implements Nod
 		stats.increment(WRITETIME);
 	}
 	
+	public void add(String key, long value) {
+		stats.add(key, value);
+	}
+	
+	public void dercrement(String key) {
+		stats.decrement(key);
+	}
+	
+	public void increment(String key) {
+		stats.increment(key);
+	}
 }

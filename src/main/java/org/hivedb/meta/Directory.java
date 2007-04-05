@@ -1,14 +1,19 @@
 package org.hivedb.meta;
 
+import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.*;
+
 import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Collection;
 
+import javax.management.NotCompliantMBeanException;
 import javax.sql.DataSource;
 
 import org.hivedb.HiveException;
+import org.hivedb.StatisticsProxy;
+import org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean;
 import org.hivedb.util.JdbcTypeMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
@@ -17,24 +22,33 @@ import org.springframework.jdbc.core.support.JdbcDaoSupport;
 
 public class Directory extends JdbcDaoSupport{
 	private PartitionDimension partitionDimension;
+	private DirectoryPerformanceStatisticsMBean stats;
 	
 	public Directory(PartitionDimension dimension, DataSource dataSource) {
 		this.partitionDimension = dimension;
 		this.setDataSource(dataSource);
+		
+//		 TODO Solve where to get these
+		try {
+			this.stats = new DirectoryPerformanceStatisticsMBean(1000,100);
+		} catch (NotCompliantMBeanException e) {
+			
+		}
 	}
 	
 	public PartitionDimension getPartitionDimension() {
 		return this.partitionDimension;
 	}
 	
-	public void insertPrimaryIndexKey(Node node, Object primaryIndexKey) throws HiveException {
-		JdbcTemplate j = getJdbcTemplate();
-		Object[] parameters = new Object[] {
+	public void insertPrimaryIndexKey(final Node node, final Object primaryIndexKey) throws HiveException {
+		final JdbcTemplate j = getJdbcTemplate();
+		final Object[] parameters = new Object[] {
 			primaryIndexKey,
 			node.getId(),
 			new Date(System.currentTimeMillis()) 
 		};
-		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory("insert into " + IndexSchema.getPrimaryIndexTableName(partitionDimension)
+		
+		final PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory("insert into " + IndexSchema.getPrimaryIndexTableName(partitionDimension)
 			+ " (id, node, read_only, secondary_index_count, last_updated)"
 			+ " values(?, ?, 0, 0, ?)",
 			new int[] { 
@@ -42,197 +56,350 @@ public class Directory extends JdbcDaoSupport{
 				Types.INTEGER,
 				Types.DATE
 		});
-		if (j.update(creatorFactory.newPreparedStatementCreator(parameters)) != 1)
-			throw new HiveException(String.format("Unable to insert primary index key %s onto node %s", primaryIndexKey, node.getId()));
+		
+		StatisticsProxy<Object, HiveException> proxy = 
+			new StatisticsProxy<Object, HiveException>(stats, PRIMARYINDEXWRITECOUNT, PRIMARYINDEXWRITEFAILURES, PRIMARYINDEXWRITETIME) {
+			
+			@Override
+			protected Object doWork() throws HiveException {
+				if (j.update(creatorFactory.newPreparedStatementCreator(parameters)) != 1) 
+					throw new HiveException(String.format("Unable to insert primary index key %s onto node %s", primaryIndexKey, node.getId()));
+				return false;
+			}
+		};
+		
+		proxy.execute();
 	}
 
-	public void insertSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey, Object primaryindexKey) throws HiveException {
-		JdbcTemplate j = getJdbcTemplate();
-		Object[] parameters = new Object[] {
+	public void insertSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey, Object primaryindexKey) throws HiveException {
+		final JdbcTemplate j = getJdbcTemplate();
+		final Object[] parameters = new Object[] {
 			secondaryIndexKey,
 			primaryindexKey
 		};
-		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory("insert into " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex)
+		final PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory("insert into " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex)
 			+ " (id, pkey)"
 			+ " values(?, ?)",
 			new int[] {
 				JdbcTypeMapper.primitiveTypeToJdbcType(secondaryIndexKey.getClass()),
 				JdbcTypeMapper.primitiveTypeToJdbcType(primaryindexKey.getClass()),
 		});
-		if (j.update(creatorFactory.newPreparedStatementCreator(parameters)) != 1)
-			throw new HiveException(String.format("Unable to insert secondary index key %s onto secondaryIndex %s", secondaryIndexKey, secondaryIndex.getName()));
+		
+		StatisticsProxy<Object, HiveException> proxy = 
+			new StatisticsProxy<Object, HiveException>(stats, SECONDARYINDEXWRITECOUNT, SECONDARYINDEXWRITEFAILURES, SECONDARYINDEXWRITETIME) {
+			
+				@Override
+				protected Object doWork() throws HiveException {
+					if (j.update(creatorFactory.newPreparedStatementCreator(parameters)) != 1) 
+						throw new HiveException(
+								String.format(
+										"Unable to insert secondary index key %s onto secondaryIndex %s", 
+										secondaryIndexKey, 
+										secondaryIndex.getName()));
+					return false;
+				}
+		};
+		
+		proxy.execute();
 	}
 	
-	public void updatePrimaryIndexKey(Node node, Object primaryIndexKey) throws HiveException {
-		JdbcTemplate j = getJdbcTemplate();
-		Object[] parameters = new Object[] {
+	public void updatePrimaryIndexKey(final Node node, final Object primaryIndexKey) throws HiveException {
+		final JdbcTemplate j = getJdbcTemplate();
+		final Object[] parameters = new Object[] {
 				node.getId(),
 				primaryIndexKey 
 		};
-		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory("update " + IndexSchema.getPrimaryIndexTableName(partitionDimension)
+		final PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory("update " + IndexSchema.getPrimaryIndexTableName(partitionDimension)
 			+ " set node = ? where id = ?",
 			new int[] {
 					Types.INTEGER,
 					JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass())
 		});
-		if (j.update(creatorFactory.newPreparedStatementCreator(parameters)) != 1)
-			throw new HiveException(String.format("Unable to update primary index key %s to node %s", primaryIndexKey, node.getId()));
+		
+		StatisticsProxy<Object, HiveException> proxy = new StatisticsProxy<Object, HiveException>(stats, PRIMARYINDEXWRITECOUNT, PRIMARYINDEXWRITEFAILURES, PRIMARYINDEXWRITETIME) {
+
+			@Override
+			protected Object doWork() throws HiveException {
+				if (j.update(creatorFactory.newPreparedStatementCreator(parameters)) != 1)
+					throw new HiveException(String.format("Unable to update primary index key %s to node %s", primaryIndexKey, node.getId()));
+				return null;
+			}
+			
+		};
+		proxy.execute();
 	}
 	
-	public void updatePrimaryIndexKeyReadOnly(Object primaryIndexKey, boolean isReadOnly) throws HiveException {
-		JdbcTemplate j = getJdbcTemplate();
-		Object[] parameters = new Object[] {
+	public void updatePrimaryIndexKeyReadOnly(final Object primaryIndexKey, boolean isReadOnly) throws HiveException {
+		final JdbcTemplate j = getJdbcTemplate();
+		final Object[] parameters = new Object[] {
 				isReadOnly,
 				primaryIndexKey 
 		};
-		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory("update " + IndexSchema.getPrimaryIndexTableName(partitionDimension)
+		final PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory("update " + IndexSchema.getPrimaryIndexTableName(partitionDimension)
 			+ " set read_only = ? where id = ?",
 			new int[] {
 					Types.BOOLEAN,
 					JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass())
 		});
-		if (j.update(creatorFactory.newPreparedStatementCreator(parameters)) != 1)
-			throw new HiveException(String.format("Unable to update read only status primary index key %s", primaryIndexKey));
+		
+		
+		StatisticsProxy<Object, HiveException> proxy = new StatisticsProxy<Object, HiveException>(stats, PRIMARYINDEXWRITECOUNT, PRIMARYINDEXWRITEFAILURES, PRIMARYINDEXWRITETIME) {
+
+			@Override
+			protected Object doWork() throws HiveException {
+				if (j.update(creatorFactory.newPreparedStatementCreator(parameters)) != 1)
+					throw new HiveException(String.format("Unable to update read only status primary index key %s", primaryIndexKey));
+				return null;
+			}
+			
+		};
+		
+		proxy.execute();
 	}
 	
-	public void updatePrimaryIndexOfSecondaryKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey, Object primaryIndexKey) throws HiveException {
-		JdbcTemplate j = getJdbcTemplate();
-		Object[] parameters = new Object[] {
+	public void updatePrimaryIndexOfSecondaryKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey, final Object primaryIndexKey) throws HiveException {
+		final JdbcTemplate j = getJdbcTemplate();
+		final Object[] parameters = new Object[] {
 			primaryIndexKey,
 			secondaryIndexKey
 		};
-		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory("update " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex)
+		final PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory("update " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex)
 			+ " set pkey = ? where id = ?",
 			new int[] {
 				JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass()),
 				JdbcTypeMapper.primitiveTypeToJdbcType(secondaryIndexKey.getClass())
 		});
-		if (j.update(creatorFactory.newPreparedStatementCreator(parameters)) != 1)
-			throw new HiveException(String.format("Unable to update secondary index key %s to primary index key %s on secondary index", secondaryIndexKey, primaryIndexKey, secondaryIndex.getName()));
+		
+		StatisticsProxy<Object, HiveException> proxy = new StatisticsProxy<Object, HiveException>(stats, SECONDARYINDEXWRITECOUNT, SECONDARYINDEXWRITEFAILURES, SECONDARYINDEXWRITETIME){
+			@Override
+			protected Object doWork() throws HiveException {
+				if (j.update(creatorFactory.newPreparedStatementCreator(parameters)) != 1)
+					throw new HiveException(String.format("Unable to update secondary index key %s to primary index key %s on secondary index", secondaryIndexKey, primaryIndexKey, secondaryIndex.getName()));
+				return null;
+			}
+		};
+		proxy.execute();
 	}
 	
 	public void deleteAllSecondaryIndexKeysOfPrimaryIndexKey(SecondaryIndex secondaryIndex, Object primaryIndexKey) throws HiveException {
-		JdbcTemplate j = getJdbcTemplate();
-		Object[] parameters = new Object[] {
+		final JdbcTemplate j = getJdbcTemplate();
+		final Object[] parameters = new Object[] {
 			primaryIndexKey 
 		};
-		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory("delete from " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex)
+		final PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory("delete from " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex)
 			+ " where pkey = ?",
 			new int[] {
 				JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass())
 		});
-		j.update(creatorFactory.newPreparedStatementCreator(parameters));
+		
+		StatisticsProxy<Integer, HiveException> proxy = new StatisticsProxy<Integer, HiveException>(stats, SECONDARYINDEXDELETECOUNT, SECONDARYINDEXDELETEFAILURES, SECONDARYINDEXDELETETIME) {
+
+			@Override
+			protected Integer doWork() throws HiveException {
+				return j.update(creatorFactory.newPreparedStatementCreator(parameters));
+			}
+			
+			@Override
+			protected void onSuccess(Integer output) {
+				counter.add(successKey,output);
+				counter.add(timeKey, getRuntimeInMillis());
+			}
+			
+		};
+		proxy.execute();
 	}
 	
-	public void deletePrimaryIndexKey(Object primaryIndexKey) throws HiveException {
-		JdbcTemplate j = getJdbcTemplate();
-		Object[] parameters = new Object[] {
+	public void deletePrimaryIndexKey(final Object primaryIndexKey) throws HiveException {
+		final JdbcTemplate j = getJdbcTemplate();
+		final Object[] parameters = new Object[] {
 			primaryIndexKey 
 		};
-		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory("delete from " + IndexSchema.getPrimaryIndexTableName(partitionDimension)
+		final PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory("delete from " + IndexSchema.getPrimaryIndexTableName(partitionDimension)
 			+ " where id = ?",
 			new int[] {
 				JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass())
 		});
-		if (j.update(creatorFactory.newPreparedStatementCreator(parameters)) != 1)
-			throw new HiveException(String.format("Unable to delete primary index key %s on partitoin dimension %s", primaryIndexKey, partitionDimension.getName()));
+		
+		StatisticsProxy<Object, HiveException> proxy = new StatisticsProxy<Object, HiveException>(stats, PRIMARYINDEXDELETECOUNT, PRIMARYINDEXDELETEFAILURES, PRIMARYINDEXDELETETIME){
+			@Override
+			protected Object doWork() throws HiveException {
+				if (j.update(creatorFactory.newPreparedStatementCreator(parameters)) != 1)
+					throw new HiveException(String.format("Unable to delete primary index key %s on partitoin dimension %s", primaryIndexKey, partitionDimension.getName()));
+				return null;
+			}
+		};
+		proxy.execute();
 	}
 
-	public void deleteSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey) throws HiveException {
-		JdbcTemplate j = getJdbcTemplate();
-		Object[] parameters = new Object[] {
+	public void deleteSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey) throws HiveException {
+		final JdbcTemplate j = getJdbcTemplate();
+		final Object[] parameters = new Object[] {
 			secondaryIndexKey 
 		};
-		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory("delete from " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex)
+		final PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory("delete from " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex)
 			+ " where id = ?",
 			new int[] {
 				JdbcTypeMapper.primitiveTypeToJdbcType(secondaryIndexKey.getClass())
 		});
-		if (j.update(creatorFactory.newPreparedStatementCreator(parameters)) != 1)
-			throw new HiveException(String.format("Unable to delete secondary index key %s on secondary index %s", secondaryIndexKey, secondaryIndex.getName()));
+		
+		StatisticsProxy<Integer, HiveException> proxy = 
+			new StatisticsProxy<Integer, HiveException>(stats, SECONDARYINDEXDELETECOUNT, SECONDARYINDEXDELETEFAILURES, SECONDARYINDEXDELETETIME) {
+			@Override
+			protected Integer doWork() throws HiveException {
+				if (j.update(creatorFactory.newPreparedStatementCreator(parameters)) != 1)
+					throw new HiveException(String.format("Unable to delete secondary index key %s on secondary index %s", secondaryIndexKey, secondaryIndex.getName()));
+				return null;
+			} 
+		};
+		proxy.execute();
 	}
 	
-	public boolean doesPrimaryIndexKeyExist(Object primaryIndexKey) throws SQLException {
-		JdbcTemplate j = getJdbcTemplate();
-		return j.query("select id from " + IndexSchema.getPrimaryIndexTableName(partitionDimension)														 
-			+ " where id =  ?",		
-			new Object[] { primaryIndexKey },
-			new IntRowMapper()).size() == 1;
+	public boolean doesPrimaryIndexKeyExist(final Object primaryIndexKey) {
+		final JdbcTemplate j = getJdbcTemplate();
+		
+		StatisticsProxy<Boolean, RuntimeException> proxy = new StatisticsProxy<Boolean, RuntimeException>(stats, PRIMARYINDEXREADCOUNT, PRIMARYINDEXREADFAILURES, PRIMARYINDEXREADTIME) {
+
+			@Override
+			protected Boolean doWork() throws RuntimeException {
+				return j.query("select id from " + IndexSchema.getPrimaryIndexTableName(partitionDimension)														 
+						+ " where id =  ?",		
+						new Object[] { primaryIndexKey },
+						new IntRowMapper()).size() == 1;
+			}
+			
+		};
+		
+		return proxy.execute();
 	}
 	
-	public int getNodeIdOfPrimaryIndexKey(Object primaryIndexKey) {
-		JdbcTemplate j = getJdbcTemplate();
-		return j.queryForInt("select node from " + IndexSchema.getPrimaryIndexTableName(partitionDimension)														 
-			 + " where id = ?",		
-			new Object[] { primaryIndexKey });
+	public int getNodeIdOfPrimaryIndexKey(final Object primaryIndexKey) {
+		final JdbcTemplate j = getJdbcTemplate();
+		StatisticsProxy<Integer, RuntimeException> proxy = new StatisticsProxy<Integer, RuntimeException>(stats, PRIMARYINDEXREADCOUNT, PRIMARYINDEXREADFAILURES, PRIMARYINDEXREADTIME) {
+			@Override
+			protected Integer doWork() throws RuntimeException {
+				return j.queryForInt("select node from " + IndexSchema.getPrimaryIndexTableName(partitionDimension)														 
+						 + " where id = ?",		
+							new Object[] { primaryIndexKey });
+			}
+		};
+		return proxy.execute();
 	}
 	
-	public NodeSemaphore getNodeSemamphoreOfPrimaryIndexKey(Object primaryIndexKey) {
-		JdbcTemplate j = getJdbcTemplate();
-		return (NodeSemaphore) j.queryForObject("select node,read_only from " + IndexSchema.getPrimaryIndexTableName(partitionDimension)														 
-				 + " where id = ?",		
-				new Object[] { primaryIndexKey },
-				new NodeSemaphoreRowMapper());
+	public NodeSemaphore getNodeSemamphoreOfPrimaryIndexKey(final Object primaryIndexKey) {
+		final JdbcTemplate j = getJdbcTemplate();
+		StatisticsProxy<NodeSemaphore, RuntimeException> proxy = 
+			new StatisticsProxy<NodeSemaphore, RuntimeException>(stats, PRIMARYINDEXREADCOUNT, PRIMARYINDEXREADFAILURES, PRIMARYINDEXREADTIME){
+			@Override
+			protected NodeSemaphore doWork() throws RuntimeException {
+				return (NodeSemaphore) j.queryForObject("select node,read_only from " + IndexSchema.getPrimaryIndexTableName(partitionDimension)														 
+						 + " where id = ?",		
+							new Object[] { primaryIndexKey },
+							new NodeSemaphoreRowMapper());
+			}
+		};
+		return proxy.execute();
 	}
 
 	@SuppressWarnings("unchecked")
-	public boolean getReadOnlyOfPrimaryIndexKey(Object primaryIndexKey) {
-		JdbcTemplate j = getJdbcTemplate();
-		return (Boolean)j.queryForObject("select read_only from " + IndexSchema.getPrimaryIndexTableName(partitionDimension)														 
-			 + " where id =  ?",		
-			new Object[] { primaryIndexKey },
-			new BooleanRowMapper());
+	public boolean getReadOnlyOfPrimaryIndexKey(final Object primaryIndexKey) {
+		final JdbcTemplate j = getJdbcTemplate();
+		StatisticsProxy<Boolean, RuntimeException> proxy = new StatisticsProxy<Boolean, RuntimeException>(stats, PRIMARYINDEXREADCOUNT, PRIMARYINDEXREADFAILURES, PRIMARYINDEXREADTIME) {
+			@Override
+			protected Boolean doWork() throws RuntimeException {
+				return (Boolean)j.queryForObject("select read_only from " + IndexSchema.getPrimaryIndexTableName(partitionDimension)														 
+						 + " where id =  ?",		
+							new Object[] { primaryIndexKey },
+							new BooleanRowMapper());
+			}
+		};
+		return proxy.execute();
 	}
 
-	public boolean doesSecondaryIndexKeyExist(SecondaryIndex secondaryIndex, Object secondaryIndexKey) throws SQLException {
-		JdbcTemplate j = getJdbcTemplate();
-		return j.query("select id from " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex)
-			+ " where id = ?",
-			new Object[] { secondaryIndexKey },
-			new TrueRowMapper()).size() == 1;
+	public boolean doesSecondaryIndexKeyExist(final SecondaryIndex secondaryIndex,final Object secondaryIndexKey) {
+		final JdbcTemplate j = getJdbcTemplate();
+		StatisticsProxy<Boolean, RuntimeException> proxy = new StatisticsProxy<Boolean, RuntimeException>(stats, SECONDARYINDEXREADCOUNT, SECONDARYINDEXREADFAILURES, SECONDARYINDEXREADTIME) {
+			@Override
+			protected Boolean doWork() throws RuntimeException {
+				return j.query("select id from " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex)
+						+ " where id = ?",
+						new Object[] { secondaryIndexKey },
+						new TrueRowMapper()).size() == 1;
+			}
+		};
+		return proxy.execute();
 	}
 
 	@SuppressWarnings("unchecked")
-	public Integer getNodeIdOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey)
+	public Integer getNodeIdOfSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey)
 	{
-		JdbcTemplate j = getJdbcTemplate();
-		return j.queryForInt("select p.node from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
-			+ " join " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex) + " s on s.pkey = p.id"
-			+ " where s.id =  ?",
-			new Object[] { secondaryIndexKey });
+		final JdbcTemplate j = getJdbcTemplate();
+		StatisticsProxy<Integer, RuntimeException> proxy = new StatisticsProxy<Integer, RuntimeException>(stats, SECONDARYINDEXREADCOUNT, SECONDARYINDEXREADFAILURES, SECONDARYINDEXREADTIME) {
+			@Override
+			protected Integer doWork() throws RuntimeException {
+				return j.queryForInt("select p.node from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
+						+ " join " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex) + " s on s.pkey = p.id"
+						+ " where s.id =  ?",
+						new Object[] { secondaryIndexKey });
+			}
+		};
+		return proxy.execute();
 	}
 	
-	public NodeSemaphore getNodeSemaphoreOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey)
+	public NodeSemaphore getNodeSemaphoreOfSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey)
 	{
-		JdbcTemplate j = getJdbcTemplate();
-		return (NodeSemaphore) j.queryForObject("select p.node,p.read_only from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
-			+ " join " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex) + " s on s.pkey = p.id"
-			+ " where s.id =  ?",
-			new Object[] { secondaryIndexKey },
-			new NodeSemaphoreRowMapper());
+		final JdbcTemplate j = getJdbcTemplate();
+		StatisticsProxy<NodeSemaphore, RuntimeException> proxy = new StatisticsProxy<NodeSemaphore, RuntimeException>(stats, SECONDARYINDEXREADCOUNT, SECONDARYINDEXREADFAILURES, SECONDARYINDEXREADTIME) {
+			@Override
+			protected NodeSemaphore doWork() throws RuntimeException {
+				return (NodeSemaphore) j.queryForObject("select p.node,p.read_only from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
+						+ " join " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex) + " s on s.pkey = p.id"
+						+ " where s.id =  ?",
+						new Object[] { secondaryIndexKey },
+						new NodeSemaphoreRowMapper());
+			}
+		};
+		return proxy.execute();
 	}
 	
 	@SuppressWarnings("unchecked")
-	public Object getPrimaryIndexKeyOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey)
+	public Object getPrimaryIndexKeyOfSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey)
 	{
-		JdbcTemplate j = getJdbcTemplate();
-		return j.queryForObject("select p.id from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
-			+ " join " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex) + " s on s.pkey = p.id"
-			+ " where s.id =  ?",
-			new Object[] { secondaryIndexKey },
-			new ObjectRowMapper(secondaryIndex.getResource().getPartitionDimension().getColumnType()));
+		final JdbcTemplate j = getJdbcTemplate();
+		StatisticsProxy<Object, RuntimeException> proxy = new StatisticsProxy<Object, RuntimeException>(stats, SECONDARYINDEXREADCOUNT, SECONDARYINDEXREADFAILURES, SECONDARYINDEXREADTIME) {
+			@Override
+			protected Object doWork() throws RuntimeException {
+				return j.queryForObject("select p.id from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
+						+ " join " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex) + " s on s.pkey = p.id"
+						+ " where s.id =  ?",
+						new Object[] { secondaryIndexKey },
+						new ObjectRowMapper(secondaryIndex.getResource().getPartitionDimension().getColumnType()));
+			}
+		};
+		return proxy.execute();
 	}
 	
 	@SuppressWarnings("unchecked")
-	public Collection getSecondaryIndexKeysOfPrimaryIndexKey(SecondaryIndex secondaryIndex, Object primaryIndexKey)
+	public Collection getSecondaryIndexKeysOfPrimaryIndexKey(final SecondaryIndex secondaryIndex, final Object primaryIndexKey)
 	{
-		JdbcTemplate j = getJdbcTemplate();
-		String secondaryIndexTableName = IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex);
-		return j.query("select s.id from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
-			+ " join " + secondaryIndexTableName + " s on s.pkey = p.id"
-			+ " where p.id = ?",
-			new Object[] { primaryIndexKey },
-			new ObjectRowMapper(secondaryIndex.getColumnInfo().getColumnType()));
+		final JdbcTemplate j = getJdbcTemplate();
+		final String secondaryIndexTableName = IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex);
+		StatisticsProxy<Collection, RuntimeException> proxy = new StatisticsProxy<Collection, RuntimeException>(stats, SECONDARYINDEXREADCOUNT, SECONDARYINDEXREADFAILURES, SECONDARYINDEXREADTIME) {
+			@Override
+			protected Collection doWork() throws RuntimeException {
+				return j.query("select s.id from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
+						+ " join " + secondaryIndexTableName + " s on s.pkey = p.id"
+						+ " where p.id = ?",
+						new Object[] { primaryIndexKey },
+						new ObjectRowMapper(secondaryIndex.getColumnInfo().getColumnType()));
+			}
+			
+			@Override
+			protected void onSuccess(Collection output) {
+				counter.add(successKey, output.size());
+				counter.add(timeKey, getRuntimeInMillis());
+			}
+		};	
+		return proxy.execute();
 	}
 	
 	private class IntRowMapper implements RowMapper {

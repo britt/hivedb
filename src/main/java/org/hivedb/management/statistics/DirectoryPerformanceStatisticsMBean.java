@@ -1,34 +1,47 @@
 package org.hivedb.management.statistics;
 
 import java.util.Arrays;
+
 import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
 
-public class DirectoryPerformanceStatisticsMBean extends StandardMBean implements DirectoryPerformanceStatistics {
+public class DirectoryPerformanceStatisticsMBean extends StandardMBean implements DirectoryPerformanceStatistics, Counter {
 	
-	private static final String PRIMARYINDEXREADCOUNT = "PrimaryIndexReadCount";
+	public static final String PRIMARYINDEXREADCOUNT = "PrimaryIndexReadCount";
 	
-	private static final String PRIMARYINDEXREADFAILURES = "PrimaryIndexReadFailures";
+	public static final String PRIMARYINDEXREADFAILURES = "PrimaryIndexReadFailures";
 	
-	private static final String PRIMARYINDEXREADTIME = "PrimaryIndexReadTime";
+	public static final String PRIMARYINDEXREADTIME = "PrimaryIndexReadTime";
 	
-	private static final String PRIMARYINDEXWRITECOUNT = "PrimaryIndexWriteCount";
+	public static final String PRIMARYINDEXWRITECOUNT = "PrimaryIndexWriteCount";
 	
-	private static final String PRIMARYINDEXWRITEFAILURES = "PrimaryIndexWriteFailures";
+	public static final String PRIMARYINDEXWRITEFAILURES = "PrimaryIndexWriteFailures";
 	
-	private static final String PRIMARYINDEXWRITETIME = "PrimaryIndexWriteTime";
+	public static final String PRIMARYINDEXWRITETIME = "PrimaryIndexWriteTime";
 	
-	private static final String SECONDARYINDEXREADCOUNT = "SecondaryIndexReadCount";
+	public static final String SECONDARYINDEXREADCOUNT = "SecondaryIndexReadCount";
 	
-	private static final String SECONDARYINDEXREADFAILURES = "SecondaryIndexReadFailures";
+	public static final String SECONDARYINDEXREADFAILURES = "SecondaryIndexReadFailures";
 	
-	private static final String SECONDARYINDEXREADTIME = "SecondaryIndexReadTime";
+	public static final String SECONDARYINDEXREADTIME = "SecondaryIndexReadTime";
 	
-	private static final String SECONDARYINDEXWRITECOUNT = "SecondaryIndexWriteCount";
+	public static final String SECONDARYINDEXWRITECOUNT = "SecondaryIndexWriteCount";
 	
-	private static final String SECONDARYINDEXWRITEFAILURES = "SecondaryIndexWriteFailures";
+	public static final String SECONDARYINDEXWRITEFAILURES = "SecondaryIndexWriteFailures";
 	
-	private static final String SECONDARYINDEXWRITETIME = "SecondaryIndexWriteTime";
+	public static final String SECONDARYINDEXWRITETIME = "SecondaryIndexWriteTime";
+
+	public static final String PRIMARYINDEXDELETECOUNT = "PrimaryIndexDeleteCount";
+	
+	public static final String PRIMARYINDEXDELETETIME = "PrimaryIndexDeleteTime";
+	
+	public static final String PRIMARYINDEXDELETEFAILURES = "PrimaryIndexDeleteFailures";
+
+	public static final String SECONDARYINDEXDELETECOUNT = "SecondaryIndexDeletes";
+
+	public static final String SECONDARYINDEXDELETEFAILURES = "SecondaryIndexDeleteFailures";
+
+	public static final String SECONDARYINDEXDELETETIME = "SecondaryIndexDeleteTime";
 	
 	private RollingAverageStatistics stats;
 	
@@ -387,4 +400,196 @@ public class DirectoryPerformanceStatisticsMBean extends StandardMBean implement
 		stats.increment(SECONDARYINDEXWRITETIME);
 	}
 	
+	public void addToPrimaryIndexDeleteCount(long value) {
+		stats.add(PRIMARYINDEXDELETECOUNT, value);
+	}
+	public void decrementPrimaryIndexDeleteCount() {
+		stats.decrement(PRIMARYINDEXDELETECOUNT);
+	}
+	public long getAveragePrimaryIndexDeleteCount() {
+		return stats.getAverage(PRIMARYINDEXDELETECOUNT);
+	}
+	public long getIntervalPrimaryIndexDeleteCount() {
+		return stats.getInterval(PRIMARYINDEXDELETECOUNT);
+	}
+	public long getMaxPrimaryIndexDeleteCount() {
+		return stats.getMax(PRIMARYINDEXDELETECOUNT);
+	}
+	public long getMinPrimaryIndexDeleteCount() {
+		return stats.getMin(PRIMARYINDEXDELETECOUNT);
+	}
+	public double getVariancePrimaryIndexDeleteCount() {
+		return stats.getVariance(PRIMARYINDEXDELETECOUNT);
+	}
+	public long getWindowPrimaryIndexDeleteCount() {
+		return stats.getWindow(PRIMARYINDEXDELETECOUNT);
+	}
+	public void incrementPrimaryIndexDeleteCount() {
+		stats.increment(PRIMARYINDEXDELETECOUNT);
+	}
+	
+	
+	public void addToPrimaryIndexDeleteFailures(long value) {
+		stats.add(PRIMARYINDEXDELETEFAILURES, value);
+	}
+	public void decrementPrimaryIndexDeleteFailures() {
+		stats.decrement(PRIMARYINDEXDELETEFAILURES);
+	}
+	public long getAveragePrimaryIndexDeleteFailures() {
+		return stats.getAverage(PRIMARYINDEXDELETEFAILURES);
+	}
+	public long getIntervalPrimaryIndexDeleteFailures() {
+		return stats.getInterval(PRIMARYINDEXDELETEFAILURES);
+	}
+	public long getMaxPrimaryIndexDeleteFailures() {
+		return stats.getMax(PRIMARYINDEXDELETEFAILURES);
+	}
+	public long getMinPrimaryIndexDeleteFailures() {
+		return stats.getMin(PRIMARYINDEXDELETEFAILURES);
+	}
+	public double getVariancePrimaryIndexDeleteFailures() {
+		return stats.getVariance(PRIMARYINDEXDELETEFAILURES);
+	}
+	public long getWindowPrimaryIndexDeleteFailures() {
+		return stats.getWindow(PRIMARYINDEXDELETEFAILURES);
+	}
+	public void incrementPrimaryIndexDeleteFailures() {
+		stats.increment(PRIMARYINDEXDELETEFAILURES);
+	}
+	
+	
+	public void addToPrimaryIndexDeleteTime(long value) {
+		stats.add(PRIMARYINDEXDELETETIME, value);
+	}
+	public void decrementPrimaryIndexDeleteTime() {
+		stats.decrement(PRIMARYINDEXDELETETIME);
+	}
+	public long getAveragePrimaryIndexDeleteTime() {
+		return stats.getAverage(PRIMARYINDEXDELETETIME);
+	}
+	public long getIntervalPrimaryIndexDeleteTime() {
+		return stats.getInterval(PRIMARYINDEXDELETETIME);
+	}
+	public long getMaxPrimaryIndexDeleteTime() {
+		return stats.getMax(PRIMARYINDEXDELETETIME);
+	}
+	public long getMinPrimaryIndexDeleteTime() {
+		return stats.getMin(PRIMARYINDEXDELETETIME);
+	}
+	public double getVariancePrimaryIndexDeleteTime() {
+		return stats.getVariance(PRIMARYINDEXDELETETIME);
+	}
+	public long getWindowPrimaryIndexDeleteTime() {
+		return stats.getWindow(PRIMARYINDEXDELETETIME);
+	}
+	public void incrementPrimaryIndexDeleteTime() {
+		stats.increment(PRIMARYINDEXDELETETIME);
+	}
+	
+	public void addToSecondaryIndexDeleteCount(long value) {
+		stats.add(SECONDARYINDEXDELETECOUNT, value);
+	}
+	public void decrementSecondaryIndexDeleteCount() {
+		stats.decrement(SECONDARYINDEXDELETECOUNT);
+	}
+	public long getAverageSecondaryIndexDeleteCount() {
+		return stats.getAverage(SECONDARYINDEXDELETECOUNT);
+	}
+	public long getIntervalSecondaryIndexDeleteCount() {
+		return stats.getInterval(SECONDARYINDEXDELETECOUNT);
+	}
+	public long getMaxSecondaryIndexDeleteCount() {
+		return stats.getMax(SECONDARYINDEXDELETECOUNT);
+	}
+	public long getMinSecondaryIndexDeleteCount() {
+		return stats.getMin(SECONDARYINDEXDELETECOUNT);
+	}
+	public double getVarianceSecondaryIndexDeleteCount() {
+		return stats.getVariance(SECONDARYINDEXDELETECOUNT);
+	}
+	public long getWindowSecondaryIndexDeleteCount() {
+		return stats.getWindow(SECONDARYINDEXDELETECOUNT);
+	}
+	public void incrementSecondaryIndexDeleteCount() {
+		stats.increment(SECONDARYINDEXDELETECOUNT);
+	}
+	
+	
+	public void addToSecondaryIndexDeleteFailures(long value) {
+		stats.add(SECONDARYINDEXDELETEFAILURES, value);
+	}
+	public void decrementSecondaryIndexDeleteFailures() {
+		stats.decrement(SECONDARYINDEXDELETEFAILURES);
+	}
+	public long getAverageSecondaryIndexDeleteFailures() {
+		return stats.getAverage(SECONDARYINDEXDELETEFAILURES);
+	}
+	public long getIntervalSecondaryIndexDeleteFailures() {
+		return stats.getInterval(SECONDARYINDEXDELETEFAILURES);
+	}
+	public long getMaxSecondaryIndexDeleteFailures() {
+		return stats.getMax(SECONDARYINDEXDELETEFAILURES);
+	}
+	public long getMinSecondaryIndexDeleteFailures() {
+		return stats.getMin(SECONDARYINDEXDELETEFAILURES);
+	}
+	public double getVarianceSecondaryIndexDeleteFailures() {
+		return stats.getVariance(SECONDARYINDEXDELETEFAILURES);
+	}
+	public long getWindowSecondaryIndexDeleteFailures() {
+		return stats.getWindow(SECONDARYINDEXDELETEFAILURES);
+	}
+	public void incrementSecondaryIndexDeleteFailures() {
+		stats.increment(SECONDARYINDEXDELETEFAILURES);
+	}
+	
+	
+	public void addToSecondaryIndexDeleteTime(long value) {
+		stats.add(SECONDARYINDEXDELETETIME, value);
+	}
+	public void decrementSecondaryIndexDeleteTime() {
+		stats.decrement(SECONDARYINDEXDELETETIME);
+	}
+	public long getAverageSecondaryIndexDeleteTime() {
+		return stats.getAverage(SECONDARYINDEXDELETETIME);
+	}
+	public long getIntervalSecondaryIndexDeleteTime() {
+		return stats.getInterval(SECONDARYINDEXDELETETIME);
+	}
+	public long getMaxSecondaryIndexDeleteTime() {
+		return stats.getMax(SECONDARYINDEXDELETETIME);
+	}
+	public long getMinSecondaryIndexDeleteTime() {
+		return stats.getMin(SECONDARYINDEXDELETETIME);
+	}
+	public double getVarianceSecondaryIndexDeleteTime() {
+		return stats.getVariance(SECONDARYINDEXDELETETIME);
+	}
+	public long getWindowSecondaryIndexDeleteTime() {
+		return stats.getWindow(SECONDARYINDEXDELETETIME);
+	}
+	public void incrementSecondaryIndexDeleteTime() {
+		stats.increment(SECONDARYINDEXDELETETIME);
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.hivedb.management.statistics.Counter#add(java.lang.String, long)
+	 */
+	public void add(String key, long value) {
+		stats.add(key, value);
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.hivedb.management.statistics.Counter#dercrement(java.lang.String)
+	 */
+	public void dercrement(String key) {
+		stats.decrement(key);
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.hivedb.management.statistics.Counter#increment(java.lang.String)
+	 */
+	public void increment(String key) {
+		stats.increment(key);
+	}
 }

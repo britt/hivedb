@@ -122,4 +122,64 @@ public interface DirectoryPerformanceStatistics {
 	public void incrementSecondaryIndexWriteTime();
 	public void decrementSecondaryIndexWriteTime();
 	
+	public long getAveragePrimaryIndexDeleteCount();
+	public long getMinPrimaryIndexDeleteCount();
+	public long getMaxPrimaryIndexDeleteCount();
+	public double getVariancePrimaryIndexDeleteCount();
+	public long getWindowPrimaryIndexDeleteCount();
+	public long getIntervalPrimaryIndexDeleteCount();
+	public void addToPrimaryIndexDeleteCount(long value);
+	public void incrementPrimaryIndexDeleteCount();
+	public void decrementPrimaryIndexDeleteCount();
+	
+	public long getAveragePrimaryIndexDeleteFailures();
+	public long getMinPrimaryIndexDeleteFailures();
+	public long getMaxPrimaryIndexDeleteFailures();
+	public double getVariancePrimaryIndexDeleteFailures();
+	public long getWindowPrimaryIndexDeleteFailures();
+	public long getIntervalPrimaryIndexDeleteFailures();
+	public void addToPrimaryIndexDeleteFailures(long value);
+	public void incrementPrimaryIndexDeleteFailures();
+	public void decrementPrimaryIndexDeleteFailures();
+	
+	public long getAveragePrimaryIndexDeleteTime();
+	public long getMinPrimaryIndexDeleteTime();
+	public long getMaxPrimaryIndexDeleteTime();
+	public double getVariancePrimaryIndexDeleteTime();
+	public long getWindowPrimaryIndexDeleteTime();
+	public long getIntervalPrimaryIndexDeleteTime();
+	public void addToPrimaryIndexDeleteTime(long value);
+	public void incrementPrimaryIndexDeleteTime();
+	public void decrementPrimaryIndexDeleteTime();
+	
+	public long getAverageSecondaryIndexDeleteCount();
+	public long getMinSecondaryIndexDeleteCount();
+	public long getMaxSecondaryIndexDeleteCount();
+	public double getVarianceSecondaryIndexDeleteCount();
+	public long getWindowSecondaryIndexDeleteCount();
+	public long getIntervalSecondaryIndexDeleteCount();
+	public void addToSecondaryIndexDeleteCount(long value);
+	public void incrementSecondaryIndexDeleteCount();
+	public void decrementSecondaryIndexDeleteCount();
+	
+	public long getAverageSecondaryIndexDeleteFailures();
+	public long getMinSecondaryIndexDeleteFailures();
+	public long getMaxSecondaryIndexDeleteFailures();
+	public double getVarianceSecondaryIndexDeleteFailures();
+	public long getWindowSecondaryIndexDeleteFailures();
+	public long getIntervalSecondaryIndexDeleteFailures();
+	public void addToSecondaryIndexDeleteFailures(long value);
+	public void incrementSecondaryIndexDeleteFailures();
+	public void decrementSecondaryIndexDeleteFailures();
+	
+	public long getAverageSecondaryIndexDeleteTime();
+	public long getMinSecondaryIndexDeleteTime();
+	public long getMaxSecondaryIndexDeleteTime();
+	public double getVarianceSecondaryIndexDeleteTime();
+	public long getWindowSecondaryIndexDeleteTime();
+	public long getIntervalSecondaryIndexDeleteTime();
+	public void addToSecondaryIndexDeleteTime(long value);
+	public void incrementSecondaryIndexDeleteTime();
+	public void decrementSecondaryIndexDeleteTime();
+	
 }
