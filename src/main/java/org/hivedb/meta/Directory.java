@@ -6,31 +6,41 @@ import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.management.NotCompliantMBeanException;
 import javax.sql.DataSource;
 
 import org.hivedb.HiveException;
 import org.hivedb.StatisticsProxy;
+import org.hivedb.Synchronizeable;
 import org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean;
+import org.hivedb.management.statistics.NodePerformanceStatisticsMBean;
 import org.hivedb.util.JdbcTypeMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
 
-public class Directory extends JdbcDaoSupport{
+public class Directory extends JdbcDaoSupport implements Synchronizeable {
 	private PartitionDimension partitionDimension;
 	private DirectoryPerformanceStatisticsMBean stats;
+	private Map<Integer, NodePerformanceStatisticsMBean> nodeStats;
+	private long interval = 100;
+	private long window = 1000;
 	
 	public Directory(PartitionDimension dimension, DataSource dataSource) {
 		this.partitionDimension = dimension;
 		this.setDataSource(dataSource);
-		
+		this.nodeStats = new ConcurrentHashMap<Integer, NodePerformanceStatisticsMBean>();
 //		 TODO Solve where to get these
 		try {
 			this.stats = new DirectoryPerformanceStatisticsMBean(1000,100);
+			for(Node node : partitionDimension.getNodeGroup().getNodes())
+				nodeStats.put(node.getId(), new NodePerformanceStatisticsMBean(window,interval));
 		} catch (NotCompliantMBeanException e) {
 			
 		}
@@ -432,7 +442,25 @@ public class Directory extends JdbcDaoSupport{
 	private class NodeSemaphoreRowMapper implements RowMapper {
 		public Object mapRow(ResultSet rs, int arg1) throws SQLException {
 			return new NodeSemaphore(rs.getInt("node"), rs.getBoolean("read_only"));
+		}	
+	}
+
+	public void sync() throws HiveException {
+		// Merge Maps
+		Collection<Integer> nodeIds = new ArrayList<Integer>();
+		for(Node node : partitionDimension.getNodeGroup().getNodes()) {
+			nodeIds.add(node.getId());
+			if(!nodeStats.containsKey(node.getId()))
+				try {
+					nodeStats.put(node.getId(), new NodePerformanceStatisticsMBean(window, interval));
+				} catch (NotCompliantMBeanException e) {
+
+				}
 		}
-		
+		//Exclude removed nodes
+		for(Integer key: nodeStats.keySet()) {
+			if(!nodeIds.contains(key))
+				nodeStats.remove(key);
+		}
 	}
 }
