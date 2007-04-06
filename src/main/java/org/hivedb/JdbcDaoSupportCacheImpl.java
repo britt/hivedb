@@ -11,7 +11,6 @@ import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.HiveUtils;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
-import org.springframework.jdbc.core.support.JdbcDaoSupport;
 
 /**
  * @author Britt Crawford (bcrawford@cafepress.com)
@@ -21,12 +20,15 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	private Hive hive;
 	private String partitionDimension;
 	private Map<Integer, SimpleJdbcDaoSupport> jdbcDaoSupports;
+//	private Map<Integer, NodePerformanceStatistics> stats;
+	
 	private int revision = Integer.MIN_VALUE;
 	
 	public JdbcDaoSupportCacheImpl(String partitionDimension, Hive hive) {
 		this.partitionDimension = partitionDimension;
 		this.hive = hive;
 		this.jdbcDaoSupports = new ConcurrentHashMap<Integer, SimpleJdbcDaoSupport>();
+//		this.stats = new ConcurrentHashMap<Integer, NodePerformanceStatistics>();
 		try {
 			sync();
 		} catch (HiveException e) {
@@ -49,6 +51,8 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 			}
 			revision = hive.getRevision();
 		}
+		
+		// TODO: Add statistics syncing
 	}
 	
 	private SimpleJdbcDaoSupport addDataSource(Integer nodeId, AccessType intention) throws HiveException {
@@ -58,15 +62,22 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	}
 	
 	private SimpleJdbcDaoSupport get(NodeSemaphore semaphore, AccessType intention) throws HiveReadOnlyException { 
-		if(intention == AccessType.ReadWrite && (hive.isReadOnly() || semaphore.isReadOnly()))
+		if(intention == AccessType.ReadWrite && (hive.isReadOnly() || semaphore.isReadOnly())){
+			//failure
 			throw new HiveReadOnlyException("This partition key cannot be written to at this time.");
+		}
 		else
-			if( jdbcDaoSupports.containsKey(hash(semaphore.getId(), intention)))
+			if( jdbcDaoSupports.containsKey(hash(semaphore.getId(), intention))){
+				// success case
 				return jdbcDaoSupports.get(hash(semaphore.getId(), intention));
+			}
 			else
 				try {
-					return addDataSource(semaphore.getId(), intention);
+					SimpleJdbcDaoSupport dao = addDataSource(semaphore.getId(), intention);
+					//success
+					return dao;
 				} catch (HiveException e) {
+					//failure
 					throw new HiveRuntimeException(e.getMessage());
 				}
 	}

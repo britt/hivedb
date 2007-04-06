@@ -21,17 +21,7 @@ public interface NodePerformanceStatistics {
 	public void addToReadFailures(long value);
 	public void incrementReadFailures();
 	public void decrementReadFailures();
-	
-	public long getAverageReadTime();
-	public long getMinReadTime();
-	public long getMaxReadTime();
-	public double getVarianceReadTime();
-	public long getWindowReadTime();
-	public long getIntervalReadTime();
-	public void addToReadTime(long value);
-	public void incrementReadTime();
-	public void decrementReadTime();
-	
+
 	public long getAverageWriteCount();
 	public long getMinWriteCount();
 	public long getMaxWriteCount();
@@ -51,15 +41,4 @@ public interface NodePerformanceStatistics {
 	public void addToWriteFailures(long value);
 	public void incrementWriteFailures();
 	public void decrementWriteFailures();
-	
-	public long getAverageWriteTime();
-	public long getMinWriteTime();
-	public long getMaxWriteTime();
-	public double getVarianceWriteTime();
-	public long getWindowWriteTime();
-	public long getIntervalWriteTime();
-	public void addToWriteTime(long value);
-	public void incrementWriteTime();
-	public void decrementWriteTime();
-	
 }

@@ -10,20 +10,16 @@ public class NodePerformanceStatisticsMBean extends StandardMBean implements Nod
 	
 	private static final String READFAILURES = "ReadFailures";
 	
-	private static final String READTIME = "ReadTime";
-	
 	private static final String WRITECOUNT = "WriteCount";
 	
 	private static final String WRITEFAILURES = "WriteFailures";
-	
-	private static final String WRITETIME = "WriteTime";
 	
 	private RollingAverageStatistics stats;
 	
 	public NodePerformanceStatisticsMBean(long window, long interval) throws NotCompliantMBeanException{
 		super(NodePerformanceStatistics.class);
 		
-		stats = new RollingAverageStatisticsImpl(Arrays.asList(new String[] {READCOUNT,READFAILURES,READTIME,WRITECOUNT,WRITEFAILURES,WRITETIME}), window, interval);
+		stats = new RollingAverageStatisticsImpl(Arrays.asList(new String[] {READCOUNT,READFAILURES,WRITECOUNT,WRITEFAILURES}), window, interval);
 	}
 	
 	
@@ -85,36 +81,6 @@ public class NodePerformanceStatisticsMBean extends StandardMBean implements Nod
 		stats.increment(READFAILURES);
 	}
 	
-	
-	public void addToReadTime(long value) {
-		stats.add(READTIME, value);
-	}
-	public void decrementReadTime() {
-		stats.decrement(READTIME);
-	}
-	public long getAverageReadTime() {
-		return stats.getAverage(READTIME);
-	}
-	public long getIntervalReadTime() {
-		return stats.getInterval(READTIME);
-	}
-	public long getMaxReadTime() {
-		return stats.getMax(READTIME);
-	}
-	public long getMinReadTime() {
-		return stats.getMin(READTIME);
-	}
-	public double getVarianceReadTime() {
-		return stats.getVariance(READTIME);
-	}
-	public long getWindowReadTime() {
-		return stats.getWindow(READTIME);
-	}
-	public void incrementReadTime() {
-		stats.increment(READTIME);
-	}
-	
-	
 	public void addToWriteCount(long value) {
 		stats.add(WRITECOUNT, value);
 	}
@@ -170,35 +136,6 @@ public class NodePerformanceStatisticsMBean extends StandardMBean implements Nod
 	}
 	public void incrementWriteFailures() {
 		stats.increment(WRITEFAILURES);
-	}
-	
-	
-	public void addToWriteTime(long value) {
-		stats.add(WRITETIME, value);
-	}
-	public void decrementWriteTime() {
-		stats.decrement(WRITETIME);
-	}
-	public long getAverageWriteTime() {
-		return stats.getAverage(WRITETIME);
-	}
-	public long getIntervalWriteTime() {
-		return stats.getInterval(WRITETIME);
-	}
-	public long getMaxWriteTime() {
-		return stats.getMax(WRITETIME);
-	}
-	public long getMinWriteTime() {
-		return stats.getMin(WRITETIME);
-	}
-	public double getVarianceWriteTime() {
-		return stats.getVariance(WRITETIME);
-	}
-	public long getWindowWriteTime() {
-		return stats.getWindow(WRITETIME);
-	}
-	public void incrementWriteTime() {
-		stats.increment(WRITETIME);
 	}
 	
 	public void add(String key, long value) {

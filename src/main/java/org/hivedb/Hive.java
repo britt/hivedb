@@ -408,7 +408,6 @@ public class Hive implements Finder, Synchronizeable {
 		incrementAndPersistHive(datasource);
 
 		sync();
-		getDirectory(partitionDimension).sync();
 		return node;
 	}
 
@@ -539,7 +538,6 @@ public class Hive implements Finder, Synchronizeable {
 		}
 		incrementAndPersistHive(datasource);
 		sync();
-		getDirectory(partitionDimension).sync();
 		
 		return partitionDimension;
 	}
@@ -696,8 +694,6 @@ public class Hive implements Finder, Synchronizeable {
 		
 		//Synchronize the DataSourceCache
 		this.dataSourceCaches.get(node.getNodeGroup().getPartitionDimension().getName()).sync();
-		getDirectory(node.getNodeGroup().getPartitionDimension()).sync();
-		
 		return node;
 	}
 
