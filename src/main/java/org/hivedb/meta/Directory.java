@@ -20,6 +20,7 @@ import org.hivedb.Synchronizeable;
 import org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean;
 import org.hivedb.management.statistics.NodePerformanceStatisticsMBean;
 import org.hivedb.util.JdbcTypeMapper;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.RowMapper;
@@ -378,11 +379,16 @@ public class Directory extends JdbcDaoSupport implements Synchronizeable {
 		StatisticsProxy<Object, RuntimeException> proxy = new StatisticsProxy<Object, RuntimeException>(stats, SECONDARYINDEXREADCOUNT, SECONDARYINDEXREADFAILURES, SECONDARYINDEXREADTIME) {
 			@Override
 			protected Object doWork() throws RuntimeException {
+				try {
 				return j.queryForObject("select p.id from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
 						+ " join " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex) + " s on s.pkey = p.id"
 						+ " where s.id =  ?",
 						new Object[] { secondaryIndexKey },
 						new ObjectRowMapper(secondaryIndex.getResource().getPartitionDimension().getColumnType()));
+				}
+				catch (RuntimeException e) {
+					throw new RuntimeException(String.format("Error looking for key %s of secondary index %s", secondaryIndexKey, secondaryIndex.getName()), e);
+				}
 			}
 		};
 		return proxy.execute();
