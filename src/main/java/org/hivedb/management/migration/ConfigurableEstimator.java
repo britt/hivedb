@@ -1,4 +1,4 @@
-package org.hivedb.management;
+package org.hivedb.management.migration;
 
 import org.hivedb.management.statistics.NodeStatistics;
 import org.hivedb.management.statistics.PartitionKeyStatistics;

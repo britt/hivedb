@@ -1,4 +1,4 @@
-package org.hivedb.management;
+package org.hivedb.management.migration;
 
 import java.sql.Types;
 import java.util.Collection;

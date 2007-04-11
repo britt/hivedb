@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.hivedb.management.Migration;
-import org.hivedb.management.MovePlanValidator;
+import org.hivedb.management.migration.Migration;
+import org.hivedb.management.migration.MovePlanValidator;
 import org.hivedb.management.statistics.NodeStatistics;
 import org.hivedb.management.statistics.PartitionKeyStatistics;
 import org.hivedb.util.TestObjectFactory;

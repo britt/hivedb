@@ -1,4 +1,4 @@
-package org.hivedb.management;
+package org.hivedb.management.migration;
 
 public class MigrationException extends Exception {
 	public MigrationException() {}

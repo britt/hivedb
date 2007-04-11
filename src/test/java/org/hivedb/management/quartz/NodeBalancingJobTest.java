@@ -5,6 +5,7 @@ import static org.testng.AssertJUnit.fail;
 import java.util.ArrayList;
 import java.util.Date;
 
+import org.hivedb.management.migration.NodeBalancingJob;
 import org.hivedb.meta.Node;
 import org.hivedb.util.TestObjectFactory;
 import org.quartz.JobDetail;

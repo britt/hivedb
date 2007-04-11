@@ -1,4 +1,4 @@
-package org.hivedb.management;
+package org.hivedb.management.migration;
 
 public class Migration implements Comparable{
 	private int order = 0;

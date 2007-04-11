@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import org.hivedb.management.MigrationEstimator;
+import org.hivedb.management.migration.MigrationEstimator;
 import org.hivedb.meta.Node;
 import org.hivedb.util.HiveUtils;
 

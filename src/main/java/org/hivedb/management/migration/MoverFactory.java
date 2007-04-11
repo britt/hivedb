@@ -1,6 +1,6 @@
-package org.hivedb.management;
+package org.hivedb.management.migration;
 
-import org.hivedb.management.Migration;
+import org.hivedb.management.migration.Migration;
 
 public class MoverFactory {
 	public static Mover getMover() {

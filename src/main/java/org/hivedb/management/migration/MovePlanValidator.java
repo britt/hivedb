@@ -1,4 +1,4 @@
-package org.hivedb.management;
+package org.hivedb.management.migration;
 
 import java.util.Collection;
 import java.util.Hashtable;

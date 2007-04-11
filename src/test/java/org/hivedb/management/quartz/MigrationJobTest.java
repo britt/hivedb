@@ -8,7 +8,8 @@ import static org.testng.AssertJUnit.fail;
 
 import java.util.Date;
 
-import org.hivedb.management.Migration;
+import org.hivedb.management.migration.Migration;
+import org.hivedb.management.migration.MigrationJob;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;

@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
-import org.hivedb.management.MigrationEstimator;
+import org.hivedb.management.migration.MigrationEstimator;
 import org.hivedb.management.statistics.NodeStatistics;
 import org.hivedb.management.statistics.NodeStatisticsBean;
 import org.hivedb.management.statistics.PartitionKeyStatistics;

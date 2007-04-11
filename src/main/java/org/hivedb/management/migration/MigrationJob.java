@@ -1,9 +1,5 @@
-package org.hivedb.management.quartz;
+package org.hivedb.management.migration;
 
-import org.hivedb.management.Migration;
-import org.hivedb.management.MigrationException;
-import org.hivedb.management.Mover;
-import org.hivedb.management.MoverFactory;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;

@@ -1,14 +1,8 @@
-package org.hivedb.management.quartz;
+package org.hivedb.management.migration;
 
 import java.util.Calendar;
 import java.util.Collection;
 
-import org.hivedb.management.ConfigurableEstimator;
-import org.hivedb.management.Migration;
-import org.hivedb.management.MigrationEstimator;
-import org.hivedb.management.MigrationPlanningException;
-import org.hivedb.management.NodeBalancer;
-import org.hivedb.management.OverFillBalancer;
 import org.hivedb.management.statistics.PartitionKeyStatistics;
 import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
 import org.hivedb.meta.Node;
