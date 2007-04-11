@@ -4,7 +4,7 @@
  * 
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
  */
-package org.hivedb;
+package org.hivedb.reference;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -21,11 +21,11 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Map;
 
-public class CallableStatement extends org.hivedb.PreparedStatement {
+public class CallableStatement extends org.hivedb.reference.PreparedStatement {
 
 	public CallableStatement() {};
 
-	public CallableStatement( org.hivedb.Connection conn, java.sql.CallableStatement ps ) throws SQLException {
+	public CallableStatement( org.hivedb.reference.Connection conn, java.sql.CallableStatement ps ) throws SQLException {
 		delegate = ps;
 		_conn = conn;
 		type = TYPE_PREPARED;

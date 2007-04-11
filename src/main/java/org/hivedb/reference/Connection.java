@@ -4,7 +4,7 @@
  * 
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
  */
-package org.hivedb;
+package org.hivedb.reference;
 
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
@@ -93,7 +93,7 @@ public class Connection implements java.sql.Connection {
 		stmt = delegate.createStatement(resultSetType,
 				resultSetConcurrency, resultSetHoldability);
 
-		org.hivedb.Statement stmt2 = new org.hivedb.Statement();
+		org.hivedb.reference.Statement stmt2 = new org.hivedb.reference.Statement();
 		stmt2.setKey( key );
 		encacheStatement( stmtsAvail, stmtsInUse, stmt2, true );
 
@@ -163,7 +163,7 @@ public class Connection implements java.sql.Connection {
 		stmt = delegate.prepareCall( sql, resultSetType,
 				resultSetConcurrency, resultSetHoldability );
 
-		org.hivedb.CallableStatement stmt2 = new org.hivedb.CallableStatement();
+		CallableStatement stmt2 = new CallableStatement();
 		stmt2.setKey( key );
 		encacheStatement( stmtsAvail, stmtsInUse, stmt2, true );
 
@@ -178,12 +178,12 @@ public class Connection implements java.sql.Connection {
 	public java.sql.PreparedStatement prepareStatement(String sql, int autoGenKeyIndex)
 			throws SQLException {
 		String key = sql + "--";
-		org.hivedb.PreparedStatement stmt = (org.hivedb.PreparedStatement)getCachedStatement( pstmtsAvail, pstmtsInUse, key );
+		org.hivedb.reference.PreparedStatement stmt = (org.hivedb.reference.PreparedStatement)getCachedStatement( pstmtsAvail, pstmtsInUse, key );
 		if( stmt != null ) {
 			return stmt;
 		} // if
 		java.sql.PreparedStatement stmt2 = delegate.prepareStatement( sql, autoGenKeyIndex );
-		stmt = new org.hivedb.PreparedStatement( this, stmt2 );
+		stmt = new org.hivedb.reference.PreparedStatement( this, stmt2 );
 		stmt.setKey( key );
 		encacheStatement( pstmtsAvail, pstmtsInUse, stmt, true );
 		return stmt;
@@ -195,19 +195,19 @@ public class Connection implements java.sql.Connection {
 		// TODO: How to encache a statement with arg params?  should we even try?  for now, no.
 
 		java.sql.PreparedStatement stmt2 = delegate.prepareStatement( sql, arg1 );
-		org.hivedb.PreparedStatement stmt = new org.hivedb.PreparedStatement( this, stmt2 );
+		org.hivedb.reference.PreparedStatement stmt = new org.hivedb.reference.PreparedStatement( this, stmt2 );
 		return stmt;
 	}
 
 	public java.sql.PreparedStatement prepareStatement(String sql, String[] arg1)
 			throws SQLException {
 		String key = sql + "--";
-		org.hivedb.PreparedStatement stmt = (org.hivedb.PreparedStatement)getCachedStatement( pstmtsAvail, pstmtsInUse, key );
+		org.hivedb.reference.PreparedStatement stmt = (org.hivedb.reference.PreparedStatement)getCachedStatement( pstmtsAvail, pstmtsInUse, key );
 		if( stmt != null ) {
 			return stmt;
 		} // if
 		java.sql.PreparedStatement stmt2 = delegate.prepareStatement( sql, arg1 );
-		stmt = new org.hivedb.PreparedStatement( this, stmt2 );
+		stmt = new org.hivedb.reference.PreparedStatement( this, stmt2 );
 		stmt.setKey( key );
 		encacheStatement( pstmtsAvail, pstmtsInUse, stmt, true );
 		return stmt;
@@ -216,13 +216,13 @@ public class Connection implements java.sql.Connection {
 	public java.sql.PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency)
 			throws SQLException {
 		String key = sql + "-" + resultSetType + "-" + resultSetConcurrency;
-		org.hivedb.PreparedStatement stmt = (org.hivedb.PreparedStatement)getCachedStatement( pstmtsAvail, pstmtsInUse, key );
+		org.hivedb.reference.PreparedStatement stmt = (org.hivedb.reference.PreparedStatement)getCachedStatement( pstmtsAvail, pstmtsInUse, key );
 		if( stmt != null ) {
 			return stmt;
 		} // if
 
 		java.sql.PreparedStatement stmt2 = delegate.prepareStatement( sql, resultSetType, resultSetConcurrency );
-		stmt = new org.hivedb.PreparedStatement( this, stmt2 );
+		stmt = new org.hivedb.reference.PreparedStatement( this, stmt2 );
 		stmt.setKey( key );
 		encacheStatement( pstmtsAvail, pstmtsInUse, stmt, true );
 		
@@ -232,14 +232,14 @@ public class Connection implements java.sql.Connection {
 	public java.sql.PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency,
 			int arg3) throws SQLException {
 		String key = sql + "-" + resultSetType + "-" + resultSetConcurrency + "-" + arg3;
-		org.hivedb.PreparedStatement stmt = (org.hivedb.PreparedStatement)getCachedStatement( pstmtsAvail, pstmtsInUse, key );
+		org.hivedb.reference.PreparedStatement stmt = (org.hivedb.reference.PreparedStatement)getCachedStatement( pstmtsAvail, pstmtsInUse, key );
 		if( stmt != null ) {
 			return stmt;
 		} // if
 
 		java.sql.PreparedStatement stmt2 = delegate.prepareStatement( sql, resultSetType, resultSetConcurrency, arg3 );
 		
-		stmt = new org.hivedb.PreparedStatement( this, stmt2 );
+		stmt = new org.hivedb.reference.PreparedStatement( this, stmt2 );
 		stmt.setKey( key );
 		encacheStatement( pstmtsAvail, pstmtsInUse, stmt, true );
 		return stmt;
@@ -292,7 +292,7 @@ public class Connection implements java.sql.Connection {
 	protected java.sql.Statement getCachedStatement( Hashtable<String, Vector<Statement>> avail, 
 			Hashtable<String, Vector<Statement>> inUse, String key ) {
 		Vector<Statement> list = avail.get( key );
-		org.hivedb.Statement stmt = null;
+		org.hivedb.reference.Statement stmt = null;
 		if( list == null) {
 			return null;
 		} // if
@@ -300,7 +300,7 @@ public class Connection implements java.sql.Connection {
 			if( list.size() == 0) {
 				return null;
 			} // if
-			stmt = (org.hivedb.Statement)list.remove( list.size() - 1 );
+			stmt = (org.hivedb.reference.Statement)list.remove( list.size() - 1 );
 		} // synchronized
 		list = inUse.get( key );
 		if( list == null ) {
@@ -319,7 +319,7 @@ public class Connection implements java.sql.Connection {
 
 	protected void encacheStatement( Hashtable<String, Vector<Statement>> avail, 
 			Hashtable<String, Vector<Statement>> inUse, 
-			org.hivedb.Statement stmt, boolean toBeUsed ) {
+			org.hivedb.reference.Statement stmt, boolean toBeUsed ) {
 		Vector<Statement> list = avail.get( stmt.getKey() );
 		if( list == null ) {
 			list = new Vector<Statement>();
@@ -337,12 +337,12 @@ public class Connection implements java.sql.Connection {
 		list.add( stmt );
 	} // encacheStatement
 
-	protected void releaseStatement( org.hivedb.Statement stmt ) {
+	protected void releaseStatement( org.hivedb.reference.Statement stmt ) {
 		Hashtable<String, Vector<Statement>> avail = null, inUse = null;
-		if( stmt.getStatementType() == org.hivedb.Statement.TYPE_STATEMENT ) {
+		if( stmt.getStatementType() == org.hivedb.reference.Statement.TYPE_STATEMENT ) {
 			avail = stmtsAvail;
 			inUse = stmtsInUse;
-		} else if( stmt.getStatementType() == org.hivedb.Statement.TYPE_CALLABLE ) {
+		} else if( stmt.getStatementType() == org.hivedb.reference.Statement.TYPE_CALLABLE ) {
 			avail = cstmtsAvail;
 			inUse = cstmtsInUse;
 		} else {
@@ -389,7 +389,7 @@ public class Connection implements java.sql.Connection {
 		} // for
 		
 		// tell each of the statements to close
-		for( org.hivedb.Statement stmt : allStatements ) {
+		for( org.hivedb.reference.Statement stmt : allStatements ) {
 			stmt.close();
 		} // for
 		

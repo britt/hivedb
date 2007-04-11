@@ -4,7 +4,7 @@
  * 
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
  */
-package org.hivedb;
+package org.hivedb.reference;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -22,13 +22,13 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 
-public class PreparedStatement  extends org.hivedb.Statement implements java.sql.PreparedStatement{
+public class PreparedStatement  extends Statement implements java.sql.PreparedStatement{
 
 	public PreparedStatement() {
 	
 	}
 	
-	public PreparedStatement( org.hivedb.Connection conn, java.sql.PreparedStatement ps ) throws SQLException {
+	public PreparedStatement( org.hivedb.reference.Connection conn, java.sql.PreparedStatement ps ) throws SQLException {
 		delegate = ps;
 		_conn = conn;
 		type = TYPE_PREPARED;
@@ -52,7 +52,7 @@ public class PreparedStatement  extends org.hivedb.Statement implements java.sql
 	
 	public java.sql.ResultSet executeQuery() throws SQLException {
 		java.sql.ResultSet rset = delegate.executeQuery();
-		org.hivedb.ResultSet rset2 = new org.hivedb.ResultSet( this, rset );
+		ResultSet rset2 = new ResultSet( this, rset );
 		
 		return rset2;
 	}

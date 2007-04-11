@@ -4,7 +4,7 @@
  * 
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
  */
-package org.hivedb;
+package org.hivedb.reference;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -66,7 +66,7 @@ public class Statement implements java.sql.Statement {
 		} // if
 
 		java.sql.ResultSet rset = delegate.executeQuery( sql );
-		org.hivedb.ResultSet jhrs = new org.hivedb.ResultSet( this, rset );
+		org.hivedb.reference.ResultSet jhrs = new org.hivedb.reference.ResultSet( this, rset );
 		_resultSets.add( jhrs );
 		
 		return jhrs;
@@ -105,7 +105,7 @@ public class Statement implements java.sql.Statement {
 
 	public java.sql.ResultSet getGeneratedKeys() throws SQLException {
 		java.sql.ResultSet rset = delegate.getGeneratedKeys();
-		org.hivedb.ResultSet jhrs = new org.hivedb.ResultSet( this, rset );
+		org.hivedb.reference.ResultSet jhrs = new org.hivedb.reference.ResultSet( this, rset );
 		_resultSets.add( jhrs );
 		
 		return jhrs;
@@ -205,7 +205,7 @@ public class Statement implements java.sql.Statement {
 		_resultSets.add( rset );
 	} // registerResultSet
 	
-	public void closeResultSet( org.hivedb.ResultSet rset ) {
+	public void closeResultSet( org.hivedb.reference.ResultSet rset ) {
 		_resultSets.remove( rset );
 	} // closeResultSet
 	
@@ -220,10 +220,10 @@ public class Statement implements java.sql.Statement {
 		_resultSets.clear();
 	} // closeResultSets
 
-	protected org.hivedb.Connection _conn           = null;
+	protected org.hivedb.reference.Connection _conn           = null;
 	protected java.sql.Statement   delegate        = null;
 	protected Vector<ResultSet>               _resultSets     = new Vector<ResultSet>();
-	protected org.hivedb.ResultSet  _queryResultSet = null;
+	protected ResultSet  _queryResultSet = null;
 	protected int                  type            = TYPE_STATEMENT;
 	protected String               key             = null;
 }

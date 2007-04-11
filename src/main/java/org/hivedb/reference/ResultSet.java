@@ -4,7 +4,7 @@
  * 
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
  */
-package org.hivedb;
+package org.hivedb.reference;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -25,7 +25,7 @@ import java.util.Map;
 
 public class ResultSet implements java.sql.ResultSet {
 
-	public ResultSet( org.hivedb.Statement owner, java.sql.ResultSet rset ) {
+	public ResultSet( org.hivedb.reference.Statement owner, java.sql.ResultSet rset ) {
 		this.owner = owner;
 		this.delegate = rset;
 		owner.registerResultSet( this );
@@ -611,5 +611,5 @@ public class ResultSet implements java.sql.ResultSet {
 	}
 
 	protected java.sql.ResultSet delegate;
-	protected org.hivedb.Statement owner;
+	protected org.hivedb.reference.Statement owner;
 }
