@@ -1,7 +1,6 @@
 package org.hivedb.util;
 
 import org.apache.commons.dbcp.BasicDataSource;
-import org.hivedb.Hive;
 import org.hivedb.HiveDbDialect;
 import org.hivedb.meta.GlobalSchema;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
