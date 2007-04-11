@@ -1,4 +1,4 @@
-package org.hivedb.util.scenarioBuilder;
+package org.hivedb.util;
 
 import org.jmock.core.DynamicMockError;
 import org.jmock.core.Invocation;

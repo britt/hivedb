@@ -7,18 +7,18 @@ import java.util.Map;
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
 import org.hivedb.meta.SecondaryIndex;
-import org.hivedb.util.scenarioBuilder.Filter;
-import org.hivedb.util.scenarioBuilder.Generate;
-import org.hivedb.util.scenarioBuilder.Generator;
+import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Generate;
+import org.hivedb.util.functional.Generator;
+import org.hivedb.util.functional.NumberIterator;
+import org.hivedb.util.functional.Predicate;
+import org.hivedb.util.functional.RingIteratorable;
+import org.hivedb.util.functional.Transform;
+import org.hivedb.util.functional.Unary;
 import org.hivedb.util.scenarioBuilder.HiveScenarioConfig;
-import org.hivedb.util.scenarioBuilder.NumberIterator;
-import org.hivedb.util.scenarioBuilder.Predicate;
 import org.hivedb.util.scenarioBuilder.PrimaryIndexIdentifiable;
 import org.hivedb.util.scenarioBuilder.ResourceIdentifiable;
-import org.hivedb.util.scenarioBuilder.RingIteratorable;
 import org.hivedb.util.scenarioBuilder.SecondaryIndexIdentifiable;
-import org.hivedb.util.scenarioBuilder.Transform;
-import org.hivedb.util.scenarioBuilder.Unary;
 
 public class GenerateHiveIndexKeys {
 	

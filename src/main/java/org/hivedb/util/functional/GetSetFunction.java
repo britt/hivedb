@@ -1,4 +1,4 @@
-package org.hivedb.util.scenarioBuilder;
+package org.hivedb.util.functional;
 
 public abstract class GetSetFunction {
 	public abstract Object get();

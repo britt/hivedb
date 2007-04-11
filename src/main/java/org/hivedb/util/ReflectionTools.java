@@ -1,8 +1,13 @@
-package org.hivedb.util.scenarioBuilder;
+package org.hivedb.util;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
+
+import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Predicate;
+import org.hivedb.util.functional.Transform;
+import org.hivedb.util.functional.Unary;
 
 public class ReflectionTools {
 	

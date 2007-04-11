@@ -18,7 +18,7 @@ import org.hivedb.HiveException;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.DerbyTestCase;
 import org.hivedb.util.IndexSchemaTestScenario;
-import org.hivedb.util.scenarioBuilder.Atom;
+import org.hivedb.util.functional.Atom;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 

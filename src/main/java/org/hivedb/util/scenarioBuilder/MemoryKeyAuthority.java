@@ -4,6 +4,7 @@
 package org.hivedb.util.scenarioBuilder;
 
 import org.hivedb.management.KeyAuthority;
+import org.hivedb.util.functional.Generator;
 
 public class MemoryKeyAuthority implements KeyAuthorityCreator {
 	

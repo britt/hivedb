@@ -6,7 +6,7 @@ import org.hivedb.meta.Node;
 import org.hivedb.persistence.DaoTestCase;
 import org.hivedb.util.AssertUtils;
 import org.hivedb.util.AssertUtils.Toss;
-import org.hivedb.util.scenarioBuilder.Atom;
+import org.hivedb.util.functional.Atom;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 

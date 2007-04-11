@@ -1,9 +1,10 @@
-package org.hivedb.util.scenarioBuilder;
+package org.hivedb.util.functional;
 
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
+
 
 class DebugMap<K,V> implements Map<K,V>
 {

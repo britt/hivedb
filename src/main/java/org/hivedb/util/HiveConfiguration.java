@@ -13,10 +13,10 @@ import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
-import org.hivedb.util.scenarioBuilder.Filter;
-import org.hivedb.util.scenarioBuilder.Pair;
-import org.hivedb.util.scenarioBuilder.Transform;
-import org.hivedb.util.scenarioBuilder.Unary;
+import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Pair;
+import org.hivedb.util.functional.Transform;
+import org.hivedb.util.functional.Unary;
 
 public class HiveConfiguration extends Hive {
 

@@ -1,4 +1,4 @@
-package org.hivedb.util.scenarioBuilder;
+package org.hivedb.util.functional;
 
 import java.util.ArrayList;
 import java.util.Collection;

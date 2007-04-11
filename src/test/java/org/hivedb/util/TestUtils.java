@@ -2,7 +2,6 @@ package org.hivedb.util;
 
 import junit.framework.Assert;
 
-import org.hivedb.util.scenarioBuilder.MaximumInvocationCountMatcher;
 import org.jmock.core.InvocationMatcher;
 
 public class TestUtils {

@@ -9,6 +9,10 @@ import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.util.GenerateHiveIndexKeys;
 import org.hivedb.util.InstallHiveIndexSchema;
+import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Predicate;
+import org.hivedb.util.functional.Transform;
+import org.hivedb.util.functional.Unary;
 
 /**
  *

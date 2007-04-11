@@ -23,18 +23,18 @@ import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.JdbcTypeMapper;
-import org.hivedb.util.scenarioBuilder.AssertUtils;
-import org.hivedb.util.scenarioBuilder.Atom;
-import org.hivedb.util.scenarioBuilder.Filter;
+import org.hivedb.util.functional.AssertUtils;
+import org.hivedb.util.functional.Atom;
+import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.RingIteratorable;
+import org.hivedb.util.functional.Transform;
+import org.hivedb.util.functional.Unary;
+import org.hivedb.util.functional.Undoable;
 import org.hivedb.util.scenarioBuilder.HiveScenario;
 import org.hivedb.util.scenarioBuilder.HiveScenarioConfig;
 import org.hivedb.util.scenarioBuilder.PrimaryIndexIdentifiable;
 import org.hivedb.util.scenarioBuilder.ResourceIdentifiable;
-import org.hivedb.util.scenarioBuilder.RingIteratorable;
 import org.hivedb.util.scenarioBuilder.SecondaryIndexIdentifiable;
-import org.hivedb.util.scenarioBuilder.Transform;
-import org.hivedb.util.scenarioBuilder.Unary;
-import org.hivedb.util.scenarioBuilder.Undoable;
 
 public class HiveScenarioTest {
 	

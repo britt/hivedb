@@ -10,6 +10,9 @@ import java.util.List;
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
 import org.hivedb.meta.Node;
+import org.hivedb.util.functional.Generate;
+import org.hivedb.util.functional.Generator;
+import org.hivedb.util.functional.NumberIterator;
 
 public class HiveScenarioMarauderConfig implements HiveScenarioConfig {
 	

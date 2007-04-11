@@ -1,4 +1,5 @@
-package org.hivedb.util.scenarioBuilder;
+package org.hivedb.util.functional;
+
 
 public abstract class Runtimer<T> implements DelayedTry<T> {
 
