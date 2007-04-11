@@ -60,24 +60,31 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	}
 	
 	private SimpleJdbcDaoSupport get(NodeSemaphore semaphore, AccessType intention) throws HiveReadOnlyException { 
-		if(intention == AccessType.ReadWrite && (hive.isReadOnly() || semaphore.isReadOnly())){
+		Node node = null;
+		try {
+			node = hive.getPartitionDimension(partitionDimension).getNodeGroup().getNode(semaphore.getId());
+		} catch (HiveException e) {
+			throw new HiveRuntimeException(e.getMessage());
+		}
+		
+		if(intention == AccessType.ReadWrite && (hive.isReadOnly() || node.isReadOnly() || semaphore.isReadOnly())){
 			//failure
 			throw new HiveReadOnlyException("This partition key cannot be written to at this time.");
 		}
-		else
-			if( jdbcDaoSupports.containsKey(hash(semaphore.getId(), intention))){
-				// success case
-				return jdbcDaoSupports.get(hash(semaphore.getId(), intention));
+		else if( jdbcDaoSupports.containsKey(hash(semaphore.getId(), intention))){
+			// success case
+			return jdbcDaoSupports.get(hash(semaphore.getId(), intention));
+		}
+		else {
+			try {
+				SimpleJdbcDaoSupport dao = addDataSource(semaphore.getId(), intention);
+				//success
+				return dao;
+			} catch (HiveException e) {
+				//failure
+				throw new HiveRuntimeException(e.getMessage());
 			}
-			else
-				try {
-					SimpleJdbcDaoSupport dao = addDataSource(semaphore.getId(), intention);
-					//success
-					return dao;
-				} catch (HiveException e) {
-					//failure
-					throw new HiveRuntimeException(e.getMessage());
-				}
+		}
 	}
 	
 	/**
@@ -89,13 +96,15 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	 * @throws HiveReadOnlyException
 	 */
 	public SimpleJdbcDaoSupport get(Object primaryIndexKey, AccessType intention) throws HiveReadOnlyException {
+		NodeSemaphore semaphore = null;
 		try {
-			return get(hive.getNodeSemaphoreOfPrimaryIndexKey(partitionDimension, primaryIndexKey), intention);
+			semaphore = hive.getNodeSemaphoreOfPrimaryIndexKey(partitionDimension, primaryIndexKey);
 		} catch (HiveException e) {
 			throw new RuntimeException(e);
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
+		return get(semaphore, intention);
 	}
 
 	/**
