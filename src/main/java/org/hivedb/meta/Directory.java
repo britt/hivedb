@@ -25,12 +25,11 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Collection;
 
-import javax.management.NotCompliantMBeanException;
 import javax.sql.DataSource;
 
 import org.hivedb.HiveException;
 import org.hivedb.StatisticsProxy;
-import org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean;
+import org.hivedb.management.statistics.Counter;
 import org.hivedb.util.JdbcTypeMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
@@ -39,17 +38,13 @@ import org.springframework.jdbc.core.support.JdbcDaoSupport;
 
 public class Directory extends JdbcDaoSupport {
 	private PartitionDimension partitionDimension;
-	private DirectoryPerformanceStatisticsMBean stats;
+	private Counter performanceStatistics;
+	private boolean performanceMonitoringEnabled = true;
 	
 	public Directory(PartitionDimension dimension, DataSource dataSource) {
 		this.partitionDimension = dimension;
 		this.setDataSource(dataSource);
-//		 TODO Solve where to get these
-		try {
-			this.stats = new DirectoryPerformanceStatisticsMBean(1000,100);
-		} catch (NotCompliantMBeanException e) {
-			
-		}
+		this.performanceStatistics = new NoOpStatistics();
 	}
 	
 	public PartitionDimension getPartitionDimension() {
@@ -74,7 +69,7 @@ public class Directory extends JdbcDaoSupport {
 		});
 		
 		StatisticsProxy<Object, HiveException> proxy = 
-			new StatisticsProxy<Object, HiveException>(stats, PRIMARYINDEXWRITECOUNT, PRIMARYINDEXWRITEFAILURES, PRIMARYINDEXWRITETIME) {
+			new StatisticsProxy<Object, HiveException>(performanceStatistics, PRIMARYINDEXWRITECOUNT, PRIMARYINDEXWRITEFAILURES, PRIMARYINDEXWRITETIME) {
 			
 			@Override
 			protected Object doWork() throws HiveException {
@@ -102,7 +97,7 @@ public class Directory extends JdbcDaoSupport {
 		});
 		
 		StatisticsProxy<Object, HiveException> proxy = 
-			new StatisticsProxy<Object, HiveException>(stats, SECONDARYINDEXWRITECOUNT, SECONDARYINDEXWRITEFAILURES, SECONDARYINDEXWRITETIME) {
+			new StatisticsProxy<Object, HiveException>(performanceStatistics, SECONDARYINDEXWRITECOUNT, SECONDARYINDEXWRITEFAILURES, SECONDARYINDEXWRITETIME) {
 			
 				@Override
 				protected Object doWork() throws HiveException {
@@ -132,7 +127,7 @@ public class Directory extends JdbcDaoSupport {
 					JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass())
 		});
 		
-		StatisticsProxy<Object, HiveException> proxy = new StatisticsProxy<Object, HiveException>(stats, PRIMARYINDEXWRITECOUNT, PRIMARYINDEXWRITEFAILURES, PRIMARYINDEXWRITETIME) {
+		StatisticsProxy<Object, HiveException> proxy = new StatisticsProxy<Object, HiveException>(performanceStatistics, PRIMARYINDEXWRITECOUNT, PRIMARYINDEXWRITEFAILURES, PRIMARYINDEXWRITETIME) {
 
 			@Override
 			protected Object doWork() throws HiveException {
@@ -159,7 +154,7 @@ public class Directory extends JdbcDaoSupport {
 		});
 		
 		
-		StatisticsProxy<Object, HiveException> proxy = new StatisticsProxy<Object, HiveException>(stats, PRIMARYINDEXWRITECOUNT, PRIMARYINDEXWRITEFAILURES, PRIMARYINDEXWRITETIME) {
+		StatisticsProxy<Object, HiveException> proxy = new StatisticsProxy<Object, HiveException>(performanceStatistics, PRIMARYINDEXWRITECOUNT, PRIMARYINDEXWRITEFAILURES, PRIMARYINDEXWRITETIME) {
 
 			@Override
 			protected Object doWork() throws HiveException {
@@ -186,7 +181,7 @@ public class Directory extends JdbcDaoSupport {
 				JdbcTypeMapper.primitiveTypeToJdbcType(secondaryIndexKey.getClass())
 		});
 		
-		StatisticsProxy<Object, HiveException> proxy = new StatisticsProxy<Object, HiveException>(stats, SECONDARYINDEXWRITECOUNT, SECONDARYINDEXWRITEFAILURES, SECONDARYINDEXWRITETIME){
+		StatisticsProxy<Object, HiveException> proxy = new StatisticsProxy<Object, HiveException>(performanceStatistics, SECONDARYINDEXWRITECOUNT, SECONDARYINDEXWRITEFAILURES, SECONDARYINDEXWRITETIME){
 			@Override
 			protected Object doWork() throws HiveException {
 				if (j.update(creatorFactory.newPreparedStatementCreator(parameters)) != 1)
@@ -208,7 +203,7 @@ public class Directory extends JdbcDaoSupport {
 				JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass())
 		});
 		
-		StatisticsProxy<Integer, HiveException> proxy = new StatisticsProxy<Integer, HiveException>(stats, SECONDARYINDEXDELETECOUNT, SECONDARYINDEXDELETEFAILURES, SECONDARYINDEXDELETETIME) {
+		StatisticsProxy<Integer, HiveException> proxy = new StatisticsProxy<Integer, HiveException>(performanceStatistics, SECONDARYINDEXDELETECOUNT, SECONDARYINDEXDELETEFAILURES, SECONDARYINDEXDELETETIME) {
 
 			@Override
 			protected Integer doWork() throws HiveException {
@@ -236,7 +231,7 @@ public class Directory extends JdbcDaoSupport {
 				JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass())
 		});
 		
-		StatisticsProxy<Object, HiveException> proxy = new StatisticsProxy<Object, HiveException>(stats, PRIMARYINDEXDELETECOUNT, PRIMARYINDEXDELETEFAILURES, PRIMARYINDEXDELETETIME){
+		StatisticsProxy<Object, HiveException> proxy = new StatisticsProxy<Object, HiveException>(performanceStatistics, PRIMARYINDEXDELETECOUNT, PRIMARYINDEXDELETEFAILURES, PRIMARYINDEXDELETETIME){
 			@Override
 			protected Object doWork() throws HiveException {
 				if (j.update(creatorFactory.newPreparedStatementCreator(parameters)) != 1)
@@ -259,7 +254,7 @@ public class Directory extends JdbcDaoSupport {
 		});
 		
 		StatisticsProxy<Integer, HiveException> proxy = 
-			new StatisticsProxy<Integer, HiveException>(stats, SECONDARYINDEXDELETECOUNT, SECONDARYINDEXDELETEFAILURES, SECONDARYINDEXDELETETIME) {
+			new StatisticsProxy<Integer, HiveException>(performanceStatistics, SECONDARYINDEXDELETECOUNT, SECONDARYINDEXDELETEFAILURES, SECONDARYINDEXDELETETIME) {
 			@Override
 			protected Integer doWork() throws HiveException {
 				if (j.update(creatorFactory.newPreparedStatementCreator(parameters)) != 1)
@@ -273,7 +268,7 @@ public class Directory extends JdbcDaoSupport {
 	public boolean doesPrimaryIndexKeyExist(final Object primaryIndexKey) {
 		final JdbcTemplate j = getJdbcTemplate();
 		
-		StatisticsProxy<Boolean, RuntimeException> proxy = new StatisticsProxy<Boolean, RuntimeException>(stats, PRIMARYINDEXREADCOUNT, PRIMARYINDEXREADFAILURES, PRIMARYINDEXREADTIME) {
+		StatisticsProxy<Boolean, RuntimeException> proxy = new StatisticsProxy<Boolean, RuntimeException>(performanceStatistics, PRIMARYINDEXREADCOUNT, PRIMARYINDEXREADFAILURES, PRIMARYINDEXREADTIME) {
 
 			@Override
 			protected Boolean doWork() throws RuntimeException {
@@ -290,7 +285,7 @@ public class Directory extends JdbcDaoSupport {
 	
 	public int getNodeIdOfPrimaryIndexKey(final Object primaryIndexKey) {
 		final JdbcTemplate j = getJdbcTemplate();
-		StatisticsProxy<Integer, RuntimeException> proxy = new StatisticsProxy<Integer, RuntimeException>(stats, PRIMARYINDEXREADCOUNT, PRIMARYINDEXREADFAILURES, PRIMARYINDEXREADTIME) {
+		StatisticsProxy<Integer, RuntimeException> proxy = new StatisticsProxy<Integer, RuntimeException>(performanceStatistics, PRIMARYINDEXREADCOUNT, PRIMARYINDEXREADFAILURES, PRIMARYINDEXREADTIME) {
 			@Override
 			protected Integer doWork() throws RuntimeException {
 				return j.queryForInt("select node from " + IndexSchema.getPrimaryIndexTableName(partitionDimension)														 
@@ -304,7 +299,7 @@ public class Directory extends JdbcDaoSupport {
 	public NodeSemaphore getNodeSemamphoreOfPrimaryIndexKey(final Object primaryIndexKey) {
 		final JdbcTemplate j = getJdbcTemplate();
 		StatisticsProxy<NodeSemaphore, RuntimeException> proxy = 
-			new StatisticsProxy<NodeSemaphore, RuntimeException>(stats, PRIMARYINDEXREADCOUNT, PRIMARYINDEXREADFAILURES, PRIMARYINDEXREADTIME){
+			new StatisticsProxy<NodeSemaphore, RuntimeException>(performanceStatistics, PRIMARYINDEXREADCOUNT, PRIMARYINDEXREADFAILURES, PRIMARYINDEXREADTIME){
 			@Override
 			protected NodeSemaphore doWork() throws RuntimeException {
 				return (NodeSemaphore) j.queryForObject("select node,read_only from " + IndexSchema.getPrimaryIndexTableName(partitionDimension)														 
@@ -319,7 +314,7 @@ public class Directory extends JdbcDaoSupport {
 	@SuppressWarnings("unchecked")
 	public boolean getReadOnlyOfPrimaryIndexKey(final Object primaryIndexKey) {
 		final JdbcTemplate j = getJdbcTemplate();
-		StatisticsProxy<Boolean, RuntimeException> proxy = new StatisticsProxy<Boolean, RuntimeException>(stats, PRIMARYINDEXREADCOUNT, PRIMARYINDEXREADFAILURES, PRIMARYINDEXREADTIME) {
+		StatisticsProxy<Boolean, RuntimeException> proxy = new StatisticsProxy<Boolean, RuntimeException>(performanceStatistics, PRIMARYINDEXREADCOUNT, PRIMARYINDEXREADFAILURES, PRIMARYINDEXREADTIME) {
 			@Override
 			protected Boolean doWork() throws RuntimeException {
 				return (Boolean)j.queryForObject("select read_only from " + IndexSchema.getPrimaryIndexTableName(partitionDimension)														 
@@ -333,7 +328,7 @@ public class Directory extends JdbcDaoSupport {
 
 	public boolean doesSecondaryIndexKeyExist(final SecondaryIndex secondaryIndex,final Object secondaryIndexKey) {
 		final JdbcTemplate j = getJdbcTemplate();
-		StatisticsProxy<Boolean, RuntimeException> proxy = new StatisticsProxy<Boolean, RuntimeException>(stats, SECONDARYINDEXREADCOUNT, SECONDARYINDEXREADFAILURES, SECONDARYINDEXREADTIME) {
+		StatisticsProxy<Boolean, RuntimeException> proxy = new StatisticsProxy<Boolean, RuntimeException>(performanceStatistics, SECONDARYINDEXREADCOUNT, SECONDARYINDEXREADFAILURES, SECONDARYINDEXREADTIME) {
 			@Override
 			protected Boolean doWork() throws RuntimeException {
 				return j.query("select id from " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex)
@@ -349,7 +344,7 @@ public class Directory extends JdbcDaoSupport {
 	public Integer getNodeIdOfSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey)
 	{
 		final JdbcTemplate j = getJdbcTemplate();
-		StatisticsProxy<Integer, RuntimeException> proxy = new StatisticsProxy<Integer, RuntimeException>(stats, SECONDARYINDEXREADCOUNT, SECONDARYINDEXREADFAILURES, SECONDARYINDEXREADTIME) {
+		StatisticsProxy<Integer, RuntimeException> proxy = new StatisticsProxy<Integer, RuntimeException>(performanceStatistics, SECONDARYINDEXREADCOUNT, SECONDARYINDEXREADFAILURES, SECONDARYINDEXREADTIME) {
 			@Override
 			protected Integer doWork() throws RuntimeException {
 				return j.queryForInt("select p.node from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
@@ -364,7 +359,7 @@ public class Directory extends JdbcDaoSupport {
 	public NodeSemaphore getNodeSemaphoreOfSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey)
 	{
 		final JdbcTemplate j = getJdbcTemplate();
-		StatisticsProxy<NodeSemaphore, RuntimeException> proxy = new StatisticsProxy<NodeSemaphore, RuntimeException>(stats, SECONDARYINDEXREADCOUNT, SECONDARYINDEXREADFAILURES, SECONDARYINDEXREADTIME) {
+		StatisticsProxy<NodeSemaphore, RuntimeException> proxy = new StatisticsProxy<NodeSemaphore, RuntimeException>(performanceStatistics, SECONDARYINDEXREADCOUNT, SECONDARYINDEXREADFAILURES, SECONDARYINDEXREADTIME) {
 			@Override
 			protected NodeSemaphore doWork() throws RuntimeException {
 				return (NodeSemaphore) j.queryForObject("select p.node,p.read_only from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
@@ -381,7 +376,7 @@ public class Directory extends JdbcDaoSupport {
 	public Object getPrimaryIndexKeyOfSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey)
 	{
 		final JdbcTemplate j = getJdbcTemplate();
-		StatisticsProxy<Object, RuntimeException> proxy = new StatisticsProxy<Object, RuntimeException>(stats, SECONDARYINDEXREADCOUNT, SECONDARYINDEXREADFAILURES, SECONDARYINDEXREADTIME) {
+		StatisticsProxy<Object, RuntimeException> proxy = new StatisticsProxy<Object, RuntimeException>(performanceStatistics, SECONDARYINDEXREADCOUNT, SECONDARYINDEXREADFAILURES, SECONDARYINDEXREADTIME) {
 			@Override
 			protected Object doWork() throws RuntimeException {
 				try {
@@ -404,7 +399,7 @@ public class Directory extends JdbcDaoSupport {
 	{
 		final JdbcTemplate j = getJdbcTemplate();
 		final String secondaryIndexTableName = IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex);
-		StatisticsProxy<Collection, RuntimeException> proxy = new StatisticsProxy<Collection, RuntimeException>(stats, SECONDARYINDEXREADCOUNT, SECONDARYINDEXREADFAILURES, SECONDARYINDEXREADTIME) {
+		StatisticsProxy<Collection, RuntimeException> proxy = new StatisticsProxy<Collection, RuntimeException>(performanceStatistics, SECONDARYINDEXREADCOUNT, SECONDARYINDEXREADFAILURES, SECONDARYINDEXREADTIME) {
 			@Override
 			protected Collection doWork() throws RuntimeException {
 				return j.query("select s.id from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
@@ -454,5 +449,32 @@ public class Directory extends JdbcDaoSupport {
 		public Object mapRow(ResultSet rs, int arg1) throws SQLException {
 			return new NodeSemaphore(rs.getInt("node"), rs.getBoolean("read_only"));
 		}	
+	}
+
+	public Counter getPerformanceStatistics() {
+		return performanceStatistics;
+	}
+
+	public void setPerformanceStatistics(
+			Counter performanceStatistics) {
+		this.performanceStatistics = performanceStatistics;
+	}
+
+	public boolean isPerformanceMonitoringEnabled() {
+		return performanceStatistics.getClass() != NoOpStatistics.class && performanceMonitoringEnabled;
+	}
+
+	public void setPerformanceMonitoringEnabled(boolean performanceMonitoringEnabled) {
+		this.performanceMonitoringEnabled = performanceMonitoringEnabled;
+	}
+	
+	private class NoOpStatistics implements Counter {
+
+		public void add(String key, long value) {}
+
+		public void dercrement(String key) {}
+
+		public void increment(String key) {}
+
 	}
 }

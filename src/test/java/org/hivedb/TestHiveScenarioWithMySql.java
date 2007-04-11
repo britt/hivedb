@@ -3,17 +3,16 @@ package org.hivedb;
 import org.hivedb.util.MysqlTestCase;
 import org.hivedb.util.scenarioBuilder.HiveScenarioMarauderConfig;
 import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
 
 public class TestHiveScenarioWithMySql extends MysqlTestCase {
 	
 	@BeforeTest
 	public void setUp() {
-		try {
-			Class.forName("com.mysql.jdbc.Driver");
-			recycleDatabase();
-		} 
-		catch (Exception e) { throw new RuntimeException("Failed to load driver class"); }
+//		try {
+//			Class.forName("com.mysql.jdbc.Driver");
+//			recycleDatabase();
+//		} 
+//		catch (Exception e) { throw new RuntimeException("Failed to load driver class"); }
 	}
 	
 	/**

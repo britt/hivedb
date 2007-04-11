@@ -13,7 +13,7 @@ public class InstallHiveGlobalSchema {
 	 * @param connectString
 	 * @return
 	 */
-	public static Hive install(String connectString) {
+	public static void install(String connectString) {
 		try {
 			try {
 				HiveDbDialect dialect =  DriverLoader.discernDialect(connectString);
@@ -23,12 +23,13 @@ public class InstallHiveGlobalSchema {
 				throw new RuntimeException(e);
 			}
 			BasicDataSource ds = new HiveBasicDataSource(connectString);
+			HiveSemaphoreDao dao = new HiveSemaphoreDao(ds);
+			
 			try {
-				Hive.load(connectString);
+				dao.get();
 			} catch (Exception e) {
 				new HiveSemaphoreDao(ds).create();
 			}
-			return Hive.load(connectString);
 			
 		} catch (Exception e) {
 			throw new RuntimeException(e);

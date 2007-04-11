@@ -1,6 +1,7 @@
 package org.hivedb.management.statistics;
 
 import java.util.Arrays;
+
 import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
 
@@ -17,7 +18,11 @@ public class HivePerformanceStatisticsMBean extends StandardMBean implements Hiv
 	public HivePerformanceStatisticsMBean(long window, long interval) throws NotCompliantMBeanException{
 		super(HivePerformanceStatistics.class);
 		
-		stats = new RollingAverageStatisticsImpl(Arrays.asList(new String[] {NEWREADCONNECTIONS,NEWWRITECONNECTIONS,CONNECTIONFAILURES}), window, interval);
+		stats = new RollingAverageStatisticsImpl(
+				Arrays.asList(
+						new String[] {NEWREADCONNECTIONS,NEWWRITECONNECTIONS,CONNECTIONFAILURES}), 
+						window, 
+						interval);
 	}
 	
 	

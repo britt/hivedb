@@ -20,6 +20,7 @@ public class TestHivePerformanceStatistics extends DaoTestCase{
 	@BeforeClass
 	public void setup() throws Exception {
 		hive = Hive.load(getConnectString());
+		hive.setPerformanceStatistics(new HivePerformanceStatisticsMBean(10000,1000));
 		hive.addPartitionDimension(createPopulatedPartitionDimension());
 		new IndexSchema(hive.getPartitionDimension(partitionDimensionName())).install();
 		hive.addNode(hive.getPartitionDimension(partitionDimensionName()), createNode());
@@ -38,7 +39,7 @@ public class TestHivePerformanceStatistics extends DaoTestCase{
 		for(int i=0; i<5; i++)
 			connections.add( hive.getConnection( hive.getPartitionDimension(partitionDimensionName()), intKey(), AccessType.ReadWrite));
 		
-		Assert.assertEquals(connections.size(), hive.stats.getSumNewWriteConnections());
+		Assert.assertEquals(connections.size(), hive.getPerformanceStatistics().getSumNewWriteConnections());
 	}
 	
 	@Test
@@ -47,7 +48,7 @@ public class TestHivePerformanceStatistics extends DaoTestCase{
 		for(int i=0; i<5; i++)
 			connections.add( hive.getConnection( hive.getPartitionDimension(partitionDimensionName()), intKey(), AccessType.Read));
 		
-		Assert.assertEquals(connections.size(), hive.stats.getSumNewReadConnections());
+		Assert.assertEquals(connections.size(), hive.getPerformanceStatistics().getSumNewReadConnections());
 	}
 	
 	@Test
@@ -62,7 +63,7 @@ public class TestHivePerformanceStatistics extends DaoTestCase{
 			}
 		}
 		
-		Assert.assertEquals(5, hive.stats.getSumConnectionFailures());
+		Assert.assertEquals(5, hive.getPerformanceStatistics().getSumConnectionFailures());
 	}
 	
 	public Integer intKey() { return new Integer(7); }

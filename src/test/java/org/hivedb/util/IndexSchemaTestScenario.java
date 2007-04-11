@@ -29,7 +29,7 @@ public class IndexSchemaTestScenario {
 		PartitionDimension dimension = partitionDimension();
 		IndexSchema schema = new IndexSchema(dimension);
 		try {
-			Hive hive = InstallHiveGlobalSchema.install(ds.getUrl());
+			Hive hive = Hive.load(ds.getUrl());
 			schema.install();
 			hive.addPartitionDimension(dimension);
 			Resource resource = resource();

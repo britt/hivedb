@@ -15,13 +15,13 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.management.NotCompliantMBeanException;
 import javax.sql.DataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.log4j.Logger;
+import org.hivedb.management.statistics.DirectoryPerformanceStatistics;
+import org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean;
 import org.hivedb.management.statistics.HivePerformanceStatistics;
-import org.hivedb.management.statistics.HivePerformanceStatisticsMBean;
 import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.Directory;
@@ -57,16 +57,14 @@ public class Hive implements Finder, Synchronizeable {
 	private String hiveUri;
 	private int revision;
 	private boolean readOnly;
+	private boolean performanceMonitoringEnabled = true;
 	private Collection<PartitionDimension> partitionDimensions;
-	private PartitionKeyStatisticsDao statistics;
+	private PartitionKeyStatisticsDao partitionStatistics;
 	private Collection<Directory> directories;
 	private HiveSyncDaemon daemon;
 	private DataSource dataSource;
 	private Map<String, JdbcDaoSupportCacheImpl> dataSourceCaches;
-
-	//TODO: This will not stay public.  Its merely that way for testing
-	// and while decisions are made.
-	public HivePerformanceStatistics stats;
+	private HivePerformanceStatistics performanceStatistics;
 	
 	/**
 	 * System entry point. Factory method for all Hive interaction. If the first
@@ -125,7 +123,19 @@ public class Hive implements Finder, Synchronizeable {
 		}
 		return hive;
 	}
-
+	
+	public static Hive load(String hiveDatabaseUri, HivePerformanceStatistics hiveStats, DirectoryPerformanceStatistics directoryStats) throws HiveException {
+		Hive hive = Hive.load(hiveDatabaseUri);
+		hive.setPerformanceStatistics(hiveStats);
+		hive.setPerformanceMonitoringEnabled(true);
+		
+		for(Directory dir : hive.directories){
+			dir.setPerformanceStatistics((DirectoryPerformanceStatisticsMBean)directoryStats);
+			dir.setPerformanceMonitoringEnabled(true);
+		}
+		return hive;
+	}
+	
 	public void create() throws HiveException, SQLException {
 		for (PartitionDimension partitionDimension : this
 				.getPartitionDimensions())
@@ -174,20 +184,12 @@ public class Hive implements Finder, Synchronizeable {
 		this.revision = revision;
 		this.readOnly = readOnly;
 		this.partitionDimensions = partitionDimensions;
-		this.statistics = statistics;
+		this.partitionStatistics = statistics;
 		this.daemon = new HiveSyncDaemon(this);
 		this.dataSource = new HiveBasicDataSource(this.getHiveUri());
 
 		this.directories = new ArrayList<Directory>();
 		
-		try {
-			// TODO: Configurable instiantion 
-			stats = new HivePerformanceStatisticsMBean(1000, 100);
-		} catch (NotCompliantMBeanException e) {
-			// TODO: How should this exception be handled?
-			throw new RuntimeException(e);
-		}
-
 		dataSourceCaches = new ConcurrentHashMap<String, JdbcDaoSupportCacheImpl>();
 		for (PartitionDimension dimension : this.partitionDimensions) {
 			this.directories.add(new Directory(dimension, this.dataSource));
@@ -828,7 +830,7 @@ public class Hive implements Finder, Synchronizeable {
 		getDirectory(secondaryIndex.getResource().getPartitionDimension())
 				.insertSecondaryIndexKey(secondaryIndex, secondaryIndexKey,
 						primaryindexKey);
-		statistics.incrementChildRecordCount(secondaryIndex.getResource()
+		partitionStatistics.incrementChildRecordCount(secondaryIndex.getResource()
 				.getPartitionDimension(), primaryindexKey, 1);
 		sync();
 	}
@@ -1119,7 +1121,7 @@ public class Hive implements Finder, Synchronizeable {
 
 		getDirectory(secondaryIndex.getResource().getPartitionDimension())
 				.deleteSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
-		statistics.decrementChildRecordCount(secondaryIndex.getResource()
+		partitionStatistics.decrementChildRecordCount(secondaryIndex.getResource()
 				.getPartitionDimension(), primaryIndexKey, 1);
 		sync();
 	}
@@ -1561,19 +1563,25 @@ public class Hive implements Finder, Synchronizeable {
 			Connection conn = DriverManager.getConnection(partitionDimension.getNodeGroup().getNode(semaphore.getId()).getUri());
 			if(intention == AccessType.Read) {
 				conn.setReadOnly(true);
-				stats.incrementNewReadConnections();
+				if( isPerformanceMonitoringEnabled() )
+					performanceStatistics.incrementNewReadConnections();
 			} else if( intention == AccessType.ReadWrite){
-				stats.incrementNewWriteConnections();
+				if( isPerformanceMonitoringEnabled() )
+					performanceStatistics.incrementNewWriteConnections();
 			}
 			return conn;
 		} catch (SQLException e) {
-			stats.incrementConnectionFailures();
+			// TODO: Ugh... duplicode
+			if( isPerformanceMonitoringEnabled() )
+				performanceStatistics.incrementConnectionFailures();
 			throw e;
 		} catch( RuntimeException e) {
-			stats.incrementConnectionFailures();
+			if( isPerformanceMonitoringEnabled() )
+				performanceStatistics.incrementConnectionFailures();
 			throw e;
 		} catch (HiveException e) {
-			stats.incrementConnectionFailures();
+			if( isPerformanceMonitoringEnabled() )
+				performanceStatistics.incrementConnectionFailures();
 			throw e;
 		}
 	}
@@ -1685,9 +1693,25 @@ public class Hive implements Finder, Synchronizeable {
 		throw new NoSuchElementException(msg);
 	}
 
-	// TODO: Rename this method
-	public PartitionKeyStatisticsDao getStatistics() {
-		return statistics;
+	public PartitionKeyStatisticsDao getPartitionStatistics() {
+		return partitionStatistics;
+	}
+
+	public HivePerformanceStatistics getPerformanceStatistics() {
+		return performanceStatistics;
+	}
+
+	public void setPerformanceStatistics(
+			HivePerformanceStatistics performanceStatistics) {
+		this.performanceStatistics = performanceStatistics;
+	}
+
+	public boolean isPerformanceMonitoringEnabled() {
+		return performanceStatistics != null && performanceMonitoringEnabled;
+	}
+
+	public void setPerformanceMonitoringEnabled(boolean performanceMonitoringEnabled) {
+		this.performanceMonitoringEnabled = performanceMonitoringEnabled;
 	}
 
 }

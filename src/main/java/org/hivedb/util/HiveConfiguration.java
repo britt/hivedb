@@ -25,7 +25,7 @@ public class HiveConfiguration extends Hive {
 	}
 	public HiveConfiguration(Hive hive)
 	{
-		super(hive.getHiveUri(), hive.getRevision(), hive.isReadOnly(), hive.getPartitionDimensions(), hive.getStatistics());
+		super(hive.getHiveUri(), hive.getRevision(), hive.isReadOnly(), hive.getPartitionDimensions(), hive.getPartitionStatistics());
 	}
 
 	/**

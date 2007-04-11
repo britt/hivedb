@@ -30,7 +30,6 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	private String indexUri;
 	private Collection<Resource> resources;
 
-	// TODO Re-introduce Kevin's stochcastic assignment code  (jmccarthy)
 	private Assigner assigner = new Assigner() {
 		private Random random = new Random(new Date().getTime());	
 		public Node chooseNode(Collection<Node> nodes, Object value) {

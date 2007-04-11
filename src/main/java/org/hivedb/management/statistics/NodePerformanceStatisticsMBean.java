@@ -4,7 +4,7 @@ import java.util.Arrays;
 import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
 
-public class NodePerformanceStatisticsMBean extends StandardMBean implements NodePerformanceStatistics, Counter {
+public class NodePerformanceStatisticsMBean extends StandardMBean implements NodePerformanceStatistics {
 	
 	private static final String READCOUNT = "ReadCount";
 	

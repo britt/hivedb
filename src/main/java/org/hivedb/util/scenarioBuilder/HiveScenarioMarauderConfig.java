@@ -8,14 +8,18 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hivedb.Hive;
+import org.hivedb.HiveException;
 import org.hivedb.meta.Node;
-import org.hivedb.util.InstallHiveGlobalSchema;
 
 public class HiveScenarioMarauderConfig implements HiveScenarioConfig {
 	
 	private Hive hive;
 	public HiveScenarioMarauderConfig(String connectString) {
-		hive = InstallHiveGlobalSchema.install(connectString);
+		try {
+			hive = Hive.load(connectString);
+		} catch (HiveException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 	public Hive getHive() {

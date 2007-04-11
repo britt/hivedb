@@ -32,7 +32,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 		try {
 			sync();
 		} catch (HiveException e) {
-			// TODO: crush for now
+			// crush for now
 		}
 	}
 	
@@ -51,8 +51,6 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 			}
 			revision = hive.getRevision();
 		}
-		
-		// TODO: Add statistics syncing
 	}
 	
 	private SimpleJdbcDaoSupport addDataSource(Integer nodeId, AccessType intention) throws HiveException {

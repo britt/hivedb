@@ -7,7 +7,7 @@
 	 -->
 	 
 	<!--  Use an RMI registry to expose our MBeans remotely through a JSR160 JMXConnectorServer -->
-	<!-- 
+ 	<!-- 
 	<bean id="rmiRegistry"
 		class="org.springframework.remoting.rmi.RmiRegistryFactoryBean" />
 	<bean id="serverConnector"
@@ -17,50 +17,27 @@
 		<property name="serviceUrl"
 			value="service:jmx:rmi://localhost/jndi/rmi://localhost:1099/hivedb-jmx" />
 	</bean>
-	 -->
-	
-	<bean name="NodeFillStatistics" class="org.hivedb.management.statistics.NodeFillStatisticsMBean">
-		<constructor-arg value="100" />
-		<constructor-arg value="1000" />
-		<constructor-arg value="100" />
-	</bean>
-	
-	<bean name="NodeStatistics" class="org.hivedb.management.statistics.HivePerformanceStatisticsMBean">
-		<constructor-arg value="1000" />
-		<constructor-arg value="100" />
-	</bean>
-	
-	<bean name="HiveStatistics" class="org.hivedb.management.statistics.HivePerformanceStatisticsMBean">
-		<constructor-arg value="1000" />
-		<constructor-arg value="100" />
-	</bean>
-	
-	<bean name="DirectoryStatistics" class="org.hivedb.management.statistics.HivePerformanceStatisticsMBean">
-		<constructor-arg value="1000" />
-		<constructor-arg value="100" />
-	</bean>
+	 
 	
 	<bean name="httpAdaptor" class="mx4j.tools.adaptor.http.HttpAdaptor">
 		<property name="port" value="9000" />
-		<property name="host" value="0.0.0.0" />
+		<property name="host" value="127.0.0.1" />
 		<property name="processor">
 			<bean
 				class="mx4j.tools.adaptor.http.XSLTProcessor" />
 		</property>
 	</bean>
+	-->
 
 	<bean id="exporter"
 		class="org.springframework.jmx.export.MBeanExporter"
 		lazy-init="false">
 		<property name="beans">
 			<map>
+			
+			<!-- 
 				<entry key="HiveDB:name=JmxHttpAdaptorFormatted" value-ref="httpAdaptor"/>				
-				<entry key="HiveDB:name=NodeFillStatistics">
-					<ref bean="NodeFillStatistics" />
-				</entry>
-				<entry key="HiveDB:name=NodeStatistics">
-					<ref bean="NodeStatistics" />
-				</entry>
+			 -->
 				<entry key="HiveDB:name=DirectoryStatistics">
 					<ref bean="DirectoryStatistics" />
 				</entry>
@@ -69,7 +46,7 @@
 				</entry>
 			</map>
 		</property>
-		<!-- 
+		<!--
 		<property name="listeners">
 			<list>
 				<bean
@@ -82,7 +59,7 @@
 				</bean>
 			</list>
 		</property>
-		 -->
+		-->
 	</bean>
 	
 	

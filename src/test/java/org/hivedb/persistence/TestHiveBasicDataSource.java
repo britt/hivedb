@@ -16,11 +16,11 @@ public class TestHiveBasicDataSource extends DerbyTestCase{
 		HiveBasicDataSource ds20 = new HiveBasicDataSource(getConnectString());
 		AssertJUnit.assertEquals(20, ds20.getMaxActive());
 		
-		System.out.println("MaxActive: " + ds.getMaxActive());
-		System.out.println("MaxIdle: " + ds.getMaxIdle());
-		System.out.println("MaxOpenPreparedStatements: " + ds.getMaxOpenPreparedStatements());
-		System.out.println("MaxWait: " + ds.getMaxWait());
-		System.out.println("InitialSize: " + ds.getInitialSize());
-		System.out.println("MinIdle: " + ds.getMinIdle());
+//		System.out.println("MaxActive: " + ds.getMaxActive());
+//		System.out.println("MaxIdle: " + ds.getMaxIdle());
+//		System.out.println("MaxOpenPreparedStatements: " + ds.getMaxOpenPreparedStatements());
+//		System.out.println("MaxWait: " + ds.getMaxWait());
+//		System.out.println("InitialSize: " + ds.getInitialSize());
+//		System.out.println("MinIdle: " + ds.getMinIdle());
 	}
 }
