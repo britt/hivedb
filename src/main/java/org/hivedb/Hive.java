@@ -241,7 +241,7 @@ public class Hive implements Finder, Synchronizeable {
 	 * 
 	 * @param readOnly
 	 */
-	public void setReadOnly(boolean readOnly) {
+	protected void setReadOnly(boolean readOnly) {
 		this.readOnly = readOnly;
 	}
 
@@ -255,6 +255,11 @@ public class Hive implements Finder, Synchronizeable {
 		}
 	}
 
+	public void updateNodeReadOnly(Node node, Boolean readOnly) throws HiveException {
+		node.setReadOnly(readOnly);
+		this.updateNode(node);
+	}
+	
 	/**
 	 * Get the current revision of the hive. The revision number is increased
 	 * when new indexes are added to the hive or if the schema of an index is

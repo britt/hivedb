@@ -28,6 +28,7 @@ public abstract class DaoTestCase extends DerbyTestCase {
 
 	@BeforeMethod
 	public void setUp() throws Exception {
+		super.beforeMethod();
 		ds = new HiveBasicDataSource(getConnectString());
 		GlobalSchema schema = new GlobalSchema(getConnectString());
 		schema.install();

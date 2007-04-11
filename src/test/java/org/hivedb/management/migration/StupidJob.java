@@ -1,4 +1,4 @@
-package org.hivedb.management;
+package org.hivedb.management.migration;
 
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;

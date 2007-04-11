@@ -1,4 +1,4 @@
-package org.hivedb.management.quartz;
+package org.hivedb.management.migration;
 
 import static org.testng.AssertJUnit.fail;
 

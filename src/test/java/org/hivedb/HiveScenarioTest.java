@@ -381,7 +381,7 @@ public class HiveScenarioTest {
 			
 			// Attempt to insert a secondary index key
 			AssertUtils.assertThrows(new AssertUtils.UndoableToss() { public void f() throws Exception {				
-				hive.setReadOnly(true);
+				hive.updateHiveReadOnly(true);
 				new Undo() { public void f() throws Exception {
 					hive.updateHiveReadOnly(false);
 				}};
