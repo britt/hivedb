@@ -17,7 +17,7 @@ public class TestJdbcDaoSupportWriteLocking extends DaoTestCase {
 	
 	@BeforeMethod
 	public void setUp() throws Exception {
-		super.beforeMethod();
+		super.setUp();
 		Hive hive = Hive.load(getConnectString());
 		hive.addPartitionDimension(createPopulatedPartitionDimension());
 		hive.addNode(Atom.getFirst(hive.getPartitionDimensions()), createNode());

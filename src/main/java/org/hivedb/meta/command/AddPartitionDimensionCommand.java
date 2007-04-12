@@ -12,9 +12,9 @@ import org.hivedb.util.JdbcTypeMapper;
 public class AddPartitionDimensionCommand extends HiveCommand {
 	private PartitionDimension newPartition = null;
 
-	public AddPartitionDimensionCommand(String name, int jdbcType) {
-		newPartition = new PartitionDimension(name, jdbcType);
-	}
+//	public AddPartitionDimensionCommand(String name, int jdbcType) {
+//		newPartition = new PartitionDimension(name, jdbcType);
+//	}
 	
 	public static String getDelimitedJdbcTypeList() {
 		return JdbcTypeMapper.BIGINT + ","

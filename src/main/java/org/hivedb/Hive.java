@@ -436,6 +436,7 @@ public class Hive implements Finder, Synchronizeable {
 	 *             hive is currently read-only, or if a resource of the same
 	 *             name already exists
 	 */
+	// TODO: Every other method has a signature ( String dimensionName, Obejct whatever) add one for this method
 	public Resource addResource(PartitionDimension partitionDimension,
 			Resource resource) throws HiveException {
 		resource.setPartitionDimension(partitionDimension);
@@ -450,15 +451,13 @@ public class Hive implements Finder, Synchronizeable {
 		try {
 			resourceDao.create(resource);
 		} catch (SQLException e) {
-			throw new HiveException("Problem persisting new Node: "
+			throw new HiveException("Problem persisting new Resource: "
 					+ e.getMessage());
 		}
 		incrementAndPersistHive(datasource);
 
-		partitionDimension.getResources().add(resource);
-		getPartitionDimensions().add(partitionDimension);
 		sync();
-		return resource;
+		return this.getPartitionDimension(partitionDimension.getName()).getResource(resource.getName());
 	}
 
 	/**
@@ -490,17 +489,17 @@ public class Hive implements Finder, Synchronizeable {
 		try {
 			secondaryIndexDao.create(secondaryIndex);
 		} catch (SQLException e) {
-			throw new HiveException("Problem persisting new Node: "
+			throw new HiveException("Problem persisting new SecondaryIndex: "
 					+ e.getMessage());
 		}
 		incrementAndPersistHive(datasource);
 		sync();
 
 		try {
-			create();
+			new IndexSchema(getPartitionDimension(resource.getPartitionDimension().getName())).install();
 		} catch (SQLException e) {
 
-			throw new HiveException("Problem persisting new Node: "
+			throw new HiveException("Problem persisting new SecondaryIndex: "
 					+ e.getMessage());
 		}
 		return secondaryIndex;
