@@ -783,7 +783,7 @@
 //	protected static HashMap<String,Hive> hives = new HashMap<String,Hive>();
 //
 //	static {
-//		// TODO: SPAWN METADATA REFRESH HEARTBEAT THREAD, WAKING UP EVERY SECOND
+//		// TO DO: SPAWN METADATA REFRESH HEARTBEAT THREAD, WAKING UP EVERY SECOND
 //	} // static initializer
 //
 //} // class Hive

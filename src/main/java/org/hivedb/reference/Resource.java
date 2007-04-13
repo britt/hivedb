@@ -97,7 +97,7 @@
 //	 * @throws HiveException
 //	 */
 //	public void setName(String name) throws HiveException {
-//// TODO: WHAT DOES IT MEAN TO WIND UP WITH A NEW NAME?
+//// TO DO: WHAT DOES IT MEAN TO WIND UP WITH A NEW NAME?
 //		validateName( name );
 //		this.name = name;
 //	}

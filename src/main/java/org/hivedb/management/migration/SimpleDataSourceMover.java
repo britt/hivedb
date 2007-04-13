@@ -23,7 +23,6 @@ public abstract class SimpleDataSourceMover<T> implements Mover {
 		this.primaryIndexKeyType = primaryIndexKeyType;
 	}
 	
-	// TODO Add record locking...you forgot
 	public MoveReport move(Migration migration) throws MigrationException{
 		DataSource origin = new HiveBasicDataSource(migration.getOriginUri());
 		DataSource destination = new HiveBasicDataSource(migration.getDestinationUri());

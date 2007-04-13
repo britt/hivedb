@@ -12,8 +12,7 @@ import org.hivedb.HiveDbDialect;
 import org.hivedb.HiveException;
 import org.hivedb.Schema;
 import org.hivedb.util.JdbcTypeMapper;
-// TODO update to use columnInfo and tableInfo objects (make DB agnostic)
-// TODO Extract inserts,updates,reads, deletes into a DAO object
+
 /**
  * IndexSchema contains tables of primary and secondary indexes in
  * accordance with the rows existing in the Global Hive meta tables.

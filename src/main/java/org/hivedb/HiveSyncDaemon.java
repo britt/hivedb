@@ -4,8 +4,6 @@
  */
 package org.hivedb;
 
-import java.sql.SQLException;
-
 import javax.sql.DataSource;
 
 import org.apache.log4j.Logger;
@@ -42,13 +40,6 @@ public class HiveSyncDaemon extends Thread {
 		return cachedDataSource;
 	}
 
-	// TODO is this the right place for this unique operation?
-	// A:  I think Hive.java might be a more appropriate place for this operation. --britt
-	public void setReadOnly(boolean readOnly) throws SQLException {
-		new HiveSemaphoreDao(getDataSource()).update(new HiveSemaphore(
-				readOnly, hive.getRevision()));
-	}
-
 	public void forceSynchronize() throws HiveException {
 		this.synchronize();
 	}
@@ -64,7 +55,6 @@ public class HiveSyncDaemon extends Thread {
 			if (hive.getRevision() != hs.getRevision()) {
 				PartitionDimensionDao pdd = new PartitionDimensionDao(
 						getDataSource());
-				// TODO: we should probably send Hive a "reload" here
 				hive.getPartitionDimensions().clear();
 				for (PartitionDimension p : pdd.loadAll())
 					hive.getPartitionDimensions().add(p);

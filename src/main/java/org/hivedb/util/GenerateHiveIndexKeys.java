@@ -96,7 +96,6 @@ public class GenerateHiveIndexKeys {
 				return Transform.toMap(
 					new Transform.IdentityFunction<ResourceIdentifiable>(),
 					makeResourceToSecondaryIndexIdentifiableGrower(hive, hiveScenarioConfig, primaryIndexIdentifiables),
-					// TODO need to filter here?
 					filterByPartitionDimensionName(primaryIndexIdentifiablePrototype.getResourceIdentifiables(), primaryIndexIdentifiablePrototype, partitionDimensionName)
 				);						
 			}

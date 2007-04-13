@@ -26,6 +26,7 @@ import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.Directory;
 import org.hivedb.meta.Finder;
+import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.IdAndNameIdentifiable;
 import org.hivedb.meta.Identifiable;
 import org.hivedb.meta.IndexSchema;
@@ -248,7 +249,8 @@ public class Hive implements Finder, Synchronizeable {
 	public void updateHiveReadOnly(Boolean readOnly) throws HiveException {
 		this.setReadOnly(readOnly);
 		try {
-			daemon.setReadOnly(isReadOnly());
+			new HiveSemaphoreDao(new HiveBasicDataSource(this.getHiveUri())).update(new HiveSemaphore(
+					readOnly, this.getRevision()));
 		} catch (SQLException e) {
 			throw new HiveException(
 					"Could not change the readonly status of the hive", e);

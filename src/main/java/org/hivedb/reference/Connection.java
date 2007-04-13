@@ -191,8 +191,6 @@ public class Connection implements java.sql.Connection {
 
 	public java.sql.PreparedStatement prepareStatement(String sql, int[] arg1)
 			throws SQLException {
-		
-		// TODO: How to encache a statement with arg params?  should we even try?  for now, no.
 
 		java.sql.PreparedStatement stmt2 = delegate.prepareStatement( sql, arg1 );
 		org.hivedb.reference.PreparedStatement stmt = new org.hivedb.reference.PreparedStatement( this, stmt2 );
@@ -417,11 +415,8 @@ public class Connection implements java.sql.Connection {
 	protected static Properties connectionProps = new Properties();
 	
 	static {
-		// TODO: TBD: IS THIS AN EFFECTIVE MEANS OF KEEPING CONNECTIONS FROM GOING STALE,
-		// OR DOES THE REAPER THREAD NEED TO KILL OFF MORE AGRESSIVELY?
 		connectionProps.put( "autoReconnect", "true" );
 		
-		// TODO: spawn connection reaper thread
 			
 	} // static initializer
 		
