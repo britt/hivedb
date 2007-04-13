@@ -62,7 +62,10 @@ public class HiveSyncDaemon extends Thread {
 				hive.setReadOnly(hs.isReadOnly());
 			}
 		} catch (Exception e) {
-			log.error("Semaphore not found; make sure Hive is installed");
+//			TODO: A refactoring is needed here.  For now I am just suppressing the message because it is not 
+//			really an error.  Since load is really "load or install".
+			
+//			log.error("Semaphore not found; make sure Hive is installed");
 			log.debug(e.getMessage());
 			for (StackTraceElement element : e.getStackTrace())
 				log.debug(element);
