@@ -24,11 +24,7 @@ public class InstallHiveGlobalSchema {
 			BasicDataSource ds = new HiveBasicDataSource(connectString);
 			HiveSemaphoreDao dao = new HiveSemaphoreDao(ds);
 			
-			try {
-				dao.get();
-			} catch (Exception e) {
-				new HiveSemaphoreDao(ds).create();
-			}
+			dao.create();
 			
 		} catch (Exception e) {
 			throw new RuntimeException(e);

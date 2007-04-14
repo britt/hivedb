@@ -90,9 +90,9 @@ public class Hive implements Finder, Synchronizeable {
 		}
 		
 		Hive hive = null;
+		HiveBasicDataSource ds = new HiveBasicDataSource(hiveDatabaseUri);
 		try {
-			PartitionKeyStatisticsDao tracker = new PartitionKeyStatisticsDao(
-					new HiveBasicDataSource(hiveDatabaseUri));
+			PartitionKeyStatisticsDao tracker = new PartitionKeyStatisticsDao(ds);
 			hive = new Hive(hiveDatabaseUri, 0, false,
 					new ArrayList<PartitionDimension>(), tracker);
 			hive.sync();
@@ -107,8 +107,9 @@ public class Hive implements Finder, Synchronizeable {
 			
 			try {
 				InstallHiveGlobalSchema.install(hiveDatabaseUri);
-				PartitionKeyStatisticsDao tracker = new PartitionKeyStatisticsDao(
-						new HiveBasicDataSource(hiveDatabaseUri));
+				new HiveSemaphoreDao(ds).create();
+				
+				PartitionKeyStatisticsDao tracker = new PartitionKeyStatisticsDao(ds);
 				hive = new Hive(hiveDatabaseUri, 0, false,
 						new ArrayList<PartitionDimension>(), tracker);
 				if (log.isDebugEnabled())
@@ -246,15 +247,10 @@ public class Hive implements Finder, Synchronizeable {
 		this.readOnly = readOnly;
 	}
 
-	public void updateHiveReadOnly(Boolean readOnly) throws HiveException {
+	public void updateHiveReadOnly(Boolean readOnly) {
 		this.setReadOnly(readOnly);
-		try {
-			new HiveSemaphoreDao(new HiveBasicDataSource(this.getHiveUri())).update(new HiveSemaphore(
-					readOnly, this.getRevision()));
-		} catch (SQLException e) {
-			throw new HiveException(
-					"Could not change the readonly status of the hive", e);
-		}
+		new HiveSemaphoreDao(new HiveBasicDataSource(this.getHiveUri())).update(new HiveSemaphore(
+				readOnly, this.getRevision()));
 	}
 
 	public void updateNodeReadOnly(Node node, Boolean readOnly) throws HiveException {
@@ -745,14 +741,8 @@ public class Hive implements Finder, Synchronizeable {
 		return secondaryIndex;
 	}
 
-	private void incrementAndPersistHive(DataSource datasource)
-			throws HiveException {
-		try {
-			new HiveSemaphoreDao(datasource).incrementAndPersist();
-		} catch (SQLException e) {
-			throw new HiveException("Problem incrementing Hive revision: "
-					+ e.getMessage());
-		}
+	private void incrementAndPersistHive(DataSource datasource) {
+		new HiveSemaphoreDao(datasource).incrementAndPersist();
 	}
 
 	/**
@@ -1553,12 +1543,7 @@ public class Hive implements Finder, Synchronizeable {
 	 * @throws SQLException
 	 */
 	public boolean isInstalled() {
-		try {
-			new HiveSemaphoreDao(dataSource).get();
-			return true;
-		} catch (Exception ex) {
-			return false;
-		}
+		return new HiveSemaphoreDao(dataSource).doesHiveSemaphoreExist();
 	}
 	
 	private Connection getConnection(PartitionDimension partitionDimension, NodeSemaphore semaphore, AccessType intention) throws SQLException, HiveException {
