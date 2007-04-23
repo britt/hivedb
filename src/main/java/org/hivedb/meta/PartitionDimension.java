@@ -236,4 +236,7 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	{
 		return new PartitionDimension(name, columnType);
 	}
+	public void setId(int id) {
+		this.id = id;
+	}
 }

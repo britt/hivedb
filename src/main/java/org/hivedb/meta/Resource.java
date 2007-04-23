@@ -139,4 +139,8 @@ public class Resource implements Comparable<Resource>, IdAndNameIdentifiable, Fi
 	{
 		return new Resource(name, secondaryIndexes);
 	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
 }

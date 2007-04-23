@@ -105,4 +105,8 @@ public class SecondaryIndex implements Comparable<SecondaryIndex>, IdAndNameIden
 	{
 		return new SecondaryIndex(columnInfo);
 	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
 }

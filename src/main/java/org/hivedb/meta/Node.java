@@ -119,4 +119,8 @@ public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable 
 	public String getName() {
 		return getUri();
 	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
 }
