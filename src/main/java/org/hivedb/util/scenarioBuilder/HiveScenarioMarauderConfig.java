@@ -21,10 +21,10 @@ public class HiveScenarioMarauderConfig implements HiveScenarioConfig {
 	private Hive hive;
 	private Collection<Node> dataNodes;
 	private Collection<String> dataNodeUris;
-	public HiveScenarioMarauderConfig(String connectString, Collection<String> dataNodeNames) {
+	public HiveScenarioMarauderConfig(String connectString, Collection<String> dataNodeUris) {
 		try { 
 			hive = Hive.load(connectString);
-			this.dataNodeUris = dataNodeNames;
+			this.dataNodeUris = dataNodeUris;
 		} catch (HiveException e) {
 			throw new RuntimeException(e);
 		}

@@ -219,8 +219,7 @@ public class Hive implements Finder, Synchronizeable {
 	 * and read-only state
 	 */
 	public int hashCode() {
-		return HiveUtils.makeHashCode(new Object[] { hiveUri, revision,
-				getPartitionDimensions(), readOnly });
+		return HiveUtils.makeHashCode(new Object[] { hiveUri, revision, getPartitionDimensions(), readOnly });
 	}
 
 	public boolean equals(Object obj) {
