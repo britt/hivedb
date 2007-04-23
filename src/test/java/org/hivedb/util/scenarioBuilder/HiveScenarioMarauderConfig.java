@@ -10,6 +10,8 @@ import java.util.List;
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
 import org.hivedb.meta.Node;
+import org.hivedb.meta.PrimaryIndexIdentifiable;
+import org.hivedb.meta.ResourceIdentifiable;
 import org.hivedb.util.functional.Generate;
 import org.hivedb.util.functional.Generator;
 import org.hivedb.util.functional.NumberIterator;

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.hivedb.util.scenarioBuilder;
+package org.hivedb.management;
 
 import org.hivedb.management.KeyAuthority;
 import org.hivedb.util.functional.Generator;

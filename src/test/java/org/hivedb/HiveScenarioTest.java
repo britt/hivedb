@@ -20,8 +20,11 @@ import org.hivedb.meta.ColumnInfo;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.NodeSemaphore;
 import org.hivedb.meta.PartitionDimension;
+import org.hivedb.meta.PrimaryIndexIdentifiable;
 import org.hivedb.meta.Resource;
+import org.hivedb.meta.ResourceIdentifiable;
 import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.meta.SecondaryIndexIdentifiable;
 import org.hivedb.util.JdbcTypeMapper;
 import org.hivedb.util.functional.AssertUtils;
 import org.hivedb.util.functional.Atom;
@@ -32,9 +35,6 @@ import org.hivedb.util.functional.Unary;
 import org.hivedb.util.functional.Undoable;
 import org.hivedb.util.scenarioBuilder.HiveScenario;
 import org.hivedb.util.scenarioBuilder.HiveScenarioConfig;
-import org.hivedb.util.scenarioBuilder.PrimaryIndexIdentifiable;
-import org.hivedb.util.scenarioBuilder.ResourceIdentifiable;
-import org.hivedb.util.scenarioBuilder.SecondaryIndexIdentifiable;
 
 public class HiveScenarioTest {
 	

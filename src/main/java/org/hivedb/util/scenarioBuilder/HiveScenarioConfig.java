@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import org.hivedb.Hive;
 import org.hivedb.meta.Node;
+import org.hivedb.meta.PrimaryIndexIdentifiable;
 
 /**
  *  An interface to allow generating a hive schema and filling it with test data.

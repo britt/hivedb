@@ -4,10 +4,10 @@ import java.sql.SQLException;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
+import org.hivedb.meta.PrimaryIndexIdentifiable;
+import org.hivedb.meta.ResourceIdentifiable;
 import org.hivedb.meta.SecondaryIndex;
-import org.hivedb.util.scenarioBuilder.PrimaryIndexIdentifiable;
-import org.hivedb.util.scenarioBuilder.ResourceIdentifiable;
-import org.hivedb.util.scenarioBuilder.SecondaryIndexIdentifiable;
+import org.hivedb.meta.SecondaryIndexIdentifiable;
 
 public class PersisterImpl implements Persister {
 	public PrimaryIndexIdentifiable persistPrimaryIndexIdentifiable(final Hive hive, final PrimaryIndexIdentifiable primaryIndexIdentifiable) throws HiveException, SQLException {

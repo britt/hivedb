@@ -5,6 +5,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import org.hivedb.meta.PrimaryIndexIdentifiable;
+import org.hivedb.meta.ResourceIdentifiable;
+import org.hivedb.meta.SecondaryIndexIdentifiable;
+
 public class HiveScenarioMarauderClasses {
 	public static class Pirate implements PrimaryIndexIdentifiable, ResourceIdentifiable, SecondaryIndexIdentifiable
 	{

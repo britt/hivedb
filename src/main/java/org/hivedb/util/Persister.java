@@ -4,9 +4,9 @@ import java.sql.SQLException;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
-import org.hivedb.util.scenarioBuilder.PrimaryIndexIdentifiable;
-import org.hivedb.util.scenarioBuilder.ResourceIdentifiable;
-import org.hivedb.util.scenarioBuilder.SecondaryIndexIdentifiable;
+import org.hivedb.meta.PrimaryIndexIdentifiable;
+import org.hivedb.meta.ResourceIdentifiable;
+import org.hivedb.meta.SecondaryIndexIdentifiable;
 
 public interface Persister {
 	PrimaryIndexIdentifiable persistPrimaryIndexIdentifiable(final Hive hive, final PrimaryIndexIdentifiable newPrimaryIndexIdentifiable) throws HiveException, SQLException;

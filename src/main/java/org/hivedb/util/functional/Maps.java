@@ -1,15 +1,9 @@
-package org.hivedb.util.scenarioBuilder;
+package org.hivedb.util.functional;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.hivedb.util.functional.Binary;
-import org.hivedb.util.functional.Pair;
-import org.hivedb.util.functional.Quaternary;
-import org.hivedb.util.functional.Ternary;
-import org.hivedb.util.functional.Transform;
-import org.hivedb.util.functional.Unary;
 
 /**
  *  Operations on single or multi-dimensional maps which take multi-argument operators. These functions eliminate the need to 

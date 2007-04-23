@@ -5,6 +5,9 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.hivedb.Hive;
+import org.hivedb.meta.PrimaryIndexIdentifiable;
+import org.hivedb.meta.ResourceIdentifiable;
+import org.hivedb.meta.SecondaryIndexIdentifiable;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Generate;
 import org.hivedb.util.functional.Generator;
@@ -14,9 +17,6 @@ import org.hivedb.util.functional.RingIteratorable;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.hivedb.util.scenarioBuilder.HiveScenarioConfig;
-import org.hivedb.util.scenarioBuilder.PrimaryIndexIdentifiable;
-import org.hivedb.util.scenarioBuilder.ResourceIdentifiable;
-import org.hivedb.util.scenarioBuilder.SecondaryIndexIdentifiable;
 
 public class GenerateHiveIndexKeys {
 	

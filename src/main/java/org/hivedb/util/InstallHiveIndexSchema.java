@@ -9,15 +9,15 @@ import org.hivedb.HiveException;
 import org.hivedb.meta.ColumnInfo;
 import org.hivedb.meta.NodeGroup;
 import org.hivedb.meta.PartitionDimension;
+import org.hivedb.meta.PrimaryIndexIdentifiable;
 import org.hivedb.meta.Resource;
+import org.hivedb.meta.ResourceIdentifiable;
 import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.meta.SecondaryIndexIdentifiable;
 import org.hivedb.util.functional.RingIteratorable;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.hivedb.util.scenarioBuilder.HiveScenarioConfig;
-import org.hivedb.util.scenarioBuilder.PrimaryIndexIdentifiable;
-import org.hivedb.util.scenarioBuilder.ResourceIdentifiable;
-import org.hivedb.util.scenarioBuilder.SecondaryIndexIdentifiable;
 
 public class InstallHiveIndexSchema {
 	public static Map<PrimaryIndexIdentifiable, PartitionDimension> install(

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.hivedb.util.scenarioBuilder;
+package org.hivedb.meta;
 
 import java.util.Collection;
 
