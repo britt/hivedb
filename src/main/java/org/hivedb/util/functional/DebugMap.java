@@ -1,3 +1,6 @@
+/**
+ * 
+ */
 package org.hivedb.util.functional;
 
 import java.util.Collection;
@@ -5,10 +8,18 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
 
-
-class DebugMap<K,V> implements Map<K,V>
+public class DebugMap<K,V> implements Map<K,V>
 {
-	Map<K,V> map = new Hashtable<K,V>();
+	protected Map<K,V> map;
+	public DebugMap()
+	{
+		map = new Hashtable<K,V>();
+	}
+	public DebugMap(Map<K,V> map)
+	{
+		this.map = map;
+	}
+	
 	public void clear() {
 		map.clear();
 	}
@@ -61,7 +72,6 @@ class DebugMap<K,V> implements Map<K,V>
 	public Collection<V> values() {
 		return map.values();
 	}
-	// I can't get the generics to comply in the inner Transform.map
 	
 	public String toString() {
 		return 

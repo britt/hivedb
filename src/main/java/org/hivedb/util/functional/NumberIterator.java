@@ -5,7 +5,7 @@ package org.hivedb.util.functional;
 
 import java.util.Iterator;
 
-public class NumberIterator implements Iterator {
+public class NumberIterator implements Iterator<Number>, Iterable<Number> {
 	int number;
 	int current=0;
 	public NumberIterator(int number)
@@ -16,10 +16,14 @@ public class NumberIterator implements Iterator {
 		return current < number;
 	}
 
-	public Object next() {
+	public Number next() {
 		return ++current;
 	}
 
 	public void remove() {
+	}
+	
+	public Iterator<Number> iterator() {
+		return this;
 	}
 }

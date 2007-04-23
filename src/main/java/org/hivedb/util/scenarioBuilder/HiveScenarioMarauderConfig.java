@@ -13,13 +13,18 @@ import org.hivedb.meta.Node;
 import org.hivedb.util.functional.Generate;
 import org.hivedb.util.functional.Generator;
 import org.hivedb.util.functional.NumberIterator;
+import org.hivedb.util.functional.Transform;
+import org.hivedb.util.functional.Unary;
 
 public class HiveScenarioMarauderConfig implements HiveScenarioConfig {
 	
 	private Hive hive;
-	public HiveScenarioMarauderConfig(String connectString) {
-		try {
+	private Collection<Node> dataNodes;
+	private Collection<String> dataNodeUris;
+	public HiveScenarioMarauderConfig(String connectString, Collection<String> dataNodeNames) {
+		try { 
 			hive = Hive.load(connectString);
+			this.dataNodeUris = dataNodeNames;
 		} catch (HiveException e) {
 			throw new RuntimeException(e);
 		}
@@ -29,16 +34,11 @@ public class HiveScenarioMarauderConfig implements HiveScenarioConfig {
 		return hive;
 	}
 	
-	public int getInstanceCountPerPrimaryIndex() { return 10; }
-	public int getInstanceCountPerSecondaryIndex() { return 100; };
-	
-	private List<PrimaryIndexIdentifiable> primaryInstanceIdentifiables;
-	public  Collection<PrimaryIndexIdentifiable> getPrimaryInstanceIdentifiables() {
-		if (primaryInstanceIdentifiables == null) {
-			primaryInstanceIdentifiables = new ArrayList<PrimaryIndexIdentifiable>();
-			primaryInstanceIdentifiables.add(new HiveScenarioMarauderClasses.Pirate());
-		}
-		return primaryInstanceIdentifiables;
+	private PrimaryIndexIdentifiable primaryIndexIdentifiables;
+	public  PrimaryIndexIdentifiable getPrimaryIndexIdentifiable() {
+		if (primaryIndexIdentifiables == null)
+			primaryIndexIdentifiables = new HiveScenarioMarauderClasses.Pirate();
+		return primaryIndexIdentifiables;
 	}
 	
 	// Classes to be used as resources and secondary indexes.
@@ -58,11 +58,14 @@ public class HiveScenarioMarauderConfig implements HiveScenarioConfig {
 		return Generate.create(new Generator<String>(){
 			public String f() { return hive.getHiveUri(); }}, new NumberIterator(2));
 	}
-		// The nodes of representing the data storage databases. These may be nonunique as well.
-	public Collection<Node> getDataNodes(final Hive hive) {
-		return Generate.create(new Generator<Node>(){
-			public Node f() { return new Node(  hive.getHiveUri(), 										
-												false); }},
-							  new NumberIterator(3));
+	public Collection<Node> getDataNodes() {
+		if (dataNodes == null)
+			dataNodes = Transform.map(new Unary<String, Node>() {
+				public Node f(String dataNodeUri) {
+					return new Node(dataNodeUri,false);	
+				}},
+				dataNodeUris);
+		return dataNodes;
 	}
+
 }

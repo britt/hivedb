@@ -45,8 +45,8 @@ public class HiveScenarioTest {
 		this.hiveScenarioConfig = hiveScenarioConfig;
 		hive = hiveScenarioConfig.getHive();
 	}
-	public void performTest() throws Exception, HiveException, SQLException {
-		HiveScenario hiveScenario = HiveScenario.run(hiveScenarioConfig);
+	public void performTest(int primaryIndexInstanceCount, int resourceInstanceCount) throws Exception, HiveException, SQLException {
+		HiveScenario hiveScenario = HiveScenario.run(hiveScenarioConfig, primaryIndexInstanceCount, resourceInstanceCount);
 		validate(hiveScenario);
 	}
 

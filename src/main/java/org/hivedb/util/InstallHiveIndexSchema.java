@@ -1,12 +1,12 @@
 package org.hivedb.util;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
 import org.hivedb.meta.ColumnInfo;
-import org.hivedb.meta.Node;
 import org.hivedb.meta.NodeGroup;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
@@ -33,11 +33,7 @@ public class InstallHiveIndexSchema {
 				public PartitionDimension f(final PrimaryIndexIdentifiable primaryIndexIdentifiable) {
 					try {
 						
-						final NodeGroup nodeGroup = new NodeGroup(
-							Transform.map(new Unary<Node,Node>() {
-								public Node f(Node n) {
-									return new Node(n.getUri(), n.isReadOnly());}}, 
-							hiveScenarioConfig.getDataNodes(hive)));
+						final NodeGroup nodeGroup = new NodeGroup(hiveScenarioConfig.getDataNodes());
 						
 						final Collection<Resource> resources = 
 							Transform.map(new Unary<ResourceIdentifiable, Resource>() {
@@ -58,7 +54,7 @@ public class InstallHiveIndexSchema {
 						throw new RuntimeException(e);
 					}
 				}},
-				hiveScenarioConfig.getPrimaryInstanceIdentifiables());
+				Collections.singleton(hiveScenarioConfig.getPrimaryIndexIdentifiable()));
 		
 		try {
 			hive.create();

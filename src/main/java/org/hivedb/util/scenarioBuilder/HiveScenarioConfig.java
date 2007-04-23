@@ -16,14 +16,12 @@ import org.hivedb.meta.Node;
  *
  */
 public interface HiveScenarioConfig {
-	int getInstanceCountPerPrimaryIndex();
-	int getInstanceCountPerSecondaryIndex();
 	
-	Collection<PrimaryIndexIdentifiable> getPrimaryInstanceIdentifiables();
+	PrimaryIndexIdentifiable getPrimaryIndexIdentifiable();
 	
 	Hive getHive();
 	// The uris of the databases used for the index servers. This may be a single URI matching the Hive URI.
 	Collection<String> getIndexUris(Hive hive);
 	// The nodes of representing the data storage databases.
-	Collection<Node> getDataNodes(Hive hive);
+	Collection<Node> getDataNodes();
 }

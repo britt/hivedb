@@ -358,13 +358,18 @@ public class Hive implements Finder, Synchronizeable {
 	public PartitionDimension addPartitionDimension(
 			PartitionDimension partitionDimension) throws HiveException {
 		isWritable("Creating a new partition dimension");
-		isUnique(String.format("Partition dimension %s already exists",
-				partitionDimension.getName()), getPartitionDimensions(),
+		isUnique(String.format("Partition dimension %s already exists", partitionDimension.getName()), 
+				getPartitionDimensions(),
 				partitionDimension);
 
 		BasicDataSource datasource = new HiveBasicDataSource(getHiveUri());
 		PartitionDimensionDao partitionDimensionDao = new PartitionDimensionDao(
 				datasource);
+		
+		// We allow the partition dimension to not specify an indexUri and we default it to the hiveUri
+		if (partitionDimension.getIndexUri() == null)
+			partitionDimension.setIndexUri(this.hiveUri);
+		
 		try {
 			partitionDimensionDao.create(partitionDimension);
 		} catch (SQLException e) {
@@ -374,8 +379,7 @@ public class Hive implements Finder, Synchronizeable {
 		}
 		incrementAndPersistHive(datasource);
 
-		if (partitionDimension.getIndexUri() == null)
-			partitionDimension.setIndexUri(this.hiveUri);
+
 		this.directories
 				.add(new Directory(partitionDimension, this.dataSource));
 		sync();
@@ -400,7 +404,10 @@ public class Hive implements Finder, Synchronizeable {
 			throws HiveException {
 		node.setNodeGroup(partitionDimension.getNodeGroup());
 		isWritable("Creating a new node");
-
+		isUnique(String.format("Node with URI %s already exists", node.getName()), 
+				partitionDimension.getNodeGroup().getNodes(),
+				node);
+		
 		BasicDataSource datasource = new HiveBasicDataSource(this.getHiveUri());
 		NodeDao nodeDao = new NodeDao(datasource);
 		try {
@@ -671,6 +678,8 @@ public class Hive implements Finder, Synchronizeable {
 			throw new HiveException("Problem deletng the partition dimension",
 					e);
 		}
+		incrementAndPersistHive(datasource);
+		sync();
 		
 		//Destroy the corresponding DataSourceCache
 		this.dataSourceCaches.remove(partitionDimension.getName());
@@ -695,6 +704,8 @@ public class Hive implements Finder, Synchronizeable {
 		} catch (SQLException e) {
 			throw new HiveException("Problem deletng the node", e);
 		}
+		incrementAndPersistHive(datasource);
+		sync();
 		
 		//Synchronize the DataSourceCache
 		this.dataSourceCaches.get(node.getNodeGroup().getPartitionDimension().getName()).sync();
@@ -717,6 +728,9 @@ public class Hive implements Finder, Synchronizeable {
 		} catch (SQLException e) {
 			throw new HiveException("Problem deletng the resource", e);
 		}
+		incrementAndPersistHive(datasource);
+		sync();
+		
 		return resource;
 	}
 
@@ -738,6 +752,9 @@ public class Hive implements Finder, Synchronizeable {
 		} catch (SQLException e) {
 			throw new HiveException("Problem deletng the secondary index", e);
 		}
+		incrementAndPersistHive(datasource);
+		sync();
+		
 		return secondaryIndex;
 	}
 

@@ -9,6 +9,7 @@ import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.util.GenerateHiveIndexKeys;
 import org.hivedb.util.InstallHiveIndexSchema;
+import org.hivedb.util.PersisterImpl;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Predicate;
 import org.hivedb.util.functional.Transform;
@@ -41,14 +42,18 @@ import org.hivedb.util.functional.Unary;
  */
 public class HiveScenario {
 	
-	public static HiveScenario run(HiveScenarioConfig hiveScenarioConfig) throws HiveException {
-		HiveScenario hiveScenario = new HiveScenario(hiveScenarioConfig);
+	public static HiveScenario run(HiveScenarioConfig hiveScenarioConfig, int primaryIndexInstanceCount, int resourceInstanceCount) throws HiveException {
+		HiveScenario hiveScenario = new HiveScenario(hiveScenarioConfig, primaryIndexInstanceCount, resourceInstanceCount);
 		return hiveScenario;
 	}
 
-	protected HiveScenario(final HiveScenarioConfig hiveScenarioConfig) throws HiveException
+	private int primaryIndexInstanceCount;
+	private int resourceInstanceCount;
+	protected HiveScenario(final HiveScenarioConfig hiveScenarioConfig, int primaryIndexInstanceCount, int resourceInstanceCount) throws HiveException
 	{
 		final Hive hive = hiveScenarioConfig.getHive();
+		this.primaryIndexInstanceCount = primaryIndexInstanceCount;
+		this.resourceInstanceCount = resourceInstanceCount;
 		fill(hiveScenarioConfig, hive);
 	}
 	private void fill(final HiveScenarioConfig hiveScenarioConfig, final Hive hive) throws HiveException {
@@ -57,7 +62,7 @@ public class HiveScenario {
 		populateData(hiveScenarioConfig, hive, partitionDimensionMap);
 	}
 	private void populateData(final HiveScenarioConfig hiveScenarioConfig, final Hive hive, Map<PrimaryIndexIdentifiable, PartitionDimension> partitionDimensionMap) {
-		GenerateHiveIndexKeys generateHiveIndexKeys = new GenerateHiveIndexKeys();
+		GenerateHiveIndexKeys generateHiveIndexKeys = new GenerateHiveIndexKeys(new PersisterImpl(), primaryIndexInstanceCount, resourceInstanceCount);
 		Map<PrimaryIndexIdentifiable, Collection<PrimaryIndexIdentifiable>> primaryIndexIdentifiableMap = 
 			generateHiveIndexKeys.createPrimaryIndexInstances(hive, hiveScenarioConfig);
 		
@@ -65,7 +70,6 @@ public class HiveScenario {
 			= generateHiveIndexKeys.createSecondaryIndexInstances(hive, hiveScenarioConfig, primaryIndexIdentifiableMap);
 	
 		this.hive = hive;
-		
 		this.primaryIndexIdentifiableMap = primaryIndexIdentifiableMap;
 		this.resourceIdentifiableMap = secondaryIndexInstanceMap;
 	}
@@ -116,6 +120,5 @@ public class HiveScenario {
 	private String getPartitionDimensionName(ResourceIdentifiable resourceIdentifiable) {
 		return resourceIdentifiable.getPrimaryIndexIdentifiable().getPartitionDimensionName();
 	}
-
 }
 

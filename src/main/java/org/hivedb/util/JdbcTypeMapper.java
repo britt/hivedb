@@ -3,10 +3,10 @@ package org.hivedb.util;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.Date;
 
-import org.hivedb.HiveDbDialect;
 import org.hivedb.HiveException;
 import org.hivedb.HiveRuntimeException;
 
@@ -95,6 +95,8 @@ public class JdbcTypeMapper {
 			return Types.VARCHAR;
 		if (classType.equals(Date.class))
 			return Types.DATE;
+		if (classType.equals(Timestamp.class))
+			return Types.TIMESTAMP;
 		if (classType.equals(char.class) || classType.equals(Character.class))
 			return Types.CHAR;
 		throw new HiveRuntimeException("No known database type for class "
@@ -119,6 +121,8 @@ public class JdbcTypeMapper {
 		else if (classType.equals(Date.class))
 			preparedStatement.setDate(index, new java.sql.Date(((Date) value)
 					.getTime()));
+		else if (classType.equals(Timestamp.class))
+			preparedStatement.setTimestamp(index, (Timestamp) value);
 		else if (classType.equals(char.class)
 				|| classType.equals(Character.class))
 			preparedStatement.setString(index, value.toString());
@@ -167,33 +171,4 @@ public class JdbcTypeMapper {
 		throw new HiveRuntimeException("No known JDBC type: " + jdbcType, null);
 	}
 
-	public static String jdbcTypeToSqlTypeString(int jdbcType,
-			HiveDbDialect hiveDbDialect) {
-		if (hiveDbDialect.equals(HiveDbDialect.MySql)) {
-			switch (jdbcType) {
-			case Types.BIGINT:
-				return "bigint(20) unsigned";
-			case Types.INTEGER:
-				return "int(10) unsigned";
-			case Types.DATE:
-				return "datetime";
-			default:
-				throw new RuntimeException("Type " + jdbcType
-						+ " not supported. Add it here");
-			}
-		} else if (hiveDbDialect.equals(HiveDbDialect.Derby)) {
-			switch (jdbcType) {
-			case Types.BIGINT:
-			case Types.INTEGER:
-				return "int";
-			case Types.DATE:
-				return "datetime";
-			default:
-				throw new RuntimeException("Type " + jdbcType
-						+ " not supported. Add it here");
-			}
-		} else
-			throw new RuntimeException("Unsupported database dialect: "
-					+ hiveDbDialect.toString());
-	}
 }
