@@ -110,7 +110,7 @@ public class NodeGroup implements Finder {
 	}
 	public int hashCode() {
 		return HiveUtils.makeHashCode(new Object[] {
-			HiveUtils.makeHashCode(nodes)
+			nodes
 		});
 	}
 	

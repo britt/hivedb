@@ -335,7 +335,7 @@ public class Hive implements Finder, Synchronizeable {
 	@SuppressWarnings("unchecked")
 	public <T extends Nameable> T findByName(Class<T> forClass, String name)
 			throws HiveException {
-		return (T) getPartitionDimension(name);
+		return (T)getPartitionDimension(name);
 	}
 
 	/**
@@ -669,8 +669,7 @@ public class Hive implements Finder, Synchronizeable {
 								partitionDimension.getName()),
 				getPartitionDimensions(), partitionDimension);
 		BasicDataSource datasource = new HiveBasicDataSource(getHiveUri());
-		PartitionDimensionDao partitionDimensionDao = new PartitionDimensionDao(
-				datasource);
+		PartitionDimensionDao partitionDimensionDao = new PartitionDimensionDao(datasource);
 		try {
 			partitionDimensionDao.delete(partitionDimension);
 		} catch (SQLException e) {
@@ -1635,8 +1634,10 @@ public class Hive implements Finder, Synchronizeable {
 		for (IdAndNameIdentifiable collectionItem : collection)
 			if (itemName.equals((collectionItem).getName())
 					&& collectionItem.getId() != item.getId())
-				throw new HiveException(errorMessage + ", "
-						+ collectionItem.getId() + ", " + item.getId());
+				throw new HiveException(String.format("%s.\nExisting: %s\nNew: %s", 
+						errorMessage,
+						collectionItem,
+						item));
 		return;
 	}
 

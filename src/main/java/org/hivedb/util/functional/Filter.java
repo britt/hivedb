@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-
 public abstract class Filter {
 	
 	/**
@@ -104,12 +103,12 @@ public abstract class Filter {
 	// The match is determined by passing all permutations needed of subset and superset item to CompareFunction, which returns true to indicate a match and false otherwise.
 	// Using Grep.EqualsFunction is the same as not passing in any CompareFunction
 	// If you need to pass in an array, use Arrays.asList() to make it iterable
-	public static<SUP,SUB> Collection<SUP> grepAgainstList(final Iterable<SUB> subset, Iterable<SUP> superset, CompareFunction<SUB, SUP> compareFunction)
+	public static<SUP,SUB> Collection<SUP> grepAgainstList(final Iterable<SUB> subset, Iterable<SUP> superset, BinaryPredicate<SUB, SUP> compareFunction)
 	{
 		Predicate<SUP> doesThisSupersetItemMatchAnySubsetItem = makeDoesSupersetItemMatchAnySubsetItem(subset, compareFunction);
 		return grep(doesThisSupersetItemMatchAnySubsetItem, superset);
 	}
-	public static<SUP,SUB> boolean grepItemAgainstList(final SUB subItem, Iterable<SUP> superset, CompareFunction<SUB, SUP> compareFunction)
+	public static<SUP,SUB> boolean grepItemAgainstList(final SUB subItem, Iterable<SUP> superset, BinaryPredicate<SUB, SUP> compareFunction)
 	{
 		List<SUB> list = new ArrayList<SUB>(1);
 		list.add(subItem);
@@ -129,12 +128,12 @@ public abstract class Filter {
 		Predicate<T> doesThisSupersetItemNotMatchAnySubsetItem = makeDoesSupersetItemNotMatchAnySubsetItem(list, new EqualFunction<T>());
 		return grep(doesThisSupersetItemNotMatchAnySubsetItem, superset);
 	}
-	public static<SUP,SUB> Collection<SUP> grepFalseAgainstList(final Iterable<SUB> subset, Iterable<SUP> superset, CompareFunction<SUB, SUP> compareFunction)
+	public static<SUP,SUB> Collection<SUP> grepFalseAgainstList(final Iterable<SUB> subset, Iterable<SUP> superset, BinaryPredicate<SUB, SUP> compareFunction)
 	{
 		Predicate<SUP> doesThisSupersetItemNotMatchAnySubsetItem = makeDoesSupersetItemNotMatchAnySubsetItem(subset, compareFunction);
 		return grep(doesThisSupersetItemNotMatchAnySubsetItem, superset);
 	}
-	public static<SUP,SUB> Collection<SUP> grepItemFalseAgainstList(final SUB subItem, Iterable<SUP> superset, CompareFunction<SUB, SUP> compareFunction)
+	public static<SUP,SUB> Collection<SUP> grepItemFalseAgainstList(final SUB subItem, Iterable<SUP> superset, BinaryPredicate<SUB, SUP> compareFunction)
 	{
 		List<SUB> list = new ArrayList<SUB>();
 		list.add(subItem);
@@ -155,7 +154,7 @@ public abstract class Filter {
 	}
 	
 	
-	private static <SUB,SUP> Predicate<SUP> makeDoesSupersetItemMatchAnySubsetItem(final Iterable<SUB> subset, final CompareFunction<SUB, SUP> compareFunction) {
+	private static <SUB,SUP> Predicate<SUP> makeDoesSupersetItemMatchAnySubsetItem(final Iterable<SUB> subset, final BinaryPredicate<SUB, SUP> compareFunction) {
 		Predicate<SUP> doesThisSupersetItemMatchAnySubsetItem = new Predicate<SUP>()
 		{
 			public boolean f(final SUP supersetItem)
@@ -171,7 +170,7 @@ public abstract class Filter {
 		};
 		return doesThisSupersetItemMatchAnySubsetItem;
 	}
-	private static <SUB,SUP> Predicate<SUP> makeDoesSupersetItemNotMatchAnySubsetItem(final Iterable<SUB> subset, final CompareFunction<SUB, SUP> compareFunction) {
+	private static <SUB,SUP> Predicate<SUP> makeDoesSupersetItemNotMatchAnySubsetItem(final Iterable<SUB> subset, final BinaryPredicate<SUB, SUP> compareFunction) {
 		Predicate<SUP> doesThisSupersetItemMatchAnySubsetItem = new Predicate<SUP>()
 		{
 			public boolean f(final SUP supersetItem)
@@ -234,6 +233,13 @@ public abstract class Filter {
 			return true;
 		}
 	}
+	
+	public static class NullPredicate<T> implements Predicate<T> {
+		public boolean f(T item) {
+			return item == null;
+		}
+	}
+	
 	public static class NotNullPredicate<T> implements Predicate<T> {
 		public boolean f(T item) {
 			return item != null;
@@ -263,10 +269,10 @@ public abstract class Filter {
 		return new ArrayList<T>(collection).get(index);
 	}
 	
-	public static abstract class CompareFunction<T,S> {public abstract boolean f(final T item1, S item2 );}
+	public static abstract class BinaryPredicate<T,S> {public abstract boolean f(final T item1, S item2 );}
 	
 	
-	public static class EqualFunction<T> extends CompareFunction<T,T>
+	public static class EqualFunction<T> extends BinaryPredicate<T,T>
 	{
 		public boolean f(final Object item1, Object item2 )
 		{
@@ -274,13 +280,16 @@ public abstract class Filter {
 		}
 	}
 	
-	public static class UnequalFunction<T> extends CompareFunction<T,T>
+	public static class UnequalFunction<T> extends BinaryPredicate<T,T>
 	{
 		public boolean f(final T item1, T item2 )
 		{
 			return !item1.equals(item2);
 		}
 	}
+
+	
+
 }
 
     

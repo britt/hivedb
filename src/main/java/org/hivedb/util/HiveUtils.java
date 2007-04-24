@@ -20,7 +20,7 @@ public class HiveUtils {
 		String result = "";
 		for (Object object : collection)
 			if (object != null)
-				result += (object instanceof Collection ? new HashSet<Object>((Collection<?>)object) : object.hashCode());
+				result += (object instanceof Collection ? new HashSet<Object>((Collection<?>)object).hashCode() : object.hashCode());
 		return result.hashCode();
 	}
 	static int globalDeepFormatedStringTabLevel = 0;

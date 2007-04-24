@@ -63,86 +63,75 @@ public class HiveScenarioTest {
 	{
 		Hive hive = hiveScenario.getHive();
 	
-		final HashSet<PartitionDimension> expected = new HashSet<PartitionDimension>(hiveScenario.getCreatedPartitionDimensions());
-		final HashSet<PartitionDimension> actual = new HashSet<PartitionDimension>(hive.getPartitionDimensions());
 		// Validate our PartitionDimension in memory against those that are in the persistence
-		assertEquals(String.format("Expected %s but got %s", expected, actual),
-					expected.hashCode(),
-					actual.hashCode());
+		assertEquals(String.format("Expected %s but got %s", hiveScenario.getCreatedPartitionDimension(), hive.getPartitionDimensions()),
+			hiveScenario.getCreatedPartitionDimension(),
+			hive.getPartitionDimensions());
 		
-		for (PartitionDimension partitionDimension : hiveScenario.getCreatedPartitionDimensions()) {
-			PartitionDimension partitionDimensionFromHive = hive.getPartitionDimension(partitionDimension.getName());
+		PartitionDimension partitionDimension = hiveScenario.getCreatedPartitionDimension();
+		PartitionDimension partitionDimensionFromHive = hive.getPartitionDimension(partitionDimension.getName());
+		
+		// Assert that primary index keys got to the persistence
+		for (PrimaryIndexIdentifiable primaryIndexInstance : hiveScenario.getPrimaryIndexInstancesCreatedByThisPartitionDimension(partitionDimension))
+			assertNotNull(hive.getNodeSemaphoreOfPrimaryIndexKey(partitionDimension, primaryIndexInstance.getPrimaryIndexKey()));
+		
+		// Validate that the hive has the created resources
+		assertEquals(new TreeSet<Resource>(hiveScenario.getResourcesOfThisPartitionDimension(partitionDimension)),
+					 new TreeSet<Resource>(partitionDimensionFromHive.getResources()));
+		
+		// Validate that the secondary index keys are in the database with the right primary index key
+		for (Resource resource : partitionDimension.getResources()) {
 			
-			// Assert that primary index keys got to the persistence
-			for (PrimaryIndexIdentifiable primaryIndexInstance : hiveScenario.getPrimaryIndexInstancesCreatedByThisPartitionDimension(partitionDimension))
-				assertNotNull(hive.getNodeSemaphoreOfPrimaryIndexKey(partitionDimension, primaryIndexInstance.getPrimaryIndexKey()));
-			
-			// Validate that the hive has the created resources
-			assertEquals(new TreeSet<Resource>(hiveScenario.getResourcesOfThisPartitionDimension(partitionDimension)),
-						 new TreeSet<Resource>(partitionDimensionFromHive.getResources()));
-			
-			// Validate that the secondary index keys are in the database with the right primary index key
-			for (Resource resource : partitionDimension.getResources()) {
-				
-				Collection<ResourceIdentifiable> resourceIdentifiables = hiveScenario.getResourceIdentifiableInstancesForThisResource(resource);
-				for (ResourceIdentifiable resourceIdentifiable : resourceIdentifiables) {
-					PrimaryIndexIdentifiable primaryIndexIdentifiable = resourceIdentifiable.getPrimaryIndexIdentifiable();
-										
-					for (SecondaryIndexIdentifiable secondaryIndexIdentifiable : resourceIdentifiable.getSecondaryIndexIdentifiables()) {	
-						SecondaryIndex secondaryIndex = resource.getSecondaryIndex(secondaryIndexIdentifiable.getSecondaryIndexName());
+			Collection<ResourceIdentifiable> resourceIdentifiables = hiveScenario.getResourceIdentifiableInstancesForThisResource(resource);
+			for (ResourceIdentifiable resourceIdentifiable : resourceIdentifiables) {
+				PrimaryIndexIdentifiable primaryIndexIdentifiable = resourceIdentifiable.getPrimaryIndexIdentifiable();
+									
+				for (SecondaryIndexIdentifiable secondaryIndexIdentifiable : resourceIdentifiable.getSecondaryIndexIdentifiables()) {	
+					SecondaryIndex secondaryIndex = resource.getSecondaryIndex(secondaryIndexIdentifiable.getSecondaryIndexName());
+					
+					//  Assert that querying for all the secondary index keys of a primary index key returns the right collection
+					List secondaryIndexKeys = new ArrayList(hive.getSecondaryIndexKeysWithPrimaryKey(
+																partitionDimension.getName(),
+																resource.getName(),
+																secondaryIndex.getName(),
+																primaryIndexIdentifiable.getPrimaryIndexKey()));
+					
+					assertTrue(secondaryIndexKeys.contains(secondaryIndexIdentifiable.getSecondaryIndexKey()));
+									
+					NodeSemaphore nodeSemaphoreOfSecondaryIndexKey = hive.getNodeSemaphoreOfSecondaryIndexKey(
+							partitionDimension.getName(),
+							resource.getName(),
+							secondaryIndex.getName(),
+							secondaryIndexIdentifiable.getSecondaryIndexKey());
+					assertNotNull(nodeSemaphoreOfSecondaryIndexKey);
 						
-						//  Assert that querying for all the secondary index keys of a primary index key returns the right collection
-						List secondaryIndexKeys = new ArrayList(hive.getSecondaryIndexKeysWithPrimaryKey(
-																	partitionDimension.getName(),
-																	resource.getName(),
-																	secondaryIndex.getName(),
-																	primaryIndexIdentifiable.getPrimaryIndexKey()));
-						
-						assertTrue(secondaryIndexKeys.contains(secondaryIndexIdentifiable.getSecondaryIndexKey()));
-										
-						NodeSemaphore nodeSemaphoreOfSecondaryIndexKey = hive.getNodeSemaphoreOfSecondaryIndexKey(
+						// Assert that querying for the primary key of the secondary index key yields what we expect
+						Object expectedPrimaryIndexKey = secondaryIndexIdentifiable.getResourceIdentifiable().getPrimaryIndexIdentifiable().getPrimaryIndexKey();
+						Object actualPrimaryIndexKey = hive.getPrimaryIndexKeyOfSecondaryIndexKey(
 								partitionDimension.getName(),
 								resource.getName(),
 								secondaryIndex.getName(),
 								secondaryIndexIdentifiable.getSecondaryIndexKey());
-						assertNotNull(nodeSemaphoreOfSecondaryIndexKey);
-							
-							// Assert that querying for the primary key of the secondary index key yields what we expect
-							Object expectedPrimaryIndexKey = secondaryIndexIdentifiable.getResourceIdentifiable().getPrimaryIndexIdentifiable().getPrimaryIndexKey();
-							Object actualPrimaryIndexKey = hive.getPrimaryIndexKeyOfSecondaryIndexKey(
-									partitionDimension.getName(),
-									resource.getName(),
-									secondaryIndex.getName(),
-									secondaryIndexIdentifiable.getSecondaryIndexKey());
-							assertEquals(expectedPrimaryIndexKey, actualPrimaryIndexKey);
-							
-							// Assert that the node of the secondary index key is the same as that of the primary index key
-							NodeSemaphore nodeSemaphoreOfPrimaryIndexKey = hive.getNodeSemaphoreOfPrimaryIndexKey(
-																						partitionDimension.getName(),
-																						actualPrimaryIndexKey);
-							assertEquals(nodeSemaphoreOfSecondaryIndexKey, nodeSemaphoreOfPrimaryIndexKey);						
-					}
-				}	
-			}
+						assertEquals(expectedPrimaryIndexKey, actualPrimaryIndexKey);
+						
+						// Assert that the node of the secondary index key is the same as that of the primary index key
+						NodeSemaphore nodeSemaphoreOfPrimaryIndexKey = hive.getNodeSemaphoreOfPrimaryIndexKey(
+																					partitionDimension.getName(),
+																					actualPrimaryIndexKey);
+						assertEquals(nodeSemaphoreOfSecondaryIndexKey, nodeSemaphoreOfPrimaryIndexKey);						
+				}
+			}	
 		}
 	}
-	
-
-
 
 	public void validateUpdatesToPersistence(final HiveScenario hiveScenario) throws HiveException, SQLException
 	{
 		final Hive hive = hiveScenario.getHive();
-		for (final PartitionDimension partitionDimension : hiveScenario.getCreatedPartitionDimensions()) {
-			updatePimaryIndexIdentifiables(hive, hiveScenario, partitionDimension, new Filter.AllowAllFilter());
-			updateSecondaryIndexIdentifiables(hive, hiveScenario, partitionDimension, new Filter.AllowAllFilter());			
-		}
-		PartitionDimension anyPartitionDimension = null;
-		try {
-			anyPartitionDimension = Atom.getFirst(hiveScenario.getCreatedPartitionDimensions());
-		} catch (Exception e) { throw new RuntimeException(e); } 
-		updateMetaData(hiveScenario, hive, anyPartitionDimension);
-		commitReadonlyViolations(hiveScenario, hive, anyPartitionDimension);
+		final PartitionDimension partitionDimension = hiveScenario.getCreatedPartitionDimension();
+		updatePimaryIndexIdentifiables(hive, hiveScenario, partitionDimension, new Filter.AllowAllFilter());
+		updateSecondaryIndexIdentifiables(hive, hiveScenario, partitionDimension, new Filter.AllowAllFilter());			
+		updateMetaData(hiveScenario, hive, partitionDimension);
+		commitReadonlyViolations(hiveScenario, hive, partitionDimension);
 	}
 
 	private static void updatePimaryIndexIdentifiables(final Hive hive, final HiveScenario hiveScenario, final PartitionDimension partitionDimension, final Filter iterateFilter) throws HiveException {
@@ -409,68 +398,66 @@ public class HiveScenarioTest {
 	public void validateDeletesToPersistence(final HiveScenario hiveScenario) throws HiveException, SQLException
 	{
 		final Hive hive = hiveScenario.getHive();
-		for (final PartitionDimension partitionDimension : hiveScenario.getCreatedPartitionDimensions()) {					
-			// Validate that the secondary index keys are in the database with the right primary index key
-			for (final Resource resource : partitionDimension.getResources()) {
-				Collection<ResourceIdentifiable> resourceIdentifiables = hiveScenario.getResourceIdentifiableInstancesForThisResource(resource);
-				for (ResourceIdentifiable resourceIdentifiable : resourceIdentifiables) {
-					
-					for (final SecondaryIndexIdentifiable secondaryIndexIdentifiable : resourceIdentifiable.getSecondaryIndexIdentifiables()) {	
-						final SecondaryIndex secondaryIndex = resource.getSecondaryIndex(secondaryIndexIdentifiable.getSecondaryIndexName());
-											
-						try {
-							new Undoable() { public void f() throws Exception {
-								
-								hive.deleteSecondaryIndexKey(
+		final PartitionDimension partitionDimension = hiveScenario.getCreatedPartitionDimension();					
+		// Validate that the secondary index keys are in the database with the right primary index key
+		for (final Resource resource : partitionDimension.getResources()) {
+			Collection<ResourceIdentifiable> resourceIdentifiables = hiveScenario.getResourceIdentifiableInstancesForThisResource(resource);
+			for (ResourceIdentifiable resourceIdentifiable : resourceIdentifiables) {
+				
+				for (final SecondaryIndexIdentifiable secondaryIndexIdentifiable : resourceIdentifiable.getSecondaryIndexIdentifiables()) {	
+					final SecondaryIndex secondaryIndex = resource.getSecondaryIndex(secondaryIndexIdentifiable.getSecondaryIndexName());
+										
+					try {
+						new Undoable() { public void f() throws Exception {
+							
+							hive.deleteSecondaryIndexKey(
+								partitionDimension.getName(),
+								resource.getName(),
+								secondaryIndex.getName(),
+								secondaryIndexIdentifiable.getSecondaryIndexKey());
+							assertFalse(hive.doesSecondaryIndexKeyExist( partitionDimension.getName(), resource.getName(), secondaryIndex.getName(), secondaryIndexIdentifiable.getSecondaryIndexKey()));
+			
+							new Undo() { public void f() throws Exception {
+								hive.insertSecondaryIndexKey(
 									partitionDimension.getName(),
 									resource.getName(),
 									secondaryIndex.getName(),
-									secondaryIndexIdentifiable.getSecondaryIndexKey());
-								assertFalse(hive.doesSecondaryIndexKeyExist( partitionDimension.getName(), resource.getName(), secondaryIndex.getName(), secondaryIndexIdentifiable.getSecondaryIndexKey()));
-				
-								new Undo() { public void f() throws Exception {
-									hive.insertSecondaryIndexKey(
-										partitionDimension.getName(),
-										resource.getName(),
-										secondaryIndex.getName(),
-										secondaryIndexIdentifiable.getSecondaryIndexKey(),
-										secondaryIndexIdentifiable.getResourceIdentifiable().getPrimaryIndexIdentifiable().getPrimaryIndexKey()
-									);
-									assertEquals(secondaryIndexIdentifiable.getResourceIdentifiable().getPrimaryIndexIdentifiable().getPrimaryIndexKey(),
-												hive.getPrimaryIndexKeyOfSecondaryIndexKey( partitionDimension.getName(), resource.getName(), secondaryIndex.getName(), secondaryIndexIdentifiable.getSecondaryIndexKey()));
-								}};
-							}}.cycle(); 
-						} catch(Exception e) { throw new HiveException("Undoable exception", e); }
-					}			
-				}			
-			}
-			try {
-				for (final Resource resource : partitionDimension.getResources()) {						
-					Collection<ResourceIdentifiable> resourceIdentifiables = hiveScenario.getResourceIdentifiableInstancesForThisResource(resource);
-					for (final ResourceIdentifiable resourceIdentifiable : resourceIdentifiables) {	
-						//TODO this isn't quite redoing correctly
-						new Undoable() { public void f() throws Exception {
-							final PrimaryIndexIdentifiable primaryIndexInstance = resourceIdentifiable.getPrimaryIndexIdentifiable();
-							hive.deletePrimaryIndexKey(partitionDimension.getName(), primaryIndexInstance.getPrimaryIndexKey());
-							assertFalse(hive.doesPrimaryIndeyKeyExist(partitionDimension.getName(), primaryIndexInstance.getPrimaryIndexKey()));
-						
-							for (final SecondaryIndexIdentifiable secondaryIndexIdentifiable : resourceIdentifiable.getSecondaryIndexIdentifiables()) {	
-								final SecondaryIndex secondaryIndex = resource.getSecondaryIndex(secondaryIndexIdentifiable.getSecondaryIndexName());																								
-								assertEquals(0, hive.getSecondaryIndexKeysWithPrimaryKey(secondaryIndex, primaryIndexInstance.getPrimaryIndexKey()).size());
-								new Undo() { public void f() throws Exception {
-							 		hive.insertSecondaryIndexKey(secondaryIndex, secondaryIndexIdentifiable.getSecondaryIndexKey(), primaryIndexInstance.getPrimaryIndexKey());										
-								}};								
-							}
-							new Undo() { public void f() throws Exception {				
-								hive.insertPrimaryIndexKey(partitionDimension, primaryIndexInstance.getPrimaryIndexKey());
-								assertTrue(hive.doesPrimaryIndeyKeyExist(partitionDimension.getName(), primaryIndexInstance.getPrimaryIndexKey()));
+									secondaryIndexIdentifiable.getSecondaryIndexKey(),
+									secondaryIndexIdentifiable.getResourceIdentifiable().getPrimaryIndexIdentifiable().getPrimaryIndexKey()
+								);
+								assertEquals(secondaryIndexIdentifiable.getResourceIdentifiable().getPrimaryIndexIdentifiable().getPrimaryIndexKey(),
+											hive.getPrimaryIndexKeyOfSecondaryIndexKey( partitionDimension.getName(), resource.getName(), secondaryIndex.getName(), secondaryIndexIdentifiable.getSecondaryIndexKey()));
 							}};
-						}}.cycle();
-					}						
-				}
-			} catch (Exception e) { throw new HiveException("Undoable exception", e); }
+						}}.cycle(); 
+					} catch(Exception e) { throw new HiveException("Undoable exception", e); }
+				}			
+			}			
 		}
-	
+		try {
+			for (final Resource resource : partitionDimension.getResources()) {						
+				Collection<ResourceIdentifiable> resourceIdentifiables = hiveScenario.getResourceIdentifiableInstancesForThisResource(resource);
+				for (final ResourceIdentifiable resourceIdentifiable : resourceIdentifiables) {	
+					//TODO this isn't quite redoing correctly
+					new Undoable() { public void f() throws Exception {
+						final PrimaryIndexIdentifiable primaryIndexInstance = resourceIdentifiable.getPrimaryIndexIdentifiable();
+						hive.deletePrimaryIndexKey(partitionDimension.getName(), primaryIndexInstance.getPrimaryIndexKey());
+						assertFalse(hive.doesPrimaryIndeyKeyExist(partitionDimension.getName(), primaryIndexInstance.getPrimaryIndexKey()));
+					
+						for (final SecondaryIndexIdentifiable secondaryIndexIdentifiable : resourceIdentifiable.getSecondaryIndexIdentifiables()) {	
+							final SecondaryIndex secondaryIndex = resource.getSecondaryIndex(secondaryIndexIdentifiable.getSecondaryIndexName());																								
+							assertEquals(0, hive.getSecondaryIndexKeysWithPrimaryKey(secondaryIndex, primaryIndexInstance.getPrimaryIndexKey()).size());
+							new Undo() { public void f() throws Exception {
+						 		hive.insertSecondaryIndexKey(secondaryIndex, secondaryIndexIdentifiable.getSecondaryIndexKey(), primaryIndexInstance.getPrimaryIndexKey());										
+							}};								
+						}
+						new Undo() { public void f() throws Exception {				
+							hive.insertPrimaryIndexKey(partitionDimension, primaryIndexInstance.getPrimaryIndexKey());
+							assertTrue(hive.doesPrimaryIndeyKeyExist(partitionDimension.getName(), primaryIndexInstance.getPrimaryIndexKey()));
+						}};
+					}}.cycle();
+				}						
+			}
+		} catch (Exception e) { throw new HiveException("Undoable exception", e); }
 	}
 	
 	private static<T> Map<T,T> makeThisToThatMap(Collection<T> items) {

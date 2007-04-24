@@ -1,6 +1,7 @@
 package org.hivedb.util;
 
 import java.sql.DriverManager;
+import java.util.Arrays;
 import java.util.Collection;
 
 import org.hivedb.util.functional.NumberIterator;
@@ -10,21 +11,23 @@ import org.testng.annotations.BeforeMethod;
 
 public class MysqlTestCase {
 	
-	protected Collection<String> dataNodes = null;
+	// Data nodes are inserted in the hive's node_metadata table. The databases are never actually created,
+	// since the hive never interacts directly with the data nodes.
+	protected String[] dataNodes = new String[] { "data1", "data2", "data3" }; 
+	
+	public Collection<String> getDataUris() {
+		return Transform.map(new Unary<String, String>() {
+		public String f(String dataNodeName) {
+			return getDataNodeConnectString(dataNodeName);
+		}},
+		Arrays.asList(dataNodes));
+	}
+
 	@BeforeMethod
 	public void setUp() {
 		recycleDatabase();
-		
-		this.dataNodes = Transform.map(new Unary<Number, String>() {
-			public String f(Number count) { return getDataNodeConnectString("data"+count.toString());  }},
-			new NumberIterator(3));
-		
-		for (String dataNode : dataNodes)
-			try {
-				recycleDatabase(dataNode);
-			}
-			catch(Exception e) {}
 	}
+	
 	private String getDataNodeConnectString(String name){
 		return String.format("jdbc:mysql://localhost/%s?user=test&password=test",name);
 	}
