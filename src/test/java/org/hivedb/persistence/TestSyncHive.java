@@ -6,6 +6,7 @@ import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.util.DerbyTestCase;
 import org.hivedb.util.HiveSyncer;
 import org.hivedb.util.MysqlTestCase;
 import org.hivedb.util.functional.Atom;
@@ -17,13 +18,13 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class TestSyncHive extends MysqlTestCase {
+public class TestSyncHive extends DerbyTestCase {
 
 	
 	@BeforeMethod
 	public void setup()
 	{
-		super.setUp();	
+		this.cleanupDbAfterEachTest = true;
 	}
 	
 	@Test

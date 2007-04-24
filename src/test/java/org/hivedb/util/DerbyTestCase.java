@@ -6,11 +6,15 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Collection;
 
 import javax.sql.DataSource;
 
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.database.DerbyUtils;
+import org.hivedb.util.functional.Transform;
+import org.hivedb.util.functional.Unary;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -128,4 +132,10 @@ public abstract class DerbyTestCase {
 	public String getDatabaseName() {
 		return databaseName;
 	}
-}
+	
+	protected String[] dataNodes = new String[] { "data1", "data2", "data3" }; 
+		
+		public Collection<String> getDataUris() {
+			return Arrays.asList(dataNodes);
+		}
+	}
