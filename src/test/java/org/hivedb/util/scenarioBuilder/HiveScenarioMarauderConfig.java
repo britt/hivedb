@@ -12,9 +12,6 @@ import org.hivedb.HiveException;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PrimaryIndexIdentifiable;
 import org.hivedb.meta.ResourceIdentifiable;
-import org.hivedb.util.functional.Generate;
-import org.hivedb.util.functional.Generator;
-import org.hivedb.util.functional.NumberIterator;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 
@@ -56,10 +53,10 @@ public class HiveScenarioMarauderConfig implements HiveScenarioConfig {
 		return list;
 	}
 	
-	public Collection<String> getIndexUris(final Hive hive) {
-		return Generate.create(new Generator<String>(){
-			public String f() { return hive.getHiveUri(); }}, new NumberIterator(2));
+	public String getHiveIndexesUri() {
+		return hive.getHiveUri();
 	}
+	
 	public Collection<Node> getDataNodes() {
 		if (dataNodes == null)
 			dataNodes = Transform.map(new Unary<String, Node>() {
