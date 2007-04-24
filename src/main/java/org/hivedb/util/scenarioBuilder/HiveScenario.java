@@ -59,49 +59,47 @@ public class HiveScenario {
 		fill(hiveScenarioConfig, hive);
 	}
 	private void fill(final HiveScenarioConfig hiveScenarioConfig, final Hive hive) throws HiveException {
-		Map<PrimaryIndexIdentifiable, PartitionDimension> partitionDimensionMap = InstallHiveIndexSchema.install(hiveScenarioConfig, hive);
-		this.partitionDimensionMap = partitionDimensionMap;
-		populateData(hiveScenarioConfig, hive, partitionDimensionMap);
+		PartitionDimension partitionDimension = InstallHiveIndexSchema.install(hiveScenarioConfig, hive);
+		this.partitionDimension = partitionDimension;
+		populateData(hiveScenarioConfig, hive, partitionDimension);
 	}
-	private void populateData(final HiveScenarioConfig hiveScenarioConfig, final Hive hive, Map<PrimaryIndexIdentifiable, PartitionDimension> partitionDimensionMap) {
+	private void populateData(final HiveScenarioConfig hiveScenarioConfig, final Hive hive, PartitionDimension partitionDimension) {
 		GenerateHiveIndexKeys generateHiveIndexKeys = new GenerateHiveIndexKeys(new PersisterImpl(), primaryIndexInstanceCount, resourceInstanceCount);
-		Map<PrimaryIndexIdentifiable, Collection<PrimaryIndexIdentifiable>> primaryIndexIdentifiableMap = 
+		Collection<PrimaryIndexIdentifiable> primaryIndexIdentifiables = 
 			generateHiveIndexKeys.createPrimaryIndexInstances(hive, hiveScenarioConfig);
 		
-		Map<PrimaryIndexIdentifiable, Map<ResourceIdentifiable, Collection<ResourceIdentifiable>>> secondaryIndexInstanceMap
-			= generateHiveIndexKeys.createSecondaryIndexInstances(hive, hiveScenarioConfig, primaryIndexIdentifiableMap);
+		Map<ResourceIdentifiable, Collection<ResourceIdentifiable>> resourceIdentifiableMap
+			= generateHiveIndexKeys.createSecondaryIndexInstances(hive, hiveScenarioConfig, primaryIndexIdentifiables);
 	
 		this.hive = hive;
-		this.primaryIndexIdentifiableMap = primaryIndexIdentifiableMap;
-		this.resourceIdentifiableMap = secondaryIndexInstanceMap;
+		this.primaryIndexIdentifiables = primaryIndexIdentifiables;
+		this.resourceIdentifiableMap = resourceIdentifiableMap;
 	}
 	
 	Hive hive;
-	Map<PrimaryIndexIdentifiable, PartitionDimension> partitionDimensionMap;
-	Map<PrimaryIndexIdentifiable, Collection<PrimaryIndexIdentifiable>>  primaryIndexIdentifiableMap;
-	Map<PrimaryIndexIdentifiable, Map<ResourceIdentifiable, Collection<ResourceIdentifiable>>> resourceIdentifiableMap;
+	PartitionDimension partitionDimension;
+	Collection<PrimaryIndexIdentifiable>  primaryIndexIdentifiables;
+	Map<ResourceIdentifiable, Collection<ResourceIdentifiable>> resourceIdentifiableMap;
 	public Hive getHive() {
 		return hive;
 	}	
-	public Collection<PartitionDimension> getCreatedPartitionDimensions()
+	public PartitionDimension getCreatedPartitionDimension()
 	{
-		return partitionDimensionMap.values();
+		return partitionDimension;
 	}
 	public Collection<PrimaryIndexIdentifiable> getPrimaryIndexInstancesCreatedByThisPartitionDimension(PartitionDimension partitionDimension)
 	{
-		return primaryIndexIdentifiableMap.get(Transform.reverseMap(partitionDimensionMap).get(partitionDimension));
+		return primaryIndexIdentifiables;
 	}
 
 	public Collection<ResourceIdentifiable> getResourceIdentifiableInstancesForThisResource(final Resource resource) {
-		final Map<ResourceIdentifiable, Collection<ResourceIdentifiable>> resourceIdentifiableToResourceIdentifiableInstancesMap = 
-				resourceIdentifiableMap.get(Transform.reverseMap(partitionDimensionMap).get(resource.getPartitionDimension()));
-		
-		return resourceIdentifiableToResourceIdentifiableInstancesMap.get(
+	
+		return resourceIdentifiableMap.get(
 			Filter.grepSingle(new Predicate<ResourceIdentifiable>() {
 				public boolean f(ResourceIdentifiable resourceIdentifiable) {
 					return resourceIdentifiable.getResourceName().equals(resource.getName());
 				}},
-				resourceIdentifiableToResourceIdentifiableInstancesMap.keySet())
+				resourceIdentifiableMap.keySet())
 		);
 	}
 	
@@ -117,7 +115,7 @@ public class HiveScenario {
 						}
 					}
 				},
-				resourceIdentifiableMap.get(Transform.reverseMap(partitionDimensionMap).get(partitionDimension)).keySet());
+				resourceIdentifiableMap.keySet());
 	}
 	private String getPartitionDimensionName(ResourceIdentifiable resourceIdentifiable) {
 		return resourceIdentifiable.getPrimaryIndexIdentifiable().getPartitionDimensionName();

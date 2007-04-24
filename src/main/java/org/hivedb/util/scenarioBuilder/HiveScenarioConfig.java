@@ -21,8 +21,8 @@ public interface HiveScenarioConfig {
 	PrimaryIndexIdentifiable getPrimaryIndexIdentifiable();
 	
 	Hive getHive();
-	// The uris of the databases used for the index servers. This may be a single URI matching the Hive URI.
-	Collection<String> getIndexUris(Hive hive);
+	// The URI of the database that stores the hive indexes. This will probably always be the same as the hive URI, and might go away
+	String getHiveIndexesUri();
 	// The nodes of representing the data storage databases.
 	Collection<Node> getDataNodes();
 }
