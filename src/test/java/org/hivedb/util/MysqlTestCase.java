@@ -4,7 +4,6 @@ import java.sql.DriverManager;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.hivedb.util.functional.NumberIterator;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.testng.annotations.BeforeMethod;

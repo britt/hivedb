@@ -15,7 +15,6 @@ import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.hivedb.util.scenarioBuilder.HiveScenario;
 import org.hivedb.util.scenarioBuilder.HiveScenarioMarauderConfig;
-import org.testng.annotations.BeforeMethod;
 
 
 public abstract class PirateHiveTestCase extends DerbyTestCase {

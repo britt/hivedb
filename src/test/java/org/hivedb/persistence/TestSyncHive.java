@@ -8,7 +8,6 @@ import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.DerbyTestCase;
 import org.hivedb.util.HiveSyncer;
-import org.hivedb.util.MysqlTestCase;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.scenarioBuilder.HiveScenario;

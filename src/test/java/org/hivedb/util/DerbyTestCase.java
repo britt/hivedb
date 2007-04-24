@@ -13,8 +13,6 @@ import javax.sql.DataSource;
 
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.database.DerbyUtils;
-import org.hivedb.util.functional.Transform;
-import org.hivedb.util.functional.Unary;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;

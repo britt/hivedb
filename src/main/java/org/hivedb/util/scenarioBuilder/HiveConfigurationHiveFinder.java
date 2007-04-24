@@ -12,6 +12,7 @@ import org.hivedb.util.InstallHiveIndexSchema;
 public class HiveConfigurationHiveFinder implements Finder {
 	
 	
+	@SuppressWarnings("unused")
 	private HiveScenarioConfig hiveScenarioConfig;
 	private PartitionDimension partitionDimension;
 	public HiveConfigurationHiveFinder(HiveScenarioConfig hiveScenarioConfig) {
