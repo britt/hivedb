@@ -12,7 +12,7 @@
 		HiveDB is an open source framework for partitioning MySQL
 		systems.
 	</description>
-	<url>http://maven.apache.org</url>
+	<url>http://www.hivedb.org</url>
 	<developers>
 		<developer>
 			<id>kkelm</id>

@@ -24,4 +24,7 @@ public class Pair<K,V> implements Entry<K,V> {
 		return value;
 	}
 	
+	public String toString() {
+		return String.format("%s : %s", getKey(), getValue());
+	}
 }
