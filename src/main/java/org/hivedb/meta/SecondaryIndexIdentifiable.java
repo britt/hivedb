@@ -48,4 +48,6 @@ public interface SecondaryIndexIdentifiable
 	 * the secondary index that maps bar.id to foo.id would have a column name of "id" and secondary index name of "bar.id"
 	 */
 	String getSecondaryIndexName();
+	
+	<T> Class<T> getRepresentedClass();
 }

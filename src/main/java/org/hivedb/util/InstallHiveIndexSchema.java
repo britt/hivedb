@@ -11,6 +11,8 @@ import org.hivedb.meta.Resource;
 import org.hivedb.meta.ResourceIdentifiable;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.SecondaryIndexIdentifiable;
+import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Predicate;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.hivedb.util.scenarioBuilder.HiveScenarioConfig;
@@ -21,15 +23,15 @@ public class InstallHiveIndexSchema {
 			final HiveScenarioConfig hiveScenarioConfig,
 			final Hive hive) throws HiveException {
 		
-		// Create a partition dimension and its subordinate NodeGroup, primary Node, Resources, and SecondaryIndexes
-		PartitionDimension partitionDimension;
+		final PartitionDimension partitionDimension = createPartitionDimension(hiveScenarioConfig);	
 		try {
-			partitionDimension = createPartitionDimension(hiveScenarioConfig);
-			hive.addPartitionDimension(partitionDimension);
+			// Create or update a partition dimension and its subordinate NodeGroup, primary Node, Resources, and SecondaryIndexes
+			new HiveSyncer(hive).syncHive(hiveScenarioConfig);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
-				
+		
+		// Create any missing tables of primary and secondary indexes
 		try {
 			hive.create();
 		}

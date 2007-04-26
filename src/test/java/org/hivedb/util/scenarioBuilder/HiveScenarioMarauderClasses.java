@@ -60,6 +60,15 @@ public class HiveScenarioMarauderClasses {
 		
 		public String getResourceName() { return this.getClass().getSimpleName().toLowerCase(); }
 		
+		@SuppressWarnings("unchecked")
+		public <T> Class<T> getRepresentedClass() {
+			return (Class<T>) Pirate.class;
+		}
+		
+		public Object getId() {
+			return id;
+		}
+		
 		/* SecondaryIndex METHODS */
 		
 		// Since Pirate is also a ResourceIdentifiable the argument is equal to this
@@ -85,6 +94,8 @@ public class HiveScenarioMarauderClasses {
 		public Object getRepresentedResourceFieldValue() {
 			return pirateName;
 		}
+
+	
 	}
 	
 	public static class Treasure implements ResourceIdentifiable, SecondaryIndexIdentifiable 
@@ -129,6 +140,15 @@ public class HiveScenarioMarauderClasses {
 		public String getSecondaryIndexName() {return getResourceName() + "." + getSecondaryIndexColumnName(); }
 
 		public Object getRepresentedResourceFieldValue() {
+			return id;
+		}
+
+		@SuppressWarnings("unchecked")
+		public <T> Class<T> getRepresentedClass() {
+			return (Class<T>) Treasure.class;
+		}
+
+		public Object getId() {
 			return id;
 		}		
 	}	                      

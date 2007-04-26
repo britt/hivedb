@@ -24,4 +24,6 @@ public interface ResourceIdentifiable {
 	Collection<SecondaryIndexIdentifiable> getSecondaryIndexIdentifiables();
 	PrimaryIndexIdentifiable getPrimaryIndexIdentifiable();
 	String getResourceName();
+	Object getId();
+	<T> Class<T> getRepresentedClass();
 }

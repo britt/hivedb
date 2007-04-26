@@ -139,8 +139,7 @@ public class Hive implements Finder, Synchronizeable {
 	}
 	
 	public void create() throws HiveException, SQLException {
-		for (PartitionDimension partitionDimension : this
-				.getPartitionDimensions())
+		for (PartitionDimension partitionDimension : this.getPartitionDimensions())
 			new IndexSchema(partitionDimension).install();
 	}
 
@@ -362,8 +361,7 @@ public class Hive implements Finder, Synchronizeable {
 				partitionDimension);
 
 		BasicDataSource datasource = new HiveBasicDataSource(getHiveUri());
-		PartitionDimensionDao partitionDimensionDao = new PartitionDimensionDao(
-				datasource);
+		PartitionDimensionDao partitionDimensionDao = new PartitionDimensionDao(datasource);
 		
 		// We allow the partition dimension to not specify an indexUri and we default it to the hiveUri
 		if (partitionDimension.getIndexUri() == null)
@@ -1414,7 +1412,7 @@ public class Hive implements Finder, Synchronizeable {
 					String
 							.format(
 									"Secondary index key %s of partition dimension %s on secondary index %s not found.",
-									secondaryIndex.toString(),
+									secondaryIndexKey,
 									partitionDimension.getName(),
 									secondaryIndex.getName()), e);
 		}
