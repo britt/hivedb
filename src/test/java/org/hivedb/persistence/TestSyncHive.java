@@ -19,7 +19,7 @@ import org.testng.annotations.Test;
 
 public class TestSyncHive extends DerbyTestCase {
 
-	
+	/*
 	@BeforeMethod
 	public void setup()
 	{
@@ -145,4 +145,5 @@ public class TestSyncHive extends DerbyTestCase {
 	private Hive loadHive() throws HiveException {
 		return Hive.load(getConnectString());
 	}
+	*/
 }
