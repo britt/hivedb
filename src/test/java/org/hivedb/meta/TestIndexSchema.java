@@ -4,8 +4,8 @@ import static org.testng.AssertJUnit.fail;
 
 import java.sql.SQLException;
 
-import org.hivedb.util.DerbyTestCase;
 import org.hivedb.util.TestObjectFactory;
+import org.hivedb.util.database.DerbyTestCase;
 import org.testng.annotations.Test;
 public class TestIndexSchema extends DerbyTestCase {
 	@Test

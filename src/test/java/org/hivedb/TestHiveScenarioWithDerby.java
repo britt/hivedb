@@ -2,7 +2,7 @@ package org.hivedb;
 
 import java.util.Collection;
 
-import org.hivedb.util.DerbyTestCase;
+import org.hivedb.util.database.DerbyTestCase;
 import org.hivedb.util.database.DerbyUtils;
 import org.hivedb.util.functional.NumberIterator;
 import org.hivedb.util.functional.Transform;

@@ -1,6 +1,6 @@
 package org.hivedb.persistence;
 
-import org.hivedb.util.DerbyTestCase;
+import org.hivedb.util.database.DerbyTestCase;
 
 public class TestSyncHive extends DerbyTestCase {
 

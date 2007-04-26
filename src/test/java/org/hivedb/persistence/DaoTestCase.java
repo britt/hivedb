@@ -14,7 +14,7 @@ import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
-import org.hivedb.util.DerbyTestCase;
+import org.hivedb.util.database.DerbyTestCase;
 import org.testng.annotations.BeforeMethod;
 
 /**

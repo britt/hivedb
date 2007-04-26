@@ -1,7 +1,7 @@
 package org.hivedb;
 
 import org.hivedb.meta.GlobalSchema;
-import org.hivedb.util.DerbyTestCase;
+import org.hivedb.util.database.DerbyTestCase;
 import org.testng.annotations.Test;
 
 public class TestMetadataSchemaWithDerby extends DerbyTestCase {

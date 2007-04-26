@@ -1,6 +1,6 @@
 package org.hivedb;
 
-import org.hivedb.util.MysqlTestCase;
+import org.hivedb.util.database.MysqlTestCase;
 import org.hivedb.util.scenarioBuilder.HiveScenarioMarauderConfig;
 import org.testng.annotations.BeforeMethod;
 

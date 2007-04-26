@@ -1,7 +1,7 @@
 package org.hivedb.persistence;
 
 import org.hivedb.meta.persistence.HiveBasicDataSource;
-import org.hivedb.util.DerbyTestCase;
+import org.hivedb.util.database.DerbyTestCase;
 import org.testng.AssertJUnit;
 import org.testng.annotations.Test;
 
