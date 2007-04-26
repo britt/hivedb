@@ -1,21 +1,6 @@
 package org.hivedb.persistence;
 
-import org.hivedb.Hive;
-import org.hivedb.HiveException;
-import org.hivedb.meta.Node;
-import org.hivedb.meta.PartitionDimension;
-import org.hivedb.meta.Resource;
-import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.DerbyTestCase;
-import org.hivedb.util.HiveSyncer;
-import org.hivedb.util.functional.Atom;
-import org.hivedb.util.functional.Filter;
-import org.hivedb.util.scenarioBuilder.HiveScenario;
-import org.hivedb.util.scenarioBuilder.HiveScenarioConfig;
-import org.hivedb.util.scenarioBuilder.HiveScenarioMarauderConfig;
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
 
 public class TestSyncHive extends DerbyTestCase {
 

@@ -1,4 +1,4 @@
-package org.hivedb.util;
+package org.hivedb.util.database;
 
 import java.io.BufferedReader;
 import java.io.File;
