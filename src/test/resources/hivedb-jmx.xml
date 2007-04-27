@@ -38,11 +38,11 @@
 			<!-- 
 				<entry key="HiveDB:name=JmxHttpAdaptorFormatted" value-ref="httpAdaptor"/>				
 			 -->
-				<entry key="HiveDB:name=DirectoryStatistics">
-					<ref bean="DirectoryStatistics" />
+				<entry key="HiveDB:name=directoryStatistics">
+					<ref bean="directoryStatistics" />
 				</entry>
-				<entry key="HiveDB:name=HiveStatistics">
-					<ref bean="HiveStatistics" />
+				<entry key="HiveDB:name=hiveStatistics">
+					<ref bean="hiveStatistics" />
 				</entry>
 			</map>
 		</property>

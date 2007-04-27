@@ -126,6 +126,19 @@ public class Hive implements Finder, Synchronizeable {
 		return hive;
 	}
 	
+	/***
+	 * Alternate system entry point, using this load method enables runtime statistics tracking.
+	 * Factory method for all Hive interaction. If the first
+	 * attempt to load the Hive throws any exception, the Hive class will
+	 * attempt to install the database schema at the target URI, and then
+	 * attempt to reload that schema one time before throwing a HiveException.
+	 * 
+	 * @param hiveDatabaseUri
+	 * @param hiveStats
+	 * @param directoryStats
+	 * @return
+	 * @throws HiveException
+	 */
 	public static Hive load(String hiveDatabaseUri, HivePerformanceStatistics hiveStats, DirectoryPerformanceStatistics directoryStats) throws HiveException {
 		Hive hive = Hive.load(hiveDatabaseUri);
 		hive.setPerformanceStatistics(hiveStats);
@@ -138,6 +151,11 @@ public class Hive implements Finder, Synchronizeable {
 		return hive;
 	}
 	
+	/***
+	 * Installs the index schema for all partition dimensions.
+	 * @throws HiveException
+	 * @throws SQLException
+	 */
 	public void create() throws HiveException, SQLException {
 		for (PartitionDimension partitionDimension : this.getPartitionDimensions())
 			new IndexSchema(partitionDimension).install();
@@ -245,12 +263,22 @@ public class Hive implements Finder, Synchronizeable {
 		this.readOnly = readOnly;
 	}
 
+	/***
+	 * Set whether or not the Hive is read-only.
+	 * @param readOnly true == read-only, false == read-write
+	 */
 	public void updateHiveReadOnly(Boolean readOnly) {
 		this.setReadOnly(readOnly);
 		new HiveSemaphoreDao(new HiveBasicDataSource(this.getHiveUri())).update(new HiveSemaphore(
 				readOnly, this.getRevision()));
 	}
 
+	/***
+	 * Set the read-only status of a particular node.
+	 * @param node Target node
+	 * @param readOnly true == read-only, false == read-write
+	 * @throws HiveException
+	 */
 	public void updateNodeReadOnly(Node node, Boolean readOnly) throws HiveException {
 		node.setReadOnly(readOnly);
 		this.updateNode(node);
@@ -656,6 +684,12 @@ public class Hive implements Finder, Synchronizeable {
 		return secondaryIndex;
 	}
 
+	/***
+	 * Remove a partition dimension from the hive.
+	 * @param partitionDimension
+	 * @return
+	 * @throws HiveException
+	 */
 	public PartitionDimension deletePartitionDimension(
 			PartitionDimension partitionDimension) throws HiveException {
 		isWritable(String.format("Deleting partition dimension %s",
@@ -683,6 +717,12 @@ public class Hive implements Finder, Synchronizeable {
 		return partitionDimension;
 	}
 
+	/***
+	 * remove a node from the hive.
+	 * @param node
+	 * @return
+	 * @throws HiveException
+	 */
 	public Node deleteNode(Node node) throws HiveException {
 		isWritable(String.format("Deleting node %s", node.getUri()));
 		itemExistsInCollection(
@@ -708,6 +748,12 @@ public class Hive implements Finder, Synchronizeable {
 		return node;
 	}
 
+	/***
+	 * remove a resource.
+	 * @param resource
+	 * @return
+	 * @throws HiveException
+	 */
 	public Resource deleteResource(Resource resource) throws HiveException {
 		isWritable(String.format("Deleting resource %s", resource.getName()));
 		itemExistsInCollection(
@@ -730,6 +776,12 @@ public class Hive implements Finder, Synchronizeable {
 		return resource;
 	}
 
+	/***
+	 * Remove a secondary index.
+	 * @param secondaryIndex
+	 * @return
+	 * @throws HiveException
+	 */
 	public SecondaryIndex deleteSecondaryIndex(SecondaryIndex secondaryIndex)
 			throws HiveException {
 		isWritable(String.format("Deleting secondary index %s", secondaryIndex
@@ -1594,11 +1646,29 @@ public class Hive implements Finder, Synchronizeable {
 		return isReadOnly() || partitionDimension.getNodeGroup().getNode(semaphore.getId()).isReadOnly() || semaphore.isReadOnly();
 	}
 	
+	/***
+	 * Get a JDBC connection to a data node by partition key.
+	 * @param partitionDimension
+	 * @param primaryIndexKey
+	 * @param intent
+	 * @return
+	 * @throws HiveException
+	 * @throws SQLException
+	 */
 	public Connection getConnection(PartitionDimension partitionDimension,
 			Object primaryIndexKey, AccessType intent) throws HiveException, SQLException {
 		return getConnection(partitionDimension, getNodeSemaphoreOfPrimaryIndexKey(partitionDimension, primaryIndexKey), intent);
 	}
 	
+	/***
+	 * Get a JDBC connection to a data node by a secondary index key.
+	 * @param secondaryIndex
+	 * @param secondaryIndexKey
+	 * @param intent
+	 * @return
+	 * @throws HiveException
+	 * @throws SQLException
+	 */
 	public Connection getConnection(SecondaryIndex secondaryIndex,
 			Object secondaryIndexKey, AccessType intent) throws HiveException, SQLException {
 		return getConnection(
@@ -1607,10 +1677,19 @@ public class Hive implements Finder, Synchronizeable {
 				intent);
 	}
 	
+	/***
+	 * Get a JdbcDaoSupportCache for a partition dimension.
+	 * @param partitionDimension
+	 * @return
+	 */
 	public JdbcDaoSupportCache getJdbcDaoSupportCache(PartitionDimension partitionDimension) {
 		return this.getJdbcDaoSupportCache(partitionDimension.getName());
 	}
-	
+	/***
+	 * Get a JdbcDaoSupportCache for a partition dimension by name.
+	 * @param partitionDimension
+	 * @return
+	 */
 	public JdbcDaoSupportCache getJdbcDaoSupportCache(String partitionDimensionName) {
 		return this.dataSourceCaches.get(partitionDimensionName);
 	}
