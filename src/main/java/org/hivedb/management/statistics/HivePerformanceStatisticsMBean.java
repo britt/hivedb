@@ -88,7 +88,7 @@ public class HivePerformanceStatisticsMBean extends StandardMBean implements Hiv
 		stats.add(key, value);
 	}
 	
-	public void dercrement(String key) {
+	public void decrement(String key) {
 		stats.decrement(key);
 	}
 	

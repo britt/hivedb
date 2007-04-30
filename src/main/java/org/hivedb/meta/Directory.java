@@ -30,6 +30,7 @@ import javax.sql.DataSource;
 import org.hivedb.HiveException;
 import org.hivedb.StatisticsProxy;
 import org.hivedb.management.statistics.Counter;
+import org.hivedb.management.statistics.NoOpStatistics;
 import org.hivedb.util.JdbcTypeMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
@@ -466,15 +467,5 @@ public class Directory extends JdbcDaoSupport {
 
 	public void setPerformanceMonitoringEnabled(boolean performanceMonitoringEnabled) {
 		this.performanceMonitoringEnabled = performanceMonitoringEnabled;
-	}
-	
-	private class NoOpStatistics implements Counter {
-
-		public void add(String key, long value) {}
-
-		public void dercrement(String key) {}
-
-		public void increment(String key) {}
-
 	}
 }

@@ -601,7 +601,7 @@ public class DirectoryPerformanceStatisticsMBean extends StandardMBean implement
 	/* (non-Javadoc)
 	 * @see org.hivedb.management.statistics.Counter#dercrement(java.lang.String)
 	 */
-	public void dercrement(String key) {
+	public void decrement(String key) {
 		stats.decrement(key);
 	}
 	
