@@ -185,7 +185,10 @@ public class Hive implements Finder, Synchronizeable {
 			if(dataSourceCaches.containsKey(name))
 				dataSourceCaches.get(name).sync();
 			else {
-				dataSourceCaches.put(name, new JdbcDaoSupportCacheImpl(name, this));
+				if(isPerformanceMonitoringEnabled())
+					dataSourceCaches.put(name, new JdbcDaoSupportCacheImpl(name, this, performanceStatistics));
+				else
+					dataSourceCaches.put(name, new JdbcDaoSupportCacheImpl(name, this));
 			}
 		}
 	}
@@ -212,7 +215,10 @@ public class Hive implements Finder, Synchronizeable {
 		dataSourceCaches = new ConcurrentHashMap<String, JdbcDaoSupportCacheImpl>();
 		for (PartitionDimension dimension : this.partitionDimensions) {
 			this.directories.add(new Directory(dimension, this.dataSource));
-			dataSourceCaches.put(dimension.getName(), new JdbcDaoSupportCacheImpl(dimension.getName(), this));
+			if(isPerformanceMonitoringEnabled())
+				dataSourceCaches.put(dimension.getName(), new JdbcDaoSupportCacheImpl(dimension.getName(), this, performanceStatistics));
+			else
+				dataSourceCaches.put(dimension.getName(), new JdbcDaoSupportCacheImpl(dimension.getName(), this));
 		}
 	}
 
