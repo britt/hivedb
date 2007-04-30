@@ -4,6 +4,7 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.hivedb.management.statistics.HivePerformanceStatistics;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.NodeSemaphore;
@@ -20,15 +21,19 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	private Hive hive;
 	private String partitionDimension;
 	private Map<Integer, SimpleJdbcDaoSupport> jdbcDaoSupports;
-//	private Map<Integer, NodePerformanceStatistics> stats;
+	private HivePerformanceStatistics stats;
 	
 	private int revision = Integer.MIN_VALUE;
 	
 	public JdbcDaoSupportCacheImpl(String partitionDimension, Hive hive) {
+		this(partitionDimension, hive, null);
+	}
+	
+	public JdbcDaoSupportCacheImpl(String partitionDimension, Hive hive, HivePerformanceStatistics stats) {
 		this.partitionDimension = partitionDimension;
 		this.hive = hive;
 		this.jdbcDaoSupports = new ConcurrentHashMap<Integer, SimpleJdbcDaoSupport>();
-//		this.stats = new ConcurrentHashMap<Integer, NodePerformanceStatistics>();
+		this.stats = stats;
 		try {
 			sync();
 		} catch (HiveException e) {
@@ -64,29 +69,49 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 		try {
 			node = hive.getPartitionDimension(partitionDimension).getNodeGroup().getNode(semaphore.getId());
 		} catch (HiveException e) {
+			//failure
+			countFailure();
 			throw new HiveRuntimeException(e.getMessage());
 		}
 		
 		if(intention == AccessType.ReadWrite && (hive.isReadOnly() || node.isReadOnly() || semaphore.isReadOnly())){
 			//failure
+			countFailure();
 			throw new HiveReadOnlyException("This partition key cannot be written to at this time.");
 		}
 		else if( jdbcDaoSupports.containsKey(hash(semaphore.getId(), intention))){
 			// success case
+			countSuccess(intention);
 			return jdbcDaoSupports.get(hash(semaphore.getId(), intention));
 		}
 		else {
 			try {
 				SimpleJdbcDaoSupport dao = addDataSource(semaphore.getId(), intention);
 				//success
+				countSuccess(intention);
 				return dao;
 			} catch (HiveException e) {
 				//failure
+				countFailure();
 				throw new HiveRuntimeException(e.getMessage());
 			}
 		}
 	}
 	
+	private void countSuccess(AccessType intention) {
+		if(isPerformanceMonitoringEnabled()) {
+			if(intention == AccessType.ReadWrite)
+				stats.incrementNewWriteConnections();
+			else
+				stats.incrementNewReadConnections();
+		}
+	}
+
+	private void countFailure() {
+		if(isPerformanceMonitoringEnabled())
+			stats.incrementConnectionFailures();
+	}
+
 	/**
 	 * Get a SimpleJdbcDaoSupport by primary partition key.
 	 * @param partitionDimension The partition dimension
@@ -158,5 +183,9 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 
 	public String getPartitionDimension() {
 		return partitionDimension;
+	}
+	
+	public boolean isPerformanceMonitoringEnabled() {
+		return this.stats != null;
 	}
 }
