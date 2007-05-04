@@ -14,13 +14,7 @@ public class InstallHiveGlobalSchema {
 	 */
 	public static void install(String connectString) {
 		try {
-			try {
-				HiveDbDialect dialect =  DriverLoader.discernDialect(connectString);
-				DriverLoader.loadByDialect(dialect);
-				new GlobalSchema(connectString).install();
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
+			new GlobalSchema(connectString).install();
 			BasicDataSource ds = new HiveBasicDataSource(connectString);
 			HiveSemaphoreDao dao = new HiveSemaphoreDao(ds);
 			
