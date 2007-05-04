@@ -88,7 +88,7 @@ public class Hive implements Finder, Synchronizeable {
 		} catch (ClassNotFoundException e) {
 			throw new HiveException("Unable to load database driver: "
 					+ e.getMessage(), e);
-		}
+		} 
 		
 		Hive hive = null;
 		HiveBasicDataSource ds = new HiveBasicDataSource(hiveDatabaseUri);
