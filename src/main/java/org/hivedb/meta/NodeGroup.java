@@ -83,12 +83,12 @@ public class NodeGroup implements Finder {
 				return node;
 		throw new HiveException("Node with id " + nodeId + " is not in this node group");
 	}
-	public Node getNode(String nodeUri) throws HiveException 
+	public Node getNode(String name) throws HiveException 
 	{
 		for (Node node : getNodes())
-			if (node.getUri().equals(nodeUri))
+			if (node.getName().equals(name))
 				return node;
-		throw new HiveException("Node with uri " + nodeUri + " is not in this node group");
+		throw new HiveException("Node with uri " + name + " is not in this node group");
 	}
 
 	public <T extends Nameable> T findByName(Class<T> forClass, String name) throws HiveException {

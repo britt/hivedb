@@ -39,6 +39,7 @@ public class GlobalSchema extends Schema {
 		return "CREATE TABLE node_metadata ( "
 				+ "id " + getNumericPrimaryKeySequenceModifier(dialect) + ", " 
 				+ "node_group_id int not null, "
+				+ "name varchar(255) not null, "
 				+ "uri varchar(255) not null, "
 				+ "read_only int " // Derby doesn't have BIT
 				+ " )";

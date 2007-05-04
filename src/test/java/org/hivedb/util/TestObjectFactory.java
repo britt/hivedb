@@ -31,7 +31,7 @@ public class TestObjectFactory {
 	}
 	
 	public static Node node(double capacity) {
-		Node node = new Node("aNode" + new Random().nextInt(), false);
+		Node node = new Node("aNode" + new Random().nextInt(),"aNode" + new Random().nextInt(), false);
 		node.setCapacity(capacity);
 		return node;
 	}

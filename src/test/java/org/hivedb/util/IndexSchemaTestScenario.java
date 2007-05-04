@@ -55,7 +55,7 @@ public class IndexSchemaTestScenario {
 	}
 
 	public Node node() {
-		return new Node(0, ds.getUrl(), false);
+		return new Node(0, "aNode", ds.getUrl(), false);
 	}
 
 	public PartitionDimension partitionDimension() {

@@ -583,7 +583,7 @@ public class Hive implements Finder, Synchronizeable {
 	public Node updateNode(Node node) throws HiveException {
 		isWritable("Updating node");
 		isIdPresentInCollection(String.format("Node with id %s does not exist",
-				node.getUri()), node.getNodeGroup().getNodes(), node);
+				node.getName()), node.getNodeGroup().getNodes(), node);
 
 		BasicDataSource datasource = new HiveBasicDataSource(this.getHiveUri());
 		NodeDao nodeDao = new NodeDao(datasource);
@@ -715,12 +715,12 @@ public class Hive implements Finder, Synchronizeable {
 	 * @throws HiveException
 	 */
 	public Node deleteNode(Node node) throws HiveException {
-		isWritable(String.format("Deleting node %s", node.getUri()));
+		isWritable(String.format("Deleting node %s", node.getName()));
 		itemExistsInCollection(
 				String
 						.format(
 								"Node %s does not match any node in the partition dimenesion %s",
-								node.getUri(), node.getNodeGroup()
+								node.getName(), node.getNodeGroup()
 										.getPartitionDimension().getName()),
 				node.getNodeGroup().getPartitionDimension().getNodeGroup()
 						.getNodes(), node);

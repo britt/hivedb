@@ -63,7 +63,7 @@ public class ExampleHiveTest extends DerbyTestCase {
 		partitionDimension = hive.addPartitionDimension(partitionDimension);
 		
 		//Create a Data Node
-		Node dataNode = new Node(getConnectString());
+		Node dataNode = new Node("aNode",getConnectString());
 		
 		//Add it to the partition dimension
 		hive.addNode(partitionDimension, dataNode);

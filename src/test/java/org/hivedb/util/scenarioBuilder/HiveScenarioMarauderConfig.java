@@ -61,7 +61,7 @@ public class HiveScenarioMarauderConfig implements HiveScenarioConfig {
 		if (dataNodes == null)
 			dataNodes = Transform.map(new Unary<String, Node>() {
 				public Node f(String dataNodeUri) {
-					return new Node(dataNodeUri,false);	
+					return new Node("daveyJonesLocker",dataNodeUri,false);	
 				}},
 				dataNodeUris);
 		return dataNodes;

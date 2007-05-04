@@ -31,14 +31,15 @@ public class NodeDao extends JdbcDaoSupport implements DataAccessObject<Node,Int
 	public Integer create(Node newObject) throws SQLException {
 		Object[] parameters = new Object[] { 
 				newObject.getNodeGroup().getId(),
+				newObject.getName(), 
 				newObject.getUri(), 
 				newObject.isReadOnly()
 				};
 		KeyHolder generatedKey = new GeneratedKeyHolder();
 		JdbcTemplate j = getJdbcTemplate();
 		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
-				"INSERT INTO node_metadata (node_group_id,uri,read_only) VALUES (?,?,?)",
-				new int[] {Types.INTEGER,Types.VARCHAR,Types.INTEGER});
+				"INSERT INTO node_metadata (node_group_id,name,uri,read_only) VALUES (?,?,?,?)",
+				new int[] {Types.INTEGER,Types.VARCHAR,Types.VARCHAR,Types.INTEGER});
 		creatorFactory.setReturnGeneratedKeys(true);
 		int rows = j.update(creatorFactory
 				.newPreparedStatementCreator(parameters), generatedKey);
@@ -79,14 +80,15 @@ public class NodeDao extends JdbcDaoSupport implements DataAccessObject<Node,Int
 	public void update(Node node) throws SQLException {
 		Object[] parameters = new Object[] { 
 				node.getNodeGroup().getId(),
+				node.getName(), 
 				node.getUri(), 
 				node.isReadOnly(),
 				node.getId()
 				};
 		JdbcTemplate j = getJdbcTemplate();
 		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
-				"UPDATE node_metadata set node_group_id=?,uri=?,read_only=? where id=?",
-				new int[] {Types.INTEGER,Types.VARCHAR,Types.INTEGER,Types.INTEGER});
+				"UPDATE node_metadata set node_group_id=?,name=?,uri=?,read_only=? where id=?",
+				new int[] {Types.INTEGER,Types.VARCHAR,Types.VARCHAR,Types.INTEGER,Types.INTEGER});
 		int rows = j.update(creatorFactory
 				.newPreparedStatementCreator(parameters));
 		if (rows != 1)
@@ -108,7 +110,7 @@ public class NodeDao extends JdbcDaoSupport implements DataAccessObject<Node,Int
 
 	protected class NodeRowMapper implements RowMapper {
 		public Object mapRow(ResultSet rs, int rowNumber) throws SQLException {
-			return new Node(rs.getInt("id"), rs.getString("uri"), rs.getInt("read_only") == 0 ? false : true);
+			return new Node(rs.getInt("id"), rs.getString("name"), rs.getString("uri"), rs.getInt("read_only") == 0 ? false : true);
 		}
 	}
 }

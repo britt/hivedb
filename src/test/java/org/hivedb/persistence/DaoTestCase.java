@@ -60,7 +60,7 @@ public abstract class DaoTestCase extends DerbyTestCase {
 	}
 
 	protected Node createNode() {
-		return new Node(getConnectString(), false);
+		return new Node("myNode",getConnectString(), false);
 	}
 
 	protected NodeGroup createPopulatedNodeGroup() {
