@@ -5,9 +5,9 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 
+import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.ColumnInfo;
-import org.hivedb.meta.GlobalSchema;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.NodeGroup;
@@ -45,8 +45,7 @@ public class ExampleHiveTest extends DerbyTestCase {
 	@Test
 	public void createAndUseTheHive() throws Exception {
 		// Install The Hive Metadata Schema
-		GlobalSchema schema = new GlobalSchema(getConnectString());
-		schema.install();
+		new HiveInstaller(getConnectString()).run();
 		
 		//Load a Hive
 		Hive hive = Hive.load(getConnectString());

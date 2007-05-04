@@ -5,6 +5,7 @@ import static org.testng.AssertJUnit.assertNotNull;
 
 import java.sql.SQLException;
 
+import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.PartitionDimension;
@@ -19,6 +20,7 @@ public class HiveDataSourceCacheTest extends DaoTestCase {
 	
 	@BeforeClass
 	public void setUp() throws Exception{
+		new HiveInstaller(getConnectString()).run();
 		Hive hive = Hive.load(getConnectString());
 		hive.addPartitionDimension(createPopulatedPartitionDimension());
 		new IndexSchema(hive.getPartitionDimension(partitionDimensionName())).install();

@@ -15,6 +15,7 @@ import java.util.Random;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
+import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.IndexSchemaTestScenario;
 import org.hivedb.util.database.DerbyTestCase;
@@ -29,6 +30,7 @@ public class TestPartitionKeyStatisticsPersistence extends DerbyTestCase {
 	
 	@BeforeClass
 	public void setUp() throws Exception{
+		new HiveInstaller(getConnectString()).run();
 		index = new IndexSchemaTestScenario((HiveBasicDataSource)getDataSource());
 		index.build();
 		try {

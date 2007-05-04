@@ -6,6 +6,7 @@ import java.util.Collection;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
+import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.persistence.DaoTestCase;
@@ -19,6 +20,7 @@ public class TestHivePerformanceStatistics extends DaoTestCase{
 	
 	@BeforeClass
 	public void setup() throws Exception {
+		new HiveInstaller(getConnectString()).run();
 		hive = Hive.load(getConnectString());
 		hive.setPerformanceStatistics(new HivePerformanceStatisticsMBean(10000,1000));
 		hive.addPartitionDimension(createPopulatedPartitionDimension());

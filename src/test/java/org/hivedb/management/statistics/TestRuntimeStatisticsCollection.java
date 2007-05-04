@@ -6,6 +6,7 @@ import java.util.Collection;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
+import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.persistence.DaoTestCase;
@@ -22,8 +23,11 @@ public class TestRuntimeStatisticsCollection extends DaoTestCase{
 	
 	@BeforeClass
 	public void setup() throws Exception {
+		new HiveInstaller(getConnectString()).run();
+		
 		String[] configFiles = new String[] {"applicationContext-test.xml", "hivedb-jmx-mbeans.xml", "hivedb-jmx.xml"};
 		context = new ClassPathXmlApplicationContext(configFiles);
+		
 		hive = (Hive) context.getBean("hive");
 		hive.addPartitionDimension(createPopulatedPartitionDimension());
 		new IndexSchema(hive.getPartitionDimension(partitionDimensionName())).install();

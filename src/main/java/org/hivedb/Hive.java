@@ -44,7 +44,6 @@ import org.hivedb.meta.persistence.ResourceDao;
 import org.hivedb.meta.persistence.SecondaryIndexDao;
 import org.hivedb.util.DriverLoader;
 import org.hivedb.util.HiveUtils;
-import org.hivedb.util.InstallHiveGlobalSchema;
 
 /**
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
@@ -81,6 +80,8 @@ public class Hive implements Finder, Synchronizeable {
 	public static Hive load(String hiveDatabaseUri) throws HiveException {
 		if (log.isDebugEnabled())
 			log.debug("Loading Hive from " + hiveDatabaseUri);
+		
+		//Tickle driver
 		try {
 			DriverLoader.loadByDialect(DriverLoader
 					.discernDialect(hiveDatabaseUri));
@@ -98,30 +99,14 @@ public class Hive implements Finder, Synchronizeable {
 			hive.sync();
 			if (log.isDebugEnabled())
 				log.debug("Successfully loaded Hive from " + hiveDatabaseUri);
+		// TODO: catch a more specific exception here
 		} catch (Exception ex) {
-			log
-					.warn("No HiveDB global schema detected (" + ex.getMessage() +  "), attempting installation to "
-							+ hiveDatabaseUri);
+			log.warn("No HiveDB global schema detected (" + ex.getMessage() +  "), attempting installation to "
+					+ hiveDatabaseUri);
 			for (StackTraceElement s : ex.getStackTrace())
 				log.warn(s.toString());
-			
-			try {
-				InstallHiveGlobalSchema.install(hiveDatabaseUri);
-				new HiveSemaphoreDao(ds).create();
-				
-				PartitionKeyStatisticsDao tracker = new PartitionKeyStatisticsDao(ds);
-				hive = new Hive(hiveDatabaseUri, 0, false,
-						new ArrayList<PartitionDimension>(), tracker);
-				if (log.isDebugEnabled())
-					log.debug("Successfully installed Hive to "
-							+ hiveDatabaseUri);
-			} catch (Exception ex2) {
-				final String errorMessage = "Unable to load Hive from or install Hive to "
-						+ hiveDatabaseUri;
-				log.fatal(errorMessage);
-				throw new HiveException(errorMessage + ": " + ex2.getMessage(),
-						ex2);
-			}
+
+			throw new HiveRuntimeException("Hive metadata is not installed.  Run the Hive installer.");
 		}
 		return hive;
 	}

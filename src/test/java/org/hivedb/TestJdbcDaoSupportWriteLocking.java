@@ -1,5 +1,6 @@
 package org.hivedb;
 
+import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.Node;
@@ -18,6 +19,7 @@ public class TestJdbcDaoSupportWriteLocking extends DaoTestCase {
 	@BeforeMethod
 	public void setUp() throws Exception {
 		super.setUp();
+		new HiveInstaller(getConnectString()).run();
 		Hive hive = Hive.load(getConnectString());
 		hive.addPartitionDimension(createPopulatedPartitionDimension());
 		hive.addNode(Atom.getFirst(hive.getPartitionDimensions()), createNode());
