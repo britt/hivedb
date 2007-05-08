@@ -4,10 +4,10 @@ import static org.testng.AssertJUnit.assertEquals;
 
 import org.hivedb.meta.NodeGroup;
 import org.hivedb.meta.persistence.NodeGroupDao;
-import org.hivedb.util.database.DaoTestCase;
+import org.hivedb.util.database.HiveTestCase;
 import org.testng.annotations.Test;
 
-public class TestNodeGroupPersistence extends DaoTestCase {
+public class TestNodeGroupPersistence extends HiveTestCase {
 	@Test
 	public void testCreate() throws Exception {
 		NodeGroupDao dao = new NodeGroupDao(ds);

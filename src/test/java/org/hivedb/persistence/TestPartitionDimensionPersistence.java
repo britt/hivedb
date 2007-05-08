@@ -5,10 +5,10 @@ import static org.testng.AssertJUnit.assertTrue;
 
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.persistence.PartitionDimensionDao;
-import org.hivedb.util.database.DaoTestCase;
+import org.hivedb.util.database.HiveTestCase;
 import org.testng.annotations.Test;
 
-public class TestPartitionDimensionPersistence extends DaoTestCase {
+public class TestPartitionDimensionPersistence extends HiveTestCase {
 	@Test
 	public void testCreate() throws Exception {
 		PartitionDimensionDao dao = new PartitionDimensionDao(ds);

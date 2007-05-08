@@ -9,13 +9,13 @@ import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.PartitionDimension;
-import org.hivedb.util.database.DaoTestCase;
+import org.hivedb.util.database.HiveTestCase;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 //TODO: Rename this class
-public class HiveDataSourceCacheTest extends DaoTestCase {
+public class HiveDataSourceCacheTest extends HiveTestCase {
 	protected boolean cleanupDbAfterEachTest = true;
 	
 	@BeforeClass

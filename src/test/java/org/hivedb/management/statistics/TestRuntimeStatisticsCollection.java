@@ -9,7 +9,7 @@ import org.hivedb.HiveException;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.IndexSchema;
-import org.hivedb.util.database.DaoTestCase;
+import org.hivedb.util.database.HiveTestCase;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.testng.Assert;
@@ -17,7 +17,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-public class TestRuntimeStatisticsCollection extends DaoTestCase{
+public class TestRuntimeStatisticsCollection extends HiveTestCase{
 	private Hive hive;
 	private ApplicationContext context;
 	

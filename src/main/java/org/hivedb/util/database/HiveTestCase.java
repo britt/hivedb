@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.commons.dbcp.BasicDataSource;
+import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.ColumnInfo;
-import org.hivedb.meta.GlobalSchema;
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.NodeGroup;
@@ -22,15 +22,14 @@ import org.testng.annotations.BeforeMethod;
  * 
  * @author Justin McCarthy (jmccarthy@cafepress.com)
  */
-public abstract class DaoTestCase extends DerbyTestCase {
+public abstract class HiveTestCase extends DerbyTestCase {
 	protected BasicDataSource ds;
 
 	@BeforeMethod
 	public void setUp() throws Exception {
 		super.beforeMethod();
 		ds = new HiveBasicDataSource(getConnectString());
-		GlobalSchema schema = new GlobalSchema(getConnectString());
-		schema.install();
+		new HiveInstaller(getConnectString()).run();
 	}
 
 	protected Collection<Resource> createResources() {

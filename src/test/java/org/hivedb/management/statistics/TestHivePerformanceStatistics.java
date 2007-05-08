@@ -9,13 +9,13 @@ import org.hivedb.HiveException;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.IndexSchema;
-import org.hivedb.util.database.DaoTestCase;
+import org.hivedb.util.database.HiveTestCase;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-public class TestHivePerformanceStatistics extends DaoTestCase{
+public class TestHivePerformanceStatistics extends HiveTestCase{
 	private Hive hive;
 	
 	@BeforeClass

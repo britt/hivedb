@@ -3,10 +3,10 @@ import static org.testng.AssertJUnit.assertEquals;
 
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
-import org.hivedb.util.database.DaoTestCase;
+import org.hivedb.util.database.HiveTestCase;
 import org.testng.annotations.Test;
 
-public class TestHiveSemaphorePersistence extends DaoTestCase {
+public class TestHiveSemaphorePersistence extends HiveTestCase {
 	@Test
 	public void testUpdate() throws Exception {
 		HiveSemaphoreDao hsd = new HiveSemaphoreDao(ds);

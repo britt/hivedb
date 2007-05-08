@@ -6,12 +6,12 @@ import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.Node;
 import org.hivedb.util.AssertUtils;
 import org.hivedb.util.AssertUtils.Toss;
-import org.hivedb.util.database.DaoTestCase;
+import org.hivedb.util.database.HiveTestCase;
 import org.hivedb.util.functional.Atom;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class TestJdbcDaoSupportWriteLocking extends DaoTestCase {
+public class TestJdbcDaoSupportWriteLocking extends HiveTestCase {
 	public TestJdbcDaoSupportWriteLocking() {
 		this.cleanupDbAfterEachTest = true;
 	}
