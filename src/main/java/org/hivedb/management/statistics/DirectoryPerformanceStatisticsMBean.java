@@ -611,4 +611,88 @@ public class DirectoryPerformanceStatisticsMBean extends StandardMBean implement
 	public void increment(String key) {
 		stats.increment(key);
 	}
+
+
+
+
+	public long getPrimaryIndexDeleteCount() {
+		return stats.getSum(PRIMARYINDEXDELETECOUNT);
+	}
+
+
+
+
+	public long getPrimaryIndexDeleteFailures() {
+		return stats.getSum(PRIMARYINDEXDELETEFAILURES);
+	}
+
+
+
+
+	public long getPrimaryIndexReadCount() {
+		return stats.getSum(PRIMARYINDEXREADCOUNT);
+	}
+
+
+
+
+	public long getPrimaryIndexReadFailures() {
+		return stats.getSum(PRIMARYINDEXREADFAILURES);
+	}
+
+
+
+
+	public long getPrimaryIndexWriteCount() {
+		return stats.getSum(SECONDARYINDEXWRITECOUNT);
+	}
+
+
+
+
+	public long getPrimaryIndexWriteFailures() {
+		return stats.getSum(SECONDARYINDEXWRITEFAILURES);
+	}
+
+
+
+
+	public long getSecondaryIndexDeleteCount() {
+		return stats.getSum(SECONDARYINDEXDELETECOUNT);
+	}
+
+
+
+
+	public long getSecondaryIndexDeleteFailures() {
+		return stats.getSum(SECONDARYINDEXDELETEFAILURES);
+	}
+
+
+
+
+	public long getSecondaryIndexReadCount() {
+		return stats.getSum(SECONDARYINDEXREADCOUNT);
+	}
+
+
+
+
+	public long getSecondaryIndexReadFailures() {
+		return stats.getSum(SECONDARYINDEXREADFAILURES);
+	}
+
+
+
+
+	public long getSecondaryIndexWriteCount() {
+		return stats.getSum(SECONDARYINDEXWRITECOUNT);
+	}
+
+
+
+
+	public long getSecondaryIndexWriteFailures() {
+		return stats.getSum(SECONDARYINDEXWRITEFAILURES);
+	}
 }

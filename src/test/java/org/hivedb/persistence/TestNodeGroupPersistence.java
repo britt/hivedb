@@ -4,6 +4,7 @@ import static org.testng.AssertJUnit.assertEquals;
 
 import org.hivedb.meta.NodeGroup;
 import org.hivedb.meta.persistence.NodeGroupDao;
+import org.hivedb.util.database.DaoTestCase;
 import org.testng.annotations.Test;
 
 public class TestNodeGroupPersistence extends DaoTestCase {

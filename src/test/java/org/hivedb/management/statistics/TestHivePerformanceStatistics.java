@@ -9,7 +9,7 @@ import org.hivedb.HiveException;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.IndexSchema;
-import org.hivedb.persistence.DaoTestCase;
+import org.hivedb.util.database.DaoTestCase;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;

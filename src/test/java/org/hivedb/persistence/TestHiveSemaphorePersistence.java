@@ -3,6 +3,7 @@ import static org.testng.AssertJUnit.assertEquals;
 
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
+import org.hivedb.util.database.DaoTestCase;
 import org.testng.annotations.Test;
 
 public class TestHiveSemaphorePersistence extends DaoTestCase {

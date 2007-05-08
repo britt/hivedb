@@ -4,6 +4,7 @@ import static org.testng.AssertJUnit.assertEquals;
 
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.SecondaryIndexDao;
+import org.hivedb.util.database.DaoTestCase;
 import org.testng.annotations.Test;
 
 public class TestSecondaryIndexPersistence extends DaoTestCase {

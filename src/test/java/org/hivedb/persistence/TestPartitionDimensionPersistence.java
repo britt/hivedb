@@ -5,6 +5,7 @@ import static org.testng.AssertJUnit.assertTrue;
 
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.persistence.PartitionDimensionDao;
+import org.hivedb.util.database.DaoTestCase;
 import org.testng.annotations.Test;
 
 public class TestPartitionDimensionPersistence extends DaoTestCase {

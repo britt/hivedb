@@ -3,10 +3,7 @@ package org.hivedb;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
-import java.util.Hashtable;
-import java.util.Map;
 
-import org.apache.commons.dbcp.BasicDataSource;
 import org.hivedb.meta.TableInfo;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.DriverLoader;
@@ -26,14 +23,10 @@ import org.springframework.jdbc.core.support.JdbcDaoSupport;
 public abstract class Schema extends JdbcDaoSupport {
 	protected String dbURI;
 	protected HiveDbDialect dialect = HiveDbDialect.MySql;
-	protected static Map<String, BasicDataSource> dataSources
-	 = new Hashtable<String, BasicDataSource>();
-
+	
 	public Schema(String dbURI){
 		this.dbURI = dbURI;
-		if (!dataSources.containsKey(dbURI))
-			dataSources.put(dbURI, new HiveBasicDataSource(dbURI));
-		this.setDataSource(dataSources.get(dbURI));
+		this.setDataSource(new HiveBasicDataSource(dbURI));
 		this.dialect = DriverLoader.discernDialect(dbURI);
 	}
 	

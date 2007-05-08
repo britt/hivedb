@@ -3,6 +3,7 @@ package org.hivedb.persistence;
 import static org.testng.AssertJUnit.assertEquals;
 
 import org.hivedb.meta.persistence.ResourceDao;
+import org.hivedb.util.database.DaoTestCase;
 import org.testng.annotations.Test;
 
 public class TestResourcePersistence extends DaoTestCase {

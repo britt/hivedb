@@ -9,7 +9,7 @@ import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.PartitionDimension;
-import org.hivedb.persistence.DaoTestCase;
+import org.hivedb.util.database.DaoTestCase;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;

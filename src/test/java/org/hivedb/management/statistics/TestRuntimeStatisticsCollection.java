@@ -9,7 +9,7 @@ import org.hivedb.HiveException;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.IndexSchema;
-import org.hivedb.persistence.DaoTestCase;
+import org.hivedb.util.database.DaoTestCase;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.testng.Assert;
