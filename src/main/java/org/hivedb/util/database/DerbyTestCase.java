@@ -31,7 +31,7 @@ public abstract class DerbyTestCase {
 	@SuppressWarnings("unused")
 	@BeforeClass
 	protected void initializeDerby(){
-		if( cleanupOnLoad ) 
+		if( cleanupOnLoad || cleanupDbAfterEachTest) 
 			deleteDerbyDb();
 		try {
 			DerbyUtils.createDatabase(getDatabaseName(), userName, password);

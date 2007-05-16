@@ -1,134 +1,67 @@
 package org.hivedb.persistence;
 
-import org.hivedb.util.database.DerbyTestCase;
+import org.hivedb.Hive;
+import org.hivedb.HiveException;
+import org.hivedb.HiveSyncDaemon;
+import org.hivedb.management.HiveInstaller;
+import org.hivedb.meta.IndexSchema;
+import org.hivedb.meta.Node;
+import org.hivedb.util.database.HiveTestCase;
+import org.hivedb.util.functional.Atom;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
-public class TestSyncHive extends DerbyTestCase {
+public class TestSyncHive extends HiveTestCase {
 
-	/*
 	@BeforeMethod
-	public void setup()
-	{
+	public void setUp() throws Exception {
 		this.cleanupDbAfterEachTest = true;
+		super.beforeMethod();
+		new HiveInstaller(getConnectString()).run();
+		Hive hive = Hive.load(getConnectString());
+		hive.addPartitionDimension(createPopulatedPartitionDimension());
+		Node node = createNode();
+		node.setName("firstNode");
+		hive.addNode(Atom.getFirst(hive.getPartitionDimensions()), node);
+		new IndexSchema(Atom.getFirst(hive.getPartitionDimensions())).install();
 	}
 	
-	@Test
-	public void insertPartitionDimensionAndSync() {
-		try {
-			final Hive hive = loadHive();
-			HiveScenarioMarauderConfig hiveScenarioConfig = new HiveScenarioMarauderConfig(getConnectString(), getDataUris());
-			final HiveScenario hiveScenario = HiveScenario.run(hiveScenarioConfig, 100, 10);
-			hive.sync();
-			cyclePartitionDimension(hive, hiveScenario, hiveScenarioConfig, new HiveSyncer(hive));
-		} catch (HiveException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	@Test
-	public void insertNodeAndSync() {
-		Hive hive;
-		try {
-			hive = loadHive();
-			HiveScenarioMarauderConfig hiveScenarioConfig = new HiveScenarioMarauderConfig(getConnectString(), getDataUris());
-			final HiveScenario hiveScenario = HiveScenario.run(hiveScenarioConfig, 100, 10);
-			hive.sync();
-			cycleNode(hive, hiveScenario, hiveScenarioConfig, new HiveSyncer(hive));
-		} catch (HiveException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
-	@Test
-	public void insertResourceAndSync() {
-		try {
-			final Hive hive = loadHive();
-			HiveScenarioMarauderConfig hiveScenarioConfig = new HiveScenarioMarauderConfig(getConnectString(), getDataUris());
-			final HiveScenario hiveScenario = HiveScenario.run(hiveScenarioConfig, 100, 10);
-			hive.sync();
-			cycleResource(hive, hiveScenario, hiveScenarioConfig, new HiveSyncer(hive));
-		} catch (HiveException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
-	@Test
-	public void insertSecondaryIndexAndSync() {
-		try {
-			final Hive hive = loadHive();
-			HiveScenarioMarauderConfig hiveScenarioConfig = new HiveScenarioMarauderConfig(getConnectString(), getDataUris());
-			final HiveScenario hiveScenario = HiveScenario.run(hiveScenarioConfig, 100, 10);
-			hive.sync();
-			cycleSecondaryIndex(hive, hiveScenario, hiveScenarioConfig, new HiveSyncer(hive));
-		} catch (HiveException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	private void cyclePartitionDimension(final Hive hive, final HiveScenario hiveScenario, final HiveScenarioConfig hiveScenarioConfig, final HiveSyncer hiveSyncer) {
-		try {
-			PartitionDimension partitionDimension = hiveScenario.getCreatedPartitionDimension();
-			// Delete a partition dimension in the hive.
-			final PartitionDimension deleted = hive.deletePartitionDimension(partitionDimension);
-			Assert.assertFalse(Filter.grepItemAgainstList(deleted, hive.getPartitionDimensions()));
-			
-			// Add the partition dimension back to the hive
-			hiveSyncer.syncHive(hiveScenarioConfig);
-			Assert.assertEquals(partitionDimension, hive.getPartitionDimension(deleted.getName()));
-			
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-	private void cycleNode(final Hive hive, final HiveScenario hiveScenario, final HiveScenarioConfig hiveScenarioConfig, final HiveSyncer hiveSyncer) {
-		try {
-			final PartitionDimension partitionDimension = hiveScenario.getCreatedPartitionDimension();
-			Node node = Atom.getFirst(partitionDimension.getNodeGroup().getNodes());
-			final Node deleted = hive.deleteNode(node);
-			Assert.assertFalse(Filter.grepItemAgainstList(deleted, hive.getPartitionDimension(partitionDimension.getName()).getNodeGroup().getNodes()));
+//	@Test
+	public void testAutoSync() throws Exception {
+		Hive hive = loadHive();
+		Hive passiveSync = loadHive();
+		hive.addNode(Atom.getFirstOrNull(hive.getPartitionDimensions()), createNode());
+		Thread.sleep(10000);
 		
-			// Add the node back to the hive
-			hiveSyncer.syncHive(hiveScenarioConfig);
-			Assert.assertEquals(node, hive.getPartitionDimension(partitionDimension.getName()).getNodeGroup().getNode(deleted.getName()));
-			
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}	
-	}
-	private void cycleResource(final Hive hive, final HiveScenario hiveScenario, final HiveScenarioConfig hiveScenarioConfig, final HiveSyncer hiveSyncer) {
-		try {
-			final PartitionDimension partitionDimension = hiveScenario.getCreatedPartitionDimension();
-			Resource resource = Atom.getFirst(partitionDimension.getResources());
-			final Resource deleted = hive.deleteResource(resource);
-			Assert.assertFalse(Filter.grepItemAgainstList(deleted, hive.getPartitionDimension(partitionDimension.getName()).getResources()));
+		nodeReport(passiveSync, hive);
 		
-			// Add the resource back to the hive
-			hiveSyncer.syncHive(hiveScenarioConfig);
-			Assert.assertEquals(resource, hive.getPartitionDimension(partitionDimension.getName()).getResource(deleted.getName()));
-			
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}	
+		Assert.assertNotNull(Atom.getFirstOrNull(passiveSync.getPartitionDimensions()).getNodeGroup().getNode(createNode().getName()));
 	}
 	
-	private void cycleSecondaryIndex(final Hive hive, final HiveScenario hiveScenario, final HiveScenarioConfig hiveScenarioConfig, final HiveSyncer hiveSyncer) {
-		try {
-			final PartitionDimension partitionDimension = hiveScenario.getCreatedPartitionDimension();
-			final Resource resource = Atom.getFirst(partitionDimension.getResources());
-			SecondaryIndex secondaryIndex = Atom.getFirst(resource.getSecondaryIndexes());
-			final SecondaryIndex deleted = hive.deleteSecondaryIndex(secondaryIndex);
-			Assert.assertFalse(Filter.grepItemAgainstList(deleted, hive.getPartitionDimension(partitionDimension.getName()).getResource(resource.getName()).getSecondaryIndexes()));
+	@Test
+	public void testForceSync() throws Exception {
+		Hive hive = loadHive();
+		Hive passiveSync = loadHive();
+		hive.addNode(Atom.getFirstOrNull(hive.getPartitionDimensions()), createNode());
+		HiveSyncDaemon daemon = new HiveSyncDaemon(passiveSync);
+		daemon.synchronize();
 		
-			// Add the secondary index back to the hive
-			hiveSyncer.syncHive(hiveScenarioConfig);
-			Assert.assertEquals(secondaryIndex, hive.getPartitionDimension(partitionDimension.getName()).getResource(resource.getName()).getSecondaryIndex(deleted.getName()));
-			
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}	
+//		nodeReport(passiveSync, hive);
+		
+		Assert.assertNotNull(Atom.getFirstOrNull(passiveSync.getPartitionDimensions()).getNodeGroup().getNode(createNode().getName()));
+	}
+	
+	private void nodeReport(Hive passiveSync, Hive hive) {
+		System.out.println("Passively synced Hive:" + passiveSync.getRevision());
+		for(Node node: passiveSync.getPartitionDimension(createPopulatedPartitionDimension().getName()).getNodeGroup().getNodes())
+			System.out.println(node.getName());
+		System.out.println("In-memory Hive " + hive.getRevision());
+		for(Node node: hive.getPartitionDimension(createPopulatedPartitionDimension().getName()).getNodeGroup().getNodes())
+			System.out.println(node.getName());
 	}
 	
 	private Hive loadHive() throws HiveException {
 		return Hive.load(getConnectString());
 	}
-	*/
 }

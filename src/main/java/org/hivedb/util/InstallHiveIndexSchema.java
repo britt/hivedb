@@ -5,6 +5,7 @@ import java.util.Collection;
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
 import org.hivedb.meta.ColumnInfo;
+import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.NodeGroup;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
@@ -24,14 +25,16 @@ public class InstallHiveIndexSchema {
 		final PartitionDimension partitionDimension = createPartitionDimension(hiveScenarioConfig);	
 		try {
 			// Create or update a partition dimension and its subordinate NodeGroup, primary Node, Resources, and SecondaryIndexes
-			new HiveSyncer(hive).syncHive(hiveScenarioConfig);
+//			new HiveSyncer(hive).syncHive(hiveScenarioConfig);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 		
 		// Create any missing tables of primary and secondary indexes
 		try {
-			hive.create();
+
+			for (PartitionDimension pd : hive.getPartitionDimensions())
+				new IndexSchema(pd).install();
 		}
 		catch (Exception exception)
 		{

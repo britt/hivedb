@@ -25,12 +25,10 @@ import org.hivedb.management.statistics.HivePerformanceStatistics;
 import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.Directory;
-import org.hivedb.meta.Finder;
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.IdAndNameIdentifiable;
 import org.hivedb.meta.Identifiable;
 import org.hivedb.meta.IndexSchema;
-import org.hivedb.meta.Nameable;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.NodeSemaphore;
 import org.hivedb.meta.PartitionDimension;
@@ -44,13 +42,14 @@ import org.hivedb.meta.persistence.ResourceDao;
 import org.hivedb.meta.persistence.SecondaryIndexDao;
 import org.hivedb.util.DriverLoader;
 import org.hivedb.util.HiveUtils;
+import org.hivedb.util.IdentifiableUtils;
 
 /**
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
  * @author Andy Likuski (alikuski@cafepress.com)
  * @author Britt Crawford (bcrawford@cafepress.com)
  */
-public class Hive implements Finder, Synchronizeable {
+public class Hive implements Synchronizeable {
 	private static Logger log = Logger.getLogger(Hive.class);
 	public static final int NEW_OBJECT_ID = 0;
 	public static String URI_SYSTEM_PROPERTY = "org.hivedb.uri";
@@ -63,7 +62,7 @@ public class Hive implements Finder, Synchronizeable {
 	private Collection<Directory> directories;
 	private HiveSyncDaemon daemon;
 	private DataSource dataSource;
-	private Map<String, JdbcDaoSupportCacheImpl> dataSourceCaches;
+	private Map<String, JdbcDaoSupportCacheImpl> jdbcDaoSupportCaches;
 	private HivePerformanceStatistics performanceStatistics;
 	
 	/**
@@ -93,9 +92,8 @@ public class Hive implements Finder, Synchronizeable {
 		Hive hive = null;
 		HiveBasicDataSource ds = new HiveBasicDataSource(hiveDatabaseUri);
 		try {
-			PartitionKeyStatisticsDao tracker = new PartitionKeyStatisticsDao(ds);
 			hive = new Hive(hiveDatabaseUri, 0, false,
-					new ArrayList<PartitionDimension>(), tracker);
+					new ArrayList<PartitionDimension>(), new PartitionKeyStatisticsDao(ds));
 			hive.sync();
 			if (log.isDebugEnabled())
 				log.debug("Successfully loaded Hive from " + hiveDatabaseUri);
@@ -135,16 +133,7 @@ public class Hive implements Finder, Synchronizeable {
 		}
 		return hive;
 	}
-	
-	/***
-	 * Installs the index schema for all partition dimensions.
-	 * @throws HiveException
-	 * @throws SQLException
-	 */
-	public void create() throws HiveException, SQLException {
-		for (PartitionDimension partitionDimension : this.getPartitionDimensions())
-			new IndexSchema(partitionDimension).install();
-	}
+
 
 	/**
 	 * Explicitly syncs the hive with the persisted data, rather than waiting
@@ -156,24 +145,27 @@ public class Hive implements Finder, Synchronizeable {
 	public void sync() throws HiveException {
 		daemon.forceSynchronize();
 		
-		// Synchronize the collction of Synchronizeable JdbcDaoSupportCaches
+		// Synchronize the collection of Synchronizeable JdbcDaoSupportCaches
+	
 		Collection<String> dimensionNames = new ArrayList<String>();
 		for(PartitionDimension dimension : getPartitionDimensions())
 			dimensionNames.add(dimension.getName());
-		Set<String> exclusions = new HashSet<String>(dataSourceCaches.keySet());
-		exclusions.removeAll(dimensionNames);
 		
+		//Build a set of caches that have been removed
+		Set<String> exclusions = new HashSet<String>(jdbcDaoSupportCaches.keySet());
+		exclusions.removeAll(dimensionNames);
+		//Delete them
 		for(String name : exclusions)
-			dataSourceCaches.remove(name);
+			jdbcDaoSupportCaches.remove(name);
 		
 		for(String name : dimensionNames) {
-			if(dataSourceCaches.containsKey(name))
-				dataSourceCaches.get(name).sync();
+			if(jdbcDaoSupportCaches.containsKey(name))
+				jdbcDaoSupportCaches.get(name).sync();
 			else {
 				if(isPerformanceMonitoringEnabled())
-					dataSourceCaches.put(name, new JdbcDaoSupportCacheImpl(name, this, performanceStatistics));
+					jdbcDaoSupportCaches.put(name, new JdbcDaoSupportCacheImpl(name, this, getDirectory(getPartitionDimension(name)), performanceStatistics));
 				else
-					dataSourceCaches.put(name, new JdbcDaoSupportCacheImpl(name, this));
+					jdbcDaoSupportCaches.put(name, new JdbcDaoSupportCacheImpl(name, this, getDirectory(getPartitionDimension(name))));
 			}
 		}
 	}
@@ -197,13 +189,13 @@ public class Hive implements Finder, Synchronizeable {
 
 		this.directories = new ArrayList<Directory>();
 		
-		dataSourceCaches = new ConcurrentHashMap<String, JdbcDaoSupportCacheImpl>();
+		jdbcDaoSupportCaches = new ConcurrentHashMap<String, JdbcDaoSupportCacheImpl>();
 		for (PartitionDimension dimension : this.partitionDimensions) {
 			this.directories.add(new Directory(dimension, this.dataSource));
 			if(isPerformanceMonitoringEnabled())
-				dataSourceCaches.put(dimension.getName(), new JdbcDaoSupportCacheImpl(dimension.getName(), this, performanceStatistics));
+				jdbcDaoSupportCaches.put(dimension.getName(), new JdbcDaoSupportCacheImpl(dimension.getName(), this, getDirectory(dimension), performanceStatistics));
 			else
-				dataSourceCaches.put(dimension.getName(), new JdbcDaoSupportCacheImpl(dimension.getName(), this));
+				jdbcDaoSupportCaches.put(dimension.getName(), new JdbcDaoSupportCacheImpl(dimension.getName(), this, getDirectory(dimension)));
 		}
 	}
 
@@ -250,6 +242,7 @@ public class Hive implements Finder, Synchronizeable {
 	 * 
 	 * @param readOnly
 	 */
+	// TODO: If we kill the daemon we can kill this method
 	protected void setReadOnly(boolean readOnly) {
 		this.readOnly = readOnly;
 	}
@@ -291,7 +284,8 @@ public class Hive implements Finder, Synchronizeable {
 	 * 
 	 * @param revision
 	 */
-	public void setRevision(int revision) {
+	// TODO: If we kill the daemon we can kill this method
+	protected void setRevision(int revision) {
 		this.revision = revision;
 	}
 
@@ -304,15 +298,7 @@ public class Hive implements Finder, Synchronizeable {
 	public Collection<PartitionDimension> getPartitionDimensions() {
 		return partitionDimensions;
 	}
-
-	/**
-	 * Required by Finder interface
-	 */
-	@SuppressWarnings("unchecked")
-	public <T extends Nameable> Collection<T> findCollection(Class<T> forClass) {
-		return (Collection<T>) getPartitionDimensions();
-	}
-
+	
 	/**
 	 * Gets a partition dimension by name.
 	 * 
@@ -324,7 +310,7 @@ public class Hive implements Finder, Synchronizeable {
 	 *             To avoid this exception, test for existence first with
 	 */
 	public PartitionDimension getPartitionDimension(String name) {
-		PartitionDimension dimension = getPartitionDimensionUnchecked(name);
+		PartitionDimension dimension = getPartitionDimensionOrNull(name);
 		if (dimension == null)
 			throw new IllegalArgumentException("PartitionDimension with name "
 					+ name + " not found.");
@@ -337,24 +323,16 @@ public class Hive implements Finder, Synchronizeable {
 	 * @return True if partition dimension exists
 	 */
 	public boolean containsPartitionDimension(String name) {
-		return getPartitionDimensionUnchecked(name) != null;
+		return getPartitionDimensionOrNull(name) != null;
 	}
 
-	private PartitionDimension getPartitionDimensionUnchecked(String name) {
+	private PartitionDimension getPartitionDimensionOrNull(String name) {
 		for (PartitionDimension partitionDimension : getPartitionDimensions())
 			if (partitionDimension.getName().equals(name))
 				return partitionDimension;
 		return null;
 	}
 
-	/**
-	 * Required by Finder interface
-	 */
-	@SuppressWarnings("unchecked")
-	public <T extends Nameable> T findByName(Class<T> forClass, String name)
-			throws HiveException {
-		return (T)getPartitionDimension(name);
-	}
 
 	/**
 	 * Adds a new partition dimension to the hive. The partition dimension
@@ -374,8 +352,8 @@ public class Hive implements Finder, Synchronizeable {
 	 */
 	public PartitionDimension addPartitionDimension(
 			PartitionDimension partitionDimension) throws HiveException {
-		isWritable("Creating a new partition dimension");
-		isUnique(String.format("Partition dimension %s already exists", partitionDimension.getName()), 
+		throwIfReadOnly("Creating a new partition dimension");
+		throwIfNameIsNotUnique(String.format("Partition dimension %s already exists", partitionDimension.getName()), 
 				getPartitionDimensions(),
 				partitionDimension);
 
@@ -393,12 +371,9 @@ public class Hive implements Finder, Synchronizeable {
 					"Problem persisting new Partition Dimension: "
 							+ e.getMessage());
 		}
+		this.directories.add(new Directory(partitionDimension, this.dataSource));
 		incrementAndPersistHive(datasource);
 
-
-		this.directories
-				.add(new Directory(partitionDimension, this.dataSource));
-		sync();
 		return partitionDimension;
 	}
 
@@ -419,13 +394,13 @@ public class Hive implements Finder, Synchronizeable {
 	public Node addNode(PartitionDimension partitionDimension, Node node)
 			throws HiveException {
 		node.setNodeGroup(partitionDimension.getNodeGroup());
-		isWritable("Creating a new node");
-		isUnique(String.format("Node with URI %s already exists", node.getName()), 
+		
+		throwIfReadOnly("Creating a new node");
+		throwIfNameIsNotUnique(String.format("Node with URI %s already exists", node.getName()), 
 				partitionDimension.getNodeGroup().getNodes(),
 				node);
 		
-		BasicDataSource datasource = new HiveBasicDataSource(this.getHiveUri());
-		NodeDao nodeDao = new NodeDao(datasource);
+		NodeDao nodeDao = new NodeDao(dataSource);
 		try {
 			nodeDao.create(node);
 		} catch (SQLException e) {
@@ -433,8 +408,7 @@ public class Hive implements Finder, Synchronizeable {
 					+ e.getMessage());
 		}
 
-		incrementAndPersistHive(datasource);
-
+		incrementAndPersistHive(dataSource);
 		sync();
 		return node;
 	}
@@ -457,12 +431,11 @@ public class Hive implements Finder, Synchronizeable {
 	 *             hive is currently read-only, or if a resource of the same
 	 *             name already exists
 	 */
-	// TODO: Every other method has a signature ( String dimensionName, Obejct whatever) add one for this method
 	public Resource addResource(PartitionDimension partitionDimension,
 			Resource resource) throws HiveException {
 		resource.setPartitionDimension(partitionDimension);
-		isWritable("Creating a new resource");
-		isUnique(String.format(
+		throwIfReadOnly("Creating a new resource");
+		throwIfNameIsNotUnique(String.format(
 				"Resource %s already exists in the partition dimension %s",
 				resource.getName(), partitionDimension.getName()),
 				partitionDimension.getResources(), resource);
@@ -479,6 +452,29 @@ public class Hive implements Finder, Synchronizeable {
 
 		sync();
 		return this.getPartitionDimension(partitionDimension.getName()).getResource(resource.getName());
+	}
+	
+	/**
+	 * 
+	 * Adds a new resource to the given partition dimension, along with any
+	 * secondary indexes defined in the resource instance
+	 * 
+	 * @param dimensionName
+	 *            The name of the persisted partition dimension of the hive to which to add
+	 *            the resource.
+	 * @param resource
+	 *            A resource instance initialized without an id and with a full
+	 *            or empty collection of secondary indexes.
+	 * @return The resource instance with its id set along with those of any
+	 *         secondary indexes
+	 * @throws HiveException
+	 *             Throws if there is any problem persisting the data, if the
+	 *             hive is currently read-only, or if a resource of the same
+	 *             name already exists
+	 */
+	public Resource addResource(String dimensionName,
+			Resource resource) throws HiveException {
+		return addResource(getPartitionDimension(dimensionName), resource);
 	}
 
 	/**
@@ -499,8 +495,8 @@ public class Hive implements Finder, Synchronizeable {
 	public SecondaryIndex addSecondaryIndex(Resource resource,
 			SecondaryIndex secondaryIndex) throws HiveException {
 		secondaryIndex.setResource(resource);
-		isWritable("Creating a new secondary index");
-		isUnique(String.format(
+		throwIfReadOnly("Creating a new secondary index");
+		throwIfNameIsNotUnique(String.format(
 				"Secondary index %s already exists in the resource %s",
 				secondaryIndex.getName(), resource.getName()), resource
 				.getSecondaryIndexes(), secondaryIndex);
@@ -544,12 +540,12 @@ public class Hive implements Finder, Synchronizeable {
 	 */
 	public PartitionDimension updatePartitionDimension(
 			PartitionDimension partitionDimension) throws HiveException {
-		isWritable("Updating partition dimension");
-		isIdPresentInCollection(String.format(
+		throwIfReadOnly("Updating partition dimension");
+		throwIfIdNotPresent(String.format(
 				"Partition dimension with id %s does not exist",
 				partitionDimension.getId()), getPartitionDimensions(),
 				partitionDimension);
-		isUnique(String.format(
+		throwIfNameIsNotUnique(String.format(
 				"Partition dimension with name %s already exists",
 				partitionDimension.getName()), getPartitionDimensions(),
 				partitionDimension);
@@ -581,8 +577,8 @@ public class Hive implements Finder, Synchronizeable {
 	 *             hive is currently read-only.
 	 */
 	public Node updateNode(Node node) throws HiveException {
-		isWritable("Updating node");
-		isIdPresentInCollection(String.format("Node with id %s does not exist",
+		throwIfReadOnly("Updating node");
+		throwIfIdNotPresent(String.format("Node with id %s does not exist",
 				node.getName()), node.getNodeGroup().getNodes(), node);
 
 		BasicDataSource datasource = new HiveBasicDataSource(this.getHiveUri());
@@ -614,11 +610,11 @@ public class Hive implements Finder, Synchronizeable {
 	 *             name already exists
 	 */
 	public Resource updateResource(Resource resource) throws HiveException {
-		isWritable("Updating resource");
-		isIdPresentInCollection(String.format(
+		throwIfReadOnly("Updating resource");
+		throwIfIdNotPresent(String.format(
 				"Resource with id %s does not exist", resource.getId()),
 				resource.getPartitionDimension().getResources(), resource);
-		isUnique(String.format("Resource with name %s already exists", resource
+		throwIfNameIsNotUnique(String.format("Resource with name %s already exists", resource
 				.getName()), resource.getPartitionDimension().getResources(),
 				resource);
 
@@ -653,12 +649,12 @@ public class Hive implements Finder, Synchronizeable {
 	 */
 	public SecondaryIndex updateSecondaryIndex(SecondaryIndex secondaryIndex)
 			throws HiveException {
-		isWritable("Updating secondary index");
-		isIdPresentInCollection(String.format(
+		throwIfReadOnly("Updating secondary index");
+		throwIfIdNotPresent(String.format(
 				"Secondary index with id %s does not exist", secondaryIndex
 						.getId()), secondaryIndex.getResource()
 				.getSecondaryIndexes(), secondaryIndex);
-		isUnique(String.format("Secondary index with name %s already exists",
+		throwIfNameIsNotUnique(String.format("Secondary index with name %s already exists",
 				secondaryIndex.getName()), secondaryIndex.getResource()
 				.getSecondaryIndexes(), secondaryIndex);
 
@@ -683,9 +679,9 @@ public class Hive implements Finder, Synchronizeable {
 	 */
 	public PartitionDimension deletePartitionDimension(
 			PartitionDimension partitionDimension) throws HiveException {
-		isWritable(String.format("Deleting partition dimension %s",
+		throwIfReadOnly(String.format("Deleting partition dimension %s",
 				partitionDimension.getName()));
-		itemExistsInCollection(
+		throwUnlessItemExists(
 				String
 						.format(
 								"Partition dimension %s does not match any partition dimension in the hive",
@@ -703,7 +699,7 @@ public class Hive implements Finder, Synchronizeable {
 		sync();
 		
 		//Destroy the corresponding DataSourceCache
-		this.dataSourceCaches.remove(partitionDimension.getName());
+		this.jdbcDaoSupportCaches.remove(partitionDimension.getName());
 		
 		return partitionDimension;
 	}
@@ -715,8 +711,8 @@ public class Hive implements Finder, Synchronizeable {
 	 * @throws HiveException
 	 */
 	public Node deleteNode(Node node) throws HiveException {
-		isWritable(String.format("Deleting node %s", node.getName()));
-		itemExistsInCollection(
+		throwIfReadOnly(String.format("Deleting node %s", node.getName()));
+		throwUnlessItemExists(
 				String
 						.format(
 								"Node %s does not match any node in the partition dimenesion %s",
@@ -735,7 +731,7 @@ public class Hive implements Finder, Synchronizeable {
 		sync();
 		
 		//Synchronize the DataSourceCache
-		this.dataSourceCaches.get(node.getNodeGroup().getPartitionDimension().getName()).sync();
+		this.jdbcDaoSupportCaches.get(node.getNodeGroup().getPartitionDimension().getName()).sync();
 		return node;
 	}
 
@@ -746,8 +742,8 @@ public class Hive implements Finder, Synchronizeable {
 	 * @throws HiveException
 	 */
 	public Resource deleteResource(Resource resource) throws HiveException {
-		isWritable(String.format("Deleting resource %s", resource.getName()));
-		itemExistsInCollection(
+		throwIfReadOnly(String.format("Deleting resource %s", resource.getName()));
+		throwUnlessItemExists(
 				String
 						.format(
 								"Resource %s does not match any resource in the partition dimenesion %s",
@@ -775,9 +771,9 @@ public class Hive implements Finder, Synchronizeable {
 	 */
 	public SecondaryIndex deleteSecondaryIndex(SecondaryIndex secondaryIndex)
 			throws HiveException {
-		isWritable(String.format("Deleting secondary index %s", secondaryIndex
+		throwIfReadOnly(String.format("Deleting secondary index %s", secondaryIndex
 				.getName()));
-		itemExistsInCollection(
+		throwUnlessItemExists(
 				String
 						.format(
 								"Secondary index %s does not match any node in the resource %s",
@@ -797,8 +793,9 @@ public class Hive implements Finder, Synchronizeable {
 		return secondaryIndex;
 	}
 
-	private void incrementAndPersistHive(DataSource datasource) {
+	private void incrementAndPersistHive(DataSource datasource) throws HiveException {
 		new HiveSemaphoreDao(datasource).incrementAndPersist();
+		this.sync();
 	}
 
 	/**
@@ -821,14 +818,13 @@ public class Hive implements Finder, Synchronizeable {
 	 */
 	public void insertPrimaryIndexKey(PartitionDimension partitionDimension,
 			Object primaryIndexKey) throws HiveException, SQLException {
-		// TODO Consider redesign of NodeGroup to perform assignment, or at
+		// TODO: Consider redesign of NodeGroup to perform assignment, or at
 		// least provider direct iteration over Nodes
 		Node node = partitionDimension.getAssigner().chooseNode(
 				partitionDimension.getNodeGroup().getNodes(), primaryIndexKey);
-		isWritable("Inserting a new primary index key", node);
+		throwIfReadOnly("Inserting a new primary index key", node);
 		getDirectory(partitionDimension).insertPrimaryIndexKey(node,
 				primaryIndexKey);
-		sync();
 	}
 
 	/**
@@ -878,13 +874,12 @@ public class Hive implements Finder, Synchronizeable {
 	public void insertSecondaryIndexKey(SecondaryIndex secondaryIndex,
 			Object secondaryIndexKey, Object primaryindexKey)
 			throws HiveException, SQLException {
-		isWritable("Inserting a new secondary index key");
+		throwIfReadOnly("Inserting a new secondary index key");
 		getDirectory(secondaryIndex.getResource().getPartitionDimension())
 				.insertSecondaryIndexKey(secondaryIndex, secondaryIndexKey,
 						primaryindexKey);
 		partitionStatistics.incrementChildRecordCount(secondaryIndex.getResource()
 				.getPartitionDimension(), primaryindexKey, 1);
-		sync();
 	}
 
 	/**
@@ -944,14 +939,13 @@ public class Hive implements Finder, Synchronizeable {
 	public void updatePrimaryIndexNode(PartitionDimension partitionDimension,
 			Object primaryIndexKey, Node node) throws HiveException,
 			SQLException {
-		isWritable("Updating primary index node", partitionDimension.getNodeGroup().getNode(getNodeSemaphoreOfPrimaryIndexKey(
+		throwIfReadOnly("Updating primary index node", partitionDimension.getNodeGroup().getNode(getNodeSemaphoreOfPrimaryIndexKey(
 				partitionDimension, primaryIndexKey).getId()), primaryIndexKey,
 				getReadOnlyOfPrimaryIndexKey(partitionDimension,
 						primaryIndexKey));
 
 		getDirectory(partitionDimension).updatePrimaryIndexKey(node,
 				primaryIndexKey);
-		sync();
 	}
 
 	/**
@@ -1001,12 +995,11 @@ public class Hive implements Finder, Synchronizeable {
 	public void updatePrimaryIndexReadOnly(
 			PartitionDimension partitionDimension, Object primaryIndexKey,
 			boolean isReadOnly) throws HiveException, SQLException {
-		isWritable("Updating primary index read-only");
+		throwIfReadOnly("Updating primary index read-only");
 		// This query validates the existence of the primaryIndexKey
 		getNodeSemaphoreOfPrimaryIndexKey(partitionDimension, primaryIndexKey);
 		getDirectory(partitionDimension).updatePrimaryIndexKeyReadOnly(
 				primaryIndexKey, isReadOnly);
-		sync();
 	}
 
 	/**
@@ -1055,12 +1048,11 @@ public class Hive implements Finder, Synchronizeable {
 	public void updatePrimaryIndexKeyOfSecondaryIndexKey(
 			SecondaryIndex secondaryIndex, Object secondaryIndexKey,
 			Object primaryIndexKey) throws HiveException, SQLException {
-		isWritable("Updating primary index key of secondary index key");
+		throwIfReadOnly("Updating primary index key of secondary index key");
 		getPrimaryIndexKeyOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
 		getDirectory(secondaryIndex.getResource().getPartitionDimension())
 				.updatePrimaryIndexOfSecondaryKey(secondaryIndex,
 						secondaryIndexKey, primaryIndexKey);
-		sync();
 	}
 
 	/**
@@ -1111,7 +1103,7 @@ public class Hive implements Finder, Synchronizeable {
 		if (!doesPrimaryIndexKeyExist(partitionDimension, primaryIndexKey))
 			throw new HiveException("The primary index key " + primaryIndexKey
 					+ " does not exist");
-		isWritable("Deleting primary index key", partitionDimension.getNodeGroup().getNode(getNodeSemaphoreOfPrimaryIndexKey(
+		throwIfReadOnly("Deleting primary index key", partitionDimension.getNodeGroup().getNode(getNodeSemaphoreOfPrimaryIndexKey(
 				partitionDimension, primaryIndexKey).getId()), primaryIndexKey,
 				getReadOnlyOfPrimaryIndexKey(partitionDimension,
 						primaryIndexKey));
@@ -1124,7 +1116,6 @@ public class Hive implements Finder, Synchronizeable {
 			}
 
 		getDirectory(partitionDimension).deletePrimaryIndexKey(primaryIndexKey);
-		sync();
 	}
 
 	/**
@@ -1165,7 +1156,7 @@ public class Hive implements Finder, Synchronizeable {
 			Object secondaryIndexKey) throws HiveException, SQLException {
 		Object primaryIndexKey = getPrimaryIndexKeyOfSecondaryIndexKey(
 				secondaryIndex, secondaryIndexKey);
-		isWritable("Deleting secondary index key");
+		throwIfReadOnly("Deleting secondary index key");
 
 		if (!doesSecondaryIndexKeyExist(secondaryIndex, secondaryIndexKey))
 			throw new HiveException("Secondary index key "
@@ -1175,7 +1166,6 @@ public class Hive implements Finder, Synchronizeable {
 				.deleteSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
 		partitionStatistics.decrementChildRecordCount(secondaryIndex.getResource()
 				.getPartitionDimension(), primaryIndexKey, 1);
-		sync();
 	}
 
 	/**
@@ -1250,33 +1240,6 @@ public class Hive implements Finder, Synchronizeable {
 	/**
 	 * Returns the node assigned to the given primary index key
 	 * 
-	 * @param partitionDimension
-	 *            A partition dimension in the hive
-	 * @param primaryIndexKey
-	 *            A primary index key belonging to the partition dimension
-	 * @return
-	 * @throws HiveException
-	 *             Throws if the primary index key does not exist
-	 * @throws SQLException
-	 *             Throws if there is a persistence error
-	 */
-	protected Node getNodeOfPrimaryIndexKey(PartitionDimension partitionDimension,
-			Object primaryIndexKey) throws HiveException, SQLException {
-		try {
-			return partitionDimension.getNodeGroup().getNode(
-					getDirectory(partitionDimension).getNodeSemamphoreOfPrimaryIndexKey(primaryIndexKey).getId());
-		} catch (Exception e) {
-			throw new HiveException(
-					String
-							.format(
-									"Primary index key %s of partition dimension %s not found.",
-									primaryIndexKey.toString(),
-									partitionDimension.getName()), e);
-		}
-	}
-	/**
-	 * Returns the node assigned to the given primary index key
-	 * 
 	 * @param partitionDimensionName
 	 *            The name of a partition dimension in the hive
 	 * @param primaryIndexKey
@@ -1288,7 +1251,7 @@ public class Hive implements Finder, Synchronizeable {
 	 * @throws SQLException
 	 *             Throws if there is a persistence error
 	 */
-	protected NodeSemaphore getNodeSemaphoreOfPrimaryIndexKey(PartitionDimension partitionDimension,
+	private NodeSemaphore getNodeSemaphoreOfPrimaryIndexKey(PartitionDimension partitionDimension,
 			Object primaryIndexKey) throws HiveException, SQLException {
 		try {
 			return getDirectory(partitionDimension).getNodeSemamphoreOfPrimaryIndexKey(primaryIndexKey);
@@ -1300,26 +1263,6 @@ public class Hive implements Finder, Synchronizeable {
 									primaryIndexKey.toString(),
 									partitionDimension.getName()), e);
 		}
-	}
-
-	/**
-	 * Returns the node assigned to the given primary index key
-	 * 
-	 * @param partitionDimensionName
-	 *            The name of a partition dimension in the hive
-	 * @param primaryIndexKey
-	 *            A primary index key belonging to the partition dimension
-	 * @return
-	 * @throws HiveException
-	 *             Throws if the partition dimension or primary index key does
-	 *             not exist
-	 * @throws SQLException
-	 *             Throws if there is a persistence error
-	 */
-	protected NodeSemaphore getNodeSemaphoreOfPrimaryIndexKey(String partitionDimensionName,
-			Object primaryIndexKey) throws HiveException, SQLException {
-		return getNodeSemaphoreOfPrimaryIndexKey(
-				getPartitionDimension(partitionDimensionName), primaryIndexKey);
 	}
 	
 	/**
@@ -1411,40 +1354,8 @@ public class Hive implements Finder, Synchronizeable {
 				partitionDimensionName).getResource(resourceName)
 				.getSecondaryIndex(secondaryIndexName), secondaryIndexKey);
 	}
-
-	/**
-	 * 
-	 * Returns the node of the given secondary index key, based on the node of
-	 * the corresponding primary index key
-	 * 
-	 * @param secondaryIndex
-	 *            A secondary index that belongs to the hive via its resource
-	 *            and partition dimension
-	 * @param secondaryIndexKey
-	 *            The secondary index key on which to query
-	 * @return
-	 * @throws HiveException
-	 *             Throws if the secondary index key does not exist
-	 * @throws SQLException
-	 *             Throws if there is a persistence error
-	 */
-	protected Node getNodeOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey) throws HiveException, SQLException {
-		PartitionDimension partitionDimension = secondaryIndex.getResource().getPartitionDimension();
-		try {
-			return partitionDimension.getNodeGroup().getNode(
-					getDirectory(partitionDimension).getNodeSemaphoreOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey).getId());
-		} catch (Exception e) {
-			throw new HiveException(
-					String
-							.format(
-									"Secondary index key %s of partition dimension %s on secondary index %s not found.",
-									secondaryIndex.toString(),
-									partitionDimension.getName(),
-									secondaryIndex.getName()), e);
-		}
-	}
 	
-	protected NodeSemaphore getNodeSemaphoreOfSecondaryIndexKey(SecondaryIndex secondaryIndex,
+	private NodeSemaphore getNodeSemaphoreOfSecondaryIndexKey(SecondaryIndex secondaryIndex,
 			Object secondaryIndexKey) throws HiveException, SQLException {
 		PartitionDimension partitionDimension = secondaryIndex.getResource()
 				.getPartitionDimension();
@@ -1459,34 +1370,6 @@ public class Hive implements Finder, Synchronizeable {
 									partitionDimension.getName(),
 									secondaryIndex.getName()), e);
 		}
-	}
-
-	/**
-	 * 
-	 * Returns the node of the given secondary index key, based on the node of
-	 * the corresponding primary index key
-	 * 
-	 * @param partitionDimensionName
-	 *            The name of a partition dimension in the hive
-	 * @param resourceName
-	 *            The name of a resource in the partition dimesnion
-	 * @param secondaryIndexName
-	 *            The name of a secondary index of the resource
-	 * @param secondaryIndexKey
-	 *            The key of the secondary index to test
-	 * @return
-	 * @throws HiveException
-	 *             Throws if the partition dimension, resource, or secondary
-	 *             index does not exist
-	 * @throws SQLException
-	 *             Throws if there is a persistence error
-	 */
-	protected NodeSemaphore getNodeSemaphoreOfSecondaryIndexKey(String partitionDimensionName,
-			String resourceName, String secondaryIndexName,
-			Object secondaryIndexKey) throws HiveException, SQLException {
-		return getNodeSemaphoreOfSecondaryIndexKey(getPartitionDimension(
-				partitionDimensionName).getResource(resourceName)
-				.getSecondaryIndex(secondaryIndexName), secondaryIndexKey);
 	}
 
 	/**
@@ -1517,33 +1400,6 @@ public class Hive implements Finder, Synchronizeable {
 								"Secondary index key %s of partition dimension %s on secondary index %s not found.",
 								secondaryIndex.toString(), partitionDimension
 										.getName(), secondaryIndex.getName()));
-	}
-
-	/**
-	 * Returns the primary index key of the given secondary index key
-	 * 
-	 * @param partitionDimensionName
-	 *            A partition dimension of the hive
-	 * @param resourceName
-	 *            A resource of the partition dimension
-	 * @param secondaryIndexName
-	 *            A secondary index of the resource
-	 * @param secondaryIndexKey
-	 *            The secondary index to query for
-	 * @return
-	 * @throws HiveException
-	 *             Throws if the partition dimension, resource, or secondary
-	 *             index do not exist
-	 * @throws SQLException
-	 *             Throws if there is a persistence error
-	 */
-	public Object getPrimaryIndexKeyOfSecondaryIndexKey(
-			String partitionDimensionName, String resourceName,
-			String secondaryIndexName, Object secondaryIndexKey)
-			throws HiveException, SQLException {
-		return getPrimaryIndexKeyOfSecondaryIndexKey(getPartitionDimension(
-				partitionDimensionName).getResource(resourceName)
-				.getSecondaryIndex(secondaryIndexName), secondaryIndexKey);
 	}
 
 	/**
@@ -1590,17 +1446,6 @@ public class Hive implements Finder, Synchronizeable {
 				partitionDimensionName).getResource(resource)
 				.getSecondaryIndex(secondaryIndexName), primaryIndexKey);
 	}
-
-	/**
-	 * Test if Hive has been installed at current JDBC URI
-	 * 
-	 * @return True if hive metadata has been installed
-	 * @throws HiveException
-	 * @throws SQLException
-	 */
-	public boolean isInstalled() {
-		return new HiveSemaphoreDao(dataSource).doesHiveSemaphoreExist();
-	}
 	
 	private Connection getConnection(PartitionDimension partitionDimension, NodeSemaphore semaphore, AccessType intention) throws SQLException, HiveException {
 		try{
@@ -1618,7 +1463,6 @@ public class Hive implements Finder, Synchronizeable {
 			}
 			return conn;
 		} catch (SQLException e) {
-			// TODO: Ugh... duplicode
 			if( isPerformanceMonitoringEnabled() )
 				performanceStatistics.incrementConnectionFailures();
 			throw e;
@@ -1682,7 +1526,7 @@ public class Hive implements Finder, Synchronizeable {
 	 * @return
 	 */
 	public JdbcDaoSupportCache getJdbcDaoSupportCache(String partitionDimensionName) {
-		return this.dataSourceCaches.get(partitionDimensionName);
+		return this.jdbcDaoSupportCaches.get(partitionDimensionName);
 	}
 
 	public String toString() {
@@ -1691,34 +1535,25 @@ public class Hive implements Finder, Synchronizeable {
 				getPartitionDimensions());
 	}
 
-	private <T extends IdAndNameIdentifiable> void isUnique(
+	@SuppressWarnings("unchecked")
+	private <T extends IdAndNameIdentifiable> void throwIfNameIsNotUnique(
 			String errorMessage, Collection<T> collection, T item)
 			throws HiveException {
 		// Forbids duplicate names for two different instances if the class
 		// implements Identifies
-		if (!(item instanceof IdAndNameIdentifiable))
-			return;
-		String itemName = ((IdAndNameIdentifiable) item).getName();
-		for (IdAndNameIdentifiable collectionItem : collection)
-			if (itemName.equals((collectionItem).getName())
-					&& collectionItem.getId() != item.getId())
-				throw new HiveException(String.format("%s.\nExisting: %s\nNew: %s", 
-						errorMessage,
-						collectionItem,
-						item));
-		return;
+		if(!IdentifiableUtils.isNameUnique((Collection<IdAndNameIdentifiable>) collection, item))
+				throw new HiveException(errorMessage);
 	}
 
-	private <T extends Identifiable> void isIdPresentInCollection(
+	@SuppressWarnings("unchecked")
+	private <T extends Identifiable> void throwIfIdNotPresent(
 			String errorMessage, Collection<T> collection, T item)
 			throws HiveException {
-		for (T collectionItem : collection)
-			if (item.getId() == collectionItem.getId())
-				return;
-		throw new HiveException(errorMessage);
+		if(!IdentifiableUtils.isIdPresent((Collection<IdAndNameIdentifiable>)collection, (IdAndNameIdentifiable) item))
+			throw new HiveException(errorMessage);
 	}
 
-	private <T> void itemExistsInCollection(String errorMessage,
+	private <T> void throwUnlessItemExists(String errorMessage,
 			Collection<T> collection, T item) throws HiveException {
 		// All classes implement Comparable, so this does a deep compare on all
 		// objects owned by the item.
@@ -1726,26 +1561,26 @@ public class Hive implements Finder, Synchronizeable {
 			throw new HiveException(errorMessage);
 	}
 
-	private void isWritable(String errorMessage) throws HiveException {
+	private void throwIfReadOnly(String errorMessage) throws HiveException {
 		if (this.isReadOnly())
 			throw new HiveReadOnlyException(
 					errorMessage
 							+ ". This operation is invalid because the hive is currently read-only.");
 	}
 
-	private void isWritable(String errorMessage, Node node)
+	private void throwIfReadOnly(String errorMessage, Node node)
 			throws HiveException {
-		isWritable(errorMessage);
+		throwIfReadOnly(errorMessage);
 		if (node.isReadOnly())
 			throw new HiveReadOnlyException(errorMessage
 					+ ". This operation is invalid becuase the selected node "
 					+ node.getId() + " is currently read-only.");
 	}
 
-	private void isWritable(String errorMessage, Node node,
+	private void throwIfReadOnly(String errorMessage, Node node,
 			Object primaryIndexKeyId, boolean primaryIndexKeyReadOnly)
 			throws HiveException {
-		isWritable(errorMessage, node);
+		throwIfReadOnly(errorMessage, node);
 		if (primaryIndexKeyReadOnly)
 			throw new HiveReadOnlyException(
 					errorMessage
@@ -1762,10 +1597,6 @@ public class Hive implements Finder, Synchronizeable {
 
 		String msg = "Could not find directory for partition dimension "
 				+ dimension.getName();
-		msg += "Looking for:\n" + dimension.toString();
-		msg += "In List: \n";
-		for (Directory dir : this.directories)
-			msg += dir.getPartitionDimension().toString() + "\n";
 		throw new NoSuchElementException(msg);
 	}
 
@@ -1777,8 +1608,7 @@ public class Hive implements Finder, Synchronizeable {
 		return performanceStatistics;
 	}
 
-	public void setPerformanceStatistics(
-			HivePerformanceStatistics performanceStatistics) {
+	public void setPerformanceStatistics(HivePerformanceStatistics performanceStatistics) {
 		this.performanceStatistics = performanceStatistics;
 	}
 

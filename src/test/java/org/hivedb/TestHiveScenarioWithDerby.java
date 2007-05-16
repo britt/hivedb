@@ -2,6 +2,7 @@ package org.hivedb;
 
 import java.util.Collection;
 
+import org.hivedb.management.HiveInstaller;
 import org.hivedb.util.database.DerbyTestCase;
 import org.hivedb.util.database.DerbyUtils;
 import org.hivedb.util.functional.NumberIterator;
@@ -10,13 +11,14 @@ import org.hivedb.util.functional.Unary;
 import org.hivedb.util.scenarioBuilder.HiveScenarioMarauderConfig;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Test;
 
 public class TestHiveScenarioWithDerby extends DerbyTestCase {
 	
 	private Collection<String> dataNodes = null;
 	@BeforeMethod
 	public void setup() {
-
+		this.beforeMethod();
 		this.dataNodes = Transform.map(new Unary<Number, String>() {
 			public String f(Number count) { 
 				try {
@@ -27,6 +29,7 @@ public class TestHiveScenarioWithDerby extends DerbyTestCase {
 				}
 			}},
 			new NumberIterator(3));
+		new HiveInstaller(getConnectString()).run();
 	}
 	
 	@BeforeTest

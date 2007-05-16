@@ -16,6 +16,7 @@ import java.util.TreeSet;
 
 import org.hivedb.meta.Assigner;
 import org.hivedb.meta.ColumnInfo;
+import org.hivedb.meta.Directory;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.NodeSemaphore;
 import org.hivedb.meta.PartitionDimension;
@@ -24,6 +25,7 @@ import org.hivedb.meta.Resource;
 import org.hivedb.meta.ResourceIdentifiable;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.SecondaryIndexIdentifiable;
+import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.AssertUtils;
 import org.hivedb.util.JdbcTypeMapper;
 import org.hivedb.util.functional.Atom;
@@ -39,6 +41,7 @@ public class HiveScenarioTest {
 	
 	protected Hive hive;
 	HiveScenarioConfig hiveScenarioConfig;
+	private Directory directory;
 	public HiveScenarioTest(HiveScenarioConfig hiveScenarioConfig)
 	{
 		this.hiveScenarioConfig = hiveScenarioConfig;
@@ -61,7 +64,6 @@ public class HiveScenarioTest {
 	public void validateReadsFromPersistence(final HiveScenario hiveScenario) throws HiveException, SQLException
 	{
 		Hive hive = hiveScenario.getHive();
-	
 		// Validate our PartitionDimension in memory against those that are in the persistence
 		assertEquals(String.format("Expected %s but got %s", hiveScenario.getCreatedPartitionDimension(), hive.getPartitionDimensions()),
 			hiveScenario.getCreatedPartitionDimension(),
@@ -69,10 +71,10 @@ public class HiveScenarioTest {
 		
 		PartitionDimension partitionDimension = hiveScenario.getCreatedPartitionDimension();
 		PartitionDimension partitionDimensionFromHive = hive.getPartitionDimension(partitionDimension.getName());
-		
-		// Assert that primary index keys got to the persistence
+
+		directory = new Directory(partitionDimensionFromHive,new HiveBasicDataSource(hive.getHiveUri()));
 		for (PrimaryIndexIdentifiable primaryIndexInstance : hiveScenario.getPrimaryIndexInstancesCreatedByThisPartitionDimension(partitionDimension))
-			assertNotNull(hive.getNodeSemaphoreOfPrimaryIndexKey(partitionDimension, primaryIndexInstance.getPrimaryIndexKey()));
+			assertNotNull(directory.getNodeSemamphoreOfPrimaryIndexKey(primaryIndexInstance.getPrimaryIndexKey()));
 		
 		// Validate that the hive has the created resources
 		assertEquals(new TreeSet<Resource>(hiveScenario.getResourcesOfThisPartitionDimension(partitionDimension)),
@@ -96,27 +98,19 @@ public class HiveScenarioTest {
 																primaryIndexIdentifiable.getPrimaryIndexKey()));
 					
 					assertTrue(secondaryIndexKeys.contains(secondaryIndexIdentifiable.getSecondaryIndexKey()));
-									
-					NodeSemaphore nodeSemaphoreOfSecondaryIndexKey = hive.getNodeSemaphoreOfSecondaryIndexKey(
-							partitionDimension.getName(),
-							resource.getName(),
-							secondaryIndex.getName(),
-							secondaryIndexIdentifiable.getSecondaryIndexKey());
+			
+					NodeSemaphore nodeSemaphoreOfSecondaryIndexKey = directory.getNodeSemaphoreOfSecondaryIndexKey(secondaryIndex, secondaryIndexIdentifiable.getSecondaryIndexKey());
 					assertNotNull(nodeSemaphoreOfSecondaryIndexKey);
 						
 						// Assert that querying for the primary key of the secondary index key yields what we expect
 						Object expectedPrimaryIndexKey = secondaryIndexIdentifiable.getResourceIdentifiable().getPrimaryIndexIdentifiable().getPrimaryIndexKey();
-						Object actualPrimaryIndexKey = hive.getPrimaryIndexKeyOfSecondaryIndexKey(
-								partitionDimension.getName(),
-								resource.getName(),
-								secondaryIndex.getName(),
+						Object actualPrimaryIndexKey = directory.getPrimaryIndexKeyOfSecondaryIndexKey(
+								secondaryIndex,
 								secondaryIndexIdentifiable.getSecondaryIndexKey());
 						assertEquals(expectedPrimaryIndexKey, actualPrimaryIndexKey);
 						
 						// Assert that the node of the secondary index key is the same as that of the primary index key
-						NodeSemaphore nodeSemaphoreOfPrimaryIndexKey = hive.getNodeSemaphoreOfPrimaryIndexKey(
-																					partitionDimension.getName(),
-																					actualPrimaryIndexKey);
+						NodeSemaphore nodeSemaphoreOfPrimaryIndexKey = directory.getNodeSemamphoreOfPrimaryIndexKey(actualPrimaryIndexKey);
 						assertEquals(nodeSemaphoreOfSecondaryIndexKey, nodeSemaphoreOfPrimaryIndexKey);						
 				}
 			}	
@@ -135,20 +129,20 @@ public class HiveScenarioTest {
 
 	private static void updatePimaryIndexIdentifiables(final Hive hive, final HiveScenario hiveScenario, final PartitionDimension partitionDimension, final Filter iterateFilter) throws HiveException {
 		try {
-			new Undoable() {
+			final Directory directory = new Directory(partitionDimension, new HiveBasicDataSource(hive.getHiveUri()));
+			Undoable undoable = new Undoable() {
 				public void f() throws Exception {
-					
 					final Map<Node,Node> nodeToNodeMap = makeThisToThatMap( partitionDimension.getNodeGroup().getNodes());
 					//	Update the node of each primary key to another node, according to this map
 					for (final PrimaryIndexIdentifiable primaryIndexInstance : iterateFilter.f(hiveScenario.getPrimaryIndexInstancesCreatedByThisPartitionDimension(partitionDimension))) {								
-						final Node originalNode = hive.getNodeOfPrimaryIndexKey(partitionDimension, primaryIndexInstance.getPrimaryIndexKey());
+						final Node originalNode = getNode(hive, directory, partitionDimension.getName(), primaryIndexInstance.getPrimaryIndexKey());
 						final boolean readOnly = hive.getReadOnlyOfPrimaryIndexKey(partitionDimension, primaryIndexInstance.getPrimaryIndexKey());
 						updateNode(primaryIndexInstance, originalNode, nodeToNodeMap);							
 						updateReadOnly(primaryIndexInstance, !readOnly);
 						
 						new Undo() { public void f() throws Exception {							
 								final Map<Node,Node> reverseNodeToNodeMap = Transform.reverseMap(nodeToNodeMap);
-								Node newNode = hive.getNodeOfPrimaryIndexKey(partitionDimension, primaryIndexInstance.getPrimaryIndexKey());
+								Node newNode = getNode(hive, directory, partitionDimension.getName(), primaryIndexInstance.getPrimaryIndexKey() ); 
 								updateReadOnly(primaryIndexInstance, readOnly);
 								updateNode(primaryIndexInstance, newNode, reverseNodeToNodeMap);									
 						}};
@@ -159,7 +153,7 @@ public class HiveScenarioTest {
 							partitionDimension,
 							primaryIndexInstance.getPrimaryIndexKey(),
 							mapToNewNode.get(fromNode)); // note, using Node instead of node uri since our tests use duplicate node uris
-					assertEquals(mapToNewNode.get(fromNode).getId(), hive.getNodeSemaphoreOfPrimaryIndexKey(partitionDimension, primaryIndexInstance.getPrimaryIndexKey()).getId());
+					assertEquals(mapToNewNode.get(fromNode).getId(), directory.getNodeIdOfPrimaryIndexKey(primaryIndexInstance.getPrimaryIndexKey()));
 				}
 				private void updateReadOnly(PrimaryIndexIdentifiable primaryIndexInstance, boolean toBool) throws HiveException, SQLException {
 					hive.updatePrimaryIndexReadOnly(
@@ -168,7 +162,8 @@ public class HiveScenarioTest {
 							toBool);
 					assertEquals(toBool, hive.getReadOnlyOfPrimaryIndexKey(partitionDimension, primaryIndexInstance.getPrimaryIndexKey()));
 				}
-			}.cycle();
+			};
+			undoable.cycle();
 		} catch (Exception e)  { throw new HiveException("Undoable exception", e); }
 	}
 	private static void updateSecondaryIndexIdentifiables(final Hive hive, final HiveScenario hiveScenario, final PartitionDimension partitionDimension, final Filter iterateFilter) throws HiveException {
@@ -343,6 +338,11 @@ public class HiveScenarioTest {
 		catch (Exception e) { throw new RuntimeException("Undoable exception", e); }
 										
 	}
+	
+	private static Node getNode(Hive hive, Directory directory, String dimensionName, Object primaryIndexKey) throws HiveException {
+		return hive.getPartitionDimension(dimensionName)
+		.getNodeGroup().getNode(directory.getNodeIdOfPrimaryIndexKey(primaryIndexKey));
+	}
 	private static void commitReadonlyViolations(final HiveScenario hiveScenario, final Hive hive, final PartitionDimension partitionDimensionFromHiveScenario) throws HiveException 
 	{
 		try {
@@ -353,7 +353,8 @@ public class HiveScenarioTest {
 			final SecondaryIndex secondaryIndex = Atom.getFirst(resource.getSecondaryIndexes());
 			final ResourceIdentifiable resourceIdentifiable = Atom.getFirst(hiveScenario.getResourceIdentifiableInstancesForThisResource(resource));
 			final SecondaryIndexIdentifiable secondaryIndexIdentifiable = Atom.getFirst(resourceIdentifiable.getSecondaryIndexIdentifiables());
-			final Node node = hive.getNodeOfPrimaryIndexKey(partitionDimension, primaryIndexInstance.getPrimaryIndexKey());
+			final Directory directory = new Directory(partitionDimension, new HiveBasicDataSource(hive.getHiveUri()));
+			final Node node = getNode(hive, directory, partitionDimensionFromHiveScenario.getName(), primaryIndexInstance.getPrimaryIndexKey());
 			
 			
 			// Test update the hive to reaonly and then try to make various updates
@@ -425,7 +426,7 @@ public class HiveScenarioTest {
 									secondaryIndexIdentifiable.getResourceIdentifiable().getPrimaryIndexIdentifiable().getPrimaryIndexKey()
 								);
 								assertEquals(secondaryIndexIdentifiable.getResourceIdentifiable().getPrimaryIndexIdentifiable().getPrimaryIndexKey(),
-											hive.getPrimaryIndexKeyOfSecondaryIndexKey( partitionDimension.getName(), resource.getName(), secondaryIndex.getName(), secondaryIndexIdentifiable.getSecondaryIndexKey()));
+											directory.getPrimaryIndexKeyOfSecondaryIndexKey( secondaryIndex, secondaryIndexIdentifiable.getSecondaryIndexKey()));
 							}};
 						}}.cycle(); 
 					} catch(Exception e) { throw new HiveException("Undoable exception", e); }

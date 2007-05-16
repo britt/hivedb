@@ -1,11 +1,11 @@
 package org.hivedb;
 
-import java.sql.SQLException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.hivedb.management.statistics.HivePerformanceStatistics;
 import org.hivedb.meta.AccessType;
+import org.hivedb.meta.Directory;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.NodeSemaphore;
 import org.hivedb.meta.SecondaryIndex;
@@ -22,17 +22,19 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	private String partitionDimension;
 	private Map<Integer, SimpleJdbcDaoSupport> jdbcDaoSupports;
 	private HivePerformanceStatistics stats;
+	private Directory directory;
 	
 	private int revision = Integer.MIN_VALUE;
 	
-	public JdbcDaoSupportCacheImpl(String partitionDimension, Hive hive) {
-		this(partitionDimension, hive, null);
+	public JdbcDaoSupportCacheImpl(String partitionDimension, Hive hive, Directory directory) {
+		this(partitionDimension, hive, directory, null);
 	}
 	
-	public JdbcDaoSupportCacheImpl(String partitionDimension, Hive hive, HivePerformanceStatistics stats) {
+	public JdbcDaoSupportCacheImpl(String partitionDimension, Hive hive, Directory directory, HivePerformanceStatistics stats) {
 		this.partitionDimension = partitionDimension;
 		this.hive = hive;
 		this.jdbcDaoSupports = new ConcurrentHashMap<Integer, SimpleJdbcDaoSupport>();
+		this.directory = directory;
 		this.stats = stats;
 		try {
 			sync();
@@ -121,14 +123,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	 * @throws HiveReadOnlyException
 	 */
 	public SimpleJdbcDaoSupport get(Object primaryIndexKey, AccessType intention) throws HiveReadOnlyException {
-		NodeSemaphore semaphore = null;
-		try {
-			semaphore = hive.getNodeSemaphoreOfPrimaryIndexKey(partitionDimension, primaryIndexKey);
-		} catch (HiveException e) {
-			throw new RuntimeException(e);
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
+		NodeSemaphore semaphore = directory.getNodeSemamphoreOfPrimaryIndexKey(primaryIndexKey);
 		return get(semaphore, intention);
 	}
 
@@ -142,10 +137,8 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	 */
 	public SimpleJdbcDaoSupport get(SecondaryIndex secondaryIndex, Object secondaryIndexKey, AccessType intention) throws HiveReadOnlyException {
 		try {
-			return get(hive.getNodeSemaphoreOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey), intention);
+			return get(directory.getNodeSemaphoreOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey), intention);
 		} catch (HiveException e) {
-			throw new RuntimeException(e);
-		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
 	}
