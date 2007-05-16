@@ -91,8 +91,9 @@ public class NodeGroup implements Finder {
 		throw new HiveException("Node with uri " + name + " is not in this node group");
 	}
 
+	@SuppressWarnings("unchecked")
 	public <T extends Nameable> T findByName(Class<T> forClass, String name) throws HiveException {
-		return findByName(forClass, name);
+		return (T) getNode(name);
 	}
 
 	/**

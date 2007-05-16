@@ -25,7 +25,7 @@ public class InstallHiveIndexSchema {
 		final PartitionDimension partitionDimension = createPartitionDimension(hiveScenarioConfig);	
 		try {
 			// Create or update a partition dimension and its subordinate NodeGroup, primary Node, Resources, and SecondaryIndexes
-//			new HiveSyncer(hive).syncHive(hiveScenarioConfig);
+			new HiveSyncer(hive).syncHive(hiveScenarioConfig);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
