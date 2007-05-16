@@ -14,8 +14,7 @@ import org.springframework.jdbc.core.support.JdbcDaoSupport;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-//TODO: Rename this class
-public class HiveDataSourceCacheTest extends HiveTestCase {
+public class JdbcDaoSupportCacheTest extends HiveTestCase {
 	protected boolean cleanupDbAfterEachTest = true;
 	
 	@BeforeClass
