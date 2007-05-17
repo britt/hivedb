@@ -6,20 +6,19 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 
 import javax.sql.DataSource;
 
 import org.hivedb.meta.persistence.HiveBasicDataSource;
-import org.hivedb.util.database.DerbyUtils;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 public abstract class DerbyTestCase {
-	//Override these valus to customize your test
+	//Override these values to customize your test
 	protected boolean cleanupDbAfterEachTest = false;
 	protected String databaseName =  "derbyTestDb";
 	protected String loadScript = null;
@@ -28,13 +27,37 @@ public abstract class DerbyTestCase {
 	protected boolean cleanupOnLoad = true;
 	protected boolean cleanupOnExit = true;
 	
+	protected Collection<String> databaseNames;
+	
+	public DerbyTestCase() {
+		databaseNames = new ArrayList<String>();
+		databaseNames.add(getDatabaseName());
+	}
+	
+	public DerbyTestCase(Collection<String> dbNames) {
+		databaseNames = dbNames;
+		if(!databaseNames.contains(databaseName))
+			databaseNames.add(databaseName);
+	}
+	
 	@SuppressWarnings("unused")
 	@BeforeClass
 	protected void initializeDerby(){
-		if( cleanupOnLoad || cleanupDbAfterEachTest) 
-			deleteDerbyDb();
+		if( cleanupOnLoad || cleanupDbAfterEachTest) {
+			deleteDatabases();
+		}
+		for(String name : getDatabaseNames())
+			createDatabase(name);
+	}
+
+	private void deleteDatabases() {
+		for(String name : getDatabaseNames())
+			deleteDerbyDb(name);
+	}
+	
+	private void createDatabase(String name) {
 		try {
-			DerbyUtils.createDatabase(getDatabaseName(), userName, password);
+			DerbyUtils.createDatabase(name, userName, password);
 			if( loadScript != null && !"".equals(loadScript))
 				loadFromSqlScript();
 		} catch (IOException e) {
@@ -49,7 +72,7 @@ public abstract class DerbyTestCase {
 	@AfterClass
 	protected void cleanupDerby() {
 		if( cleanupOnExit ){
-			deleteDerbyDb();
+			deleteDatabases();
 		}
 	}
 	
@@ -62,7 +85,7 @@ public abstract class DerbyTestCase {
 	@AfterMethod
 	protected void afterMethod() {
 		if( cleanupDbAfterEachTest ){
-			deleteDerbyDb();
+			deleteDatabases();
 		}
 	}
 
@@ -84,13 +107,13 @@ public abstract class DerbyTestCase {
 		DerbyUtils.executeScript(sql, DerbyUtils.getConnection(getDatabaseName(), userName, password));
 	}
 	
-	private void deleteDerbyDb() {
+	private void deleteDerbyDb(String name) {
 		String path;
 		try {
-			path = new File(".").getCanonicalPath() + File.separator + getDatabaseName();
+			path = new File(".").getCanonicalPath() + File.separator + name;
 			File db = new File(path);
 			if( db.exists())
-				DerbyUtils.deleteDatabase(new File(".").getCanonicalPath(), getDatabaseName());
+				DerbyUtils.deleteDatabase(new File(".").getCanonicalPath(), name);
 		} catch (IOException e) {
 			throw new DerbyTestCaseException("Error deleting database", e);
 		}
@@ -131,9 +154,7 @@ public abstract class DerbyTestCase {
 		return databaseName;
 	}
 	
-	protected String[] dataNodes = new String[] { "data1", "data2", "data3" }; 
-		
-		public Collection<String> getDataUris() {
-			return Arrays.asList(dataNodes);
-		}
+	public Collection<String> getDatabaseNames() {
+		return databaseNames;
 	}
+}
