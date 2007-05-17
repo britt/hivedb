@@ -5,8 +5,7 @@ import java.util.Arrays;
 import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
 
-// TODO Fill Rate is a computed value from historical values of fill level
-// Reconsider how this statistic is implemented
+// TODO Reconsider how this statistic is implemented
 public class NodeFillStatisticsMBean extends StandardMBean implements
 		NodeFillStatistics {
 	private static final String FILLLEVEL = "FillLevel";

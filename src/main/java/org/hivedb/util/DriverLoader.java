@@ -21,7 +21,6 @@ public class DriverLoader {
 
 	public static void loadByDialect(HiveDbDialect dialect)
 			throws ClassNotFoundException {
-		// TODO Integrate with configuration subsystem to provide for overrides
 		Class.forName(defaultDrivers.get(dialect));
 	}
 	
