@@ -1,7 +1,7 @@
 package org.hivedb.management.migration;
 
 
-public class MigrationException extends Exception {
+public class MigrationException extends RuntimeException {
 	public MigrationException() {}
 	
 	public MigrationException(Exception innerException) {super(innerException);}

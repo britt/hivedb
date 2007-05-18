@@ -70,10 +70,10 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 		Node node = null;
 		try {
 			node = hive.getPartitionDimension(partitionDimension).getNodeGroup().getNode(semaphore.getId());
-		} catch (HiveException e) {
+		} catch (HiveRuntimeException e) {
 			//failure
 			countFailure();
-			throw new HiveRuntimeException(e.getMessage());
+			throw e;
 		}
 		
 		if(intention == AccessType.ReadWrite && (hive.isReadOnly() || node.isReadOnly() || semaphore.isReadOnly())){
@@ -165,7 +165,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	 * IMPORTANT -- This bypasses the locking mechanism.  You should only use this
 	 * to install schema before data nodes have been populated.
 	 */
-	public SimpleJdbcDaoSupport getUnsafe(Node node) throws HiveReadOnlyException {
+	public SimpleJdbcDaoSupport getUnsafe(Node node) {
 		try {
 			NodeSemaphore semaphore = new NodeSemaphore(node.getId(), node.isReadOnly());
 			return get(semaphore, AccessType.ReadWrite);

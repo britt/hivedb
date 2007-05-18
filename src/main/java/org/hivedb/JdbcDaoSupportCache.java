@@ -8,5 +8,5 @@ import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 public interface JdbcDaoSupportCache {
 	public SimpleJdbcDaoSupport get(Object primaryIndexKey, AccessType intention) throws HiveReadOnlyException;
 	public SimpleJdbcDaoSupport get(SecondaryIndex secondaryIndex, Object secondaryIndexKey, AccessType intention) throws HiveReadOnlyException;
-	public SimpleJdbcDaoSupport getUnsafe(Node node) throws HiveReadOnlyException;
+	public SimpleJdbcDaoSupport getUnsafe(Node node);
 }

@@ -1,8 +1,9 @@
 package org.hivedb.management.migration;
 
-
+import org.hivedb.meta.Node;
 
 public interface Mover<T> {
-	public MoveReport move(Migration migration) throws MigrationException;
-	//This class should probably have a couple of checked exceptions for contigencies.
+	public void copy(T item, Node node); 
+	public T get(Object id, Node node);
+	public void delete(T item, Node node);
 }

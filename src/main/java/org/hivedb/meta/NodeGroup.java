@@ -7,7 +7,7 @@ package org.hivedb.meta;
 import java.util.Collection;
 
 import org.hivedb.Hive;
-import org.hivedb.HiveException;
+import org.hivedb.HiveRuntimeException;
 import org.hivedb.util.HiveUtils;
 
 /**
@@ -76,23 +76,23 @@ public class NodeGroup implements Finder {
 	public void setNodes(Collection<Node> nodes) {
 		this.nodes = nodes;
 	}
-	public Node getNode(int nodeId) throws HiveException 
+	public Node getNode(int nodeId) 
 	{
 		for (Node node : getNodes())
 			if (node.getId() == (nodeId))
 				return node;
-		throw new HiveException("Node with id " + nodeId + " is not in this node group");
+		throw new HiveRuntimeException("Node with id " + nodeId + " is not in this node group");
 	}
-	public Node getNode(String name) throws HiveException 
+	public Node getNode(String name) 
 	{
 		for (Node node : getNodes())
 			if (node.getName().equals(name))
 				return node;
-		throw new HiveException("Node with uri " + name + " is not in this node group");
+		throw new HiveRuntimeException("Node with uri " + name + " is not in this node group");
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T extends Nameable> T findByName(Class<T> forClass, String name) throws HiveException {
+	public <T extends Nameable> T findByName(Class<T> forClass, String name) {
 		return (T) getNode(name);
 	}
 

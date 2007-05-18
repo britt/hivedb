@@ -937,13 +937,7 @@ public class Hive implements Synchronizeable {
 	 *             Throws if there is a persistence error
 	 */
 	public void updatePrimaryIndexNode(PartitionDimension partitionDimension,
-			Object primaryIndexKey, Node node) throws HiveException,
-			SQLException {
-		throwIfReadOnly("Updating primary index node", partitionDimension.getNodeGroup().getNode(getNodeSemaphoreOfPrimaryIndexKey(
-				partitionDimension, primaryIndexKey).getId()), primaryIndexKey,
-				getReadOnlyOfPrimaryIndexKey(partitionDimension,
-						primaryIndexKey));
-
+			Object primaryIndexKey, Node node) throws HiveException {
 		getDirectory(partitionDimension).updatePrimaryIndexKey(node,
 				primaryIndexKey);
 	}
@@ -967,8 +961,7 @@ public class Hive implements Synchronizeable {
 	 *             Throws if there is a persistence error
 	 */
 	public void updatePrimaryIndexNode(String partitionDimensionName,
-			Object primaryIndexKey, String nodeUri) throws HiveException,
-			SQLException {
+			Object primaryIndexKey, String nodeUri) throws HiveException {
 		PartitionDimension partitionDimension = getPartitionDimension(partitionDimensionName);
 		updatePrimaryIndexNode(partitionDimension, primaryIndexKey,
 				partitionDimension.getNodeGroup().getNode(nodeUri));
@@ -994,7 +987,7 @@ public class Hive implements Synchronizeable {
 	 */
 	public void updatePrimaryIndexReadOnly(
 			PartitionDimension partitionDimension, Object primaryIndexKey,
-			boolean isReadOnly) throws HiveException, SQLException {
+			boolean isReadOnly) throws HiveException {
 		throwIfReadOnly("Updating primary index read-only");
 		// This query validates the existence of the primaryIndexKey
 		getNodeSemaphoreOfPrimaryIndexKey(partitionDimension, primaryIndexKey);
@@ -1021,8 +1014,7 @@ public class Hive implements Synchronizeable {
 	 *             Throws if there is a persistence error
 	 */
 	public void updatePrimaryIndexReadOnly(String partitionDimensionName,
-			Object primaryIndexKey, boolean isReadOnly) throws HiveException,
-			SQLException {
+			Object primaryIndexKey, boolean isReadOnly) throws HiveException {
 		PartitionDimension partitionDimension = getPartitionDimension(partitionDimensionName);
 		updatePrimaryIndexReadOnly(partitionDimension, primaryIndexKey,
 				isReadOnly);
@@ -1252,7 +1244,7 @@ public class Hive implements Synchronizeable {
 	 *             Throws if there is a persistence error
 	 */
 	private NodeSemaphore getNodeSemaphoreOfPrimaryIndexKey(PartitionDimension partitionDimension,
-			Object primaryIndexKey) throws HiveException, SQLException {
+			Object primaryIndexKey) throws HiveException {
 		try {
 			return getDirectory(partitionDimension).getNodeSemamphoreOfPrimaryIndexKey(primaryIndexKey);
 		} catch (Exception e) {
@@ -1280,7 +1272,7 @@ public class Hive implements Synchronizeable {
 	 */
 	public boolean getReadOnlyOfPrimaryIndexKey(
 			PartitionDimension partitionDimension, Object primaryIndexKey)
-			throws HiveException, SQLException {
+			throws HiveException {
 		Boolean readOnly = getDirectory(partitionDimension)
 				.getReadOnlyOfPrimaryIndexKey(primaryIndexKey);
 		if (readOnly != null)
@@ -1304,7 +1296,7 @@ public class Hive implements Synchronizeable {
 	 *             Throws if there is a persistence error
 	 */
 	public boolean getReadOnlyOfPrimaryIndexKey(String partitionDimensionName,
-			Object primaryIndexKey) throws HiveException, SQLException {
+			Object primaryIndexKey) throws HiveException {
 		return getReadOnlyOfPrimaryIndexKey(
 				getPartitionDimension(partitionDimensionName), primaryIndexKey);
 	}
@@ -1322,7 +1314,7 @@ public class Hive implements Synchronizeable {
 	 *             Throws an exception if there is a persistence error
 	 */
 	public boolean doesSecondaryIndexKeyExist(SecondaryIndex secondaryIndex,
-			Object secondaryIndexKey) throws SQLException {
+			Object secondaryIndexKey) {
 		return getDirectory(
 				secondaryIndex.getResource().getPartitionDimension())
 				.doesSecondaryIndexKeyExist(secondaryIndex, secondaryIndexKey);
@@ -1344,19 +1336,17 @@ public class Hive implements Synchronizeable {
 	 * @throws HiveException
 	 *             Throws if the partition dimension, resource, or secondary
 	 *             index does not exist
-	 * @throws SQLException
-	 *             Throws if there is a persistence error
 	 */
 	public boolean doesSecondaryIndexKeyExist(String partitionDimensionName,
 			String resourceName, String secondaryIndexName,
-			Object secondaryIndexKey) throws HiveException, SQLException {
+			Object secondaryIndexKey) throws HiveException {
 		return doesSecondaryIndexKeyExist(getPartitionDimension(
 				partitionDimensionName).getResource(resourceName)
 				.getSecondaryIndex(secondaryIndexName), secondaryIndexKey);
 	}
 	
 	private NodeSemaphore getNodeSemaphoreOfSecondaryIndexKey(SecondaryIndex secondaryIndex,
-			Object secondaryIndexKey) throws HiveException, SQLException {
+			Object secondaryIndexKey) throws HiveException {
 		PartitionDimension partitionDimension = secondaryIndex.getResource()
 				.getPartitionDimension();
 		try {
@@ -1382,11 +1372,10 @@ public class Hive implements Synchronizeable {
 	 *            The secondary in
 	 * @return
 	 * @throws HiveException
-	 * @throws SQLException
 	 */
 	public Object getPrimaryIndexKeyOfSecondaryIndexKey(
 			SecondaryIndex secondaryIndex, Object secondaryIndexKey)
-			throws HiveException, SQLException {
+			throws HiveException {
 		PartitionDimension partitionDimension = secondaryIndex.getResource()
 				.getPartitionDimension();
 		Object primaryIndexKey = getDirectory(partitionDimension)
@@ -1412,12 +1401,9 @@ public class Hive implements Synchronizeable {
 	 * @param primaryIndexKey
 	 *            the primary index key with which to query
 	 * @return
-	 * @throws SQLException
-	 *             Throws if there is a persistence error.
 	 */
 	public Collection getSecondaryIndexKeysWithPrimaryKey(
-			SecondaryIndex secondaryIndex, Object primaryIndexKey)
-			throws SQLException {
+			SecondaryIndex secondaryIndex, Object primaryIndexKey) {
 		return getDirectory(
 				secondaryIndex.getResource().getPartitionDimension())
 				.getSecondaryIndexKeysOfPrimaryIndexKey(secondaryIndex,
@@ -1436,12 +1422,11 @@ public class Hive implements Synchronizeable {
 	 * @param primaryIndexKey
 	 * @return
 	 * @throws HiveException
-	 * @throws SQLException
 	 */
 	public Collection getSecondaryIndexKeysWithPrimaryKey(
 			String partitionDimensionName, String resource,
 			String secondaryIndexName, Object primaryIndexKey)
-			throws HiveException, SQLException {
+			throws HiveException {
 		return getSecondaryIndexKeysWithPrimaryKey(getPartitionDimension(
 				partitionDimensionName).getResource(resource)
 				.getSecondaryIndex(secondaryIndexName), primaryIndexKey);
@@ -1488,7 +1473,7 @@ public class Hive implements Synchronizeable {
 	 * @param intent
 	 * @return
 	 * @throws HiveException
-	 * @throws SQLException
+	 * @throws SQLException 
 	 */
 	public Connection getConnection(PartitionDimension partitionDimension,
 			Object primaryIndexKey, AccessType intent) throws HiveException, SQLException {
