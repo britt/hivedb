@@ -99,7 +99,7 @@ public class Hive implements Synchronizeable {
 				log.debug("Successfully loaded Hive from " + hiveDatabaseUri);
 		// TODO: catch a more specific exception here
 		} catch (Exception ex) {
-			log.warn("No HiveDB global schema detected (" + ex.getMessage() +  "), attempting installation to "
+			log.warn("No HiveDB global schema detected (" + ex.getMessage() +  ") at : "
 					+ hiveDatabaseUri);
 			for (StackTraceElement s : ex.getStackTrace())
 				log.warn(s.toString());
