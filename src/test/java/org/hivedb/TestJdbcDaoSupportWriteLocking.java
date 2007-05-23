@@ -1,6 +1,5 @@
 package org.hivedb;
 
-import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.Directory;
 import org.hivedb.meta.IndexSchema;
@@ -15,14 +14,8 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class TestJdbcDaoSupportWriteLocking extends HiveTestCase {
-	public TestJdbcDaoSupportWriteLocking() {
-		this.cleanupDbAfterEachTest = true;
-	}
-	
 	@BeforeMethod
 	public void setUp() throws Exception {
-		super.setUp();
-		new HiveInstaller(getConnectString()).run();
 		Hive hive = Hive.load(getConnectString());
 		hive.addPartitionDimension(createPopulatedPartitionDimension());
 		hive.addNode(Atom.getFirst(hive.getPartitionDimensions()), createNode());
@@ -37,8 +30,7 @@ public class TestJdbcDaoSupportWriteLocking extends HiveTestCase {
 		hive.insertPrimaryIndexKey(Atom.getFirst(hive.getPartitionDimensions()), key);
 		hive.updateHiveReadOnly(true);
 		
-		AssertUtils.assertThrows(new Toss(){
-
+		AssertUtils.assertThrows(new Toss() {
 			public void f() throws Exception {
 				hive.getJdbcDaoSupportCache(Atom.getFirst(hive.getPartitionDimensions())).get(key, AccessType.ReadWrite);
 			}}, HiveReadOnlyException.class);
@@ -81,7 +73,7 @@ public class TestJdbcDaoSupportWriteLocking extends HiveTestCase {
 	
 	@Test
 	public void testNodeLockingPersistent() throws Exception {
-		Hive hive = Hive.load(getConnectString());
+		final Hive hive = Hive.load(getConnectString());
 		final Integer key = new Integer(13);
 		
 		PartitionDimension partitionDimension = Atom.getFirst(hive.getPartitionDimensions());
@@ -89,7 +81,6 @@ public class TestJdbcDaoSupportWriteLocking extends HiveTestCase {
 		Directory directory = new Directory(partitionDimension, new HiveBasicDataSource(hive.getHiveUri()));
 		Node node = partitionDimension.getNodeGroup().getNode(directory.getNodeIdOfPrimaryIndexKey(key));
 		hive.updateNodeReadOnly(node, true);
-		hive = null;
 		
 		final Hive fetchedHive = Hive.load(getConnectString());
 		

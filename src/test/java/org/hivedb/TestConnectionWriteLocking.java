@@ -1,6 +1,5 @@
 package org.hivedb;
 
-import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.Directory;
 import org.hivedb.meta.IndexSchema;
@@ -22,8 +21,6 @@ public class TestConnectionWriteLocking extends HiveTestCase {
 	
 	@BeforeMethod
 	public void setUp() throws Exception {
-		super.beforeMethod();
-		new HiveInstaller(getConnectString()).run();
 		Hive hive = Hive.load(getConnectString());
 		hive.addPartitionDimension(createPopulatedPartitionDimension());
 		hive.addNode(Atom.getFirst(hive.getPartitionDimensions()), createNode());

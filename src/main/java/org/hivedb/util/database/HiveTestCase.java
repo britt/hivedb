@@ -25,8 +25,14 @@ import org.testng.annotations.BeforeMethod;
 public abstract class HiveTestCase extends DerbyTestCase {
 	protected BasicDataSource ds;
 
+	public HiveTestCase() {
+		super();
+		this.cleanupDbAfterEachTest = true;	
+	}
+	
+	@Override
 	@BeforeMethod
-	public void setUp() throws Exception {
+	public void beforeMethod() {
 		super.beforeMethod();
 		ds = new HiveBasicDataSource(getConnectString());
 		new HiveInstaller(getConnectString()).run();

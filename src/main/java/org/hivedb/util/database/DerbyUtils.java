@@ -14,8 +14,6 @@ public class DerbyUtils {
 	public static final String derbyDriver = "org.apache.derby.jdbc.EmbeddedDriver";
 	public static final String derbyShutdownString = "jdbc:derby:;shutdown=true";
 	
-	private static Driver driver = null;
-	
 	public static Connection getConnection(String databaseName, Properties properties) throws InstantiationException, SQLException {
 		return createConnection(connectString(databaseName), properties);
 	}
@@ -105,8 +103,6 @@ public class DerbyUtils {
 	}
 	
 	private static Driver getDriver() throws InstantiationException, IllegalAccessException, ClassNotFoundException {
-		if( driver == null )
-			driver = (Driver) Class.forName(derbyDriver).newInstance();
-		return driver;
+		return (Driver) Class.forName(derbyDriver).newInstance();
 	}
 }

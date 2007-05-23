@@ -181,4 +181,14 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	public boolean isPerformanceMonitoringEnabled() {
 		return this.stats != null;
 	}
+
+	public SimpleJdbcDaoSupport getUnsafe(String nodeName) {
+		try {
+			Node node = hive.getPartitionDimension(this.getPartitionDimension()).getNodeGroup().getNode(nodeName);
+			NodeSemaphore semaphore = new NodeSemaphore(node.getId(), node.isReadOnly());
+			return get(semaphore, AccessType.ReadWrite);
+		} catch (HiveException e) {
+			throw new RuntimeException(e);
+		}
+	}
 }

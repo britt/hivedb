@@ -1,8 +1,6 @@
 package org.hivedb.util.database;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -19,9 +17,8 @@ import org.testng.annotations.BeforeMethod;
 
 public abstract class DerbyTestCase {
 	//Override these values to customize your test
-	protected boolean cleanupDbAfterEachTest = false;
+	protected boolean cleanupDbAfterEachTest = true;
 	protected String databaseName =  "derbyTestDb";
-	protected String loadScript = null;
 	protected String userName = "theuser";
 	protected String password = "thepassword";
 	protected boolean cleanupOnLoad = true;
@@ -37,58 +34,56 @@ public abstract class DerbyTestCase {
 	public DerbyTestCase(Collection<String> dbNames) {
 		databaseNames = dbNames;
 		if(!databaseNames.contains(databaseName))
-			databaseNames.add(databaseName);
+			databaseNames.add(getDatabaseName());
 	}
 	
 	@SuppressWarnings("unused")
 	@BeforeClass
-	protected void initializeDerby(){
+	protected void beforeClass(){
 		if( cleanupOnLoad || cleanupDbAfterEachTest) {
-			deleteDatabases();
-		}
-		for(String name : getDatabaseNames())
-			createDatabase(name);
-	}
-
-	private void deleteDatabases() {
-		for(String name : getDatabaseNames())
-			deleteDerbyDb(name);
-	}
-	
-	private void createDatabase(String name) {
-		try {
-			DerbyUtils.createDatabase(name, userName, password);
-			if( loadScript != null && !"".equals(loadScript))
-				loadFromSqlScript();
-		} catch (IOException e) {
-			throw new DerbyTestCaseException(
-					"Error initializing the Derby database: IOException while reading the sql script.",e);
-		} catch (Exception e) {
-			throw new DerbyTestCaseException("Error initializing the Derby database: " + e.getMessage(), e);
-		}
-	}
-	
-	@SuppressWarnings("unused")
-	@AfterClass
-	protected void cleanupDerby() {
-		if( cleanupOnExit ){
-			deleteDatabases();
+			for(String name : getDatabaseNames()){
+				deleteDerbyDb(name);
+				createDatabase(name);
+			}
 		}
 	}
 	
 	@BeforeMethod
 	protected void beforeMethod() {
-		if( cleanupDbAfterEachTest ){
-			initializeDerby();
-		}
-	}
-	@AfterMethod
-	protected void afterMethod() {
-		if( cleanupDbAfterEachTest ){
-			deleteDatabases();
+		if( cleanupDbAfterEachTest ) {
+			for(String name : getDatabaseNames()){
+				createDatabase(name);
+			}
 		}
 	}
 
+	@SuppressWarnings("unused")
+	@AfterClass
+	protected void afterClass() {
+		if( cleanupOnExit ){
+			for(String name : getDatabaseNames()){
+				deleteDerbyDb(name);
+			}
+		}
+		DerbyUtils.shutdown();
+	}
+	
+	@AfterMethod
+	protected void afterMethod() {
+		if( cleanupDbAfterEachTest ){
+			for(String name : getDatabaseNames()){
+				deleteDerbyDb(name);
+			}
+		}
+	}
+	
+	private void createDatabase(String name) {
+		try {
+			DerbyUtils.createDatabase(name, userName, password);
+		} catch (Exception e) {
+			throw new DerbyTestCaseException("Error initializing the Derby database: " + e.getMessage(), e);
+		}
+	}
 	
 	protected String getConnectString()  {
 		return DerbyUtils.connectString(getDatabaseName());
@@ -102,11 +97,6 @@ public abstract class DerbyTestCase {
 		return new HiveBasicDataSource(getConnectString());
 	}
 	
-	private void loadFromSqlScript() throws IOException, SQLException, InstantiationException {
-		String sql = readFileAsString( relativePathToFullPath(loadScript));
-		DerbyUtils.executeScript(sql, DerbyUtils.getConnection(getDatabaseName(), userName, password));
-	}
-	
 	private void deleteDerbyDb(String name) {
 		String path;
 		try {
@@ -117,25 +107,6 @@ public abstract class DerbyTestCase {
 		} catch (IOException e) {
 			throw new DerbyTestCaseException("Error deleting database", e);
 		}
-	}
-	
-	private static String relativePathToFullPath(String relativePath){
-		String baseDir = null;
-		try {
-			baseDir = new File(".").getCanonicalPath();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return baseDir + File.separator + relativePath;
-	}
-	
-	private static String readFileAsString(String file) throws IOException{
-		BufferedReader reader = new BufferedReader(new FileReader(file));
-		String line;
-		StringBuilder sb = new StringBuilder();
-		while((line = reader.readLine()) != null)
-			sb.append(line + "\n");
-		return sb.toString();
 	}
 	
 	@SuppressWarnings("serial")

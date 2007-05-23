@@ -6,7 +6,6 @@ import java.util.Collection;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
-import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.util.database.HiveTestCase;
@@ -14,18 +13,18 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class TestRuntimeStatisticsCollection extends HiveTestCase{
 	private Hive hive;
 	private ApplicationContext context;
 	
-	@BeforeClass
+	@BeforeMethod
 	public void setup() throws Exception {
-		new HiveInstaller(getConnectString()).run();
+		super.beforeMethod();
 		
-		String[] configFiles = new String[] {"applicationContext-test.xml", "hivedb-jmx-mbeans.xml", "hivedb-jmx.xml"};
+		String[] configFiles = new String[] {"applicationContext-test.xml", "hivedb-jmx-mbeans.xml"};
 		context = new ClassPathXmlApplicationContext(configFiles);
 		
 		hive = (Hive) context.getBean("hive");

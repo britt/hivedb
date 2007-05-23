@@ -12,14 +12,16 @@ import org.hivedb.meta.IndexSchema;
 import org.hivedb.util.database.HiveTestCase;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class TestHivePerformanceStatistics extends HiveTestCase{
 	private Hive hive;
 	
-	@BeforeClass
+	@BeforeMethod
 	public void setup() throws Exception {
+		this.cleanupDbAfterEachTest = true;
+		super.beforeMethod();
 		new HiveInstaller(getConnectString()).run();
 		hive = Hive.load(getConnectString());
 		hive.setPerformanceStatistics(new HivePerformanceStatisticsMBean(10000,1000));

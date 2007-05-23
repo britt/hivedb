@@ -11,13 +11,13 @@ import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.util.database.HiveTestCase;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
-import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class JdbcDaoSupportCacheTest extends HiveTestCase {
 	protected boolean cleanupDbAfterEachTest = true;
 	
-	@BeforeClass
+	@BeforeMethod
 	public void setUp() throws Exception{
 		new HiveInstaller(getConnectString()).run();
 		Hive hive = Hive.load(getConnectString());

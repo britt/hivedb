@@ -30,13 +30,19 @@ public class TestMigration extends HiveTestCase {
 	}
 	
 	@BeforeMethod
-	public void setUp() throws Exception {
-		super.setUp();
-		Hive hive = Hive.load(getConnectString());
-		hive.addPartitionDimension(createPopulatedPartitionDimension());
-		new IndexSchema(hive.getPartitionDimension(partitionDimensionName())).install();
-		for(String name : this.databaseNames)
-			hive.addNode(hive.getPartitionDimension(partitionDimensionName()), new Node(name, DerbyUtils.connectString(name)));
+	public void beforeMethod() {
+		super.beforeMethod();
+		Hive hive;
+		try {
+			hive = Hive.load(getConnectString());
+			hive.addPartitionDimension(createPopulatedPartitionDimension());
+			new IndexSchema(hive.getPartitionDimension(partitionDimensionName())).install();
+			for(String name : this.databaseNames)
+				hive.addNode(hive.getPartitionDimension(partitionDimensionName()), new Node(name, DerbyUtils.connectString(name)));
+			
+		} catch (Exception e) {
+			throw new RuntimeException("");
+		}
 		
 		for(String name: this.databaseNames) {
 			SimpleJdbcDaoSupport dao = new SimpleJdbcDaoSupport();

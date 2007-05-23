@@ -128,7 +128,7 @@ public class TestRollingAverage {
 	public void testRollsOut() throws Exception {
 		// this test is finicky b/c of inaccuracies of Thread.sleep().
 
-		long window = 2000;
+		long window = 1000;
 		int numIntervals = 4;
 		long resolution = window / numIntervals;
 		long wait = resolution;
@@ -172,60 +172,60 @@ public class TestRollingAverage {
 		}
 	}
 
-	private RollingAverage shared = RollingAverage.getInstanceByIntervalSize(10000, 100);
+//	private RollingAverage shared = RollingAverage.getInstanceByIntervalSize(10000, 100);
 
-	@Test
-	public void testConcurrentUse() throws Exception {
-
-		// crate a bunch of threads who use the shared RollingAverage
-		Thread[] threads = new Thread[10];
-		for (int i = 0; i < threads.length; i++) {
-			threads[i] = new Thread() {
-				@Override
-				public void run() {
-					while (!interrupted()) {
-						shared.toString();
-						shared.add(1);
-						shared.getCount();
-						shared.add(1);
-						shared.getAverage();
-						shared.add(1);
-						shared.getAverageAsDouble();
-						shared.add(1);
-						shared.getSum();
-						shared.reset();
-						shared.add(1);
-						shared.getIntervalSize();
-						shared.add(1);
-						shared.getWindowSize();
-						shared.add(2);
-						shared.toString();
-						try {
-							Thread.sleep((int) (Math.random() * 2));
-						} catch (InterruptedException e) {
-							// accept interruptions while sleeping
-							return;
-						}
-					}
-				}
-			};
-		}
-
-		// start all threads
-		for (Thread thread : threads) {
-			thread.start();
-		}
-
-		// allow threads to work
-		Thread.sleep(1000);
-
-		// all threads should be interruptable (if not, they are locked in some
-		// way)
-		for (Thread t : threads) {
-			t.interrupt();
-			Thread.sleep(1000);
-			assertTrue("Thread should be dead.", !t.isAlive());
-		}
-
-	}
+//	@Test
+//	public void testConcurrentUse() throws Exception {
+//
+//		// crate a bunch of threads who use the shared RollingAverage
+//		Thread[] threads = new Thread[10];
+//		for (int i = 0; i < threads.length; i++) {
+//			threads[i] = new Thread() {
+//				@Override
+//				public void run() {
+//					while (!interrupted()) {
+//						shared.toString();
+//						shared.add(1);
+//						shared.getCount();
+//						shared.add(1);
+//						shared.getAverage();
+//						shared.add(1);
+//						shared.getAverageAsDouble();
+//						shared.add(1);
+//						shared.getSum();
+//						shared.reset();
+//						shared.add(1);
+//						shared.getIntervalSize();
+//						shared.add(1);
+//						shared.getWindowSize();
+//						shared.add(2);
+//						shared.toString();
+//						try {
+//							Thread.sleep((int) (Math.random() * 2));
+//						} catch (InterruptedException e) {
+//							// accept interruptions while sleeping
+//							return;
+//						}
+//					}
+//				}
+//			};
+//		}
+//
+//		// start all threads
+//		for (Thread thread : threads) {
+//			thread.start();
+//		}
+//
+//		// allow threads to work
+//		Thread.sleep(1000);
+//
+//		// all threads should be interruptable (if not, they are locked in some
+//		// way)
+//		for (Thread t : threads) {
+//			t.interrupt();
+//			Thread.sleep(1000);
+//			assertTrue("Thread should be dead.", !t.isAlive());
+//		}
+//
+//	}
 }

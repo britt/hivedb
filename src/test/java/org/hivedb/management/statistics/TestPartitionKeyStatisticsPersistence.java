@@ -20,7 +20,7 @@ import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.IndexSchemaTestScenario;
 import org.hivedb.util.database.DerbyTestCase;
 import org.hivedb.util.functional.Atom;
-import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class TestPartitionKeyStatisticsPersistence extends DerbyTestCase {
@@ -28,8 +28,13 @@ public class TestPartitionKeyStatisticsPersistence extends DerbyTestCase {
 	private IndexSchemaTestScenario index;
 	private Hive hive;
 	
-	@BeforeClass
+	public TestPartitionKeyStatisticsPersistence() {
+		this.cleanupDbAfterEachTest = true;
+	}
+	
+	@BeforeMethod
 	public void setUp() throws Exception{
+		super.beforeMethod();
 		new HiveInstaller(getConnectString()).run();
 		index = new IndexSchemaTestScenario((HiveBasicDataSource)getDataSource());
 		index.build();

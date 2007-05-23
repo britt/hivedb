@@ -2,6 +2,7 @@ package org.hivedb;
 
 import org.hivedb.meta.GlobalSchema;
 import org.hivedb.util.database.DerbyTestCase;
+import org.testng.annotations.Test;
 
 public class TestGlobalSchema extends DerbyTestCase {
 
@@ -11,6 +12,7 @@ public class TestGlobalSchema extends DerbyTestCase {
 	 * 
 	 * @throws Exception
 	 */
+	@Test
 	public void testInstallDerby() throws Exception {
 		// relies on getConnectString() from DerbyTest base class
 		GlobalSchema schema = new GlobalSchema(getConnectString());
