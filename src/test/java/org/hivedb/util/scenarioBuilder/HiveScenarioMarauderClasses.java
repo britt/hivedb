@@ -65,7 +65,7 @@ public class HiveScenarioMarauderClasses {
 			return (Class<T>) Pirate.class;
 		}
 		
-		public Object getId() {
+		public Number getId() {
 			return id;
 		}
 		
@@ -148,7 +148,7 @@ public class HiveScenarioMarauderClasses {
 			return (Class<T>) Treasure.class;
 		}
 
-		public Object getId() {
+		public Number getId() {
 			return id;
 		}		
 	}	                      

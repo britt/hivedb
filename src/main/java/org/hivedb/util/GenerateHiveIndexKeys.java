@@ -77,13 +77,13 @@ public class GenerateHiveIndexKeys {
 		
 		return Transform.toMap(
 			new Transform.IdentityFunction<ResourceIdentifiable>(),
-			makeResourceToSecondaryIndexIdentifiableGrower(hive, hiveScenarioConfig, primaryIndexIdentifiables),
+			resourceCreator(hive, hiveScenarioConfig, primaryIndexIdentifiables),
 			primaryIndexIdentifiablePrototype.getResourceIdentifiables()
 		);						
 	}
 	
 	private Unary<ResourceIdentifiable, Collection<ResourceIdentifiable>>
-		makeResourceToSecondaryIndexIdentifiableGrower(
+		resourceCreator(
 			final Hive hive,
 			final HiveScenarioConfig hiveScenarioConfig,
 			final Collection<PrimaryIndexIdentifiable> primaryIndexIdentifiables) {

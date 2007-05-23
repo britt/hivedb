@@ -43,6 +43,7 @@ import org.hivedb.meta.persistence.SecondaryIndexDao;
 import org.hivedb.util.DriverLoader;
 import org.hivedb.util.HiveUtils;
 import org.hivedb.util.IdentifiableUtils;
+import org.hivedb.util.PrimitiveUtils;
 
 /**
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
@@ -820,6 +821,8 @@ public class Hive implements Synchronizeable {
 			Object primaryIndexKey) throws HiveException, SQLException {
 		// TODO: Consider redesign of NodeGroup to perform assignment, or at
 		// least provider direct iteration over Nodes
+		if (PrimitiveUtils.isUndefinedId(primaryIndexKey))
+			throw new HiveException("Primary index key has undefined value: " + primaryIndexKey);
 		Node node = partitionDimension.getAssigner().chooseNode(
 				partitionDimension.getNodeGroup().getNodes(), primaryIndexKey);
 		throwIfReadOnly("Inserting a new primary index key", node);
@@ -874,6 +877,11 @@ public class Hive implements Synchronizeable {
 	public void insertSecondaryIndexKey(SecondaryIndex secondaryIndex,
 			Object secondaryIndexKey, Object primaryindexKey)
 			throws HiveException, SQLException {
+		if (PrimitiveUtils.isUndefinedId(secondaryIndexKey))
+			throw new HiveException("Secondary index key has undefined value: " + secondaryIndexKey);
+		if (PrimitiveUtils.isUndefinedId(primaryindexKey))
+			throw new HiveException("Primary index key has undefined value: " + primaryindexKey);
+		
 		throwIfReadOnly("Inserting a new secondary index key");
 		getDirectory(secondaryIndex.getResource().getPartitionDimension())
 				.insertSecondaryIndexKey(secondaryIndex, secondaryIndexKey,
@@ -1040,6 +1048,8 @@ public class Hive implements Synchronizeable {
 	public void updatePrimaryIndexKeyOfSecondaryIndexKey(
 			SecondaryIndex secondaryIndex, Object secondaryIndexKey,
 			Object primaryIndexKey) throws HiveException, SQLException {
+		if (PrimitiveUtils.isUndefinedId(primaryIndexKey))
+			throw new HiveException("Primary index key has undefined value: " + primaryIndexKey);
 		throwIfReadOnly("Updating primary index key of secondary index key");
 		getPrimaryIndexKeyOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
 		getDirectory(secondaryIndex.getResource().getPartitionDimension())
