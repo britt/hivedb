@@ -73,6 +73,7 @@ public abstract class DerbyTestCase {
 		if( cleanupDbAfterEachTest ){
 			for(String name : getDatabaseNames()){
 				deleteDerbyDb(name);
+				DerbyUtils.shutdown(name);
 			}
 		}
 	}

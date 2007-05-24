@@ -29,6 +29,10 @@ public abstract class HiveTestCase extends DerbyTestCase {
 		super();
 		this.cleanupDbAfterEachTest = true;	
 	}
+
+	public HiveTestCase(Collection<String> names) {
+		super(names);
+	}
 	
 	@Override
 	@BeforeMethod
