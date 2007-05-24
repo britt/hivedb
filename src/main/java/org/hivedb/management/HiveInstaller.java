@@ -4,10 +4,13 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.Map;
 
+import org.hivedb.HiveDbDialect;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.meta.GlobalSchema;
+import org.hivedb.meta.command.HiveCommand;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
+import org.hivedb.util.DriverLoader;
 import org.hivedb.util.GetOpt;
 
 public class HiveInstaller implements Runnable {
@@ -19,10 +22,11 @@ public class HiveInstaller implements Runnable {
 
 	public void run() {
 		try {
+			DriverLoader.loadByDialect(DriverLoader.discernDialect(this.uri));
 			new GlobalSchema(uri).install();
 			new HiveSemaphoreDao(new HiveBasicDataSource(uri)).create();
 		} catch(Exception e) {
-			throw new HiveRuntimeException(e.getMessage());
+			throw new HiveRuntimeException(e.getMessage(), e);
 		}
 	}
 
