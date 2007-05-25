@@ -1,10 +1,15 @@
 package org.hivedb;
 
+import java.util.Arrays;
+import java.util.Collection;
+
 import org.hivedb.meta.GlobalSchema;
 import org.hivedb.util.database.DerbyTestCase;
 import org.testng.annotations.Test;
 
 public class TestGlobalSchema extends DerbyTestCase {
+
+	private static final String TEST_DB = "testDb";
 
 	/**
 	 * Execute all CREATE TABLE statements for global Hive schema.  Assume
@@ -14,20 +19,12 @@ public class TestGlobalSchema extends DerbyTestCase {
 	 */
 	@Test
 	public void testInstallDerby() throws Exception {
-		// relies on getConnectString() from DerbyTest base class
-		GlobalSchema schema = new GlobalSchema(getConnectString());
+		GlobalSchema schema = new GlobalSchema(getConnectString(TEST_DB));
 		schema.install();
 	}
 	
-	/**
-	 * Supply a valid connect string & rename to test MySql.  Please do not
-	 * check in as a running test.
-	 */
-	public void disabledTestInstallMySql() throws Exception {
-	//public void testInstallMySql() throws Exception {
-		Class.forName("com.mysql.jdbc.Driver");
-		String connectString = "jdbc:mysql://localhost/test?user=test&password=test";
-		GlobalSchema schema = new GlobalSchema(connectString);
-		schema.install();
+	@Override
+	public Collection<String> getDatabaseNames() {
+		return Arrays.asList(new String[]{TEST_DB});
 	}
 }

@@ -10,7 +10,7 @@ import org.testng.annotations.Test;
 public class TestNodeGroupPersistence extends HiveTestCase {
 	@Test
 	public void testCreate() throws Exception {
-		NodeGroupDao dao = new NodeGroupDao(ds);
+		NodeGroupDao dao = new NodeGroupDao(getDataSource(getHiveDatabaseName()));
 		assertEquals(0, dao.loadAll().size());
 		final NodeGroup group = createEmptyNodeGroup();
 		group.setPartitionDimension(createPopulatedPartitionDimension());

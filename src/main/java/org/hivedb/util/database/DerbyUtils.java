@@ -19,11 +19,11 @@ public class DerbyUtils {
 	}
 	
 	private static Connection createConnection(String connectString, Properties properties) throws SQLException, InstantiationException {
-		try {
-			getDriver(); //JNDI magic
-		} catch (Exception e) {
-			throw new InstantiationException(e.getMessage());
-		}  
+//		try {
+//			getDriver(); //JNDI magic
+//		} catch (Exception e) {
+//			throw new InstantiationException(e.getMessage());
+//		}  
 		return DriverManager.getConnection(connectString, properties);
 	}
 	
@@ -102,7 +102,7 @@ public class DerbyUtils {
 	    }
 	}
 	
-	private static Driver getDriver() throws InstantiationException, IllegalAccessException, ClassNotFoundException {
+	public static Driver getDriver() throws InstantiationException, IllegalAccessException, ClassNotFoundException {
 		return (Driver) Class.forName(derbyDriver).newInstance();
 	}
 }

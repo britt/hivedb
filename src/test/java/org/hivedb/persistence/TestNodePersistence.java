@@ -13,9 +13,9 @@ import org.testng.annotations.Test;
 public class TestNodePersistence extends HiveTestCase {	  
 	@Test
 	public void testCreate() throws Exception {
-		NodeDao dao = new NodeDao(ds);
+		NodeDao dao = new NodeDao(getDataSource(getHiveDatabaseName()));
 		assertEquals(0,dao.loadAll().size());
-		final Node node = createNode();
+		final Node node = createNode(getHiveDatabaseName());
 		node.setNodeGroup(createEmptyNodeGroup());
 		node.getNodeGroup().updateId(12345);
 		dao.create(node);

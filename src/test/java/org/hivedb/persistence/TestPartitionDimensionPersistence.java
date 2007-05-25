@@ -11,7 +11,7 @@ import org.testng.annotations.Test;
 public class TestPartitionDimensionPersistence extends HiveTestCase {
 	@Test
 	public void testCreate() throws Exception {
-		PartitionDimensionDao dao = new PartitionDimensionDao(ds);
+		PartitionDimensionDao dao = new PartitionDimensionDao(getDataSource(getHiveDatabaseName()));
 		assertEquals(0, dao.loadAll().size());
 		final PartitionDimension d = createEmptyPartitionDimension();
 		dao.create(d);

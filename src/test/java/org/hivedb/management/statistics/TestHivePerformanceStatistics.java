@@ -6,7 +6,6 @@ import java.util.Collection;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
-import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.util.database.HiveTestCase;
@@ -20,14 +19,11 @@ public class TestHivePerformanceStatistics extends HiveTestCase{
 	
 	@BeforeMethod
 	public void setup() throws Exception {
-		this.cleanupDbAfterEachTest = true;
-		super.beforeMethod();
-		new HiveInstaller(getConnectString()).run();
-		hive = Hive.load(getConnectString());
+		hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		hive.setPerformanceStatistics(new HivePerformanceStatisticsMBean(10000,1000));
 		hive.addPartitionDimension(createPopulatedPartitionDimension());
 		new IndexSchema(hive.getPartitionDimension(partitionDimensionName())).install();
-		hive.addNode(hive.getPartitionDimension(partitionDimensionName()), createNode());
+		hive.addNode(hive.getPartitionDimension(partitionDimensionName()), createNode(getHiveDatabaseName()));
 		hive.insertPrimaryIndexKey(partitionDimensionName(), intKey());
 	}
 	

@@ -3,7 +3,6 @@ package org.hivedb.persistence;
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
 import org.hivedb.HiveSyncDaemon;
-import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.Node;
 import org.hivedb.util.database.HiveTestCase;
@@ -16,12 +15,9 @@ public class TestSyncHive extends HiveTestCase {
 
 	@BeforeMethod
 	public void setUp() throws Exception {
-		this.cleanupDbAfterEachTest = true;
-		super.beforeMethod();
-		new HiveInstaller(getConnectString()).run();
-		Hive hive = Hive.load(getConnectString());
+		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		hive.addPartitionDimension(createPopulatedPartitionDimension());
-		Node node = createNode();
+		Node node = createNode(getHiveDatabaseName());
 		node.setName("firstNode");
 		hive.addNode(Atom.getFirst(hive.getPartitionDimensions()), node);
 		new IndexSchema(Atom.getFirst(hive.getPartitionDimensions())).install();
@@ -31,25 +27,25 @@ public class TestSyncHive extends HiveTestCase {
 	public void testAutoSync() throws Exception {
 		Hive hive = loadHive();
 		Hive passiveSync = loadHive();
-		hive.addNode(Atom.getFirstOrNull(hive.getPartitionDimensions()), createNode());
+		hive.addNode(Atom.getFirstOrNull(hive.getPartitionDimensions()), createNode(getHiveDatabaseName()));
 		Thread.sleep(10000);
 		
 		nodeReport(passiveSync, hive);
 		
-		Assert.assertNotNull(Atom.getFirstOrNull(passiveSync.getPartitionDimensions()).getNodeGroup().getNode(createNode().getName()));
+		Assert.assertNotNull(Atom.getFirstOrNull(passiveSync.getPartitionDimensions()).getNodeGroup().getNode(createNode(getHiveDatabaseName()).getName()));
 	}
 	
 	@Test
 	public void testForceSync() throws Exception {
 		Hive hive = loadHive();
 		Hive passiveSync = loadHive();
-		hive.addNode(Atom.getFirstOrNull(hive.getPartitionDimensions()), createNode());
+		hive.addNode(Atom.getFirstOrNull(hive.getPartitionDimensions()), createNode(getHiveDatabaseName()));
 		HiveSyncDaemon daemon = new HiveSyncDaemon(passiveSync);
 		daemon.synchronize();
 		
 //		nodeReport(passiveSync, hive);
 		
-		Assert.assertNotNull(Atom.getFirstOrNull(passiveSync.getPartitionDimensions()).getNodeGroup().getNode(createNode().getName()));
+		Assert.assertNotNull(Atom.getFirstOrNull(passiveSync.getPartitionDimensions()).getNodeGroup().getNode(createNode(getHiveDatabaseName()).getName()));
 	}
 	
 	private void nodeReport(Hive passiveSync, Hive hive) {
@@ -62,6 +58,6 @@ public class TestSyncHive extends HiveTestCase {
 	}
 	
 	private Hive loadHive() throws HiveException {
-		return Hive.load(getConnectString());
+		return Hive.load(getConnectString(getHiveDatabaseName()));
 	}
 }

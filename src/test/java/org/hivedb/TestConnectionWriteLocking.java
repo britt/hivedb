@@ -14,22 +14,18 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class TestConnectionWriteLocking extends HiveTestCase {
-	public TestConnectionWriteLocking() {
-		this.cleanupDbAfterEachTest = true;
-		this.cleanupOnLoad = true;
-	}
 	
 	@BeforeMethod
 	public void setUp() throws Exception {
-		Hive hive = Hive.load(getConnectString());
+		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		hive.addPartitionDimension(createPopulatedPartitionDimension());
-		hive.addNode(Atom.getFirst(hive.getPartitionDimensions()), createNode());
+		hive.addNode(Atom.getFirst(hive.getPartitionDimensions()), createNode(getHiveDatabaseName()));
 		new IndexSchema(Atom.getFirst(hive.getPartitionDimensions())).install();
 	}
 	
 	@Test
 	public void testHiveLockingInMemory() throws Exception {
-		final Hive hive = Hive.load(getConnectString());
+		final Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		final Integer key = new Integer(13);
 		
 		hive.insertPrimaryIndexKey(Atom.getFirst(hive.getPartitionDimensions()), key);
@@ -44,14 +40,14 @@ public class TestConnectionWriteLocking extends HiveTestCase {
 	
 	@Test
 	public void testHiveLockingPersistent() throws Exception {
-		Hive hive = Hive.load(getConnectString());
+		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		final Integer key = new Integer(13);
 		
 		hive.insertPrimaryIndexKey(Atom.getFirst(hive.getPartitionDimensions()), key);
 		hive.updateHiveReadOnly(true);
 		hive = null;
 		
-		final Hive fetchedHive = Hive.load(getConnectString());
+		final Hive fetchedHive = Hive.load(getConnectString(getHiveDatabaseName()));
 		
 		AssertUtils.assertThrows(new Toss(){
 
@@ -62,7 +58,7 @@ public class TestConnectionWriteLocking extends HiveTestCase {
 	
 	@Test
 	public void testNodeLockingInMemory() throws Exception {
-		final Hive hive = Hive.load(getConnectString());
+		final Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		final Integer key = new Integer(13);
 		
 		final PartitionDimension partitionDimension = Atom.getFirst(hive.getPartitionDimensions());
@@ -79,7 +75,7 @@ public class TestConnectionWriteLocking extends HiveTestCase {
 	
 	@Test
 	public void testNodeLockingPersistent() throws Exception {
-		Hive hive = Hive.load(getConnectString());
+		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		final Integer key = new Integer(13);
 		
 		PartitionDimension partitionDimension = Atom.getFirst(hive.getPartitionDimensions());
@@ -89,7 +85,7 @@ public class TestConnectionWriteLocking extends HiveTestCase {
 		hive.updateNodeReadOnly(node, true);
 		hive = null;
 		
-		final Hive fetchedHive = Hive.load(getConnectString());
+		final Hive fetchedHive = Hive.load(getConnectString(getHiveDatabaseName()));
 		
 		AssertUtils.assertThrows(new Toss(){
 
@@ -101,7 +97,7 @@ public class TestConnectionWriteLocking extends HiveTestCase {
 	
 	@Test
 	public void testRecordLockingInMemory() throws Exception {
-		final Hive hive = Hive.load(getConnectString());
+		final Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		final Integer key = new Integer(13);
 		
 		hive.insertPrimaryIndexKey(Atom.getFirst(hive.getPartitionDimensions()), key);
@@ -116,14 +112,14 @@ public class TestConnectionWriteLocking extends HiveTestCase {
 	
 	@Test
 	public void testRecordLockingPersistent() throws Exception {
-		Hive hive = Hive.load(getConnectString());
+		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		final Integer key = new Integer(13);
 		
 		hive.insertPrimaryIndexKey(Atom.getFirst(hive.getPartitionDimensions()), key);
 		hive.updatePrimaryIndexReadOnly(Atom.getFirst(hive.getPartitionDimensions()), key, true);
 		hive = null;
 		
-		final Hive fetchedHive = Hive.load(getConnectString());
+		final Hive fetchedHive = Hive.load(getConnectString(getHiveDatabaseName()));
 		
 		AssertUtils.assertThrows(new Toss(){
 

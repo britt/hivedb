@@ -251,6 +251,7 @@
 					<!-- Woah! Try uncommenting this sometime... 
 						<parallel>true</parallel>
 					-->
+					<excludedGroups>mysql</excludedGroups>
 					<testFailureIgnore>true</testFailureIgnore>
 				</configuration>
 			</plugin>

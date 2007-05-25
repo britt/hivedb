@@ -45,10 +45,10 @@ public class ExampleHiveTest extends DerbyTestCase {
 	@Test
 	public void createAndUseTheHive() throws Exception {
 		// Install The Hive Metadata Schema
-		new HiveInstaller(getConnectString()).run();
+		new HiveInstaller(getConnectString(DerbyTestCase.TEST_DB)).run();
 		
 		//Load a Hive
-		Hive hive = Hive.load(getConnectString());
+		Hive hive = Hive.load(getConnectString(DerbyTestCase.TEST_DB));
 		
 		//Create an empty NodeGroup
 		NodeGroup nodeGroup = new NodeGroup(new ArrayList<Node>());
@@ -57,13 +57,13 @@ public class ExampleHiveTest extends DerbyTestCase {
 		String dimensionName = "ProductId";
 		
 		PartitionDimension partitionDimension = 
-			new PartitionDimension(dimensionName, Types.INTEGER, nodeGroup, getConnectString(), new ArrayList<Resource>());
+			new PartitionDimension(dimensionName, Types.INTEGER, nodeGroup, getConnectString(DerbyTestCase.TEST_DB), new ArrayList<Resource>());
 		
 		//Add it to the Hive	
 		partitionDimension = hive.addPartitionDimension(partitionDimension);
 		
 		//Create a Data Node
-		Node dataNode = new Node("aNode",getConnectString());
+		Node dataNode = new Node("aNode",getConnectString(DerbyTestCase.TEST_DB));
 		
 		//Add it to the partition dimension
 		hive.addNode(partitionDimension, dataNode);

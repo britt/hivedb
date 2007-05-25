@@ -7,9 +7,10 @@ import org.hivedb.util.database.HiveTestCase;
 import org.testng.annotations.Test;
 
 public class TestHiveSemaphorePersistence extends HiveTestCase {
+	
 	@Test
 	public void testUpdate() throws Exception {
-		HiveSemaphoreDao hsd = new HiveSemaphoreDao(ds);
+		HiveSemaphoreDao hsd = new HiveSemaphoreDao(getDataSource(getHiveDatabaseName()));
 		HiveSemaphore hs = hsd.create();
 		hs.incrementRevision();
 		hsd.update(hs);

@@ -3,6 +3,8 @@ package org.hivedb.meta;
 import static org.testng.AssertJUnit.fail;
 
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Collection;
 
 import org.hivedb.util.TestObjectFactory;
 import org.hivedb.util.database.DerbyTestCase;
@@ -11,7 +13,7 @@ public class TestIndexSchema extends DerbyTestCase {
 	@Test
 	public void testSchemaInstallation() {
 		PartitionDimension dimension = TestObjectFactory.partitionDimension();
-		dimension.setIndexUri(getConnectString());
+		dimension.setIndexUri(getConnectString("testDb"));
 		IndexSchema schema = new IndexSchema( dimension );
 		try {
 			schema.install();
@@ -19,5 +21,10 @@ public class TestIndexSchema extends DerbyTestCase {
 			e.printStackTrace();
 			fail("Exception thrown while installing schema: " + e.toString());
 		}
+	}
+	
+	@Override
+	public Collection<String> getDatabaseNames(){
+		return Arrays.asList(new String[]{"testDb"});
 	}
 }

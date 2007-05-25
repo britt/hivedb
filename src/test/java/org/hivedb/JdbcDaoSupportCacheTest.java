@@ -19,17 +19,17 @@ public class JdbcDaoSupportCacheTest extends HiveTestCase {
 	
 	@BeforeMethod
 	public void setUp() throws Exception{
-		new HiveInstaller(getConnectString()).run();
-		Hive hive = Hive.load(getConnectString());
+		new HiveInstaller(getConnectString(getHiveDatabaseName())).run();
+		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		hive.addPartitionDimension(createPopulatedPartitionDimension());
 		new IndexSchema(hive.getPartitionDimension(partitionDimensionName())).install();
-		hive.addNode(hive.getPartitionDimension(partitionDimensionName()), createNode());
+		hive.addNode(hive.getPartitionDimension(partitionDimensionName()), createNode(getHiveDatabaseName()));
 		hive.insertPrimaryIndexKey(partitionDimensionName(), intKey());
 	}
 	
 	@Test
 	public void testDataSourceCacheCreation() throws HiveException, SQLException{
-		Hive hive = Hive.load(getConnectString());
+		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		JdbcDaoSupportCacheImpl cache = (JdbcDaoSupportCacheImpl) hive.getJdbcDaoSupportCache(partitionDimensionName());
 		JdbcDaoSupport read = cache.get(intKey(), AccessType.Read);
 		JdbcDaoSupport readWrite = cache.get(intKey(), AccessType.ReadWrite);
@@ -40,7 +40,7 @@ public class JdbcDaoSupportCacheTest extends HiveTestCase {
 
 	@Test
 	public void testReadOnlyEnforcement() throws Exception {
-		Hive hive = Hive.load(getConnectString());
+		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		JdbcDaoSupportCacheImpl cache = (JdbcDaoSupportCacheImpl) hive.getJdbcDaoSupportCache(partitionDimensionName());
 		JdbcDaoSupport read = cache.get(intKey(), AccessType.Read);
 		JdbcDaoSupport readWrite = cache.get(intKey(), AccessType.ReadWrite);
@@ -57,7 +57,7 @@ public class JdbcDaoSupportCacheTest extends HiveTestCase {
 	}
 	
 	public void testCacheSynchronization() throws Exception {
-		Hive hive = Hive.load(getConnectString());
+		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		PartitionDimension dimension = hive.deletePartitionDimension(hive.getPartitionDimension(partitionDimensionName()));
 		try {
 			hive.getJdbcDaoSupportCache(dimension);
@@ -69,5 +69,6 @@ public class JdbcDaoSupportCacheTest extends HiveTestCase {
 	private Integer intKey() {
 		return new Integer(23);
 	}
+
 	
 }

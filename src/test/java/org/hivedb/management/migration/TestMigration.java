@@ -24,27 +24,22 @@ import static org.testng.AssertJUnit.*;
 
 public class TestMigration extends HiveTestCase {
 	
-	public TestMigration() {
-		this.cleanupDbAfterEachTest = true;
-		this.databaseNames = Arrays.asList(new String[] {getDatabaseName(), "data1", "data2"});
-	}
-	
 	@BeforeMethod
 	public void beforeMethod() {
 		super.beforeMethod();
 		Hive hive;
 		try {
-			hive = Hive.load(getConnectString());
+			hive = Hive.load(getConnectString(getHiveDatabaseName()));
 			hive.addPartitionDimension(createPopulatedPartitionDimension());
 			new IndexSchema(hive.getPartitionDimension(partitionDimensionName())).install();
-			for(String name : this.databaseNames)
+			for(String name : getDatabaseNames())
 				hive.addNode(hive.getPartitionDimension(partitionDimensionName()), new Node(name, DerbyUtils.connectString(name)));
 			
 		} catch (Exception e) {
 			throw new RuntimeException("");
 		}
 		
-		for(String name: this.databaseNames) {
+		for(String name: getDatabaseNames()) {
 			SimpleJdbcDaoSupport dao = new SimpleJdbcDaoSupport();
 			dao.setDataSource(new HiveBasicDataSource(DerbyUtils.connectString(name)));
 			
@@ -56,14 +51,14 @@ public class TestMigration extends HiveTestCase {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testMigration() throws Exception {
-		Hive hive = Hive.load(getConnectString());
+		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		Integer primaryKey = new Integer(2);
 		Integer secondaryKey = new Integer(7);
 		
 		Pair<Node, Node> nodes = initializeTestData(hive, primaryKey, secondaryKey);
 		Node origin = nodes.getKey();
 		Node destination = nodes.getValue();
-		Directory dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), new HiveBasicDataSource(getConnectString()));
+		Directory dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), new HiveBasicDataSource(getConnectString(getHiveDatabaseName())));
 		PartitionKeyMover<Integer> pMover = new PrimaryMover(origin.getUri());
 		Mover<Integer> secMover = new SecondaryMover();
 		
@@ -80,14 +75,14 @@ public class TestMigration extends HiveTestCase {
 	
 	@Test
 	public void testFailDuringCopy() throws Exception {
-		Hive hive = Hive.load(getConnectString());
+		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		Integer primaryKey = new Integer(2);
 		Integer secondaryKey = new Integer(7);
 		
 		Pair<Node, Node> nodes = initializeTestData(hive, primaryKey, secondaryKey);
 		Node origin = nodes.getKey();
 		Node destination = nodes.getValue();
-		Directory dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), new HiveBasicDataSource(getConnectString()));
+		Directory dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), new HiveBasicDataSource(getConnectString(getHiveDatabaseName())));
 		PartitionKeyMover<Integer> pMover = new PrimaryMover(origin.getUri());
 		//This mover just craps out on copy
 		Mover<Integer> failingMover = new Mover<Integer>() {
@@ -115,14 +110,14 @@ public class TestMigration extends HiveTestCase {
 	
 	@Test
 	public void testFailDuringDirectoryUpdate() throws Exception {
-		Hive hive = Hive.load(getConnectString());
+		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		Integer primaryKey = new Integer(2);
 		Integer secondaryKey = new Integer(7);
 		
 		Pair<Node, Node> nodes = initializeTestData(hive, primaryKey, secondaryKey);
 		Node origin = nodes.getKey();
 		Node destination = nodes.getValue();
-		Directory dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), new HiveBasicDataSource(getConnectString()));
+		Directory dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), getDataSource(getHiveDatabaseName()));
 		PartitionKeyMover<Integer> pMover = new PrimaryMover(origin.getUri());
 		
 		Migrator m = new HiveMigrator(new NoUpdateHive(hive.getHiveUri(), 1, false, hive.getPartitionDimensions(), null), partitionDimensionName());
@@ -142,14 +137,14 @@ public class TestMigration extends HiveTestCase {
 	
 	@Test
 	public void testFailDuringDelete() throws Exception {
-		Hive hive = Hive.load(getConnectString());
+		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		Integer primaryKey = new Integer(2);
 		Integer secondaryKey = new Integer(7);
 		
 		Pair<Node, Node> nodes = initializeTestData(hive, primaryKey, secondaryKey);
 		Node origin = nodes.getKey();
 		Node destination = nodes.getValue();
-		Directory dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), new HiveBasicDataSource(getConnectString()));
+		Directory dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), getDataSource(getHiveDatabaseName()));
 		PartitionKeyMover<Integer> pMover = new PrimaryMover(origin.getUri());
 //		This mover just craps out on delete
 		Mover<Integer> failingMover = new Mover<Integer>() {
@@ -185,7 +180,7 @@ public class TestMigration extends HiveTestCase {
 	private Pair<Node, Node> initializeTestData(Hive hive, Integer primaryKey, Integer secondaryKey) throws HiveException, SQLException {
 		hive.insertPrimaryIndexKey(hive.getPartitionDimension(partitionDimensionName()), primaryKey);
 		//Setup the test data on one node
-		Directory dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), new HiveBasicDataSource(getConnectString()));
+		Directory dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), getDataSource(getHiveDatabaseName()));
 		int originId = dir.getNodeIdOfPrimaryIndexKey(primaryKey);
 		Node origin = hive.getPartitionDimension(partitionDimensionName()).getNodeGroup().getNode(originId);
 		Node destination = origin.getName().equals("data1") ? hive.getPartitionDimension(partitionDimensionName()).getNodeGroup().getNode("data2") : 
@@ -289,5 +284,15 @@ public class TestMigration extends HiveTestCase {
 			throw new HiveException("");
 		}
 		
+	}
+
+	@Override
+	public Collection<String> getDatabaseNames() {
+		return Arrays.asList(new String[]{getHiveDatabaseName(), "data1","data2"});
+	}
+	
+	@Override
+	protected String getHiveDatabaseName() {
+		return "hive";
 	}
 }

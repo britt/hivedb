@@ -2,6 +2,7 @@ package org.hivedb.management.statistics;
 
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 
 import org.hivedb.Hive;
@@ -30,7 +31,7 @@ public class TestRuntimeStatisticsCollection extends HiveTestCase{
 		hive = (Hive) context.getBean("hive");
 		hive.addPartitionDimension(createPopulatedPartitionDimension());
 		new IndexSchema(hive.getPartitionDimension(partitionDimensionName())).install();
-		hive.addNode(hive.getPartitionDimension(partitionDimensionName()), createNode());
+		hive.addNode(hive.getPartitionDimension(partitionDimensionName()), createNode(getHiveDatabaseName()));
 		hive.insertPrimaryIndexKey(partitionDimensionName(), intKey());
 	}
 	
@@ -74,11 +75,16 @@ public class TestRuntimeStatisticsCollection extends HiveTestCase{
 	public void resetReadOnly() throws HiveException {
 		hive.updateHiveReadOnly(false);
 	}
-	
-	@Override
-	public String getDatabaseName() {
-		return "storage_test";
-	}
 
 	public Integer intKey() { return new Integer(7); }
+
+	@Override
+	protected String getHiveDatabaseName() {
+		return "storage_test";
+	}
+	
+	@Override
+	public Collection<String> getDatabaseNames() {
+		return Arrays.asList(new String[] {getHiveDatabaseName()});
+	}
 }

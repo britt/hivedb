@@ -9,11 +9,11 @@ public class TestHiveBasicDataSource extends DerbyTestCase{
 
 	@Test
 	public void testPoolSize() {
-		HiveBasicDataSource ds = new HiveBasicDataSource(getConnectString());
+		HiveBasicDataSource ds = new HiveBasicDataSource(getConnectString("testDb"));
 		AssertJUnit.assertEquals(HiveBasicDataSource.DEFAULT_POOL_SIZE, ds.getMaxActive());
 		
 		System.setProperty(HiveBasicDataSource.CONNECTION_POOL_SIZE, "20");
-		HiveBasicDataSource ds20 = new HiveBasicDataSource(getConnectString());
+		HiveBasicDataSource ds20 = new HiveBasicDataSource(getConnectString("testDb"));
 		AssertJUnit.assertEquals(20, ds20.getMaxActive());
 		
 //		System.out.println("MaxActive: " + ds.getMaxActive());
