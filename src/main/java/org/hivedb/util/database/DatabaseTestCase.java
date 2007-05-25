@@ -11,8 +11,8 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 public abstract class DatabaseTestCase {
-	boolean cleanupAfterEachTest = true;
-	boolean cleanupOnExit = true;
+	protected boolean cleanupAfterEachTest = true;
+	protected boolean cleanupOnExit = true;
 
 	protected String userName = "test";
 	protected String password = "test";
@@ -29,10 +29,10 @@ public abstract class DatabaseTestCase {
 	@BeforeClass
 	protected void beforeClass(){
 		for(String name : getDatabaseNames()){
-			if(databaseExists(name)) {
+			if(databaseExists(name))
 				deleteDatabase(name);
+			if(!databaseExists(name))
 				createDatabase(name);
-			}
 		}
 	}
 

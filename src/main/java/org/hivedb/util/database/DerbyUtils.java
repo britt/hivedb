@@ -35,11 +35,17 @@ public class DerbyUtils {
 		return getConnection(databaseName, properties);
 	}
 	
-	public static Connection createDatabase(String databaseName, String user, String password) throws SQLException, InstantiationException {
+	public static void createDatabase(String databaseName, String user, String password) throws SQLException, InstantiationException {
 		Properties properties = new Properties();
 		properties.setProperty("user", user);
 		properties.setProperty("password", password);
-		return createConnection(getCreateString(databaseName), properties); 
+		Connection c = null;
+		try {
+			c = createConnection(getCreateString(databaseName), properties); 
+		} finally {
+			if( c != null )
+				c.close();
+		}
 	}
 	
 	public static void deleteDatabase(String basePath, String databaseName) throws IOException {
@@ -59,9 +65,17 @@ public class DerbyUtils {
 	
 	//Kill one particular Derby DB
 	public static void shutdown(String databaseName) {
+		Connection c = null;
 		try {
-			DriverManager.getConnection(shutdownString(databaseName));
+			c = DriverManager.getConnection(shutdownString(databaseName));
 		} catch(SQLException e) {
+		} finally {
+			if(c != null)
+				try {
+					c.close();
+				} catch (SQLException e) {
+					throw new RuntimeException(e);
+				}
 		}
 	}
 	
