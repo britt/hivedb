@@ -3,21 +3,48 @@ package org.hivedb.util.database;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
 
 import javax.sql.DataSource;
 
 import org.hivedb.meta.persistence.HiveBasicDataSource;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 
 public class DerbyTestCase extends DatabaseTestCase{
 	public static final String TEST_DB = "testDb";
-
+	public Driver driver;
 	static {
 		try {
 			DerbyUtils.getDriver();
 		} catch (Exception e) {
 			throw new RuntimeException("Error initalizing the derby driver.", e);
+		}
+	}
+	
+	@Override
+	@BeforeClass
+	protected void beforeClass(){
+		try {
+			driver = DerbyUtils.getDriver();
+		} catch (Exception e) {
+			throw new RuntimeException("Error initalizing the derby driver.", e);
+		}
+		super.beforeClass();
+	}
+	
+	@Override
+	@AfterClass
+	protected void afterClass() {
+		super.afterClass();
+		try {
+			DriverManager.deregisterDriver(driver);
+		} catch (SQLException e) {
+			//quash
 		}
 	}
 	
