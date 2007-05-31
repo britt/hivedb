@@ -4,8 +4,10 @@ import java.util.List;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
+import org.hivedb.meta.Directory;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
+import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.functional.Pair;
 
 public class HiveMigrator implements Migrator {
@@ -21,8 +23,9 @@ public class HiveMigrator implements Migrator {
 	 * @see org.hivedb.management.migration.Migrator#migrate(java.lang.Object, java.lang.String, java.lang.String, org.hivedb.management.migration.PartitionKeyMover)
 	 */
 	@SuppressWarnings("unchecked")
-	public void migrate(Object key, String originName, String destinationName, PartitionKeyMover mover) {
-		Node origin = getNode(originName);
+	public void migrate(Object key, String destinationName, PartitionKeyMover mover) {
+		Directory dir = new Directory(dimension, new HiveBasicDataSource(dimension.getIndexUri()));
+		Node origin = getNode(dir.getNodeIdOfPrimaryIndexKey(key));
 		Node destination = getNode(destinationName);
 		
 		lock(key); //Lock the partition key for writing
@@ -67,6 +70,10 @@ public class HiveMigrator implements Migrator {
 		}
 		//Delete the primary index instance.
 		mover.delete(migrant, origin);
+	}
+	
+	private Node getNode(int id) {
+		return dimension.getNodeGroup().getNode(id);
 	}
 	
 	private Node getNode(String id) {

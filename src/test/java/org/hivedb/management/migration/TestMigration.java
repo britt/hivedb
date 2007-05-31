@@ -65,7 +65,7 @@ public class TestMigration extends HiveTestCase {
 		//Do the actual migration
 		Migrator m = new HiveMigrator(hive, partitionDimensionName());
 		assertEquals(origin.getId(), dir.getNodeIdOfPrimaryIndexKey(primaryKey));
-		m.migrate(primaryKey, origin.getName(), destination.getName(), pMover);
+		m.migrate(primaryKey, destination.getName(), pMover);
 		//Directory points to the destination node
 		assertEquals(destination.getId(), dir.getNodeIdOfPrimaryIndexKey(primaryKey));
 		//Records exist and are identical on the destination node
@@ -97,7 +97,7 @@ public class TestMigration extends HiveTestCase {
 		pMover.getDependentMovers().clear();
 		pMover.getDependentMovers().add(new Pair<Mover, KeyLocator>(failingMover, new SecondaryKeyLocator(origin.getUri())));
 		try {
-			m.migrate(primaryKey, origin.getName(), destination.getName(), pMover);
+			m.migrate(primaryKey, destination.getName(), pMover);
 		} catch( Exception e) {
 			//Quash
 		}
@@ -122,7 +122,7 @@ public class TestMigration extends HiveTestCase {
 		
 		Migrator m = new HiveMigrator(new NoUpdateHive(hive.getHiveUri(), 1, false, hive.getPartitionDimensions(), null), partitionDimensionName());
 		try {
-			m.migrate(primaryKey, origin.getName(), destination.getName(), pMover);
+			m.migrate(primaryKey, destination.getName(), pMover);
 		} catch( Exception e) {
 			//Quash
 		}
@@ -165,7 +165,7 @@ public class TestMigration extends HiveTestCase {
 		pMover.getDependentMovers().clear();
 		pMover.getDependentMovers().add(new Pair<Mover, KeyLocator>(failingMover, new SecondaryKeyLocator(origin.getUri())));
 		try {
-			m.migrate(primaryKey, origin.getName(), destination.getName(), pMover);
+			m.migrate(primaryKey,destination.getName(), pMover);
 		} catch( Exception e) {
 			//Quash
 		}

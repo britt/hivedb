@@ -2,9 +2,11 @@ package org.hivedb.util.database;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
+import org.hivedb.HiveRuntimeException;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 
 public class MysqlTestCase extends DatabaseTestCase {
@@ -18,16 +20,30 @@ public class MysqlTestCase extends DatabaseTestCase {
 		} catch (Exception e) {
 			throw new RuntimeException("Unable to create database "
 					+ name, e);
+		} finally {
+			closeConnection(name, connection);
 		}
 	}
 
 	@Override
 	protected boolean databaseExists(String name) {
+		Connection connection = null;
 		try{
-			getConnection(name);
+			connection = getConnection(name);
 			return true;
 		} catch(Exception e) {
 			return false;
+		} finally {
+			if(connection != null)
+				closeConnection(name, connection);
+		}
+	}
+
+	private void closeConnection(String name, Connection connection) {
+		try {
+			connection.close();
+		} catch (SQLException e) {
+			throw new HiveRuntimeException("Failed to close connection to " + name);
 		}
 	}
 
@@ -39,6 +55,8 @@ public class MysqlTestCase extends DatabaseTestCase {
 		} catch (Exception e) {
 			throw new RuntimeException("Unable to drop database "
 					+ name, e);
+		} finally {
+			closeConnection(name, connection);
 		}
 	}
 
