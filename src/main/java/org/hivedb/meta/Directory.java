@@ -363,11 +363,16 @@ public class Directory extends JdbcDaoSupport {
 		StatisticsProxy<NodeSemaphore, RuntimeException> proxy = new StatisticsProxy<NodeSemaphore, RuntimeException>(performanceStatistics, SECONDARYINDEXREADCOUNT, SECONDARYINDEXREADFAILURES, SECONDARYINDEXREADTIME) {
 			@Override
 			protected NodeSemaphore doWork() throws RuntimeException {
-				return (NodeSemaphore) j.queryForObject("select p.node,p.read_only from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
-						+ " join " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex) + " s on s.pkey = p.id"
-						+ " where s.id =  ?",
-						new Object[] { secondaryIndexKey },
-						new NodeSemaphoreRowMapper());
+				try {
+					return (NodeSemaphore) j.queryForObject("select p.node,p.read_only from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
+							+ " join " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex) + " s on s.pkey = p.id"
+							+ " where s.id =  ?",
+							new Object[] { secondaryIndexKey },
+							new NodeSemaphoreRowMapper());
+				}
+				catch (RuntimeException e) {
+					throw new RuntimeException(String.format("Error looking for key %s of secondary index is not in the hive", secondaryIndexKey, secondaryIndex.getName()), e);
+				}
 			}
 		};
 		return proxy.execute();

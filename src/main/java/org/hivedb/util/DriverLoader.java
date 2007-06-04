@@ -37,4 +37,31 @@ public class DriverLoader {
 			return HiveDbDialect.Derby;
 		throw new UnsupportedDialectException("Could not discern the HiveDbDialect from the uri " + uri);
 	}
+	public static String parseConnectionUrl(String uri)
+	{
+		HiveDbDialect discernDialect = discernDialect(uri);
+		if (discernDialect == HiveDbDialect.MySql)
+			return "jdbc:mysql://${db.host}/${db.name}?user=${db.user}&amp;password=${db.password}";
+		if (discernDialect == HiveDbDialect.Derby)
+			return uri;
+		throw new UnsupportedDialectException("Could not discern the HiveDbDialect from the uri " + uri);
+	}
+	public static String parseUsername(String uri)
+	{
+		HiveDbDialect discernDialect = discernDialect(uri);
+		if (discernDialect == HiveDbDialect.MySql)
+			return "jdbc:mysql://${db.host}/${db.name}?user=${db.user}&amp;password=${db.password}";
+		if (discernDialect == HiveDbDialect.Derby)
+			return uri;
+		throw new UnsupportedDialectException("Could not discern the HiveDbDialect from the uri " + uri);
+	}
+	public static String parsePassword(String uri)
+	{
+		HiveDbDialect discernDialect = discernDialect(uri);
+		if (discernDialect == HiveDbDialect.MySql)
+			return "jdbc:mysql://${db.host}/${db.name}?user=${db.user}&amp;password=${db.password}";
+		if (discernDialect == HiveDbDialect.Derby)
+			return uri;
+		throw new UnsupportedDialectException("Could not discern the HiveDbDialect from the uri " + uri);
+	}
 }

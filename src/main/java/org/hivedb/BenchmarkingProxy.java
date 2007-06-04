@@ -16,6 +16,8 @@ public abstract class BenchmarkingProxy<R,E extends Throwable> {
 			onFailure();
 			stop = System.nanoTime();
 			throw new RuntimeException(e);
+		} finally {
+			onFinally();
 		}
 		return output;
 	}
@@ -24,6 +26,9 @@ public abstract class BenchmarkingProxy<R,E extends Throwable> {
 		return stop - start;
 	}
 	
+	protected long getStartTime() { return start; }
+	protected long getStopTime() { return stop; }
+	
 	public long getRuntimeInMillis() {
 		return getRuntimeInNanos() / 1000000;
 	}
@@ -31,4 +36,5 @@ public abstract class BenchmarkingProxy<R,E extends Throwable> {
 	protected abstract R doWork() throws E;
 	protected abstract void onSuccess(R output);
 	protected abstract void onFailure();
+	protected void onFinally() {}
 }
