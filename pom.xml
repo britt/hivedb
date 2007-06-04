@@ -34,6 +34,11 @@
 			<email>jmccarthy@cafepress.com</email>
 		</developer>
 	</developers>
+	<scm>
+    	<connection>scm:svn:svn://svn.hivedb.org/hivedb/trunk</connection>
+    	<developerConnection>scm:svn:svn+ssh://svn.hivedb.org/svn/hivedb/trunk</developerConnection>
+    	<tag>HEAD</tag>
+  	</scm>
 	<dependencies>
 		<!-- commons stuff -->
 		<dependency>
