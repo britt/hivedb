@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+  <parent>
+    <artifactId>hivedb</artifactId>
+    <groupId>org.hivedb</groupId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.hivedb</groupId>
+  <artifactId>tools</artifactId>
+  <name>tools</name>
+  <packaging>pom</packaging>
+  <version>1.0-SNAPSHOT</version>
+  <url>http://www.hivedb.org</url>
+  <dependencies>
+    <dependency>
+      <groupId>org.hivedb</groupId>
+      <artifactId>lib</artifactId>
+      <version>1.0-SNAPSHOT</version>
+    </dependency>
+  </dependencies>
+  <modules>
+    <module>hiveInstaller</module>
+  </modules>
+</project>
