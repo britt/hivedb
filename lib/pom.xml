@@ -8,6 +8,7 @@
   </parent>
   <groupId>org.hivedb</groupId>
   <artifactId>lib</artifactId>
+  <name>lib</name>
   <packaging>jar</packaging>
   <version>1.0-SNAPSHOT</version>
   <profiles>

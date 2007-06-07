@@ -18,6 +18,17 @@
         <activeByDefault>true</activeByDefault>
       </activation>
       <build>
+        <resources>
+          <resource>
+	<!-- This path is relative to target/classes no ${basedir} -->
+            <targetPath>../../../../target/bin</targetPath>
+            <filtering>false</filtering>
+            <directory>${basedir}/scripts</directory>
+            <includes>
+              <include>hive_installer.sh</include>
+            </includes>
+          </resource>
+        </resources>
         <plugins>
           <plugin>
             <artifactId>maven-assembly-plugin</artifactId>
@@ -62,6 +73,16 @@
       <build>
         <finalName>hive-installer</finalName>
         <defaultGoal>install</defaultGoal>
+        <resources>
+          <resource>
+            <filtering>false</filtering>
+            <directory>${basedir}/scripts</directory>
+            <targetPath>../</targetPath>
+            <includes>
+              <include>hive_installer.sh</include>
+            </includes>
+          </resource>
+        </resources>
         <plugins>
           <plugin>
             <artifactId>maven-assembly-plugin</artifactId>
@@ -82,8 +103,11 @@
                 <id>build-hive-installer</id>
                 <phase>package</phase>
                 <goals>
-                  <goal>attached</goal>
+                  <goal>assembly</goal>
                 </goals>
+                <configuration>
+                  <attach>false</attach>
+                </configuration>
               </execution>
             </executions>
           </plugin>
