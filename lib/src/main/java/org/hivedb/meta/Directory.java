@@ -32,6 +32,7 @@ import org.hivedb.StatisticsProxy;
 import org.hivedb.management.statistics.Counter;
 import org.hivedb.management.statistics.NoOpStatistics;
 import org.hivedb.util.JdbcTypeMapper;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.RowMapper;
@@ -280,8 +281,11 @@ public class Directory extends JdbcDaoSupport {
 			}
 			
 		};
-		
-		return proxy.execute();
+		try {
+			return proxy.execute();
+		} catch( EmptyResultDataAccessException e) {
+			return false;
+		}
 	}
 	
 	public int getNodeIdOfPrimaryIndexKey(final Object primaryIndexKey) {
@@ -338,7 +342,11 @@ public class Directory extends JdbcDaoSupport {
 						new TrueRowMapper()).size() == 1;
 			}
 		};
-		return proxy.execute();
+		try {
+			return proxy.execute();
+		} catch( EmptyResultDataAccessException e ) {
+			return false;
+		}
 	}
 
 	@SuppressWarnings("unchecked")
