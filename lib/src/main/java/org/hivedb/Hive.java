@@ -1247,16 +1247,7 @@ public class Hive implements Synchronizeable {
 	 */
 	private NodeSemaphore getNodeSemaphoreOfPrimaryIndexKey(PartitionDimension partitionDimension,
 			Object primaryIndexKey) throws HiveException {
-		try {
-			return getDirectory(partitionDimension).getNodeSemamphoreOfPrimaryIndexKey(primaryIndexKey);
-		} catch (Exception e) {
-			throw new HiveException(
-					String
-							.format(
-									"Primary index key %s of partition dimension %s not found.",
-									primaryIndexKey.toString(),
-									partitionDimension.getName()), e);
-		}
+		return getDirectory(partitionDimension).getNodeSemamphoreOfPrimaryIndexKey(primaryIndexKey);
 	}
 	
 	/**

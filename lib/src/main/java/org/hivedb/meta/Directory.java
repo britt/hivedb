@@ -28,6 +28,7 @@ import java.util.Collection;
 import javax.sql.DataSource;
 
 import org.hivedb.HiveException;
+import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.StatisticsProxy;
 import org.hivedb.management.statistics.Counter;
 import org.hivedb.management.statistics.NoOpStatistics;
@@ -133,7 +134,10 @@ public class Directory extends JdbcDaoSupport {
 
 			@Override
 			protected Object doWork() throws HiveException {
-				if (j.update(creatorFactory.newPreparedStatementCreator(parameters)) != 1)
+				int rowsUpdated = j.update(creatorFactory.newPreparedStatementCreator(parameters));
+				if(rowsUpdated == 0)
+					throw new HiveKeyNotFoundException(String.format("Unable to update primary index key %s to node %s, key not found.", primaryIndexKey, node.getId()), primaryIndexKey);
+				else if (rowsUpdated != 1)
 					throw new HiveException(String.format("Unable to update primary index key %s to node %s", primaryIndexKey, node.getId()));
 				return null;
 			}
@@ -160,7 +164,10 @@ public class Directory extends JdbcDaoSupport {
 
 			@Override
 			protected Object doWork() throws HiveException {
-				if (j.update(creatorFactory.newPreparedStatementCreator(parameters)) != 1)
+				int rowsUpdated = j.update(creatorFactory.newPreparedStatementCreator(parameters));
+				if (rowsUpdated == 0)
+					throw new HiveKeyNotFoundException(String.format("Unable to update primary index key %s read-only, key not found.", primaryIndexKey), primaryIndexKey);
+				else if (rowsUpdated != 1)
 					throw new HiveException(String.format("Unable to update read only status primary index key %s", primaryIndexKey));
 				return null;
 			}
@@ -186,7 +193,10 @@ public class Directory extends JdbcDaoSupport {
 		StatisticsProxy<Object, HiveException> proxy = new StatisticsProxy<Object, HiveException>(performanceStatistics, SECONDARYINDEXWRITECOUNT, SECONDARYINDEXWRITEFAILURES, SECONDARYINDEXWRITETIME){
 			@Override
 			protected Object doWork() throws HiveException {
-				if (j.update(creatorFactory.newPreparedStatementCreator(parameters)) != 1)
+				int rowsUpdated = j.update(creatorFactory.newPreparedStatementCreator(parameters));
+				if( rowsUpdated == 0)
+					throw new HiveKeyNotFoundException(String.format("Unable to update Secondary index key %s key not found.", secondaryIndexKey), primaryIndexKey);
+				else if (rowsUpdated != 1)
 					throw new HiveException(String.format("Unable to update secondary index key %s to primary index key %s on secondary index", secondaryIndexKey, primaryIndexKey, secondaryIndex.getName()));
 				return null;
 			}
@@ -233,14 +243,12 @@ public class Directory extends JdbcDaoSupport {
 				JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass())
 		});
 		
-		StatisticsProxy<Object, HiveException> proxy = new StatisticsProxy<Object, HiveException>(performanceStatistics, PRIMARYINDEXDELETECOUNT, PRIMARYINDEXDELETEFAILURES, PRIMARYINDEXDELETETIME){
+		StatisticsProxy<Object, RuntimeException> proxy  = new StatisticsProxy<Object, RuntimeException>(performanceStatistics, PRIMARYINDEXDELETECOUNT, PRIMARYINDEXDELETEFAILURES, PRIMARYINDEXDELETETIME){
+
 			@Override
-			protected Object doWork() throws HiveException {
-				if (j.update(creatorFactory.newPreparedStatementCreator(parameters)) != 1)
-					throw new HiveException(String.format("Unable to delete primary index key %s on partitoin dimension %s", primaryIndexKey, partitionDimension.getName()));
-				return null;
-			}
-		};
+			protected Object doWork() throws RuntimeException {
+				return j.update(creatorFactory.newPreparedStatementCreator(parameters));
+			}};
 		proxy.execute();
 	}
 
@@ -259,9 +267,7 @@ public class Directory extends JdbcDaoSupport {
 			new StatisticsProxy<Integer, HiveException>(performanceStatistics, SECONDARYINDEXDELETECOUNT, SECONDARYINDEXDELETEFAILURES, SECONDARYINDEXDELETETIME) {
 			@Override
 			protected Integer doWork() throws HiveException {
-				if (j.update(creatorFactory.newPreparedStatementCreator(parameters)) != 1)
-					throw new HiveException(String.format("Unable to delete secondary index key %s on secondary index %s", secondaryIndexKey, secondaryIndex.getName()));
-				return null;
+				return j.update(creatorFactory.newPreparedStatementCreator(parameters));
 			} 
 		};
 		proxy.execute();
@@ -298,7 +304,12 @@ public class Directory extends JdbcDaoSupport {
 							new Object[] { primaryIndexKey });
 			}
 		};
-		return proxy.execute();
+		
+		try{
+			return proxy.execute();
+		} catch(EmptyResultDataAccessException e) {
+			throw new HiveKeyNotFoundException(String.format("Unable to get node of primary index key %s, key not found.", primaryIndexKey), primaryIndexKey,e);
+		}
 	}
 	
 	public NodeSemaphore getNodeSemamphoreOfPrimaryIndexKey(final Object primaryIndexKey) {
@@ -313,7 +324,11 @@ public class Directory extends JdbcDaoSupport {
 							new NodeSemaphoreRowMapper());
 			}
 		};
-		return proxy.execute();
+		try{
+			return proxy.execute();
+		} catch(EmptyResultDataAccessException e) {
+			throw new HiveKeyNotFoundException(String.format("Unable to get nodeSemaphore of primary index key %s, key not found.", primaryIndexKey), primaryIndexKey,e);
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -328,7 +343,11 @@ public class Directory extends JdbcDaoSupport {
 							new BooleanRowMapper());
 			}
 		};
-		return proxy.execute();
+		try{
+			return proxy.execute();
+		} catch(EmptyResultDataAccessException e) {
+			throw new HiveKeyNotFoundException(String.format("Unable to get read-only of primary index key %s, key not found.", primaryIndexKey), primaryIndexKey,e);
+		}
 	}
 
 	public boolean doesSecondaryIndexKeyExist(final SecondaryIndex secondaryIndex,final Object secondaryIndexKey) {
@@ -362,7 +381,11 @@ public class Directory extends JdbcDaoSupport {
 						new Object[] { secondaryIndexKey });
 			}
 		};
-		return proxy.execute();
+		try{
+			return proxy.execute();
+		} catch(EmptyResultDataAccessException e) {
+			throw new HiveKeyNotFoundException(String.format("Unable to get node id of secondary index key %s, key not found.", secondaryIndexKey), secondaryIndexKey,e);
+		}
 	}
 	
 	public NodeSemaphore getNodeSemaphoreOfSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey)
@@ -383,7 +406,11 @@ public class Directory extends JdbcDaoSupport {
 				}
 			}
 		};
-		return proxy.execute();
+		try{
+			return proxy.execute();
+		} catch(EmptyResultDataAccessException e) {
+			throw new HiveKeyNotFoundException(String.format("Unable to get nodeSemaphore of secondayr index key %s, key not found.", secondaryIndexKey), secondaryIndexKey,e);
+		}
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -405,7 +432,11 @@ public class Directory extends JdbcDaoSupport {
 				}
 			}
 		};
-		return proxy.execute();
+		try{
+			return proxy.execute();
+		} catch(EmptyResultDataAccessException e) {
+			throw new HiveKeyNotFoundException(String.format("Unable to get primary Index Key of secondary index key %s, key not found.", secondaryIndexKey), secondaryIndexKey,e);
+		}
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -429,7 +460,11 @@ public class Directory extends JdbcDaoSupport {
 				counter.add(timeKey, getRuntimeInMillis());
 			}
 		};	
-		return proxy.execute();
+		try{
+			return proxy.execute();
+		} catch(EmptyResultDataAccessException e) {
+			throw new HiveKeyNotFoundException(String.format("Unable to get secondary index keys of primary index key %s, key not found.", primaryIndexKey), primaryIndexKey,e);
+		}
 	}
 	
 	private class IntRowMapper implements RowMapper {
