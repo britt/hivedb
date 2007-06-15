@@ -402,7 +402,7 @@ public class Directory extends JdbcDaoSupport {
 							new NodeSemaphoreRowMapper());
 				}
 				catch (RuntimeException e) {
-					throw new RuntimeException(String.format("Error looking for key %s of secondary index is not in the hive", secondaryIndexKey, secondaryIndex.getName()), e);
+					throw new HiveKeyNotFoundException(String.format("Error looking for key %s of secondary index is not in the hive", secondaryIndexKey, secondaryIndex.getName()), e);
 				}
 			}
 		};
@@ -428,7 +428,7 @@ public class Directory extends JdbcDaoSupport {
 						new ObjectRowMapper(secondaryIndex.getResource().getPartitionDimension().getColumnType()));
 				}
 				catch (RuntimeException e) {
-					throw new RuntimeException(String.format("Error looking for key %s of secondary index %s", secondaryIndexKey, secondaryIndex.getName()), e);
+					throw new HiveKeyNotFoundException(String.format("Error looking for key %s of secondary index %s", secondaryIndexKey, secondaryIndex.getName()), e);
 				}
 			}
 		};

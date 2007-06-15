@@ -1092,7 +1092,7 @@ public class Hive implements Synchronizeable {
 	 *             Throws if there is a persistence error
 	 */
 	public void deletePrimaryIndexKey(PartitionDimension partitionDimension,
-			Object primaryIndexKey) throws HiveException, SQLException {
+			Object primaryIndexKey) throws HiveException {
 
 		if (!doesPrimaryIndexKeyExist(partitionDimension, primaryIndexKey))
 			throw new HiveException("The primary index key " + primaryIndexKey
@@ -1206,7 +1206,7 @@ public class Hive implements Synchronizeable {
 	 */
 	public boolean doesPrimaryIndexKeyExist(
 			PartitionDimension partitionDimension, Object primaryIndexKey)
-			throws HiveException, SQLException {
+			throws HiveException {
 		return getDirectory(partitionDimension).doesPrimaryIndexKeyExist(
 				primaryIndexKey);
 	}
@@ -1222,11 +1222,10 @@ public class Hive implements Synchronizeable {
 	 * @return
 	 * @throws HiveException
 	 *             Throws if the partition dimension is not in the hive
-	 * @throws SQLException
-	 *             Throws if there is a persistence error
+
 	 */
 	public boolean doesPrimaryIndeyKeyExist(String partitionDimensionName,
-			Object primaryIndexKey) throws HiveException, SQLException {
+			Object primaryIndexKey) throws HiveException {
 		return doesPrimaryIndexKeyExist(
 				getPartitionDimension(partitionDimensionName), primaryIndexKey);
 	}
@@ -1242,8 +1241,7 @@ public class Hive implements Synchronizeable {
 	 * @throws HiveException
 	 *             Throws if the partition dimension or primary index key does
 	 *             not exist
-	 * @throws SQLException
-	 *             Throws if there is a persistence error
+
 	 */
 	private NodeSemaphore getNodeSemaphoreOfPrimaryIndexKey(PartitionDimension partitionDimension,
 			Object primaryIndexKey) throws HiveException {
@@ -1260,8 +1258,6 @@ public class Hive implements Synchronizeable {
 	 * @return
 	 * @throws HiveException
 	 *             Throws if the primary index key does not exist
-	 * @throws SQLException
-	 *             Throws if there is a persistence error
 	 */
 	public boolean getReadOnlyOfPrimaryIndexKey(
 			PartitionDimension partitionDimension, Object primaryIndexKey)
@@ -1285,8 +1281,6 @@ public class Hive implements Synchronizeable {
 	 * @return
 	 * @throws HiveException
 	 *             Throws if the primary index key does not exist
-	 * @throws SQLException
-	 *             Throws if there is a persistence error
 	 */
 	public boolean getReadOnlyOfPrimaryIndexKey(String partitionDimensionName,
 			Object primaryIndexKey) throws HiveException {
@@ -1466,6 +1460,7 @@ public class Hive implements Synchronizeable {
 	 * @param intent
 	 * @return
 	 * @throws HiveException
+	 * @throws SQLException 
 	 * @throws SQLException 
 	 */
 	public Connection getConnection(PartitionDimension partitionDimension,
