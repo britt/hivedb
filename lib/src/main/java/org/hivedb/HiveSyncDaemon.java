@@ -22,6 +22,14 @@ public class HiveSyncDaemon extends Thread {
 	private int lastRevision = Integer.MIN_VALUE;
 	private int sleepPeriodMs = 5000;
 	
+	@SuppressWarnings("unchecked")
+	public static HiveSyncDaemon startDaemon(String uri, int sleepPeriodMs, Collection observers) {
+		HiveSyncDaemon daemon = new HiveSyncDaemon(uri, sleepPeriodMs, observers);
+		daemon.start();
+		return daemon;
+	}
+	
+	
 	public HiveSyncDaemon(String uri, int sleepPeriodMs, Collection<Observer> observers) {
 		this(uri, observers);
 		this.sleepPeriodMs = sleepPeriodMs;
