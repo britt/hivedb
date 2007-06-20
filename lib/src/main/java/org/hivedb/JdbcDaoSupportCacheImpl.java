@@ -24,8 +24,6 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	private HivePerformanceStatistics stats;
 	private Directory directory;
 	
-	private int revision = Integer.MIN_VALUE;
-	
 	public JdbcDaoSupportCacheImpl(String partitionDimension, Hive hive, Directory directory) {
 		this(partitionDimension, hive, directory, null);
 	}
@@ -49,14 +47,12 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	 * @throws HiveException
 	 */
 	public void sync() throws HiveException {
-		if(hive.getRevision() != revision) {
-			jdbcDaoSupports.clear();
-			for(Node node : hive.getPartitionDimension(partitionDimension).getNodeGroup().getNodes()) {
-				jdbcDaoSupports.put(hash(node.getId(), AccessType.Read), new DataNodeJdbcDaoSupport(node.getUri(), true));
-				if( !hive.isReadOnly() && !node.isReadOnly() )
-					addDataSource(node.getId(), AccessType.ReadWrite);
-			}
-			revision = hive.getRevision();
+		
+		jdbcDaoSupports.clear();
+		for(Node node : hive.getPartitionDimension(partitionDimension).getNodeGroup().getNodes()) {
+			jdbcDaoSupports.put(hash(node.getId(), AccessType.Read), new DataNodeJdbcDaoSupport(node.getUri(), true));
+			if( !hive.isReadOnly() && !node.isReadOnly() )
+				addDataSource(node.getId(), AccessType.ReadWrite);
 		}
 	}
 	

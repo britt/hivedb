@@ -42,7 +42,13 @@ import org.springframework.jdbc.core.support.JdbcDaoSupport;
 public class Directory extends JdbcDaoSupport {
 	private PartitionDimension partitionDimension;
 	private Counter performanceStatistics;
-	private boolean performanceMonitoringEnabled = true;
+	private boolean performanceMonitoringEnabled = false;
+	
+	public Directory(PartitionDimension dimension, DataSource dataSource, Counter performanceStatistics) {
+		this(dimension, dataSource);
+		this.setPerformanceStatistics(performanceStatistics);
+		this.setPerformanceMonitoringEnabled(true);
+	}
 	
 	public Directory(PartitionDimension dimension, DataSource dataSource) {
 		this.partitionDimension = dimension;

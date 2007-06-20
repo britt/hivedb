@@ -36,7 +36,7 @@ public class TestMigration extends HiveTestCase {
 				hive.addNode(hive.getPartitionDimension(partitionDimensionName()), new Node(name, DerbyUtils.connectString(name)));
 			
 		} catch (Exception e) {
-			throw new RuntimeException("");
+			throw new RuntimeException(e.getMessage());
 		}
 		
 		for(String name: getDatabaseNames()) {
@@ -117,13 +117,16 @@ public class TestMigration extends HiveTestCase {
 		Pair<Node, Node> nodes = initializeTestData(hive, primaryKey, secondaryKey);
 		Node origin = nodes.getKey();
 		Node destination = nodes.getValue();
-		Directory dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), getDataSource(getHiveDatabaseName()));
+		Directory dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), new HiveBasicDataSource(hive.getPartitionDimension(partitionDimensionName()).getIndexUri()));
 		PartitionKeyMover<Integer> pMover = new PrimaryMover(origin.getUri());
 		
-		Migrator m = new HiveMigrator(new NoUpdateHive(hive.getHiveUri(), 1, false, hive.getPartitionDimensions(), null), partitionDimensionName());
+		NoUpdateHive noUpdateHive = new NoUpdateHive(hive.getHiveUri(), 1, false, hive.getPartitionDimensions(), null);
+		noUpdateHive.sync();
+		Migrator m = new HiveMigrator(noUpdateHive, partitionDimensionName());
 		try {
 			m.migrate(primaryKey, destination.getName(), pMover);
 		} catch( Exception e) {
+//			e.printStackTrace();
 			//Quash
 		}
 		//Directory still points to origin
@@ -275,7 +278,7 @@ public class TestMigration extends HiveTestCase {
 	class NoUpdateHive extends Hive {
 		
 		protected NoUpdateHive(String hiveUri, int revision, boolean readOnly, Collection<PartitionDimension> partitionDimensions, PartitionKeyStatisticsDao statistics) {
-			super(hiveUri, revision, readOnly, partitionDimensions, statistics);
+			super(hiveUri, revision, readOnly, partitionDimensions);
 		}
 		
 		@Override

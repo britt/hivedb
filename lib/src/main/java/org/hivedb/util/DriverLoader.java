@@ -24,6 +24,10 @@ public class DriverLoader {
 		Class.forName(defaultDrivers.get(dialect));
 	}
 	
+	public static void load(String uri) throws ClassNotFoundException {
+		loadByDialect(discernDialect(uri));
+	}
+	
 	/**
 	 * From the connection URI determine the databhase type.
 	 * @param uri

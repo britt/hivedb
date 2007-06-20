@@ -66,7 +66,7 @@ public class PartitionDimensionDao extends JdbcDaoSupport implements DataAccessO
 		return new Integer(newObject.getId());	
 	}
 
-	public List<PartitionDimension> loadAll() throws SQLException {
+	public List<PartitionDimension> loadAll() {
 		JdbcTemplate t = getJdbcTemplate();
 		ArrayList<PartitionDimension> results = new ArrayList<PartitionDimension>();
 		for (Object result : t.query("SELECT * FROM partition_dimension_metadata",

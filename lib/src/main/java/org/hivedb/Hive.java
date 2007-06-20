@@ -9,16 +9,16 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.sql.DataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.log4j.Logger;
+import org.hivedb.management.statistics.Counter;
 import org.hivedb.management.statistics.DirectoryPerformanceStatistics;
 import org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean;
 import org.hivedb.management.statistics.HivePerformanceStatistics;
@@ -49,7 +49,7 @@ import org.hivedb.util.IdentifiableUtils;
  * @author Andy Likuski (alikuski@cafepress.com)
  * @author Britt Crawford (bcrawford@cafepress.com)
  */
-public class Hive implements Synchronizeable {
+public class Hive implements Synchronizeable, Observer {
 	private static Logger log = Logger.getLogger(Hive.class);
 	public static final int NEW_OBJECT_ID = 0;
 	public static String URI_SYSTEM_PROPERTY = "org.hivedb.uri";
@@ -57,10 +57,9 @@ public class Hive implements Synchronizeable {
 	private int revision;
 	private boolean readOnly;
 	private boolean performanceMonitoringEnabled = true;
-	private Collection<PartitionDimension> partitionDimensions;
+	private Map<String,PartitionDimension> partitionDimensions;
 	private PartitionKeyStatisticsDao partitionStatistics;
-	private Collection<Directory> directories;
-	private HiveSyncDaemon daemon;
+	private Map<String,Directory> directories;
 	private DataSource dataSource;
 	private Map<String, JdbcDaoSupportCacheImpl> jdbcDaoSupportCaches;
 	private HivePerformanceStatistics performanceStatistics;
@@ -77,35 +76,19 @@ public class Hive implements Synchronizeable {
 	 * @throws HiveException
 	 */
 	public static Hive load(String hiveDatabaseUri) throws HiveException {
-		if (log.isDebugEnabled())
-			log.debug("Loading Hive from " + hiveDatabaseUri);
+		log.debug("Loading Hive from " + hiveDatabaseUri);
 		
 		//Tickle driver
 		try {
-			DriverLoader.loadByDialect(DriverLoader
-					.discernDialect(hiveDatabaseUri));
+			DriverLoader.load(hiveDatabaseUri);
 		} catch (ClassNotFoundException e) {
-			throw new HiveException("Unable to load database driver: "
-					+ e.getMessage(), e);
+			throw new HiveRuntimeException("Unable to load database driver: " + e.getMessage(), e);
 		} 
 		
-		Hive hive = null;
-		HiveBasicDataSource ds = new HiveBasicDataSource(hiveDatabaseUri);
-		try {
-			hive = new Hive(hiveDatabaseUri, 0, false,
-					new ArrayList<PartitionDimension>(), new PartitionKeyStatisticsDao(ds));
-			hive.sync();
-			if (log.isDebugEnabled())
-				log.debug("Successfully loaded Hive from " + hiveDatabaseUri);
-		// TODO: catch a more specific exception here
-		} catch (Exception ex) {
-			log.warn("No HiveDB global schema detected (" + ex.getMessage() +  ") at : "
-					+ hiveDatabaseUri);
-			for (StackTraceElement s : ex.getStackTrace())
-				log.warn(s.toString());
+		Hive hive = new Hive(hiveDatabaseUri, 0, false, new ArrayList<PartitionDimension>());
+		hive.sync();
+		log.debug("Successfully loaded Hive from " + hiveDatabaseUri);
 
-			throw new HiveRuntimeException("Hive metadata is not installed.  Run the Hive installer.");
-		}
 		return hive;
 	}
 	
@@ -124,10 +107,12 @@ public class Hive implements Synchronizeable {
 	 */
 	public static Hive load(String hiveDatabaseUri, HivePerformanceStatistics hiveStats, DirectoryPerformanceStatistics directoryStats) throws HiveException {
 		Hive hive = Hive.load(hiveDatabaseUri);
+		
+		//Inject the statistics monitoring beans
 		hive.setPerformanceStatistics(hiveStats);
 		hive.setPerformanceMonitoringEnabled(true);
 		
-		for(Directory dir : hive.directories){
+		for(Directory dir : hive.directories.values()){
 			dir.setPerformanceStatistics((DirectoryPerformanceStatisticsMBean)directoryStats);
 			dir.setPerformanceMonitoringEnabled(true);
 		}
@@ -136,67 +121,69 @@ public class Hive implements Synchronizeable {
 
 
 	/**
-	 * Explicitly syncs the hive with the persisted data, rather than waiting
-	 * for the periodic sync.
+	 * Explicitly syncs the hive with the persisted data.
 	 * 
 	 * @throws HiveException
+	 * @throws  
 	 * 
 	 */
 	public void sync() throws HiveException {
-		daemon.forceSynchronize();
+		HiveSemaphore hs = new HiveSemaphoreDao(dataSource).get();
+		setRevision(hs.getRevision());
+		setReadOnly(hs.isReadOnly());
 		
-		// Synchronize the collection of Synchronizeable JdbcDaoSupportCaches
-	
-		Collection<String> dimensionNames = new ArrayList<String>();
-		for(PartitionDimension dimension : getPartitionDimensions())
-			dimensionNames.add(dimension.getName());
+		//Reload partition dimensions
+		Map<String, PartitionDimension> dimensionMap = new ConcurrentHashMap<String, PartitionDimension>();
+		Map<String, Directory> directoryMap = new ConcurrentHashMap<String, Directory>();
+		Map<String, JdbcDaoSupportCacheImpl> jdbcCacheMap = new ConcurrentHashMap<String, JdbcDaoSupportCacheImpl>();
 		
-		//Build a set of caches that have been removed
-		Set<String> exclusions = new HashSet<String>(jdbcDaoSupportCaches.keySet());
-		exclusions.removeAll(dimensionNames);
-		//Delete them
-		for(String name : exclusions)
-			jdbcDaoSupportCaches.remove(name);
+		Counter directoryStats = null;
+		if(directories.size() > 0)
+			directoryStats = directories.values().iterator().next().getPerformanceStatistics();
 		
-		for(String name : dimensionNames) {
-			if(jdbcDaoSupportCaches.containsKey(name))
-				jdbcDaoSupportCaches.get(name).sync();
-			else {
+		for (PartitionDimension p : new PartitionDimensionDao(dataSource).loadAll()){
+			dimensionMap.put(p.getName(),p);
+			if(isPerformanceMonitoringEnabled() && directoryStats != null)
+				directoryMap.put(p.getName(), new Directory(p, new HiveBasicDataSource(p.getIndexUri()), directoryStats));
+			else
+				directoryMap.put(p.getName(), new Directory(p, new HiveBasicDataSource(p.getIndexUri())));
+		}
+		
+		//Critical Section
+		synchronized (this) {
+			this.partitionDimensions = dimensionMap;
+			this.directories = directoryMap;
+		
+			for(PartitionDimension p : this.getPartitionDimensions()) {
 				if(isPerformanceMonitoringEnabled())
-					jdbcDaoSupportCaches.put(name, new JdbcDaoSupportCacheImpl(name, this, getDirectory(getPartitionDimension(name)), performanceStatistics));
+					jdbcCacheMap.put(p.getName(), new JdbcDaoSupportCacheImpl(p.getName(), this, directoryMap.get(p.getName()), performanceStatistics));
 				else
-					jdbcDaoSupportCaches.put(name, new JdbcDaoSupportCacheImpl(name, this, getDirectory(getPartitionDimension(name))));
+					jdbcCacheMap.put(p.getName(), new JdbcDaoSupportCacheImpl(p.getName(), this, directoryMap.get(p.getName())));
 			}
+		
+			this.jdbcDaoSupportCaches = jdbcCacheMap;
 		}
 	}
 
 	/**
-	 * INTERNAL USE ONLY- load the Hive from persistence
-	 * 
+	 * INTERNAL USE ONLY- load the Hive from persistence.
+	 * If you instantiate a Hive this way it will be in an invalid state.
 	 * @param revision
 	 * @param readOnly
 	 */
-	protected Hive(String hiveUri, int revision, boolean readOnly,
-			Collection<PartitionDimension> partitionDimensions,
-			PartitionKeyStatisticsDao statistics) {
+	protected Hive(String hiveUri, int revision, boolean readOnly, Collection<PartitionDimension> partitionDimensions) {
 		this.hiveUri = hiveUri;
 		this.revision = revision;
 		this.readOnly = readOnly;
-		this.partitionDimensions = partitionDimensions;
-		this.partitionStatistics = statistics;
-		this.daemon = new HiveSyncDaemon(this);
-		this.dataSource = new HiveBasicDataSource(this.getHiveUri());
-
-		this.directories = new ArrayList<Directory>();
 		
-		jdbcDaoSupportCaches = new ConcurrentHashMap<String, JdbcDaoSupportCacheImpl>();
-		for (PartitionDimension dimension : this.partitionDimensions) {
-			this.directories.add(new Directory(dimension, this.dataSource));
-			if(isPerformanceMonitoringEnabled())
-				jdbcDaoSupportCaches.put(dimension.getName(), new JdbcDaoSupportCacheImpl(dimension.getName(), this, getDirectory(dimension), performanceStatistics));
-			else
-				jdbcDaoSupportCaches.put(dimension.getName(), new JdbcDaoSupportCacheImpl(dimension.getName(), this, getDirectory(dimension)));
-		}
+		Map<String,PartitionDimension> dimensionNameMap = new ConcurrentHashMap<String, PartitionDimension>();
+		for(PartitionDimension d : partitionDimensions)
+			dimensionNameMap.put(d.getName(), d);
+		this.partitionDimensions = dimensionNameMap;
+		this.dataSource = new HiveBasicDataSource(this.getHiveUri());
+		this.partitionStatistics = new PartitionKeyStatisticsDao(dataSource);
+		this.jdbcDaoSupportCaches = new ConcurrentHashMap<String, JdbcDaoSupportCacheImpl>();
+		this.directories = new ConcurrentHashMap<String, Directory>();
 	}
 
 	/**
@@ -242,7 +229,6 @@ public class Hive implements Synchronizeable {
 	 * 
 	 * @param readOnly
 	 */
-	// TODO: If we kill the daemon we can kill this method
 	protected void setReadOnly(boolean readOnly) {
 		this.readOnly = readOnly;
 	}
@@ -284,7 +270,6 @@ public class Hive implements Synchronizeable {
 	 * 
 	 * @param revision
 	 */
-	// TODO: If we kill the daemon we can kill this method
 	protected void setRevision(int revision) {
 		this.revision = revision;
 	}
@@ -296,7 +281,7 @@ public class Hive implements Synchronizeable {
 	 * @return
 	 */
 	public Collection<PartitionDimension> getPartitionDimensions() {
-		return partitionDimensions;
+		return partitionDimensions.values();
 	}
 	
 	/**
@@ -310,11 +295,7 @@ public class Hive implements Synchronizeable {
 	 *             To avoid this exception, test for existence first with
 	 */
 	public PartitionDimension getPartitionDimension(String name) {
-		PartitionDimension dimension = getPartitionDimensionOrNull(name);
-		if (dimension == null)
-			throw new IllegalArgumentException("PartitionDimension with name "
-					+ name + " not found.");
-		return dimension;
+		return partitionDimensions.get(name);
 	}
 	
 	/**
@@ -323,16 +304,8 @@ public class Hive implements Synchronizeable {
 	 * @return True if partition dimension exists
 	 */
 	public boolean containsPartitionDimension(String name) {
-		return getPartitionDimensionOrNull(name) != null;
+		return partitionDimensions.containsKey(name);
 	}
-
-	private PartitionDimension getPartitionDimensionOrNull(String name) {
-		for (PartitionDimension partitionDimension : getPartitionDimensions())
-			if (partitionDimension.getName().equals(name))
-				return partitionDimension;
-		return null;
-	}
-
 
 	/**
 	 * Adds a new partition dimension to the hive. The partition dimension
@@ -356,13 +329,12 @@ public class Hive implements Synchronizeable {
 		throwIfNameIsNotUnique(String.format("Partition dimension %s already exists", partitionDimension.getName()), 
 				getPartitionDimensions(),
 				partitionDimension);
-
-		BasicDataSource datasource = new HiveBasicDataSource(getHiveUri());
-		PartitionDimensionDao partitionDimensionDao = new PartitionDimensionDao(datasource);
 		
-		// We allow the partition dimension to not specify an indexUri and we default it to the hiveUri
-		if (partitionDimension.getIndexUri() == null)
+//		 We allow the partition dimension to not specify an indexUri and we default it to the hiveUri
+		if(partitionDimension.getIndexUri() == null)
 			partitionDimension.setIndexUri(this.hiveUri);
+		HiveBasicDataSource pdDataSource = new HiveBasicDataSource(partitionDimension.getIndexUri());
+		PartitionDimensionDao partitionDimensionDao = new PartitionDimensionDao(pdDataSource);	
 		
 		try {
 			partitionDimensionDao.create(partitionDimension);
@@ -371,8 +343,8 @@ public class Hive implements Synchronizeable {
 					"Problem persisting new Partition Dimension: "
 							+ e.getMessage());
 		}
-		this.directories.add(new Directory(partitionDimension, this.dataSource));
-		incrementAndPersistHive(datasource);
+		this.directories.put(partitionDimension.getName(),new Directory(partitionDimension, pdDataSource));
+		incrementAndPersistHive(this.dataSource);
 
 		return partitionDimension;
 	}
@@ -393,10 +365,11 @@ public class Hive implements Synchronizeable {
 	 */
 	public Node addNode(PartitionDimension partitionDimension, Node node)
 			throws HiveException {
+		
 		node.setNodeGroup(partitionDimension.getNodeGroup());
 		
 		throwIfReadOnly("Creating a new node");
-		throwIfNameIsNotUnique(String.format("Node with URI %s already exists", node.getName()), 
+		throwIfNameIsNotUnique(String.format("Node with name %s already exists", node.getName()), 
 				partitionDimension.getNodeGroup().getNodes(),
 				node);
 		
@@ -823,7 +796,7 @@ public class Hive implements Synchronizeable {
 		Node node = partitionDimension.getAssigner().chooseNode(
 				partitionDimension.getNodeGroup().getNodes(), primaryIndexKey);
 		throwIfReadOnly("Inserting a new primary index key", node);
-		getDirectory(partitionDimension).insertPrimaryIndexKey(node,
+		directories.get(partitionDimension.getName()).insertPrimaryIndexKey(node,
 				primaryIndexKey);
 	}
 
@@ -876,7 +849,7 @@ public class Hive implements Synchronizeable {
 			throws HiveException, SQLException {
 		
 		throwIfReadOnly("Inserting a new secondary index key");
-		getDirectory(secondaryIndex.getResource().getPartitionDimension())
+		directories.get(secondaryIndex.getResource().getPartitionDimension().getName())
 				.insertSecondaryIndexKey(secondaryIndex, secondaryIndexKey,
 						primaryindexKey);
 		partitionStatistics.incrementChildRecordCount(secondaryIndex.getResource()
@@ -939,7 +912,7 @@ public class Hive implements Synchronizeable {
 	 */
 	public void updatePrimaryIndexNode(PartitionDimension partitionDimension,
 			Object primaryIndexKey, Node node) throws HiveException {
-		getDirectory(partitionDimension).updatePrimaryIndexKey(node,
+		directories.get(partitionDimension.getName()).updatePrimaryIndexKey(node,
 				primaryIndexKey);
 	}
 
@@ -989,11 +962,9 @@ public class Hive implements Synchronizeable {
 	public void updatePrimaryIndexReadOnly(
 			PartitionDimension partitionDimension, Object primaryIndexKey,
 			boolean isReadOnly) throws HiveException {
-		throwIfReadOnly("Updating primary index read-only");
 		// This query validates the existence of the primaryIndexKey
 		getNodeSemaphoreOfPrimaryIndexKey(partitionDimension, primaryIndexKey);
-		getDirectory(partitionDimension).updatePrimaryIndexKeyReadOnly(
-				primaryIndexKey, isReadOnly);
+		directories.get(partitionDimension.getName()).updatePrimaryIndexKeyReadOnly(primaryIndexKey, isReadOnly);
 	}
 
 	/**
@@ -1044,7 +1015,7 @@ public class Hive implements Synchronizeable {
 		
 		throwIfReadOnly("Updating primary index key of secondary index key");
 		getPrimaryIndexKeyOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
-		getDirectory(secondaryIndex.getResource().getPartitionDimension())
+		directories.get(secondaryIndex.getResource().getPartitionDimension().getName())
 				.updatePrimaryIndexOfSecondaryKey(secondaryIndex,
 						secondaryIndexKey, primaryIndexKey);
 	}
@@ -1104,12 +1075,12 @@ public class Hive implements Synchronizeable {
 
 		for (Resource resource : partitionDimension.getResources())
 			for (SecondaryIndex secondaryIndex : resource.getSecondaryIndexes()) {
-				getDirectory(partitionDimension)
+				directories.get(partitionDimension.getName())
 						.deleteAllSecondaryIndexKeysOfPrimaryIndexKey(
 								secondaryIndex, primaryIndexKey);
 			}
 
-		getDirectory(partitionDimension).deletePrimaryIndexKey(primaryIndexKey);
+		directories.get(partitionDimension.getName()).deletePrimaryIndexKey(primaryIndexKey);
 	}
 
 	/**
@@ -1156,7 +1127,7 @@ public class Hive implements Synchronizeable {
 			throw new HiveException("Secondary index key "
 					+ secondaryIndexKey.toString() + " does not exist");
 
-		getDirectory(secondaryIndex.getResource().getPartitionDimension())
+		directories.get(secondaryIndex.getResource().getPartitionDimension().getName())
 				.deleteSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
 		partitionStatistics.decrementChildRecordCount(secondaryIndex.getResource()
 				.getPartitionDimension(), primaryIndexKey, 1);
@@ -1207,7 +1178,7 @@ public class Hive implements Synchronizeable {
 	public boolean doesPrimaryIndexKeyExist(
 			PartitionDimension partitionDimension, Object primaryIndexKey)
 			throws HiveException {
-		return getDirectory(partitionDimension).doesPrimaryIndexKeyExist(
+		return directories.get(partitionDimension.getName()).doesPrimaryIndexKeyExist(
 				primaryIndexKey);
 	}
 
@@ -1245,7 +1216,7 @@ public class Hive implements Synchronizeable {
 	 */
 	private NodeSemaphore getNodeSemaphoreOfPrimaryIndexKey(PartitionDimension partitionDimension,
 			Object primaryIndexKey) throws HiveException {
-		return getDirectory(partitionDimension).getNodeSemamphoreOfPrimaryIndexKey(primaryIndexKey);
+		return directories.get(partitionDimension.getName()).getNodeSemamphoreOfPrimaryIndexKey(primaryIndexKey);
 	}
 	
 	/**
@@ -1262,7 +1233,7 @@ public class Hive implements Synchronizeable {
 	public boolean getReadOnlyOfPrimaryIndexKey(
 			PartitionDimension partitionDimension, Object primaryIndexKey)
 			throws HiveException {
-		Boolean readOnly = getDirectory(partitionDimension)
+		Boolean readOnly = directories.get(partitionDimension.getName())
 				.getReadOnlyOfPrimaryIndexKey(primaryIndexKey);
 		if (readOnly != null)
 			return readOnly;
@@ -1302,8 +1273,8 @@ public class Hive implements Synchronizeable {
 	 */
 	public boolean doesSecondaryIndexKeyExist(SecondaryIndex secondaryIndex,
 			Object secondaryIndexKey) {
-		return getDirectory(
-				secondaryIndex.getResource().getPartitionDimension())
+		return directories.get(
+				secondaryIndex.getResource().getPartitionDimension().getName())
 				.doesSecondaryIndexKeyExist(secondaryIndex, secondaryIndexKey);
 	}
 
@@ -1337,7 +1308,7 @@ public class Hive implements Synchronizeable {
 		PartitionDimension partitionDimension = secondaryIndex.getResource()
 				.getPartitionDimension();
 		try {
-			return getDirectory(partitionDimension).getNodeSemaphoreOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
+			return directories.get(partitionDimension.getName()).getNodeSemaphoreOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
 		} catch (Exception e) {
 			throw new HiveException(
 					String
@@ -1365,7 +1336,7 @@ public class Hive implements Synchronizeable {
 			throws HiveException {
 		PartitionDimension partitionDimension = secondaryIndex.getResource()
 				.getPartitionDimension();
-		Object primaryIndexKey = getDirectory(partitionDimension)
+		Object primaryIndexKey = directories.get(partitionDimension.getName())
 				.getPrimaryIndexKeyOfSecondaryIndexKey(secondaryIndex,
 						secondaryIndexKey);
 		if (primaryIndexKey != null)
@@ -1391,8 +1362,8 @@ public class Hive implements Synchronizeable {
 	 */
 	public Collection getSecondaryIndexKeysWithPrimaryKey(
 			SecondaryIndex secondaryIndex, Object primaryIndexKey) {
-		return getDirectory(
-				secondaryIndex.getResource().getPartitionDimension())
+		return directories.get(
+				secondaryIndex.getResource().getPartitionDimension().getName())
 				.getSecondaryIndexKeysOfPrimaryIndexKey(secondaryIndex,
 						primaryIndexKey);
 	}
@@ -1562,17 +1533,6 @@ public class Hive implements Synchronizeable {
 							+ " is currently read-only.");
 	}
 
-	private Directory getDirectory(PartitionDimension dimension) {
-		for (Directory directory : directories)
-			if (dimension.getName().equals(
-					directory.getPartitionDimension().getName()))
-				return directory;
-
-		String msg = "Could not find directory for partition dimension "
-				+ dimension.getName();
-		throw new NoSuchElementException(msg);
-	}
-
 	public PartitionKeyStatisticsDao getPartitionStatistics() {
 		return partitionStatistics;
 	}
@@ -1591,6 +1551,14 @@ public class Hive implements Synchronizeable {
 
 	public void setPerformanceMonitoringEnabled(boolean performanceMonitoringEnabled) {
 		this.performanceMonitoringEnabled = performanceMonitoringEnabled;
+	}
+
+	public void update(Observable o, Object arg) {
+		try {
+			sync();
+		} catch (HiveException e) {
+			
+		}
 	}
 
 }

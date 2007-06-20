@@ -4,86 +4,65 @@
  */
 package org.hivedb;
 
+import java.util.Collection;
+import java.util.Observable;
+import java.util.Observer;
+
 import javax.sql.DataSource;
 
 import org.apache.log4j.Logger;
-import org.hivedb.meta.HiveSemaphore;
-import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
-import org.hivedb.meta.persistence.PartitionDimensionDao;
 
 public class HiveSyncDaemon extends Thread {
 	Logger log = Logger.getLogger(HiveSyncDaemon.class);
-
-	long lastRun = 0;
-
-	private Hive hive = null;
-
-	public HiveSyncDaemon(Hive hive) {
-		this.hive = hive;
-		try {
-			synchronize();
-		} catch (Exception ex) {
-			// suppress, as Hive may be installing.  Exception will be thrown 
-			// when synchronize() is called after next waiting period.
-			log.debug(this.getClass().getName() + " unable to sync Hive in constructor");
-		}
+	private Observable hiveStatus;
+	private long lastRun = 0;
+	private String hiveUri;
+	private int lastRevision = Integer.MIN_VALUE;
+	private int sleepPeriodMs = 5000;
+	
+	public HiveSyncDaemon(String uri, int sleepPeriodMs, Collection<Observer> observers) {
+		this(uri, observers);
+		this.sleepPeriodMs = sleepPeriodMs;
+	}
+	
+	public HiveSyncDaemon(String uri, Collection<Observer> observers) {
+		hiveUri = uri;
+		hiveStatus = new HiveUpdateStatus();
+		for(Observer o : observers)
+			hiveStatus.addObserver(o);
 	}
 
 	private DataSource cachedDataSource = null;
-
 	private DataSource getDataSource() {
 		if (cachedDataSource == null) {
-			cachedDataSource = new HiveBasicDataSource(hive.getHiveUri());
+			cachedDataSource = new HiveBasicDataSource(hiveUri);
 		}
 		return cachedDataSource;
 	}
 
-	public void forceSynchronize() throws HiveException {
-		this.synchronize();
+	private int getLatestRevision() {
+		return new HiveSemaphoreDao(getDataSource()).get().getRevision();
 	}
-
-	public void synchronize() throws HiveException {
-		// update revision & locking, optionally triggering remaining sync
-		// activies
-		HiveSemaphoreDao hsd = new HiveSemaphoreDao(getDataSource());
-		try {
-			HiveSemaphore hs = null;
-			hs = hsd.get();
-
-			if (hive.getRevision() != hs.getRevision()) {
-				PartitionDimensionDao pdd = new PartitionDimensionDao(
-						getDataSource());
-				hive.getPartitionDimensions().clear();
-				for (PartitionDimension p : pdd.loadAll())
-					hive.getPartitionDimensions().add(p);
-				hive.setRevision(hs.getRevision());
-				hive.setReadOnly(hs.isReadOnly());
-			}
-		} catch (Exception e) {
-			log.debug(e.getMessage());
-			for (StackTraceElement element : e.getStackTrace())
-				log.debug(element);
-			throw new HiveException(
-					"Semaphore not found; make sure Hive is installed", e);
-		}
+	
+	public synchronized void detectChanges() {
+		int latestRevision = getLatestRevision();
+		if (lastRevision != latestRevision)
+			hiveStatus.notifyObservers();
+		lastRevision = latestRevision;
 	}
 
 	public void run() {
 		while (true) {
 			try {
-				synchronize();
+				detectChanges();
 				lastRun = System.currentTimeMillis();
 				sleep(getConfiguredSleepPeriodMs());
 			} catch (Exception e) {
-				// just don't care
+				log.warn("Error occurred while polling the HIveSemaphore", e);
 			}
 		}
-	}
-
-	public Hive getHive() {
-		return this.hive;
 	}
 
 	/**
@@ -95,12 +74,17 @@ public class HiveSyncDaemon extends Thread {
 	}
 
 	public int getConfiguredSleepPeriodMs() {
-		// TODO we haven't set any configuration standards yet,
-		// and 5 seconds is a pretty good guess -- these systems
-		// will be handling thousands of queries per second,
-		// so we could probably shorten it even further without
-		// presenting any significant load (as a percentage of
-		// total query volume).
-		return 5000;
+		return sleepPeriodMs;
+	}
+	
+	public void setSleepPeriodMs(int ms) {
+		this.sleepPeriodMs = ms;
+	}
+	
+	class HiveUpdateStatus extends Observable {
+		public void notifyObservers() {
+			super.setChanged();
+			super.notifyObservers();
+		}
 	}
 }

@@ -1,5 +1,8 @@
 package org.hivedb.persistence;
 
+import java.util.ArrayList;
+import java.util.Observer;
+
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
 import org.hivedb.HiveSyncDaemon;
@@ -23,31 +26,33 @@ public class TestSyncHive extends HiveTestCase {
 		new IndexSchema(Atom.getFirst(hive.getPartitionDimensions())).install();
 	}
 	
-//	@Test
-	public void testAutoSync() throws Exception {
-		Hive hive = loadHive();
-		Hive passiveSync = loadHive();
-		hive.addNode(Atom.getFirstOrNull(hive.getPartitionDimensions()), createNode(getHiveDatabaseName()));
-		Thread.sleep(10000);
-		
-		nodeReport(passiveSync, hive);
-		
-		Assert.assertNotNull(Atom.getFirstOrNull(passiveSync.getPartitionDimensions()).getNodeGroup().getNode(createNode(getHiveDatabaseName()).getName()));
-	}
-	
 	@Test
-	public void testForceSync() throws Exception {
+	public void testDaemonSync() throws Exception {
 		Hive hive = loadHive();
 		Hive passiveSync = loadHive();
+		ArrayList<Observer> observers = new ArrayList<Observer>();
+		observers.add(passiveSync);
+		HiveSyncDaemon daemon = new HiveSyncDaemon(getConnectString(getHiveDatabaseName()), observers);
+		daemon.detectChanges();
+		
 		hive.addNode(Atom.getFirstOrNull(hive.getPartitionDimensions()), createNode(getHiveDatabaseName()));
-		HiveSyncDaemon daemon = new HiveSyncDaemon(passiveSync);
-		daemon.synchronize();
+		
+		daemon.detectChanges();
 		
 //		nodeReport(passiveSync, hive);
 		
 		Assert.assertNotNull(Atom.getFirstOrNull(passiveSync.getPartitionDimensions()).getNodeGroup().getNode(createNode(getHiveDatabaseName()).getName()));
 	}
 	
+	@Test
+	public void testSync() throws Exception {
+		Hive hive = loadHive();
+		hive.addNode(Atom.getFirstOrNull(hive.getPartitionDimensions()), createNode(getHiveDatabaseName()));
+		
+		Assert.assertNotNull(Atom.getFirstOrNull(hive.getPartitionDimensions()).getNodeGroup().getNode(createNode(getHiveDatabaseName()).getName()));
+	}
+	
+	@SuppressWarnings("unused")
 	private void nodeReport(Hive passiveSync, Hive hive) {
 		System.out.println("Passively synced Hive:" + passiveSync.getRevision());
 		for(Node node: passiveSync.getPartitionDimension(createPopulatedPartitionDimension().getName()).getNodeGroup().getNodes())
