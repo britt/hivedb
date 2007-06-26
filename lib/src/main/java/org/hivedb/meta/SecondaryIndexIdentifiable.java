@@ -50,4 +50,13 @@ public interface SecondaryIndexIdentifiable
 	String getSecondaryIndexName();
 	
 	<T> Class<T> getRepresentedClass();
+	
+	/***
+	 * 
+	 * @return true if this secondary index has keys that map to more than one primary index key
+	 * 
+	 * This method exists to facilitate testing of the Directory.  In practice all Secondary indexes are considered
+	 * one to many.
+	 */
+	boolean isOneToMany();
 }

@@ -12,7 +12,7 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
-import org.hivedb.HiveException;
+import org.hivedb.HiveRuntimeException;
 import org.hivedb.meta.ColumnInfo;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.JdbcTypeMapper;
@@ -32,7 +32,7 @@ public class SecondaryIndexDao extends JdbcDaoSupport implements
 		this.setDataSource(ds);
 	}
 
-	public Integer create(SecondaryIndex newObject) throws SQLException {
+	public Integer create(SecondaryIndex newObject) {
 		Object[] parameters;
 		parameters = new Object[] {
 					newObject.getResource().getId(),
@@ -49,10 +49,10 @@ public class SecondaryIndexDao extends JdbcDaoSupport implements
 		int rows = j.update(creatorFactory
 				.newPreparedStatementCreator(parameters), generatedKey);
 		if (rows != 1)
-			throw new SQLException("Unable to create secondary index: "
+			throw new HiveRuntimeException("Unable to create secondary index: "
 					+ parameters);
 		if (generatedKey.getKeyList().size() == 0)
-			throw new SQLException("Unable to retrieve generated primary key");
+			throw new HiveRuntimeException("Unable to retrieve generated primary key");
 		newObject.updateId(generatedKey.getKey().intValue());
 	
 		return new Integer(newObject.getId());
@@ -69,23 +69,17 @@ public class SecondaryIndexDao extends JdbcDaoSupport implements
 	}
 
 	class SecondaryIndexRowMapper implements RowMapper {
-		public Object mapRow(ResultSet rs, int index) throws SQLException {
+		public Object mapRow(ResultSet rs, int index) throws SQLException{
 			int jdbcType = Types.OTHER;
-
-			try {
-				jdbcType = JdbcTypeMapper.parseJdbcType(rs.getString("db_type"));
-			} catch (HiveException ex) {
-				throw new SQLException("Unable to discern type: "
-						+ rs.getString("db_type") + ", inner message: " + ex.getMessage());
-			}
-
+			jdbcType = JdbcTypeMapper.parseJdbcType(rs.getString("db_type"));
+			
 			SecondaryIndex si = new SecondaryIndex(rs.getInt("id"),
 					new ColumnInfo(rs.getString("column_name"), jdbcType));
 			return si;
 		}
 	}
 
-	public void update(SecondaryIndex secondaryIndex) throws SQLException {
+	public void update(SecondaryIndex secondaryIndex) {
 		Object[] parameters;
 		parameters = new Object[] {
 					secondaryIndex.getResource().getId(),
@@ -102,10 +96,10 @@ public class SecondaryIndexDao extends JdbcDaoSupport implements
 		int rows = j.update(creatorFactory
 				.newPreparedStatementCreator(parameters), generatedKey);
 		if (rows != 1)
-			throw new SQLException("Unable to update secondary index: " + secondaryIndex.getId());
+			throw new HiveRuntimeException("Unable to update secondary index: " + secondaryIndex.getId());
 	}
 	
-	public void delete(SecondaryIndex secondaryIndex) throws SQLException {
+	public void delete(SecondaryIndex secondaryIndex) {
 		Object[] parameters;
 		parameters = new Object[] { secondaryIndex.getId()};
 		JdbcTemplate j = getJdbcTemplate();
@@ -115,7 +109,7 @@ public class SecondaryIndexDao extends JdbcDaoSupport implements
 		int rows = j.update(creatorFactory
 				.newPreparedStatementCreator(parameters));
 		if (rows != 1)
-			throw new SQLException("Unable to delete secondary index for id: " + secondaryIndex.getId());
+			throw new HiveRuntimeException("Unable to delete secondary index for id: " + secondaryIndex.getId());
 	}
 
 	public List<SecondaryIndex> findByResource(int id) {

@@ -14,7 +14,7 @@ public class HivePerformanceStatisticsMBean extends StandardMBean implements Hiv
 	private static final String CONNECTIONFAILURES = "ConnectionFailures";
 	
 	private RollingAverageStatistics stats;
-	
+	//Exception required by StandardMBean
 	public HivePerformanceStatisticsMBean(long window, long interval) throws NotCompliantMBeanException{
 		super(HivePerformanceStatistics.class);
 		

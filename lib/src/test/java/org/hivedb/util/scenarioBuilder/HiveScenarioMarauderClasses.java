@@ -14,8 +14,9 @@ public class HiveScenarioMarauderClasses {
 	{
 		public static int idGenerator = 0;
 		public Pirate() { 
-			id = ++idGenerator;
-			pirateName = "name"+id; }		
+			id = ++idGenerator; //Redundantly named pirates, every other pirate has the same name so that name
+			//is a many-to-one secondary index
+			pirateName = "name"+(id%2); }		
 		protected int id;
 		String pirateName;
 		public String getSecondaryIndexKey() {	return pirateName;}
@@ -30,6 +31,7 @@ public class HiveScenarioMarauderClasses {
 		public Collection<ResourceIdentifiable> getResourceIdentifiables()
 		{
 			List<ResourceIdentifiable> list = new ArrayList<ResourceIdentifiable>();
+			list.add(this);
 			list.add(new Treasure(this));
 			return list;
 		}
@@ -42,8 +44,8 @@ public class HiveScenarioMarauderClasses {
 		// Because Pirate is also a PrimaryIndexIdentifiable the argument is equal to this.
 		public ResourceIdentifiable generate(PrimaryIndexIdentifiable primaryIndexIdentifiable) {
 			
-			if (this != primaryIndexIdentifiable)
-				throw new RuntimeException("Excpected equality here");
+//			if (this != primaryIndexIdentifiable)
+//				throw new RuntimeException("Excpected equality here");
 			return this;
 		}
 		
@@ -93,6 +95,10 @@ public class HiveScenarioMarauderClasses {
 
 		public Object getRepresentedResourceFieldValue() {
 			return pirateName;
+		}
+
+		public boolean isOneToMany() {
+			return true;
 		}
 
 	
@@ -150,6 +156,10 @@ public class HiveScenarioMarauderClasses {
 
 		public Number getId() {
 			return id;
+		}
+
+		public boolean isOneToMany() {
+			return false;
 		}		
 	}	                      
 }

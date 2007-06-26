@@ -57,7 +57,7 @@ public class JdbcTypeMapper {
 		throw new HiveRuntimeException("No known JDBC type: " + jdbcType, null);
 	}
 
-	public static int parseJdbcType(String dbString) throws HiveException {
+	public static int parseJdbcType(String dbString) {
 		String upperDbString = dbString.toUpperCase();
 		if (BIGINT.equals(upperDbString))
 			return Types.BIGINT;
@@ -79,7 +79,7 @@ public class JdbcTypeMapper {
 			return Types.TINYINT;
 		if (VARCHAR.equals(upperDbString))
 			return Types.VARCHAR;
-		throw new HiveException("No known JDBC type: " + upperDbString);
+		throw new HiveRuntimeException("No known JDBC type: " + upperDbString);
 	}
 
 	public static int primitiveTypeToJdbcType(Class<?> classType) {

@@ -12,7 +12,7 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
-import org.hivedb.HiveException;
+import org.hivedb.HiveRuntimeException;
 import org.hivedb.meta.NodeGroup;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
@@ -34,7 +34,7 @@ public class PartitionDimensionDao extends JdbcDaoSupport implements DataAccessO
 		this.ds = ds;
 	}
 
-	public Integer create(PartitionDimension newObject) throws SQLException {
+	public Integer create(PartitionDimension newObject) {
 		// dependencies
 		if (newObject.getNodeGroup().getId()==0)
 			new NodeGroupDao(ds).create(newObject.getNodeGroup());
@@ -54,9 +54,9 @@ public class PartitionDimensionDao extends JdbcDaoSupport implements DataAccessO
 		int rows = j.update(creatorFactory
 				.newPreparedStatementCreator(parameters), generatedKey);
 		if (rows != 1)
-			throw new SQLException("Unable to create Partition Dimension: " + parameters);
+			throw new HiveRuntimeException("Unable to create Partition Dimension: " + parameters);
 		if (generatedKey.getKeyList().size() == 0)
-			throw new SQLException("Unable to retrieve generated primary key");
+			throw new HiveRuntimeException("Unable to retrieve generated primary key");
 		newObject.updateId(generatedKey.getKey().intValue());
 		
 		// dependencies
@@ -84,7 +84,6 @@ public class PartitionDimensionDao extends JdbcDaoSupport implements DataAccessO
 			NodeGroup dataNodes = new NodeGroupDao(ds).get(rs.getInt("node_group_id"));
 			
 			PartitionDimension dimension;
-			try {
 				dimension = new PartitionDimension(
 						rs.getInt("id"),
 						rs.getString("name"),
@@ -92,15 +91,12 @@ public class PartitionDimensionDao extends JdbcDaoSupport implements DataAccessO
 						dataNodes, 
 						rs.getString("index_uri"),
 						resources);
-			} catch (HiveException e) {
-				throw new SQLException(e.getMessage());
-			}
 			
 			return dimension;
 		}
 	}
 
-	public void update(PartitionDimension partitionDimension) throws SQLException {
+	public void update(PartitionDimension partitionDimension) {
 		
 		Object[] parameters;
 		parameters = new Object[] { partitionDimension.getName(),
@@ -116,10 +112,10 @@ public class PartitionDimensionDao extends JdbcDaoSupport implements DataAccessO
 		int rows = j.update(creatorFactory
 				.newPreparedStatementCreator(parameters));
 		if (rows != 1)
-			throw new SQLException("Unable to update Partition Dimension for id: " + partitionDimension.getId());
+			throw new HiveRuntimeException("Unable to update Partition Dimension for id: " + partitionDimension.getId());
 	}
 
-	public void delete(PartitionDimension partitionDimension) throws SQLException {
+	public void delete(PartitionDimension partitionDimension) {
 		// dependencies
 		new NodeGroupDao(ds).delete(partitionDimension.getNodeGroup());
 		for (Resource r : partitionDimension.getResources())
@@ -133,6 +129,6 @@ public class PartitionDimensionDao extends JdbcDaoSupport implements DataAccessO
 				new int[] { Types.INTEGER });
 		int rows = j.update(creatorFactory.newPreparedStatementCreator(parameters));
 		if (rows != 1)
-			throw new SQLException("Unable to delete Partition Dimension for id: " + partitionDimension.getId());	
+			throw new HiveRuntimeException("Unable to delete Partition Dimension for id: " + partitionDimension.getId());	
 	}
 }

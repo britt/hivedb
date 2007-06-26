@@ -45,6 +45,7 @@ public class DirectoryPerformanceStatisticsMBean extends StandardMBean implement
 	
 	private RollingAverageStatistics stats;
 	
+	//Exception required by StandardMBean
 	public DirectoryPerformanceStatisticsMBean(long window, long interval) throws NotCompliantMBeanException{
 		super(DirectoryPerformanceStatistics.class);
 		

@@ -2,7 +2,7 @@ package org.hivedb;
 
 import org.hivedb.management.statistics.Counter;
 
-public abstract class StatisticsProxy<R, E extends Throwable> extends BenchmarkingProxy<R,E> {
+public abstract class StatisticsProxy<R> extends BenchmarkingProxy<R> {
 	private static final String count = "Count";
 	private static final String failures = "Failures";
 	private static final String time = "Time";
@@ -22,7 +22,7 @@ public abstract class StatisticsProxy<R, E extends Throwable> extends Benchmarki
 	}
 	
 	@Override
-	protected abstract R doWork() throws E;
+	protected abstract R doWork();
 
 	@Override
 	protected void onFailure() {

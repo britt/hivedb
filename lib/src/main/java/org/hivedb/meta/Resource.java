@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.hivedb.Hive;
-import org.hivedb.HiveException;
+import org.hivedb.HiveRuntimeException;
 import org.hivedb.util.HiveUtils;
 
 /**
@@ -85,18 +85,18 @@ public class Resource implements Comparable<Resource>, IdAndNameIdentifiable, Fi
 	public Collection<SecondaryIndex> getSecondaryIndexes() {
 		return secondaryIndexes;
 	}
-	public SecondaryIndex getSecondaryIndex(String secondaryIndexName) throws HiveException {
+	public SecondaryIndex getSecondaryIndex(String secondaryIndexName) {
 		for (SecondaryIndex secondaryIndex : getSecondaryIndexes())
 			if (secondaryIndex.getName().equals(secondaryIndexName))
 				return secondaryIndex;
-		throw new HiveException(String.format("Secondary index %s of resource %s of partitition dimension %s not found.",
+		throw new HiveRuntimeException(String.format("Secondary index %s of resource %s of partitition dimension %s not found.",
 				secondaryIndexName,
 				getName(),
 				getPartitionDimension().getName()));
 	}
 	
 	@SuppressWarnings("unchecked")
-	public <T extends Nameable> T findByName(Class<T> forClass, String name) throws HiveException {
+	public <T extends Nameable> T findByName(Class<T> forClass, String name) {
 		return (T)getSecondaryIndex(name);
 	}
 	@SuppressWarnings("unchecked")

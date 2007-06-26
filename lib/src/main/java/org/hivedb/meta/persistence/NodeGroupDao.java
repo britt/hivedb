@@ -12,6 +12,7 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.hivedb.HiveRuntimeException;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.NodeGroup;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -33,7 +34,7 @@ public class NodeGroupDao extends JdbcDaoSupport implements
 		this.setDataSource(ds);
 	}
 
-	public Integer create(NodeGroup newObject) throws SQLException {
+	public Integer create(NodeGroup newObject) {
 		Object[] parameters = new Object[] {  };
 		KeyHolder generatedKey = new GeneratedKeyHolder();
 		JdbcTemplate j = getJdbcTemplate();
@@ -43,9 +44,9 @@ public class NodeGroupDao extends JdbcDaoSupport implements
 		int rows = j.update(creatorFactory
 				.newPreparedStatementCreator(parameters), generatedKey);
 		if (rows != 1)
-			throw new SQLException("Unable to create Node Group: " + parameters);
+			throw new HiveRuntimeException("Unable to create Node Group: " + parameters);
 		if (generatedKey.getKeyList().size() == 0)
-			throw new SQLException("Unable to retrieve generated primary key");
+			throw new HiveRuntimeException("Unable to retrieve generated primary key");
 		newObject.updateId(generatedKey.getKey().intValue());
 		
 		// dependents
@@ -55,7 +56,7 @@ public class NodeGroupDao extends JdbcDaoSupport implements
 		return new Integer(newObject.getId());
 	}
 
-	public List<NodeGroup> loadAll() throws SQLException {
+	public List<NodeGroup> loadAll() {
 		JdbcTemplate t = getJdbcTemplate();
 		ArrayList<NodeGroup> results = new ArrayList<NodeGroup>();
 		for (Object result : t.query("SELECT * FROM node_group_metadata",
@@ -74,11 +75,11 @@ public class NodeGroupDao extends JdbcDaoSupport implements
 		}
 	}
 
-	public void update(NodeGroup object) throws SQLException {
+	public void update(NodeGroup object) {
 		// nothing to do
 	}
 	
-	public void delete(NodeGroup nodeGroup) throws SQLException {
+	public void delete(NodeGroup nodeGroup) {
 		// dependencies
 		for (Node node : nodeGroup.getNodes())
 			new NodeDao(ds).delete(node);
@@ -92,7 +93,7 @@ public class NodeGroupDao extends JdbcDaoSupport implements
 		int rows = j.update(creatorFactory
 				.newPreparedStatementCreator(parameters));
 		if (rows != 1)
-			throw new SQLException("Unable to delete node group for id: " + nodeGroup.getId());
+			throw new HiveRuntimeException("Unable to delete node group for id: " + nodeGroup.getId());
 	}
 
 	public NodeGroup get(int id) {

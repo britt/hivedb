@@ -1,6 +1,6 @@
 package org.hivedb;
 
-public abstract class BenchmarkingProxy<R,E extends Throwable> {
+public abstract class BenchmarkingProxy<R> {
 	private long start, stop;
 	
 	@SuppressWarnings("unchecked")
@@ -15,7 +15,10 @@ public abstract class BenchmarkingProxy<R,E extends Throwable> {
 		} catch( Throwable e) {
 			onFailure();
 			stop = System.nanoTime();
-			throw new RuntimeException(e);
+			if(RuntimeException.class.isInstance(e))
+				throw (RuntimeException)e;
+			else
+				throw new RuntimeException(e);
 		} finally {
 			onFinally();
 		}
@@ -33,7 +36,7 @@ public abstract class BenchmarkingProxy<R,E extends Throwable> {
 		return getRuntimeInNanos() / 1000000;
 	}
 	
-	protected abstract R doWork() throws E;
+	protected abstract R doWork();
 	protected abstract void onSuccess(R output);
 	protected abstract void onFailure();
 	protected void onFinally() {}

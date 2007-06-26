@@ -10,7 +10,7 @@ import java.util.Date;
 import java.util.Random;
 
 import org.hivedb.Hive;
-import org.hivedb.HiveException;
+import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.util.HiveUtils;
 import org.hivedb.util.JdbcTypeMapper;
@@ -144,7 +144,7 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 		return nodeGroup;
 	}
 	@SuppressWarnings("unchecked")
-	public<T extends Nameable> T findByName(Class<T> forClass, String name) throws HiveException {
+	public<T extends Nameable> T findByName(Class<T> forClass, String name){
 		if (forClass.equals(Resource.class))
 			return (T)getResource(name);
 		if (forClass.equals(Node.class))
@@ -175,11 +175,11 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	public Collection<Resource> getResources() {
 		return resources;
 	}
-	public Resource getResource(String resourceName) throws HiveException {
+	public Resource getResource(String resourceName) {
 		for (Resource resource : resources)
 			if (resource.getName().equals(resourceName))
 				return resource;
-		throw new HiveException("Resource with name " + resourceName + " not found.");
+		throw new HiveKeyNotFoundException("Resource with name " + resourceName + " not found.", resourceName);
 	}
 
 	public Assigner getAssigner() {

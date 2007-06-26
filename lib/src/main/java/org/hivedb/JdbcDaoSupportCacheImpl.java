@@ -34,11 +34,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 		this.jdbcDaoSupports = new ConcurrentHashMap<Integer, SimpleJdbcDaoSupport>();
 		this.directory = directory;
 		this.stats = stats;
-		try {
-			sync();
-		} catch (HiveException e) {
-			// crush for now
-		}
+		sync();
 	}
 	
 	/**
@@ -46,7 +42,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	 * This method destroys and recreates all SimpleJdbcDaoSupport in the cache.
 	 * @throws HiveException
 	 */
-	public void sync() throws HiveException {
+	public void sync() {
 		
 		jdbcDaoSupports.clear();
 		for(Node node : hive.getPartitionDimension(partitionDimension).getNodeGroup().getNodes()) {
@@ -56,7 +52,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 		}
 	}
 	
-	private SimpleJdbcDaoSupport addDataSource(Integer nodeId, AccessType intention) throws HiveException {
+	private SimpleJdbcDaoSupport addDataSource(Integer nodeId, AccessType intention) {
 		Node node = hive.getPartitionDimension(partitionDimension).getNodeGroup().getNode(nodeId);
 		jdbcDaoSupports.put(hash(nodeId, intention), new DataNodeJdbcDaoSupport(node.getUri()));
 		return jdbcDaoSupports.get(hash(nodeId, intention));
@@ -84,14 +80,13 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 		}
 		else {
 			try {
-				SimpleJdbcDaoSupport dao = addDataSource(semaphore.getId(), intention);
-				//success
-				countSuccess(intention);
-				return dao;
-			} catch (HiveException e) {
-				//failure
+			SimpleJdbcDaoSupport dao = addDataSource(semaphore.getId(), intention);
+			//success
+			countSuccess(intention);
+			return dao;
+			} catch(RuntimeException e) {
 				countFailure();
-				throw new HiveRuntimeException(e.getMessage());
+				throw e;
 			}
 		}
 	}

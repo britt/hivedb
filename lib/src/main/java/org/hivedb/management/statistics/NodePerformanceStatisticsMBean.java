@@ -16,6 +16,7 @@ public class NodePerformanceStatisticsMBean extends StandardMBean implements Nod
 	
 	private RollingAverageStatistics stats;
 	
+	//Exception required by StandardMBean
 	public NodePerformanceStatisticsMBean(long window, long interval) throws NotCompliantMBeanException{
 		super(NodePerformanceStatistics.class);
 		

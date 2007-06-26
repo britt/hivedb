@@ -64,6 +64,7 @@ public class TestRuntimeStatisticsCollection extends HiveTestCase{
 				connections.add( hive.getConnection( hive.getPartitionDimension(partitionDimensionName()), intKey(), AccessType.ReadWrite));
 			} catch( Exception e) {
 				//CRUSH! KILL! DESTROY!
+//				e.printStackTrace();
 			}
 		}
 		

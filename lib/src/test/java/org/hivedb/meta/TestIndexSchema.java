@@ -1,8 +1,5 @@
 package org.hivedb.meta;
 
-import static org.testng.AssertJUnit.fail;
-
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -15,12 +12,7 @@ public class TestIndexSchema extends DerbyTestCase {
 		PartitionDimension dimension = TestObjectFactory.partitionDimension();
 		dimension.setIndexUri(getConnectString("testDb"));
 		IndexSchema schema = new IndexSchema( dimension );
-		try {
-			schema.install();
-		} catch (SQLException e) {
-			e.printStackTrace();
-			fail("Exception thrown while installing schema: " + e.toString());
-		}
+		schema.install();
 	}
 	
 	@Override

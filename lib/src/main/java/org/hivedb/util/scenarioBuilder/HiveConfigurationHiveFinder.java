@@ -3,7 +3,6 @@ package org.hivedb.util.scenarioBuilder;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.hivedb.HiveException;
 import org.hivedb.meta.Finder;
 import org.hivedb.meta.Nameable;
 import org.hivedb.meta.PartitionDimension;
@@ -20,7 +19,7 @@ public class HiveConfigurationHiveFinder implements Finder {
 		this.partitionDimension = InstallHiveIndexSchema.createPartitionDimension(hiveScenarioConfig);
 	}
 	@SuppressWarnings("unchecked")
-	public <T extends Nameable> T findByName(Class<T> forClass, final String name) throws HiveException {
+	public <T extends Nameable> T findByName(Class<T> forClass, final String name) {
 		
 		return (T)partitionDimension;
 	}

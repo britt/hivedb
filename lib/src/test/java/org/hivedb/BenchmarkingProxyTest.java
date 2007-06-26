@@ -1,12 +1,14 @@
 package org.hivedb;
 
-import org.hivedb.BenchmarkingProxy;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertTrue;
+
 import org.testng.annotations.Test;
-import static org.testng.AssertJUnit.*;
 
 public class BenchmarkingProxyTest {
 	
-	//@Test
+	@Test
 	public void testRuntimeMeasurement() throws Exception {
 		Nap nap = new Nap();
 		nap.execute();
@@ -25,12 +27,30 @@ public class BenchmarkingProxyTest {
 		assertTrue(nap.getRuntimeInNanos() > 0);
 	}
 	
-	class Nap extends BenchmarkingProxy<Boolean, Exception> {
+	@Test
+	public void testExceptionBehavior() {
+		InterruptedNap nap = new InterruptedNap();
+		try {
+			nap.execute();
+		} catch(Exception e) {
+			for(Class c : e.getClass().getInterfaces())
+				System.out.println(c.getName());
+			System.out.println(e.getClass().getSuperclass().getName());
+			assertTrue(RuntimeException.class.isInstance(e));
+			assertEquals(NapInterruptionException.class, e.getClass());
+		}
+	}
+	
+	class Nap extends BenchmarkingProxy<Boolean> {
 		private boolean everythingGoOk = true;
 		
 		@Override
-		protected Boolean doWork() throws Exception {
-			Thread.sleep(100);
+		protected Boolean doWork() {
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
 			return true;
 		}
 
@@ -52,13 +72,13 @@ public class BenchmarkingProxyTest {
 	class InterruptedNap extends Nap {
 		
 		@Override
-		protected Boolean doWork() throws Exception {
+		protected Boolean doWork() {
 			throw new NapInterruptionException("Why did you wake me up, jerk?");
 		}
 	}
 	
 	@SuppressWarnings("serial")
-	class NapInterruptionException extends Exception {
+	class NapInterruptionException extends RuntimeException {
 		NapInterruptionException(String msg) {
 			super(msg);
 		}

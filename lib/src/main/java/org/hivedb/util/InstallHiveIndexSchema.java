@@ -3,7 +3,6 @@ package org.hivedb.util;
 import java.util.Collection;
 
 import org.hivedb.Hive;
-import org.hivedb.HiveException;
 import org.hivedb.meta.ColumnInfo;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.NodeGroup;
@@ -20,7 +19,7 @@ import org.hivedb.util.scenarioBuilder.HiveScenarioConfig;
 public class InstallHiveIndexSchema {
 	public static PartitionDimension install(
 			final HiveScenarioConfig hiveScenarioConfig,
-			final Hive hive) throws HiveException {
+			final Hive hive) {
 		
 		final PartitionDimension partitionDimension = createPartitionDimension(hiveScenarioConfig);	
 		try {

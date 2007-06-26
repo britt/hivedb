@@ -51,14 +51,14 @@ public class HiveScenario {
 
 	private int primaryIndexInstanceCount;
 	private int resourceInstanceCount;
-	protected HiveScenario(final HiveScenarioConfig hiveScenarioConfig, int primaryIndexInstanceCount, int resourceInstanceCount) throws HiveException
+	protected HiveScenario(final HiveScenarioConfig hiveScenarioConfig, int primaryIndexInstanceCount, int resourceInstanceCount)
 	{
 		final Hive hive = hiveScenarioConfig.getHive();
 		this.primaryIndexInstanceCount = primaryIndexInstanceCount;
 		this.resourceInstanceCount = resourceInstanceCount;
 		fill(hiveScenarioConfig, hive);
 	}
-	private void fill(final HiveScenarioConfig hiveScenarioConfig, final Hive hive) throws HiveException {
+	private void fill(final HiveScenarioConfig hiveScenarioConfig, final Hive hive) {
 		PartitionDimension partitionDimension = InstallHiveIndexSchema.install(hiveScenarioConfig, hive);
 		this.partitionDimension = partitionDimension;
 		populateData(hiveScenarioConfig, hive, partitionDimension);
@@ -108,11 +108,7 @@ public class HiveScenario {
 				new Unary<ResourceIdentifiable, Resource>() {
 					public Resource f(ResourceIdentifiable resourceIdentifiable) {
 						
-						try {
-							return hive.getPartitionDimension(getPartitionDimensionName(resourceIdentifiable)).getResource(resourceIdentifiable.getResourceName());
-						} catch (HiveException e) {
-							throw new RuntimeException(e);
-						}
+						return hive.getPartitionDimension(getPartitionDimensionName(resourceIdentifiable)).getResource(resourceIdentifiable.getResourceName());
 					}
 				},
 				resourceIdentifiableMap.keySet());

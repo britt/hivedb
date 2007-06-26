@@ -7,7 +7,6 @@ import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.AssertJUnit.fail;
 
 import java.sql.Date;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -15,7 +14,6 @@ import java.util.List;
 import java.util.Random;
 
 import org.hivedb.Hive;
-import org.hivedb.HiveException;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.IndexSchemaTestScenario;
@@ -41,11 +39,7 @@ public class TestPartitionKeyStatisticsPersistence extends DerbyTestCase {
 		new HiveInstaller(getConnectString(DB)).run();
 		index = new IndexSchemaTestScenario((HiveBasicDataSource)getDataSource(DB));
 		index.build();
-		try {
-			hive = Hive.load(getConnectString(DB));
-		} catch (HiveException e) {
-			fail("Error instantiating hive.");
-		}
+		hive = Hive.load(getConnectString(DB));
 		
 		keys = new ArrayList<Integer>();
 		Random rand = new Random();
@@ -91,18 +85,14 @@ public class TestPartitionKeyStatisticsPersistence extends DerbyTestCase {
 		PartitionKeyStatistics frozen = new PartitionKeyStatisticsBean(index.partitionDimension(), keys
 				.iterator().next(), new Date(System.currentTimeMillis()));
 		frozen.setChildRecordCount(21);
-		try {
-			dao.update(frozen);
+				dao.update(frozen);
 			dao.incrementChildRecordCount(frozen.getPartitionDimension(),
 					frozen.getKey(), 2);
 			PartitionKeyStatistics thawed = dao.findByPrimaryPartitionKey(frozen
 					.getPartitionDimension(), frozen.getKey());
 			assertEquals(frozen.getChildRecordCount() + 2, thawed
 					.getChildRecordCount());
-		} catch (SQLException e) {
-			e.printStackTrace();
-			fail("Error creating the statistics entry");
-		}
+		
 	}
 
 	@Test
@@ -111,7 +101,7 @@ public class TestPartitionKeyStatisticsPersistence extends DerbyTestCase {
 		PartitionKeyStatistics frozen = new PartitionKeyStatisticsBean(index.partitionDimension(), keys
 				.iterator().next(), new Date(System.currentTimeMillis()));
 		frozen.setChildRecordCount(21);
-		try {
+		
 			dao.update(frozen);
 			dao.decrementChildRecordCount(frozen.getPartitionDimension(),
 					frozen.getKey(), 2);
@@ -119,10 +109,7 @@ public class TestPartitionKeyStatisticsPersistence extends DerbyTestCase {
 					.getPartitionDimension(), frozen.getKey());
 			assertEquals(frozen.getChildRecordCount() - 2, thawed
 					.getChildRecordCount());
-		} catch (SQLException e) {
-			e.printStackTrace();
-			fail("Error creating the statistics entry");
-		}
+		
 	}
 	
 	@Test

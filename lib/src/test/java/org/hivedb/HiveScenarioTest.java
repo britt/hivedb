@@ -67,7 +67,7 @@ public class HiveScenarioTest {
 		// Validate our PartitionDimension in memory against those that are in the persistence
 		assertEquals(String.format("Expected %s but got %s", hiveScenario.getCreatedPartitionDimension(), hive.getPartitionDimensions()),
 			hiveScenario.getCreatedPartitionDimension(),
-			hive.getPartitionDimensions());
+			hive.getPartitionDimension(hiveScenario.getCreatedPartitionDimension().getName()));
 		
 		PartitionDimension partitionDimension = hiveScenario.getCreatedPartitionDimension();
 		PartitionDimension partitionDimensionFromHive = hive.getPartitionDimension(partitionDimension.getName());

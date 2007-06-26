@@ -145,11 +145,9 @@ public class HiveSyncer {
 				new Unary<String, Entry<T, T>>() {
 					@SuppressWarnings("unchecked")
 					public Entry<T, T> f(String name) {
-						try {
-							return new Pair<T, T>(
-									(T)live.findByName(ofClass, name),
-									(T)updater.findByName(ofClass, name)); 
-						} catch (HiveException e) { throw new RuntimeException(e); }}},	
+						return new Pair<T, T>(
+								(T)live.findByName(ofClass, name),
+								(T)updater.findByName(ofClass, name));}},	
 				Filter.grepAgainstList(getNames(live.findCollection(ofClass)), getNames(updater.findCollection(ofClass))));
 	}
 

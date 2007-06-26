@@ -1,9 +1,18 @@
 package org.hivedb.meta;
 
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
+import static org.testng.AssertJUnit.assertTrue;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
 import org.hivedb.Hive;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.database.HiveTestCase;
 import org.hivedb.util.functional.Atom;
+import org.hivedb.util.scenarioBuilder.HiveScenario;
+import org.hivedb.util.scenarioBuilder.HiveScenarioMarauderConfig;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -16,10 +25,18 @@ public class DirectoryTest extends HiveTestCase {
 		new IndexSchema(Atom.getFirst(hive.getPartitionDimensions())).install();
 	}
 	
+	@SuppressWarnings("unchecked")
 //	@Test
-	public void testExceptionBehavior() throws Exception {
+	public void testGetNodeIdsOfSecondaryIndexKeys() throws Exception {
+		HiveScenario hiveScenario = HiveScenario.run(new HiveScenarioMarauderConfig(getConnectString(getHiveDatabaseName()), getDataUris()), 10, 10);
 		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
-		Directory dir = new Directory(Atom.getFirst(hive.getPartitionDimensions()), new HiveBasicDataSource(hive.getHiveUri()));
-		dir.updatePrimaryIndexKey(createNode(getHiveDatabaseName()), new Integer(7));
+		hive.addPartitionDimension(createPopulatedPartitionDimension());
+	}
+	
+	private Collection<String> getDataUris() {
+		Collection<String> uris = new ArrayList<String>();
+		for(String name : getDatabaseNames())
+			uris.add(getConnectString(name));
+		return uris;
 	}
 }

@@ -61,7 +61,7 @@ public class PartitionKeyStatisticsDao extends JdbcDaoSupport {
 		return results;
 	}
 
-	public void update(PartitionKeyStatistics stats) throws SQLException {
+	public void update(PartitionKeyStatistics stats) {
 		Object[] parameters = new Object[] {
 				stats.getChildRecordCount(), 
 				new Date(System.currentTimeMillis()),
@@ -96,13 +96,13 @@ public class PartitionKeyStatisticsDao extends JdbcDaoSupport {
 		return sql.toString();
 	}
 
-	public void decrementChildRecordCount(PartitionDimension dimension, Object primaryIndexKey, int increment) throws SQLException {
+	public void decrementChildRecordCount(PartitionDimension dimension, Object primaryIndexKey, int increment) {
 		PartitionKeyStatistics stats = findByPrimaryPartitionKey(dimension, primaryIndexKey);
 		stats.setChildRecordCount( stats.getChildRecordCount() - increment);
 		update(stats);
 	}
 
-	public void incrementChildRecordCount(PartitionDimension dimension, Object primaryIndexKey, int increment) throws SQLException {
+	public void incrementChildRecordCount(PartitionDimension dimension, Object primaryIndexKey, int increment) {
 		PartitionKeyStatistics stats = findByPrimaryPartitionKey(dimension, primaryIndexKey);
 		stats.setChildRecordCount( stats.getChildRecordCount() + increment);
 		update(stats);

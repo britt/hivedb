@@ -12,6 +12,7 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.hivedb.HiveRuntimeException;
 import org.hivedb.meta.Node;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
@@ -28,7 +29,7 @@ public class NodeDao extends JdbcDaoSupport implements DataAccessObject<Node,Int
 		this.setDataSource(ds);
 	}
 
-	public Integer create(Node newObject) throws SQLException {
+	public Integer create(Node newObject) {
 		Object[] parameters = new Object[] { 
 				newObject.getNodeGroup().getId(),
 				newObject.getName(), 
@@ -44,15 +45,15 @@ public class NodeDao extends JdbcDaoSupport implements DataAccessObject<Node,Int
 		int rows = j.update(creatorFactory
 				.newPreparedStatementCreator(parameters), generatedKey);
 		if (rows != 1)
-			throw new SQLException("Unable to create Resource: "
+			throw new HiveRuntimeException("Unable to create Resource: "
 					+ parameters);
 		if (generatedKey.getKeyList().size() == 0)
-			throw new SQLException("Unable to retrieve generated primary key");
+			throw new HiveRuntimeException("Unable to retrieve generated primary key");
 		newObject.updateId(generatedKey.getKey().intValue());
 		return new Integer(newObject.getId());	
 	}
 
-	public List<Node> loadAll() throws SQLException {
+	public List<Node> loadAll() {
 		JdbcTemplate t = getJdbcTemplate();
 		ArrayList<Node> results = new ArrayList<Node>();
 		for (Object result : t.query("SELECT * FROM node_metadata",
@@ -77,7 +78,7 @@ public class NodeDao extends JdbcDaoSupport implements DataAccessObject<Node,Int
 		return (Node) t.queryForObject("SELECT * FROM node_metadata WHERE id = ?", new Object[] { id }, new NodeRowMapper());
 	}
 	
-	public void update(Node node) throws SQLException {
+	public void update(Node node) {
 		Object[] parameters = new Object[] { 
 				node.getNodeGroup().getId(),
 				node.getName(), 
@@ -92,10 +93,10 @@ public class NodeDao extends JdbcDaoSupport implements DataAccessObject<Node,Int
 		int rows = j.update(creatorFactory
 				.newPreparedStatementCreator(parameters));
 		if (rows != 1)
-			throw new SQLException("Unable to update node with id: " + node.getId());
+			throw new HiveRuntimeException("Unable to update node with id: " + node.getId());
 	}
 	
-	public void delete(Node node) throws SQLException {
+	public void delete(Node node) {
 		Object[] parameters;
 		parameters = new Object[] { node.getId()};
 		JdbcTemplate j = getJdbcTemplate();
@@ -105,7 +106,7 @@ public class NodeDao extends JdbcDaoSupport implements DataAccessObject<Node,Int
 		int rows = j.update(creatorFactory
 				.newPreparedStatementCreator(parameters));
 		if (rows != 1)
-			throw new SQLException("Unable to delete node for id: " + node.getId());
+			throw new HiveRuntimeException("Unable to delete node for id: " + node.getId());
 	}
 
 	protected class NodeRowMapper implements RowMapper {

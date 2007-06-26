@@ -3,7 +3,6 @@ package org.hivedb.util;
 import java.util.Collection;
 
 import org.hivedb.Hive;
-import org.hivedb.HiveException;
 import org.hivedb.meta.Finder;
 import org.hivedb.meta.Nameable;
 
@@ -15,8 +14,7 @@ public class HiveFinder implements Finder {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public <T extends Nameable> T findByName(Class<T> forClass, String name)
-			throws HiveException {
+	public <T extends Nameable> T findByName(Class<T> forClass, String name) {
 			return (T) hive.getPartitionDimension(name);
 	}
 

@@ -70,7 +70,6 @@ public class HiveSemaphoreDao extends JdbcDaoSupport {
 	 * semaphore if any Exception is encountered.
 	 * 
 	 * @param hs
-	 * @throws SQLException
 	 */
 	public HiveSemaphore update(HiveSemaphore hs) {
 		//Unilateral decision to abandon implicit creation

@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.hivedb.HiveDbDialect;
-import org.hivedb.HiveException;
 import org.hivedb.Schema;
 import org.hivedb.util.JdbcTypeMapper;
 
@@ -42,7 +41,6 @@ public class IndexSchema extends Schema{
 	/**
 	 * 
 	 * @return
-	 * @throws HiveException
 	 */
 	protected String getCreatePrimaryIndex() {
 		return 
@@ -53,23 +51,26 @@ public class IndexSchema extends Schema{
 			+ " secondary_index_count INTEGER not null, "
 			+ " last_updated "+ JdbcTypeMapper.jdbcTypeToString(Types.DATE) +" not null, "
 			+ " read_only " +  GlobalSchema.getBooleanTypeForDialect(dialect) + " default 0"			
+			+ ifMySql(", INDEX node_id (node),")
+			+ ifMySql(" INDEX last_updated (last_updated)")
 			+ " ) "
-			+ (dialect.equals(HiveDbDialect.MySql) ? "ENGINE=InnoDB" : "");
+			+ ifMySql("ENGINE=InnoDB");
 	}
 	
 	/**
 	 * 
 	 * @param secondaryIndex
-	 * @throws HiveException
 	 */
 	protected String getCreateSecondaryIndex(SecondaryIndex secondaryIndex) {
 		return 
 			"CREATE TABLE " + getSecondaryIndexTableName(partitionDimension,secondaryIndex) 
 			+ " ( "
-			+ " id " +  addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(secondaryIndex.getColumnInfo().getColumnType())) + " primary key not null, "
+			+ " id " +  addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(secondaryIndex.getColumnInfo().getColumnType())) + " not null, "
 			+ " pkey " + addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(partitionDimension.getColumnType())) + " not null"
+			+ ifMySql(", INDEX secondary_index_value (id),")
+			+ ifMySql(" INDEX secondary_index_to_primary_index (pkey)")
 			+ " ) " 
-			+ (dialect.equals(HiveDbDialect.MySql) ? "ENGINE=InnoDB" : "");
+			+ ifMySql(" ENGINE=InnoDB");
 	}
 	
 	/**
@@ -99,6 +100,8 @@ public class IndexSchema extends Schema{
 		return TableInfos;
 	}
 	
-	
+	private String ifMySql(String sql) {
+		return (dialect.equals(HiveDbDialect.MySql) ? sql : "");
+	}
 	
 }

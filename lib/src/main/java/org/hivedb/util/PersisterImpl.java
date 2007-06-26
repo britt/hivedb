@@ -1,7 +1,5 @@
 package org.hivedb.util;
 
-import java.sql.SQLException;
-
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
 import org.hivedb.meta.PrimaryIndexIdentifiable;
@@ -10,7 +8,7 @@ import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.SecondaryIndexIdentifiable;
 
 public class PersisterImpl implements Persister {
-	public PrimaryIndexIdentifiable persistPrimaryIndexIdentifiable(final Hive hive, final PrimaryIndexIdentifiable primaryIndexIdentifiable) throws HiveException, SQLException {
+	public PrimaryIndexIdentifiable persistPrimaryIndexIdentifiable(final Hive hive, final PrimaryIndexIdentifiable primaryIndexIdentifiable) throws HiveException {
 		hive.insertPrimaryIndexKey(hive.getPartitionDimension(primaryIndexIdentifiable.getPartitionDimensionName()), primaryIndexIdentifiable.getPrimaryIndexKey());
 		return primaryIndexIdentifiable;
 	}
@@ -22,7 +20,7 @@ public class PersisterImpl implements Persister {
 		return resourceIdentifiable;
 	}
 	
-	public SecondaryIndexIdentifiable persistSecondaryIndexIdentifiableInstance(final Hive hive, SecondaryIndexIdentifiable secondaryIndexIdentifiable) throws HiveException, SQLException {
+	public SecondaryIndexIdentifiable persistSecondaryIndexIdentifiableInstance(final Hive hive, SecondaryIndexIdentifiable secondaryIndexIdentifiable) throws HiveException {
 		hive.insertSecondaryIndexKey(getSecondaryIndex(hive, secondaryIndexIdentifiable), secondaryIndexIdentifiable.getSecondaryIndexKey(), getPrimaryIndexKey(secondaryIndexIdentifiable));
 		return secondaryIndexIdentifiable;
 	}
@@ -32,11 +30,7 @@ public class PersisterImpl implements Persister {
 		ResourceIdentifiable resourceIdentifiable = secondaryIndexIdentifable.getResourceIdentifiable();
 		String resourceName = resourceIdentifiable.getResourceName();
 		String partitionDimensionName = resourceIdentifiable.getPrimaryIndexIdentifiable().getPartitionDimensionName();
-		try {
-			return hive.getPartitionDimension(partitionDimensionName).getResource(resourceName).getSecondaryIndex(secondaryIndexIdentifable.getSecondaryIndexName());
-		} catch (HiveException e) {
-			throw new RuntimeException(e);
-		}
+		return hive.getPartitionDimension(partitionDimensionName).getResource(resourceName).getSecondaryIndex(secondaryIndexIdentifable.getSecondaryIndexName());
 	}
 	private Object getPrimaryIndexKey(SecondaryIndexIdentifiable secondaryIndexIdentifiable)
 	{

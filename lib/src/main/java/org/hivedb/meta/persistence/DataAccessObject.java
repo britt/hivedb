@@ -5,7 +5,6 @@
 package org.hivedb.meta.persistence;
 
 import java.io.Serializable;
-import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -17,7 +16,7 @@ import java.util.List;
  * @param <PK>	Type of key
  */
 public interface DataAccessObject <T, PK extends Serializable> {
-    PK create(T newObject) throws SQLException;
-    void update(T object) throws SQLException;
-    List<T> loadAll() throws SQLException;
+    PK create(T newObject);
+    void update(T object);
+    List<T> loadAll();
 }

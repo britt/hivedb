@@ -4,12 +4,10 @@
  */
 package org.hivedb.meta;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.commons.dbcp.BasicDataSource;
-import org.hivedb.HiveException;
 import org.hivedb.Schema;
 
 /**
@@ -31,7 +29,7 @@ public class GlobalSchema extends Schema {
 	 * 
 	 * @param dbURI Empty target database connect string, including username, password & catalog
 	 */
-	public GlobalSchema(String dbURI) throws HiveException {
+	public GlobalSchema(String dbURI){
 		super(dbURI);
 	}
 	
@@ -85,7 +83,7 @@ public class GlobalSchema extends Schema {
 				+ " )";
 	}
 	
-	public void install() throws SQLException {
+	public void install() {
 		super.install();
 		BasicDataSource ds = new BasicDataSource();
 		ds.setUrl(this.dbURI);

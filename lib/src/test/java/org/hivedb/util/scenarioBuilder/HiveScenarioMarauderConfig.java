@@ -3,15 +3,11 @@
  */
 package org.hivedb.util.scenarioBuilder;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import org.hivedb.Hive;
-import org.hivedb.HiveException;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PrimaryIndexIdentifiable;
-import org.hivedb.meta.ResourceIdentifiable;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 
@@ -21,12 +17,8 @@ public class HiveScenarioMarauderConfig implements HiveScenarioConfig {
 	private Collection<Node> dataNodes;
 	private Collection<String> dataNodeUris;
 	public HiveScenarioMarauderConfig(String connectString, Collection<String> dataNodeUris) {
-		try { 
-			hive = Hive.load(connectString);
-			this.dataNodeUris = dataNodeUris;
-		} catch (HiveException e) {
-			throw new RuntimeException(e);
-		}
+		hive = Hive.load(connectString);
+		this.dataNodeUris = dataNodeUris;
 	}
 	
 	public Hive getHive() {
@@ -45,13 +37,13 @@ public class HiveScenarioMarauderConfig implements HiveScenarioConfig {
 	// a property of class, such as name, which will reference the id of the class (an intra-class reference.)
 	// If the classes are no also primary classes, then the secondary index created will be
 	// the class's id which references the id of another class (an inter-class reference)
-	@SuppressWarnings("unchecked")
-	public Collection<Class<? extends ResourceIdentifiable>> getResourceClasses() {
-		List<Class<? extends ResourceIdentifiable>> list = new ArrayList<Class<? extends ResourceIdentifiable>>();
-		list.add(HiveScenarioMarauderClasses.Pirate.class);
-		list.add(HiveScenarioMarauderClasses.Treasure.class);
-		return list;
-	}
+//	@SuppressWarnings("unchecked")
+//	public Collection<Class<? extends ResourceIdentifiable>> getResourceClasses() {
+//		List<Class<? extends ResourceIdentifiable>> list = new ArrayList<Class<? extends ResourceIdentifiable>>();
+//		list.add(HiveScenarioMarauderClasses.Pirate.class);
+//		list.add(HiveScenarioMarauderClasses.Treasure.class);
+//		return list;
+//	}
 	
 	public String getHiveIndexesUri() {
 		return hive.getHiveUri();

@@ -39,9 +39,8 @@ public abstract class Schema extends JdbcDaoSupport {
 	
 	/**
 	 * Create the schema in the database.
-	 * @throws SQLException
 	 */
-	public void install() throws SQLException {
+	public void install() {
 		// Register any new Global tables here
 		for (TableInfo table : getTables())
 			createTable(table);

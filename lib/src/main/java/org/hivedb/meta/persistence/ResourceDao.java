@@ -12,6 +12,7 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.hivedb.HiveRuntimeException;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -43,7 +44,7 @@ public class ResourceDao extends JdbcDaoSupport implements
 		return results;
 	}
 
-	public Integer create(Resource newObject) throws SQLException {
+	public Integer create(Resource newObject) {
 		Object[] parameters = new Object[] { newObject.getName(), newObject.getPartitionDimension().getId()};
 		KeyHolder generatedKey = new GeneratedKeyHolder();
 		JdbcTemplate j = getJdbcTemplate();
@@ -54,10 +55,10 @@ public class ResourceDao extends JdbcDaoSupport implements
 		int rows = j.update(creatorFactory
 				.newPreparedStatementCreator(parameters), generatedKey);
 		if (rows != 1)
-			throw new SQLException("Unable to create Resource: "
+			throw new HiveRuntimeException("Unable to create Resource: "
 					+ parameters);
 		if (generatedKey.getKeyList().size() == 0)
-			throw new SQLException("Unable to retrieve generated primary key");
+			throw new HiveRuntimeException("Unable to retrieve generated primary key");
 		newObject.updateId(generatedKey.getKey().intValue());
 		
 		// dependencies
@@ -67,7 +68,7 @@ public class ResourceDao extends JdbcDaoSupport implements
 		return new Integer(newObject.getId());
 	}
 
-	public void update(Resource resource) throws SQLException {
+	public void update(Resource resource) {
 		Object[] parameters = new Object[] { resource.getName(), resource.getPartitionDimension().getId(), resource.getId()};
 		KeyHolder generatedKey = new GeneratedKeyHolder();
 		JdbcTemplate j = getJdbcTemplate();
@@ -78,10 +79,10 @@ public class ResourceDao extends JdbcDaoSupport implements
 		int rows = j.update(creatorFactory
 				.newPreparedStatementCreator(parameters), generatedKey);
 		if (rows != 1)
-			throw new SQLException("Unable to update Resource: " + resource.getId());
+			throw new HiveRuntimeException("Unable to update Resource: " + resource.getId());
 	}
 	
-	public void delete(Resource resource) throws SQLException {
+	public void delete(Resource resource) {
 		// dependencies
 		for (SecondaryIndex si : resource.getSecondaryIndexes())
 			new SecondaryIndexDao(ds).create(si);
@@ -95,7 +96,7 @@ public class ResourceDao extends JdbcDaoSupport implements
 		int rows = j.update(creatorFactory
 				.newPreparedStatementCreator(parameters));
 		if (rows != 1)
-			throw new SQLException("Unable to delete resource for id: " + resource.getId());
+			throw new HiveRuntimeException("Unable to delete resource for id: " + resource.getId());
 	}
 
 	protected class ResourceRowMapper implements RowMapper {

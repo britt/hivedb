@@ -14,6 +14,7 @@ public class NodeFillStatisticsMBean extends StandardMBean implements
 	private long capacity = 0;
 	private RollingAverageStatistics stats;
 	
+	//Exception required by StandardMBean
 	public NodeFillStatisticsMBean(long capacity, long window, long interval)
 			throws NotCompliantMBeanException {
 		super(NodeFillStatistics.class);

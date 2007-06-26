@@ -4,7 +4,7 @@
  */
 package org.hivedb.meta;
 
-import org.hivedb.HiveException;
+import org.hivedb.HiveRuntimeException;
 import org.hivedb.util.HiveUtils;
 
 /**
@@ -38,12 +38,12 @@ public class Access {
 		return writeShareLevel;
 	}
 	
-	public static AccessType parseType(String accessTypeString) throws HiveException {
+	public static AccessType parseType(String accessTypeString) {
 		if (AccessType.ReadWrite.toString().equals(accessTypeString))
 			return AccessType.ReadWrite;
 		if (AccessType.Read.toString().equals(accessTypeString))
 			return AccessType.Read;
-		throw new HiveException("Unknown access type: " + accessTypeString);
+		throw new HiveRuntimeException("Unknown access type: " + accessTypeString);
 	}
 	public int hashCode() {
 		return HiveUtils.makeHashCode(new Object[] {

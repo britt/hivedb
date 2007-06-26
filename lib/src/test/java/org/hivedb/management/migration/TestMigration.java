@@ -1,5 +1,7 @@
 package org.hivedb.management.migration;
 
+import static org.testng.AssertJUnit.assertEquals;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,6 +10,7 @@ import java.util.List;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
+import org.hivedb.HiveRuntimeException;
 import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
 import org.hivedb.meta.Directory;
 import org.hivedb.meta.IndexSchema;
@@ -20,7 +23,6 @@ import org.hivedb.util.functional.Pair;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import static org.testng.AssertJUnit.*;
 
 public class TestMigration extends HiveTestCase {
 	
@@ -283,8 +285,8 @@ public class TestMigration extends HiveTestCase {
 		
 		@Override
 		public void updatePrimaryIndexNode(PartitionDimension partitionDimension,
-				Object primaryIndexKey, Node node) throws HiveException {
-			throw new HiveException("");
+				Object primaryIndexKey, Node node) {
+			throw new HiveRuntimeException("");
 		}
 		
 	}
