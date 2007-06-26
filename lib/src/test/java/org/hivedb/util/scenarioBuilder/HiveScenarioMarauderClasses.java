@@ -44,8 +44,8 @@ public class HiveScenarioMarauderClasses {
 		// Because Pirate is also a PrimaryIndexIdentifiable the argument is equal to this.
 		public ResourceIdentifiable generate(PrimaryIndexIdentifiable primaryIndexIdentifiable) {
 			
-//			if (this != primaryIndexIdentifiable)
-//				throw new RuntimeException("Excpected equality here");
+			if (this != primaryIndexIdentifiable)
+				throw new RuntimeException("Excpected equality here");
 			return this;
 		}
 		

@@ -1131,7 +1131,7 @@ public class Hive implements Synchronizeable, Observer {
 				.getSecondaryIndex(secondaryIndexName), secondaryIndexKey);
 	}
 	
-	private NodeSemaphore getNodeSemaphoreOfSecondaryIndexKey(SecondaryIndex secondaryIndex,
+	private Collection<NodeSemaphore> getNodeSemaphoreOfSecondaryIndexKey(SecondaryIndex secondaryIndex,
 			Object secondaryIndexKey) {
 		PartitionDimension partitionDimension = secondaryIndex.getResource()
 				.getPartitionDimension();

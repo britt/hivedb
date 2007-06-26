@@ -37,9 +37,12 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.simple.ParameterizedRowMapper;
+import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
+import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
 
-public class Directory extends JdbcDaoSupport {
+public class Directory extends SimpleJdbcDaoSupport {
 	private PartitionDimension partitionDimension;
 	private Counter performanceStatistics;
 	private boolean performanceMonitoringEnabled = false;
@@ -394,18 +397,19 @@ public class Directory extends JdbcDaoSupport {
 		}
 	}
 	
-	public NodeSemaphore getNodeSemaphoreOfSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey)
+	public Collection<NodeSemaphore> getNodeSemaphoreOfSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey)
 	{
-		final JdbcTemplate j = getJdbcTemplate();
-		StatisticsProxy<NodeSemaphore> proxy = new StatisticsProxy<NodeSemaphore>(performanceStatistics, SECONDARYINDEXREADCOUNT, SECONDARYINDEXREADFAILURES, SECONDARYINDEXREADTIME) {
+		final SimpleJdbcTemplate j = getSimpleJdbcTemplate();
+		StatisticsProxy<Collection<NodeSemaphore>> proxy = new StatisticsProxy<Collection<NodeSemaphore>>(performanceStatistics, SECONDARYINDEXREADCOUNT, SECONDARYINDEXREADFAILURES, SECONDARYINDEXREADTIME) {
+			@SuppressWarnings("unchecked")
 			@Override
-			protected NodeSemaphore doWork() throws RuntimeException {
+			protected Collection<NodeSemaphore> doWork() throws RuntimeException {
 				try {
-					return (NodeSemaphore) j.queryForObject("select p.node,p.read_only from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
+					return j.query("select p.node,p.read_only from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
 							+ " join " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex) + " s on s.pkey = p.id"
 							+ " where s.id =  ?",
-							new Object[] { secondaryIndexKey },
-							new NodeSemaphoreRowMapper());
+							new NodeSemaphoreRowMapper(),
+							secondaryIndexKey);
 				}
 				catch (RuntimeException e) {
 					throw new HiveKeyNotFoundException(String.format("Error looking for key %s of secondary index is not in the hive", secondaryIndexKey, secondaryIndex.getName()), e);
@@ -420,18 +424,18 @@ public class Directory extends JdbcDaoSupport {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public Object getPrimaryIndexKeyOfSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey)
+	public Collection<Object> getPrimaryIndexKeyOfSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey)
 	{
-		final JdbcTemplate j = getJdbcTemplate();
-		StatisticsProxy<Object> proxy = new StatisticsProxy<Object>(performanceStatistics, SECONDARYINDEXREADCOUNT, SECONDARYINDEXREADFAILURES, SECONDARYINDEXREADTIME) {
+		final SimpleJdbcTemplate j = getSimpleJdbcTemplate();
+		StatisticsProxy<Collection<Object>> proxy = new StatisticsProxy<Collection<Object>>(performanceStatistics, SECONDARYINDEXREADCOUNT, SECONDARYINDEXREADFAILURES, SECONDARYINDEXREADTIME) {
 			@Override
-			protected Object doWork() throws RuntimeException {
+			protected Collection<Object> doWork() throws RuntimeException {
 				try {
-				return j.queryForObject("select p.id from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
+				return j.query("select p.id from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
 						+ " join " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex) + " s on s.pkey = p.id"
 						+ " where s.id =  ?",
-						new Object[] { secondaryIndexKey },
-						new ObjectRowMapper(secondaryIndex.getResource().getPartitionDimension().getColumnType()));
+						new ObjectRowMapper(secondaryIndex.getResource().getPartitionDimension().getColumnType()),
+						secondaryIndexKey);
 				}
 				catch (RuntimeException e) {
 					throw new HiveKeyNotFoundException(String.format("Error looking for key %s of secondary index %s", secondaryIndexKey, secondaryIndex.getName()), e);
@@ -483,7 +487,7 @@ public class Directory extends JdbcDaoSupport {
 			return rs.getBoolean(1);		
 		}
 	}
-	private class ObjectRowMapper implements RowMapper {
+	private class ObjectRowMapper implements ParameterizedRowMapper {
 		int jdbcType;
 		public ObjectRowMapper(int jdbcType)
 		{
@@ -500,7 +504,7 @@ public class Directory extends JdbcDaoSupport {
 		}
 	}
 	
-	private class NodeSemaphoreRowMapper implements RowMapper {
+	private class NodeSemaphoreRowMapper implements ParameterizedRowMapper {
 		public Object mapRow(ResultSet rs, int arg1) throws SQLException {
 			return new NodeSemaphore(rs.getInt("node"), rs.getBoolean("read_only"));
 		}	

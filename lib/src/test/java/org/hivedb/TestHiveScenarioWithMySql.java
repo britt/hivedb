@@ -14,7 +14,7 @@ public class TestHiveScenarioWithMySql extends HiveMySqlTestCase {
 	 *  Fills a hive with metadata and indexes to validate CRUD operations
 	 *  This tests works but is commented out due to its slowness
 	 */
-//	@Test(groups={"mysql"})
+	@Test(groups={"mysql"})
 	public void testPirateDomain() throws Exception {
 		new HiveScenarioTest(new HiveScenarioMarauderConfig(getConnectString(getHiveDatabaseName()), getDataUris())).performTest(10,10);
 	}

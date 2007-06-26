@@ -11,6 +11,12 @@ public class Atom {
 			return item;
 		throw new Exception("Iterable has no items");
 	}
+	public static<T> T getFirstOrThrow(Iterable<T> iterable)
+	{
+		for (T item : iterable)
+			return item;
+		throw new RuntimeException("Iterable has no items");
+	}
 	public static<T> T getFirstOrNull(Iterable<T> iterable)
 	{
 		for (T item : iterable)

@@ -99,19 +99,20 @@ public class HiveScenarioTest {
 					
 					assertTrue(secondaryIndexKeys.contains(secondaryIndexIdentifiable.getSecondaryIndexKey()));
 			
-					NodeSemaphore nodeSemaphoreOfSecondaryIndexKey = directory.getNodeSemaphoreOfSecondaryIndexKey(secondaryIndex, secondaryIndexIdentifiable.getSecondaryIndexKey());
-					assertNotNull(nodeSemaphoreOfSecondaryIndexKey);
+					Collection<NodeSemaphore> nodeSemaphoreOfSecondaryIndexKeys = directory.getNodeSemaphoreOfSecondaryIndexKey(secondaryIndex, secondaryIndexIdentifiable.getSecondaryIndexKey());
+					assertTrue(nodeSemaphoreOfSecondaryIndexKeys.size() > 0);
 						
 						// Assert that querying for the primary key of the secondary index key yields what we expect
 						Object expectedPrimaryIndexKey = secondaryIndexIdentifiable.getResourceIdentifiable().getPrimaryIndexIdentifiable().getPrimaryIndexKey();
-						Object actualPrimaryIndexKey = directory.getPrimaryIndexKeyOfSecondaryIndexKey(
+						Collection<Object> actualPrimaryIndexKeys = directory.getPrimaryIndexKeyOfSecondaryIndexKey(
 								secondaryIndex,
 								secondaryIndexIdentifiable.getSecondaryIndexKey());
-						assertEquals(expectedPrimaryIndexKey, actualPrimaryIndexKey);
+						assertTrue(Filter.grepItemAgainstList(expectedPrimaryIndexKey, actualPrimaryIndexKeys));
 						
-						// Assert that the node of the secondary index key is the same as that of the primary index key
-						NodeSemaphore nodeSemaphoreOfPrimaryIndexKey = directory.getNodeSemamphoreOfPrimaryIndexKey(actualPrimaryIndexKey);
-						assertEquals(nodeSemaphoreOfSecondaryIndexKey, nodeSemaphoreOfPrimaryIndexKey);						
+						// Assert that one of the nodes of the secondary index key is the same as that of the primary index key
+						// There are multiple nodes returned when multiple primray index keys exist for a secondary index key
+						NodeSemaphore nodeSemaphoreOfPrimaryIndexKey = directory.getNodeSemamphoreOfPrimaryIndexKey(expectedPrimaryIndexKey);
+						assertTrue(Filter.grepItemAgainstList(nodeSemaphoreOfPrimaryIndexKey, nodeSemaphoreOfSecondaryIndexKeys));						
 				}
 			}	
 		}

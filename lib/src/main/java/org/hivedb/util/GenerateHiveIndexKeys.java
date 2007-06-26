@@ -89,6 +89,7 @@ public class GenerateHiveIndexKeys {
 			final Collection<PrimaryIndexIdentifiable> primaryIndexIdentifiables) {
 			
 		return new Unary<ResourceIdentifiable, Collection<ResourceIdentifiable>>() {
+			@SuppressWarnings("unchecked")
 			public Collection<ResourceIdentifiable>
 				f(final ResourceIdentifiable resourceIdentifiablePrototype) {	
 				
@@ -97,20 +98,37 @@ public class GenerateHiveIndexKeys {
 				// to the number of PrimaryIndexIdentifiable instances that we have, since it's a 1-to-1 relationship.
 				// Also, if it's not the sameClass then we want to construct the ResourceIdentifiable with a reference
 				// to it's PrimaryIndexIdentifiable instance.
-				final boolean sameClass = (resourceIdentifiablePrototype.equals(resourceIdentifiablePrototype.getPrimaryIndexIdentifiable().getClass()));
+				final boolean sameClass = (resourceIdentifiablePrototype.getClass().equals(resourceIdentifiablePrototype.getPrimaryIndexIdentifiable().getClass()));
 				final Iterable<PrimaryIndexIdentifiable> primaryPartitionIndexInstanceIterable = new RingIteratorable<PrimaryIndexIdentifiable>(
 					primaryIndexIdentifiables,
 					sameClass
 						? Math.min(resourceInstanceCount, primaryIndexIdentifiables.size()) // limit it
 						: resourceInstanceCount); 	// follow our configuration preference		
 				
-				return Transform.map(
-					makeResourceIdentifiableGrower(hive, hiveScenarioConfig, resourceIdentifiablePrototype, sameClass),
-					primaryPartitionIndexInstanceIterable);	
+				Collection<ResourceIdentifiable> resourceIdentifiables =  (Collection<ResourceIdentifiable>) (sameClass 
+					? primaryIndexIdentifiables
+					: Transform.map(
+							makeResourceIdentifiableGrower(hive, hiveScenarioConfig, resourceIdentifiablePrototype),
+							primaryPartitionIndexInstanceIterable));	
+				
+				// Persist all the secondary indexes here. This really should be called after creating
+				// all secondary indexes for all primary idexes identifiables, but it's easier to do here
+				for (ResourceIdentifiable resourceIdentifiable : resourceIdentifiables)
+					for (SecondaryIndexIdentifiable secondaryIndexIdentifiable : resourceIdentifiable.getSecondaryIndexIdentifiables()) 
+						persistSecondaryIndexIdentifiable(hive, secondaryIndexIdentifiable);
+				
+				return resourceIdentifiables;
 		}};	
 	}
 		
-	private Unary<PrimaryIndexIdentifiable, ResourceIdentifiable> makeResourceIdentifiableGrower(final Hive hive, final HiveScenarioConfig hiveScenarioConfig, final ResourceIdentifiable resourceIdentifiablePrototype, final boolean sameClass) {
+	private void persistSecondaryIndexIdentifiable(final Hive hive, SecondaryIndexIdentifiable secondaryIndexIdentifiable) {
+		try {
+			persister.persistSecondaryIndexIdentifiableInstance(hive, secondaryIndexIdentifiable);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	private Unary<PrimaryIndexIdentifiable, ResourceIdentifiable> makeResourceIdentifiableGrower(final Hive hive, final HiveScenarioConfig hiveScenarioConfig, final ResourceIdentifiable resourceIdentifiablePrototype) {
 		return new Unary<PrimaryIndexIdentifiable, ResourceIdentifiable>() { 
 			public ResourceIdentifiable f(PrimaryIndexIdentifiable primaryIndexIdentifiable) {
 				ResourceIdentifiable resourceIdentifiable = resourceIdentifiablePrototype.generate(primaryIndexIdentifiable);
@@ -119,14 +137,6 @@ public class GenerateHiveIndexKeys {
 					persistSecondaryIndexIdentifiable(hive, secondaryIndexIdentifiable);
 				}
 				return resourceIdentifiable;
-		}
-
-		private void persistSecondaryIndexIdentifiable(final Hive hive, SecondaryIndexIdentifiable secondaryIndexIdentifiable) {
-			try {
-				persister.persistSecondaryIndexIdentifiableInstance(hive, secondaryIndexIdentifiable);
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
 		}};
 	}	
 }

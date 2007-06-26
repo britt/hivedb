@@ -111,6 +111,11 @@ public class Transform {
 							map.entrySet());
 	}
 
-
+	@SuppressWarnings("unchecked")
+	public static<F,T> Collection<T> castCollection(Collection<F> collection)
+	{
+		return (Collection<T>)collection;
+	}
+	
 }
 
