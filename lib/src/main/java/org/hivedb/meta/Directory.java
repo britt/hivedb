@@ -26,8 +26,6 @@ import org.hivedb.util.Proxies;
 import org.hivedb.util.database.RowMappers;
 import org.hivedb.util.database.Statements;
 import org.hivedb.util.functional.Filter;
-import org.hivedb.util.functional.Transform;
-import org.hivedb.util.functional.Unary;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
@@ -67,7 +65,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver {
 	/* (non-Javadoc)
 	 * @see org.hivedb.meta.HiveDirectory#insertPrimaryIndexKey(org.hivedb.meta.Node, java.lang.Object)
 	 */
-	public void insertPrimaryIndexKey(final Collection<Node> nodes, final Object primaryIndexKey) {
+	public void insertPrimaryIndexKey(final Node node, final Object primaryIndexKey) {
 		final JdbcTemplate j = getJdbcTemplate();
 		final PreparedStatementCreatorFactory insertFactory = 
 			Statements.newStmtCreatorFactory(
@@ -76,18 +74,17 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver {
 					Types.INTEGER, Types.DATE);
 		
 		try {
-			for(Node node : nodes) {
+			
 				final Object[] parameters = new Object[] {primaryIndexKey,node.getId(),new Date(System.currentTimeMillis()) };
 				StatisticsProxy<Integer> proxy = 
 					Proxies.newJdbcUpdateProxy(performanceStatistics,PRIMARY_INDEX_WRITE,parameters,insertFactory,j);
 				if(proxy.execute() == 0)
 					throw new HiveRuntimeException(String.format("Unable to insert primary key %s into node %s", primaryIndexKey, node.getId()));
-			}
 		} catch(Exception e) {
 			deletePrimaryIndexKey(primaryIndexKey);
 			throw new HiveRuntimeException(
-					String.format("Error while inserting primary key %s into nodes %s. Caused by: %s", 
-							primaryIndexKey, getIds(nodes), e.getMessage()), e);
+					String.format("Error while inserting primary key %s into node %s. Caused by: %s", 
+							primaryIndexKey, node.getName(), e.getMessage()), e);
 		}
 	}
 
@@ -105,14 +102,6 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver {
 				JdbcTypeMapper.primitiveTypeToJdbcType(secondaryIndexKey.getClass()),
 				JdbcTypeMapper.primitiveTypeToJdbcType(primaryindexKey.getClass()));
 		Proxies.newJdbcUpdateProxy(performanceStatistics, SECONDARY_INDEX_WRITE, parameters, insertFactory, getJdbcTemplate()).execute();
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.hivedb.meta.HiveDirectory#updatePrimaryIndexKey(org.hivedb.meta.Node, java.lang.Object)
-	 */
-	public void updatePrimaryIndexKey(final Collection<Node> nodes, final Object primaryIndexKey) {
-		deletePrimaryIndexKey(primaryIndexKey);
-		insertPrimaryIndexKey(nodes, primaryIndexKey);
 	}
 	
 	/* (non-Javadoc)
@@ -142,9 +131,9 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver {
 		};
 		PreparedStatementCreatorFactory updateFactory = 
 			Statements.newStmtCreatorFactory(updateSecondaryIndexSql(secondaryIndex),
-					JdbcTypeMapper.primitiveTypeToJdbcType(originalPrimaryIndexKey.getClass()),
+					JdbcTypeMapper.primitiveTypeToJdbcType(newPrimaryIndexKey.getClass()),
 					JdbcTypeMapper.primitiveTypeToJdbcType(secondaryIndexKey.getClass()),
-					JdbcTypeMapper.primitiveTypeToJdbcType(newPrimaryIndexKey.getClass()));
+					JdbcTypeMapper.primitiveTypeToJdbcType(originalPrimaryIndexKey.getClass()));
 		StatisticsProxy<Integer> proxy = Proxies.newJdbcUpdateProxy(performanceStatistics, SECONDARY_INDEX_WRITE, parameters, updateFactory, getJdbcTemplate());
 		if(proxy.execute() == 0)
 			throw new HiveKeyNotFoundException(String.format("Unable to update Secondary index key %s key not found.", secondaryIndexKey), originalPrimaryIndexKey);
@@ -180,8 +169,8 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver {
 		};
 		PreparedStatementCreatorFactory deleteFactory = 
 			Statements.newStmtCreatorFactory(deleteSingleSecondaryIndexKey(secondaryIndex), 
-					JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass()), 
-					JdbcTypeMapper.primitiveTypeToJdbcType(secondaryIndexKey.getClass()));
+					JdbcTypeMapper.primitiveTypeToJdbcType(secondaryIndexKey.getClass()),
+					JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass()));
 		Proxies.newJdbcUpdateProxy(performanceStatistics, SECONDARY_INDEX_DELETE, parameters, deleteFactory, getJdbcTemplate()).execute();
 	}
 	
@@ -426,13 +415,6 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver {
 		return "select p.id from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
 				+ " join " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex) + " s on s.pkey = p.id"
 				+ " where s.id =  ?";
-	}
-	
-	private Collection<Integer> getIds(Collection<Node> nodes) {
-		return Transform.map(new Unary<Node, Integer>(){
-			public Integer f(Node item) {
-				return item.getId();
-			}}, nodes);
 	}
 	
 	public Counter getPerformanceStatistics() {

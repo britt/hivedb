@@ -7,7 +7,6 @@ import java.sql.Types;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveReadOnlyException;
@@ -48,7 +47,7 @@ public class DirectoryTest extends HiveTestCase {
 		NodeResolver d = getDirectory();
 		final Integer key = new Integer(43);
 		Node firstNode = Atom.getFirst(dimension.getNodeGroup().getNodes());
-		d.insertPrimaryIndexKey( Arrays.asList( new Node[] {Atom.getFirst(dimension.getNodeGroup().getNodes())}), key);
+		d.insertPrimaryIndexKey( Atom.getFirst(dimension.getNodeGroup().getNodes()), key);
 		for(Integer id: d.getNodeIdsOfPrimaryIndexKey(key))
 			assertEquals((Integer)firstNode.getId(), id);
 	}
@@ -57,7 +56,8 @@ public class DirectoryTest extends HiveTestCase {
 	public void testInsertPrimaryIndexKeyMultipleNodes() throws Exception{
 		NodeResolver d = getDirectory();
 		final Integer key = new Integer(43);
-		d.insertPrimaryIndexKey( dimension.getNodeGroup().getNodes(), key);
+		for(Node node : dimension.getNodeGroup().getNodes())
+			d.insertPrimaryIndexKey( node, key);
 		Collection<Integer> nodeIds = d.getNodeIdsOfPrimaryIndexKey(key);
 		AssertUtils.assertUnique(nodeIds);
 		assertEquals(dimension.getNodeGroup().getNodes().size(), nodeIds.size());
@@ -77,7 +77,8 @@ public class DirectoryTest extends HiveTestCase {
 	public void testDeletePrimaryIndexKeyMultipleNodes() throws Exception {
 		NodeResolver d = getDirectory();
 		for(Integer key: getPrimaryIndexKeys())
-			d.insertPrimaryIndexKey(d.getPartitionDimension().getNodeGroup().getNodes(), key);
+			for(Node node : d.getPartitionDimension().getNodeGroup().getNodes())
+			d.insertPrimaryIndexKey(node, key);
 		for(Integer key : getPrimaryIndexKeys()){
 			d.deletePrimaryIndexKey(key);
 			assertEquals(0,d.getNodeIdsOfPrimaryIndexKey(key).size());
@@ -94,18 +95,6 @@ public class DirectoryTest extends HiveTestCase {
 
 	private Hive getHive() {
 		return Hive.load(getConnectString(getHiveDatabaseName()));
-	}
-	
-	@Test
-	public void testUpdatePrimaryIndexKey() throws Exception {
-		insertKeys(getHive());
-		NodeResolver d = getDirectory();
-		for(Integer key: getPrimaryIndexKeys()){
-			assertEquals(1, d.getNodeIdsOfPrimaryIndexKey(key).size());
-			d.updatePrimaryIndexKey(d.getPartitionDimension().getNodeGroup().getNodes(), key);
-			assertEquals(d.getPartitionDimension().getNodeGroup().getNodes().size(), d.getNodeIdsOfPrimaryIndexKey(key).size());
-			AssertUtils.assertUnique(d.getNodeIdsOfPrimaryIndexKey(key));
-		}
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -220,7 +209,8 @@ public class DirectoryTest extends HiveTestCase {
 	public void testGetNodeSemaphoresOfPrimaryIndexKeyMultiNode() throws Exception {
 		NodeResolver d = getDirectory();
 		for(Integer pkey : getPrimaryIndexKeys()) {
-			d.insertPrimaryIndexKey(dimension.getNodeGroup().getNodes(), pkey);
+			for(Node node : dimension.getNodeGroup().getNodes())
+				d.insertPrimaryIndexKey(node, pkey);
 			assertEquals(dimension.getNodeGroup().getNodes().size(), d.getNodeSemamphoresOfPrimaryIndexKey(pkey).size());
 		}
 	}

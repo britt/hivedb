@@ -54,7 +54,7 @@ public class IndexSchema extends Schema{
 			+ " PRIMARY KEY (id,node)"
 			+ ifMySql(", INDEX node_id (node),")
 			+ ifMySql(" INDEX last_updated (last_updated),")
-			+ ifMySql(" INDEX primary_index (id),")
+			+ ifMySql(" INDEX primary_index (id)")
 			+ " ) "
 			+ ifMySql("ENGINE=InnoDB");
 	}

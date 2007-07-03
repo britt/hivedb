@@ -5,12 +5,10 @@ import java.util.List;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
-import org.hivedb.HiveReadOnlyException;
 import org.hivedb.meta.Directory;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.NodeResolver;
 import org.hivedb.meta.PartitionDimension;
-import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.Lists;
 import org.hivedb.util.functional.Collect;
 import org.hivedb.util.functional.Pair;
@@ -162,12 +160,15 @@ public class HiveMigrator implements Migrator {
 			}
 			//Update the directory entries
 			try {
-				hive.updatePrimaryIndexNode(dimension, key, destinations);
+				dir.deletePrimaryIndexKey(key);
+				for(Node destination : destinations)
+					dir.insertPrimaryIndexKey(destination, key);
 			} catch( RuntimeException e) {
-				throw new MigrationException(
-						String.format("Failed to update directory entry for %s. Records may be orphaned.", 
-								key), e);
-			} catch (HiveReadOnlyException e) {
+				try {
+					//try to repair the damage
+					for(Node origin : origins)
+						dir.insertPrimaryIndexKey(origin, key);
+				} catch(Exception ex) {}
 				throw new MigrationException(
 						String.format("Failed to update directory entry for %s. Records may be orphaned.", 
 								key), e);

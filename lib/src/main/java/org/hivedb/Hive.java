@@ -686,10 +686,10 @@ public class Hive implements Synchronizeable, Observer {
 			Object primaryIndexKey) throws HiveReadOnlyException {
 		// TODO: Consider redesign of NodeGroup to perform assignment, or at
 		// least provider direct iteration over Nodes
-		Collection<Node> nodes = partitionDimension.getAssigner().chooseNodes(
+		Node node = partitionDimension.getAssigner().chooseNode(
 				partitionDimension.getNodeGroup().getNodes(), primaryIndexKey);
-		throwIfReadOnly("Inserting a new primary index key", nodes);
-		directories.get(partitionDimension.getName()).insertPrimaryIndexKey(nodes,
+		throwIfReadOnly("Inserting a new primary index key", node);
+		directories.get(partitionDimension.getName()).insertPrimaryIndexKey(node,
 				primaryIndexKey);
 	}
 
@@ -771,30 +771,6 @@ public class Hive implements Synchronizeable, Observer {
 
 	/**
 	 * 
-	 * Updates the node of the given primary index key for the given partition
-	 * dimension.
-	 * 
-	 * @param partitionDimension
-	 *            A partition dimension of the hive
-	 * @param primaryIndexKey
-	 *            An existing primary index key in the primary index
-	 * @param node
-	 *            A node of the node group of the partition dimension
-	 * @throws HiveException
-	 *             Throws if the primary index key is not yet in the primary
-	 *             index, or if the hive, primary index or node is currently
-	 *             read only.
-	 * @throws SQLException
-	 *             Throws if there is a persistence error
-	 */
-	public void updatePrimaryIndexNode(PartitionDimension partitionDimension,
-			Object primaryIndexKey, Collection<Node> nodes) throws HiveReadOnlyException {
-		directories.get(partitionDimension.getName()).updatePrimaryIndexKey(nodes,
-				primaryIndexKey);
-	}
-
-	/**
-	 * 
 	 * Updates the read-only status of the given primary index key for the given
 	 * partition dimension.
 	 * 
@@ -853,7 +829,6 @@ public class Hive implements Synchronizeable, Observer {
 			Object originalPrimaryIndexKey, Object newPrimaryIndexKey) throws HiveReadOnlyException {
 		
 		throwIfReadOnly("Updating primary index key of secondary index key");
-		getPrimaryIndexKeyOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
 		directories.get(secondaryIndex.getResource().getPartitionDimension().getName())
 				.updatePrimaryIndexOfSecondaryKey(secondaryIndex,
 						secondaryIndexKey, originalPrimaryIndexKey, newPrimaryIndexKey);
@@ -897,6 +872,7 @@ public class Hive implements Synchronizeable, Observer {
 		if (!doesPrimaryIndexKeyExist(partitionDimension, primaryIndexKey))
 			throw new HiveKeyNotFoundException("The primary index key " + primaryIndexKey
 					+ " does not exist",primaryIndexKey);
+		
 		for(NodeSemaphore node: getNodeSemaphoresOfPrimaryIndexKey(partitionDimension, primaryIndexKey)){
 			throwIfReadOnly("Deleting primary index key", partitionDimension.getNodeGroup().getNode(node.getId()), primaryIndexKey,
 					getReadOnlyOfPrimaryIndexKey(partitionDimension,
@@ -1129,22 +1105,22 @@ public class Hive implements Synchronizeable, Observer {
 	 *            The secondary in
 	 * @return
 	 */
-	public Object getPrimaryIndexKeyOfSecondaryIndexKey(
+	public Collection<Object> getPrimaryIndexKeysOfSecondaryIndexKey(
 			SecondaryIndex secondaryIndex, Object secondaryIndexKey) {
 		PartitionDimension partitionDimension = secondaryIndex.getResource()
 				.getPartitionDimension();
-		Object primaryIndexKey = directories.get(partitionDimension.getName())
+		Collection<Object> primaryIndexKeys = directories.get(partitionDimension.getName())
 				.getPrimaryIndexKeysOfSecondaryIndexKey(secondaryIndex,
 						secondaryIndexKey);
-		if (primaryIndexKey != null)
-			return primaryIndexKey;
+		if (primaryIndexKeys.size() > 0)
+			return primaryIndexKeys;
 		else
 			throw new HiveKeyNotFoundException(
 				String
 						.format(
 								"Secondary index key %s of partition dimension %s on secondary index %s not found.",
 								secondaryIndex.toString(), partitionDimension
-										.getName(), secondaryIndex.getName()), primaryIndexKey);
+										.getName(), secondaryIndex.getName()), primaryIndexKeys);
 	}
 
 	/**
@@ -1323,6 +1299,7 @@ public class Hive implements Synchronizeable, Observer {
 					+ node.getId() + " is currently read-only.");
 	}
 	
+	@SuppressWarnings("unused")
 	private void throwIfReadOnly(String errorMessage, Collection<Node> nodes) throws HiveReadOnlyException {
 		for(Node node : nodes)
 			throwIfReadOnly(errorMessage, node);

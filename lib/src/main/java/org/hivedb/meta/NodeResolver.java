@@ -15,7 +15,7 @@ public interface NodeResolver {
 	 * @param nodes The nodes to add the primary index key to.
 	 * @param primaryIndexKey The key to be added
 	 */
-	public void insertPrimaryIndexKey(final Collection<Node> nodes, final Object primaryIndexKey);
+	public void insertPrimaryIndexKey(final Node node, final Object primaryIndexKey);
 
 	/***
 	 * Add a secondary index key
@@ -24,13 +24,6 @@ public interface NodeResolver {
 	 * @param primaryindexKey
 	 */
 	public void insertSecondaryIndexKey(final SecondaryIndex secondaryIndex,final Object secondaryIndexKey, Object primaryindexKey);
-
-	/***
-	 * Change the nodes of a primary index key.
-	 * @param nodes
-	 * @param primaryIndexKey
-	 */
-	public void updatePrimaryIndexKey(final Collection<Node> nodes,final Object primaryIndexKey);
 
 	/***
 	 * Set the write lock on a priamry index key.

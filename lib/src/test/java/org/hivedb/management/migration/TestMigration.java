@@ -9,13 +9,10 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hivedb.Hive;
-import org.hivedb.HiveRuntimeException;
-import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
 import org.hivedb.meta.Directory;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.NodeResolver;
-import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.database.DerbyUtils;
 import org.hivedb.util.database.HiveTestCase;
@@ -110,36 +107,6 @@ public class TestMigration extends HiveTestCase {
 		//Records are intact on the origin node
 		assertEquals(primaryKey, pMover.get(primaryKey, origin));
 		assertEquals(secondaryKey, new SecondaryMover().get(secondaryKey, origin));
-	}
-	
-	@Test
-	public void testFailDuringDirectoryUpdate() throws Exception {
-		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
-		Integer primaryKey = new Integer(2);
-		Integer secondaryKey = new Integer(7);
-		
-		Pair<Node, Node> nodes = initializeTestData(hive, primaryKey, secondaryKey);
-		Node origin = nodes.getKey();
-		Node destination = nodes.getValue();
-		NodeResolver dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), new HiveBasicDataSource(hive.getPartitionDimension(partitionDimensionName()).getIndexUri()));
-		PartitionKeyMover<Integer> pMover = new PrimaryMover(origin.getUri());
-		
-		NoUpdateHive noUpdateHive = new NoUpdateHive(hive.getHiveUri(), 1, false, hive.getPartitionDimensions(), null);
-		noUpdateHive.sync();
-		Migrator m = new HiveMigrator(noUpdateHive, partitionDimensionName());
-		try {
-			m.migrate(primaryKey, Arrays.asList(new String[]{destination.getName()}), pMover);
-		} catch( Exception e) {
-//			e.printStackTrace();
-			//Quash
-		}
-		//Directory still points to origin
-		assertNotNull(Filter.grepItemAgainstList(origin.getId(), dir.getNodeIdsOfPrimaryIndexKey(primaryKey)));
-		//Records exist on both nodes
-		assertEquals(primaryKey, pMover.get(primaryKey, origin));
-		assertEquals(secondaryKey, new SecondaryMover().get(secondaryKey, origin));
-		assertEquals(primaryKey, pMover.get(primaryKey, destination));
-		assertEquals(secondaryKey, new SecondaryMover().get(secondaryKey, destination));
 	}
 	
 	@Test
@@ -278,21 +245,7 @@ public class TestMigration extends HiveTestCase {
 		}
 		
 	}
-
-	class NoUpdateHive extends Hive {
-		
-		protected NoUpdateHive(String hiveUri, int revision, boolean readOnly, Collection<PartitionDimension> partitionDimensions, PartitionKeyStatisticsDao statistics) {
-			super(hiveUri, revision, readOnly, partitionDimensions);
-		}
-		
-		@Override
-		public void updatePrimaryIndexNode(PartitionDimension partitionDimension,
-				Object primaryIndexKey, Collection<Node> node) {
-			throw new HiveRuntimeException("");
-		}
-		
-	}
-
+	
 	@Override
 	public Collection<String> getDatabaseNames() {
 		return Arrays.asList(new String[]{getHiveDatabaseName(), "data1","data2"});
