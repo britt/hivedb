@@ -1,16 +1,20 @@
 package org.hivedb;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.hivedb.management.statistics.HivePerformanceStatistics;
 import org.hivedb.meta.AccessType;
-import org.hivedb.meta.Directory;
 import org.hivedb.meta.Node;
+import org.hivedb.meta.NodeResolver;
 import org.hivedb.meta.NodeSemaphore;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.HiveUtils;
+import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Unary;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 
 /**
@@ -22,13 +26,13 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	private String partitionDimension;
 	private Map<Integer, SimpleJdbcDaoSupport> jdbcDaoSupports;
 	private HivePerformanceStatistics stats;
-	private Directory directory;
+	private NodeResolver directory;
 	
-	public JdbcDaoSupportCacheImpl(String partitionDimension, Hive hive, Directory directory) {
+	public JdbcDaoSupportCacheImpl(String partitionDimension, Hive hive, NodeResolver directory) {
 		this(partitionDimension, hive, directory, null);
 	}
 	
-	public JdbcDaoSupportCacheImpl(String partitionDimension, Hive hive, Directory directory, HivePerformanceStatistics stats) {
+	public JdbcDaoSupportCacheImpl(String partitionDimension, Hive hive, NodeResolver directory, HivePerformanceStatistics stats) {
 		this.partitionDimension = partitionDimension;
 		this.hive = hive;
 		this.jdbcDaoSupports = new ConcurrentHashMap<Integer, SimpleJdbcDaoSupport>();
@@ -43,7 +47,6 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	 * @throws HiveException
 	 */
 	public void sync() {
-		
 		jdbcDaoSupports.clear();
 		for(Node node : hive.getPartitionDimension(partitionDimension).getNodeGroup().getNodes()) {
 			jdbcDaoSupports.put(hash(node.getId(), AccessType.Read), new DataNodeJdbcDaoSupport(node.getUri(), true));
@@ -113,9 +116,12 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	 * @return
 	 * @throws HiveReadOnlyException
 	 */
-	public SimpleJdbcDaoSupport get(Object primaryIndexKey, AccessType intention) throws HiveReadOnlyException {
-		NodeSemaphore semaphore = directory.getNodeSemamphoreOfPrimaryIndexKey(primaryIndexKey);
-		return get(semaphore, intention);
+	public Collection<SimpleJdbcDaoSupport> get(Object primaryIndexKey, final AccessType intention) throws HiveReadOnlyException {
+		Collection<NodeSemaphore> semaphores = directory.getNodeSemamphoresOfPrimaryIndexKey(primaryIndexKey);
+		Collection<SimpleJdbcDaoSupport> supports = new ArrayList<SimpleJdbcDaoSupport>();
+		for(NodeSemaphore semaphore : semaphores)
+			supports.add(get(semaphore, intention));
+		return supports;
 	}
 
 	/**
@@ -126,12 +132,20 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	 * @return
 	 * @throws HiveReadOnlyException
 	 */
-	public SimpleJdbcDaoSupport get(SecondaryIndex secondaryIndex, Object secondaryIndexKey, AccessType intention) throws HiveReadOnlyException {
-		try {
-			return get(directory.getNodeSemaphoreOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey), intention);
-		} catch (HiveException e) {
-			throw new RuntimeException(e);
-		}
+	public Collection<SimpleJdbcDaoSupport> get(SecondaryIndex secondaryIndex, Object secondaryIndexKey, final AccessType intention) throws HiveReadOnlyException {
+		if(AccessType.ReadWrite == intention)
+			throw new UnsupportedOperationException("Writes must be performed using the primary index key.");
+		
+		Collection<NodeSemaphore> nodeSemaphores = directory.getNodeSemaphoresOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
+		nodeSemaphores = Filter.getUnique(nodeSemaphores, new Unary<NodeSemaphore, Integer>(){
+			public Integer f(NodeSemaphore item) {
+				return item.getId();
+		}});
+		
+		Collection<SimpleJdbcDaoSupport> supports = new ArrayList<SimpleJdbcDaoSupport>();
+		for(NodeSemaphore semaphore : nodeSemaphores)
+			supports.add(get(semaphore, intention));
+		return supports;
 	}
 	private static int hash(Object node, AccessType intention) {
 		return HiveUtils.makeHashCode(new Object[] {node, intention});

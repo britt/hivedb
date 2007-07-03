@@ -13,5 +13,4 @@ public class HiveRuntimeException extends RuntimeException {
 	public HiveRuntimeException(String message, Exception inner) {
 		super(message,inner);
 	}
-
 }

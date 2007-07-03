@@ -46,13 +46,15 @@ public class IndexSchema extends Schema{
 		return 
 			"CREATE TABLE " + getPrimaryIndexTableName(partitionDimension)
 			+ " ( " 
-			+ " id " + addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(partitionDimension.getColumnType())) + " primary key not null, "
+			+ " id " + addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(partitionDimension.getColumnType())) + " not null, "
 			+ " node SMALLINT not null, "
 			+ " secondary_index_count INTEGER not null, "
 			+ " last_updated "+ JdbcTypeMapper.jdbcTypeToString(Types.DATE) +" not null, "
-			+ " read_only " +  GlobalSchema.getBooleanTypeForDialect(dialect) + " default 0"			
+			+ " read_only " +  GlobalSchema.getBooleanTypeForDialect(dialect) + " default 0,"	
+			+ " PRIMARY KEY (id,node)"
 			+ ifMySql(", INDEX node_id (node),")
-			+ ifMySql(" INDEX last_updated (last_updated)")
+			+ ifMySql(" INDEX last_updated (last_updated),")
+			+ ifMySql(" INDEX primary_index (id),")
 			+ " ) "
 			+ ifMySql("ENGINE=InnoDB");
 	}
@@ -103,5 +105,4 @@ public class IndexSchema extends Schema{
 	private String ifMySql(String sql) {
 		return (dialect.equals(HiveDbDialect.MySql) ? sql : "");
 	}
-	
 }

@@ -1,23 +1,11 @@
 package org.hivedb.meta;
 
-import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.PRIMARYINDEXDELETECOUNT;
-import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.PRIMARYINDEXDELETEFAILURES;
-import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.PRIMARYINDEXDELETETIME;
-import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.PRIMARYINDEXREADCOUNT;
-import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.PRIMARYINDEXREADFAILURES;
-import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.PRIMARYINDEXREADTIME;
-import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.PRIMARYINDEXWRITECOUNT;
-import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.PRIMARYINDEXWRITEFAILURES;
-import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.PRIMARYINDEXWRITETIME;
-import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.SECONDARYINDEXDELETECOUNT;
-import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.SECONDARYINDEXDELETEFAILURES;
-import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.SECONDARYINDEXDELETETIME;
-import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.SECONDARYINDEXREADCOUNT;
-import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.SECONDARYINDEXREADFAILURES;
-import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.SECONDARYINDEXREADTIME;
-import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.SECONDARYINDEXWRITECOUNT;
-import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.SECONDARYINDEXWRITEFAILURES;
-import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.SECONDARYINDEXWRITETIME;
+import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.PRIMARY_INDEX_DELETE;
+import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.PRIMARY_INDEX_READ;
+import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.PRIMARY_INDEX_WRITE;
+import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.SECONDARY_INDEX_DELETE;
+import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.SECONDARY_INDEX_READ;
+import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.SECONDARY_INDEX_WRITE;
 
 import java.sql.Date;
 import java.sql.ResultSet;
@@ -32,17 +20,21 @@ import org.hivedb.HiveRuntimeException;
 import org.hivedb.StatisticsProxy;
 import org.hivedb.management.statistics.Counter;
 import org.hivedb.management.statistics.NoOpStatistics;
+import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.JdbcTypeMapper;
+import org.hivedb.util.Proxies;
+import org.hivedb.util.database.RowMappers;
+import org.hivedb.util.database.Statements;
+import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Transform;
+import org.hivedb.util.functional.Unary;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.ParameterizedRowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
-import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
-import org.springframework.jdbc.core.support.JdbcDaoSupport;
 
-public class Directory extends SimpleJdbcDaoSupport {
+public class Directory extends SimpleJdbcDaoSupport implements NodeResolver {
 	private PartitionDimension partitionDimension;
 	private Counter performanceStatistics;
 	private boolean performanceMonitoringEnabled = false;
@@ -59,261 +51,171 @@ public class Directory extends SimpleJdbcDaoSupport {
 		this.performanceStatistics = new NoOpStatistics();
 	}
 	
+	public Directory(PartitionDimension dimension) {
+		this.partitionDimension = dimension;
+		this.setDataSource(new HiveBasicDataSource(dimension.getIndexUri()));
+		this.performanceStatistics = new NoOpStatistics();
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.hivedb.meta.HiveDirectory#getPartitionDimension()
+	 */
 	public PartitionDimension getPartitionDimension() {
 		return this.partitionDimension;
 	}
 	
-	public void insertPrimaryIndexKey(final Node node, final Object primaryIndexKey) {
+	/* (non-Javadoc)
+	 * @see org.hivedb.meta.HiveDirectory#insertPrimaryIndexKey(org.hivedb.meta.Node, java.lang.Object)
+	 */
+	public void insertPrimaryIndexKey(final Collection<Node> nodes, final Object primaryIndexKey) {
 		final JdbcTemplate j = getJdbcTemplate();
-		final Object[] parameters = new Object[] {
-			primaryIndexKey,
-			node.getId(),
-			new Date(System.currentTimeMillis()) 
-		};
+		final PreparedStatementCreatorFactory insertFactory = 
+			Statements.newStmtCreatorFactory(
+					insertPrimaryIndexSql(partitionDimension),
+					JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass()),
+					Types.INTEGER, Types.DATE);
 		
-		final PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory("insert into " + IndexSchema.getPrimaryIndexTableName(partitionDimension)
-			+ " (id, node, read_only, secondary_index_count, last_updated)"
-			+ " values(?, ?, 0, 0, ?)",
-			new int[] { 
-				JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass()),
-				Types.INTEGER,
-				Types.DATE
-		});
-		
-		StatisticsProxy<Object> proxy = 
-			new StatisticsProxy<Object>(performanceStatistics, PRIMARYINDEXWRITECOUNT, PRIMARYINDEXWRITEFAILURES, PRIMARYINDEXWRITETIME) {
-			
-			@Override
-			protected Object doWork() {
-				if (j.update(creatorFactory.newPreparedStatementCreator(parameters)) != 1) 
-					throw new HiveRuntimeException(String.format("Unable to insert primary index key %s onto node %s", primaryIndexKey, node.getId()));
-				return false;
+		try {
+			for(Node node : nodes) {
+				final Object[] parameters = new Object[] {primaryIndexKey,node.getId(),new Date(System.currentTimeMillis()) };
+				StatisticsProxy<Integer> proxy = 
+					Proxies.newJdbcUpdateProxy(performanceStatistics,PRIMARY_INDEX_WRITE,parameters,insertFactory,j);
+				if(proxy.execute() == 0)
+					throw new HiveRuntimeException(String.format("Unable to insert primary key %s into node %s", primaryIndexKey, node.getId()));
 			}
-		};
-		
-		proxy.execute();
+		} catch(Exception e) {
+			deletePrimaryIndexKey(primaryIndexKey);
+			throw new HiveRuntimeException(
+					String.format("Error while inserting primary key %s into nodes %s. Caused by: %s", 
+							primaryIndexKey, getIds(nodes), e.getMessage()), e);
+		}
 	}
 
+	
+	/* (non-Javadoc)
+	 * @see org.hivedb.meta.HiveDirectory#insertSecondaryIndexKey(org.hivedb.meta.SecondaryIndex, java.lang.Object, java.lang.Object)
+	 */
 	public void insertSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey, Object primaryindexKey) {
-		final JdbcTemplate j = getJdbcTemplate();
 		final Object[] parameters = new Object[] {
 			secondaryIndexKey,
 			primaryindexKey
 		};
-		final PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory("insert into " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex)
-			+ " (id, pkey)"
-			+ " values(?, ?)",
-			new int[] {
+		final PreparedStatementCreatorFactory insertFactory = 
+			Statements.newStmtCreatorFactory(insertSecondaryIndexKeySql(secondaryIndex, partitionDimension), 
 				JdbcTypeMapper.primitiveTypeToJdbcType(secondaryIndexKey.getClass()),
-				JdbcTypeMapper.primitiveTypeToJdbcType(primaryindexKey.getClass()),
-		});
-		
-		StatisticsProxy<Object> proxy = 
-			new StatisticsProxy<Object>(performanceStatistics, SECONDARYINDEXWRITECOUNT, SECONDARYINDEXWRITEFAILURES, SECONDARYINDEXWRITETIME) {
-			
-				@Override
-				protected Object doWork() {
-					if (j.update(creatorFactory.newPreparedStatementCreator(parameters)) != 1) 
-						throw new HiveRuntimeException(
-								String.format(
-										"Unable to insert secondary index key %s onto secondaryIndex %s", 
-										secondaryIndexKey, 
-										secondaryIndex.getName()));
-					return false;
-				}
-		};
-		
-		proxy.execute();
+				JdbcTypeMapper.primitiveTypeToJdbcType(primaryindexKey.getClass()));
+		Proxies.newJdbcUpdateProxy(performanceStatistics, SECONDARY_INDEX_WRITE, parameters, insertFactory, getJdbcTemplate()).execute();
 	}
 	
-	public void updatePrimaryIndexKey(final Node node, final Object primaryIndexKey) {
-		final JdbcTemplate j = getJdbcTemplate();
-		final Object[] parameters = new Object[] {
-				node.getId(),
-				primaryIndexKey 
-		};
-		final PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory("update " + IndexSchema.getPrimaryIndexTableName(partitionDimension)
-			+ " set node = ? where id = ?",
-			new int[] {
-					Types.INTEGER,
-					JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass())
-		});
-		
-		StatisticsProxy<Object> proxy = new StatisticsProxy<Object>(performanceStatistics, PRIMARYINDEXWRITECOUNT, PRIMARYINDEXWRITEFAILURES, PRIMARYINDEXWRITETIME) {
-
-			@Override
-			protected Object doWork() {
-				int rowsUpdated = j.update(creatorFactory.newPreparedStatementCreator(parameters));
-				if(rowsUpdated == 0)
-					throw new HiveKeyNotFoundException(String.format("Unable to update primary index key %s to node %s, key not found.", primaryIndexKey, node.getId()), primaryIndexKey);
-				else if (rowsUpdated != 1)
-					throw new HiveRuntimeException(String.format("Unable to update primary index key %s to node %s", primaryIndexKey, node.getId()));
-				return null;
-			}
-			
-		};
-		proxy.execute();
+	/* (non-Javadoc)
+	 * @see org.hivedb.meta.HiveDirectory#updatePrimaryIndexKey(org.hivedb.meta.Node, java.lang.Object)
+	 */
+	public void updatePrimaryIndexKey(final Collection<Node> nodes, final Object primaryIndexKey) {
+		deletePrimaryIndexKey(primaryIndexKey);
+		insertPrimaryIndexKey(nodes, primaryIndexKey);
 	}
 	
+	/* (non-Javadoc)
+	 * @see org.hivedb.meta.HiveDirectory#updatePrimaryIndexKeyReadOnly(java.lang.Object, boolean)
+	 */
 	public void updatePrimaryIndexKeyReadOnly(final Object primaryIndexKey, boolean isReadOnly) {
-		final JdbcTemplate j = getJdbcTemplate();
 		final Object[] parameters = new Object[] {
 				isReadOnly,
 				primaryIndexKey 
 		};
-		final PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory("update " + IndexSchema.getPrimaryIndexTableName(partitionDimension)
-			+ " set read_only = ? where id = ?",
-			new int[] {
-					Types.BOOLEAN,
-					JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass())
-		});
-		
-		
-		StatisticsProxy<Object> proxy = new StatisticsProxy<Object>(performanceStatistics, PRIMARYINDEXWRITECOUNT, PRIMARYINDEXWRITEFAILURES, PRIMARYINDEXWRITETIME) {
-
-			@Override
-			protected Object doWork() {
-				int rowsUpdated = j.update(creatorFactory.newPreparedStatementCreator(parameters));
-				if (rowsUpdated == 0)
-					throw new HiveKeyNotFoundException(String.format("Unable to update primary index key %s read-only, key not found.", primaryIndexKey), primaryIndexKey);
-				else if (rowsUpdated != 1)
-					throw new HiveRuntimeException(String.format("Unable to update read only status primary index key %s", primaryIndexKey));
-				return null;
-			}
-			
-		};
-		
-		proxy.execute();
+		PreparedStatementCreatorFactory updateFactory = 
+			Statements.newStmtCreatorFactory("update " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " set read_only = ? where id = ?", 
+					Types.BOOLEAN, JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass()));
+		StatisticsProxy<Integer> proxy = Proxies.newJdbcUpdateProxy(performanceStatistics, PRIMARY_INDEX_WRITE, parameters, updateFactory, getJdbcTemplate());
+		if(proxy.execute() == 0)
+			throw new HiveKeyNotFoundException(String.format("Unable to update primary index key %s read-only, key not found.", primaryIndexKey), primaryIndexKey);
 	}
 	
-	public void updatePrimaryIndexOfSecondaryKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey, final Object primaryIndexKey) {
-		final JdbcTemplate j = getJdbcTemplate();
+	/* (non-Javadoc)
+	 * @see org.hivedb.meta.HiveDirectory#updatePrimaryIndexOfSecondaryKey(org.hivedb.meta.SecondaryIndex, java.lang.Object, java.lang.Object, java.lang.Object)
+	 */
+	public void updatePrimaryIndexOfSecondaryKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey, final Object originalPrimaryIndexKey, final Object newPrimaryIndexKey) {
 		final Object[] parameters = new Object[] {
-			primaryIndexKey,
-			secondaryIndexKey
+			newPrimaryIndexKey,
+			secondaryIndexKey,
+			originalPrimaryIndexKey
 		};
-		final PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory("update " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex)
-			+ " set pkey = ? where id = ?",
-			new int[] {
-				JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass()),
-				JdbcTypeMapper.primitiveTypeToJdbcType(secondaryIndexKey.getClass())
-		});
-		
-		StatisticsProxy<Object> proxy = new StatisticsProxy<Object>(performanceStatistics, SECONDARYINDEXWRITECOUNT, SECONDARYINDEXWRITEFAILURES, SECONDARYINDEXWRITETIME){
-			@Override
-			protected Object doWork() {
-				int rowsUpdated = j.update(creatorFactory.newPreparedStatementCreator(parameters));
-				if( rowsUpdated == 0)
-					throw new HiveKeyNotFoundException(String.format("Unable to update Secondary index key %s key not found.", secondaryIndexKey), primaryIndexKey);
-				else if (rowsUpdated != 1)
-					throw new HiveRuntimeException(String.format("Unable to update secondary index key %s to primary index key %s on secondary index", secondaryIndexKey, primaryIndexKey, secondaryIndex.getName()));
-				return null;
-			}
-		};
-		proxy.execute();
+		PreparedStatementCreatorFactory updateFactory = 
+			Statements.newStmtCreatorFactory(updateSecondaryIndexSql(secondaryIndex),
+					JdbcTypeMapper.primitiveTypeToJdbcType(originalPrimaryIndexKey.getClass()),
+					JdbcTypeMapper.primitiveTypeToJdbcType(secondaryIndexKey.getClass()),
+					JdbcTypeMapper.primitiveTypeToJdbcType(newPrimaryIndexKey.getClass()));
+		StatisticsProxy<Integer> proxy = Proxies.newJdbcUpdateProxy(performanceStatistics, SECONDARY_INDEX_WRITE, parameters, updateFactory, getJdbcTemplate());
+		if(proxy.execute() == 0)
+			throw new HiveKeyNotFoundException(String.format("Unable to update Secondary index key %s key not found.", secondaryIndexKey), originalPrimaryIndexKey);
 	}
 	
+	/* (non-Javadoc)
+	 * @see org.hivedb.meta.HiveDirectory#deleteAllSecondaryIndexKeysOfPrimaryIndexKey(org.hivedb.meta.SecondaryIndex, java.lang.Object)
+	 */
 	public void deleteAllSecondaryIndexKeysOfPrimaryIndexKey(SecondaryIndex secondaryIndex, Object primaryIndexKey) {
-		final JdbcTemplate j = getJdbcTemplate();
-		final Object[] parameters = new Object[] {
-			primaryIndexKey 
-		};
-		final PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory("delete from " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex)
-			+ " where pkey = ?",
-			new int[] {
-				JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass())
-		});
-		
-		StatisticsProxy<Integer> proxy = new StatisticsProxy<Integer>(performanceStatistics, SECONDARYINDEXDELETECOUNT, SECONDARYINDEXDELETEFAILURES, SECONDARYINDEXDELETETIME) {
-
-			@Override
-			protected Integer doWork() {
-				return j.update(creatorFactory.newPreparedStatementCreator(parameters));
-			}
-			
-			@Override
-			protected void onSuccess(Integer output) {
-				counter.add(successKey,output);
-				counter.add(timeKey, getRuntimeInMillis());
-			}
-			
-		};
-		proxy.execute();
+		PreparedStatementCreatorFactory deleteFactory = 
+			Statements.newStmtCreatorFactory(deleteSecondaryIndexKeysSql(secondaryIndex), JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass()));
+		Proxies.newJdbcUpdateProxy(performanceStatistics, SECONDARY_INDEX_WRITE, new Object[] {primaryIndexKey}, deleteFactory, getJdbcTemplate()).execute();
 	}
 	
+	/* (non-Javadoc)
+	 * @see org.hivedb.meta.HiveDirectory#deletePrimaryIndexKey(java.lang.Object)
+	 */
 	public void deletePrimaryIndexKey(final Object primaryIndexKey) {
-		final JdbcTemplate j = getJdbcTemplate();
-		final Object[] parameters = new Object[] {
-			primaryIndexKey 
-		};
-		final PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory("delete from " + IndexSchema.getPrimaryIndexTableName(partitionDimension)
-			+ " where id = ?",
-			new int[] {
-				JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass())
-		});
-		
-		StatisticsProxy<Object> proxy  = new StatisticsProxy<Object>(performanceStatistics, PRIMARYINDEXDELETECOUNT, PRIMARYINDEXDELETEFAILURES, PRIMARYINDEXDELETETIME){
-
-			@Override
-			protected Object doWork() {
-				return j.update(creatorFactory.newPreparedStatementCreator(parameters));
-			}};
+		final Object[] parameters = new Object[] {primaryIndexKey};
+		final PreparedStatementCreatorFactory deleteFactory = 
+			Statements.newStmtCreatorFactory(deletePrimaryIndexSql(partitionDimension), JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass()));
+		StatisticsProxy<Integer> proxy = Proxies.newJdbcUpdateProxy(performanceStatistics, PRIMARY_INDEX_DELETE, parameters, deleteFactory, getJdbcTemplate());
 		proxy.execute();
 	}
 
-	public void deleteSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey) {
-		final JdbcTemplate j = getJdbcTemplate();
+	/* (non-Javadoc)
+	 * @see org.hivedb.meta.HiveDirectory#deleteSecondaryIndexKey(org.hivedb.meta.SecondaryIndex, java.lang.Object)
+	 */
+	public void deleteSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey, final Object primaryIndexKey) {
 		final Object[] parameters = new Object[] {
-			secondaryIndexKey 
+			secondaryIndexKey,
+			primaryIndexKey
 		};
-		final PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory("delete from " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex)
-			+ " where id = ?",
-			new int[] {
-				JdbcTypeMapper.primitiveTypeToJdbcType(secondaryIndexKey.getClass())
-		});
-		
-		StatisticsProxy<Integer> proxy = 
-			new StatisticsProxy<Integer>(performanceStatistics, SECONDARYINDEXDELETECOUNT, SECONDARYINDEXDELETEFAILURES, SECONDARYINDEXDELETETIME) {
-			@Override
-			protected Integer doWork() {
-				return j.update(creatorFactory.newPreparedStatementCreator(parameters));
-			} 
-		};
-		proxy.execute();
+		PreparedStatementCreatorFactory deleteFactory = 
+			Statements.newStmtCreatorFactory(deleteSingleSecondaryIndexKey(secondaryIndex), 
+					JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass()), 
+					JdbcTypeMapper.primitiveTypeToJdbcType(secondaryIndexKey.getClass()));
+		Proxies.newJdbcUpdateProxy(performanceStatistics, SECONDARY_INDEX_DELETE, parameters, deleteFactory, getJdbcTemplate()).execute();
 	}
 	
+	/* (non-Javadoc)
+	 * @see org.hivedb.meta.HiveDirectory#doesPrimaryIndexKeyExist(java.lang.Object)
+	 */
 	public boolean doesPrimaryIndexKeyExist(final Object primaryIndexKey) {
-		final JdbcTemplate j = getJdbcTemplate();
-		
-		StatisticsProxy<Boolean> proxy = new StatisticsProxy<Boolean>(performanceStatistics, PRIMARYINDEXREADCOUNT, PRIMARYINDEXREADFAILURES, PRIMARYINDEXREADTIME) {
-
-			@Override
-			protected Boolean doWork() throws RuntimeException {
-				return j.query("select id from " + IndexSchema.getPrimaryIndexTableName(partitionDimension)														 
-						+ " where id =  ?",		
-						new Object[] { primaryIndexKey },
-						new IntRowMapper()).size() == 1;
-			}
-			
-		};
+		StatisticsProxy<Collection<Integer>> proxy = 
+			Proxies.newJdbcSqlQueryProxy(
+					performanceStatistics, 
+					PRIMARY_INDEX_READ, 
+					checkExistenceOfPrimaryKeySql(), 
+					new Object[] { primaryIndexKey }, 
+					RowMappers.newTrueRowMapper(), 
+					getJdbcTemplate());
 		try {
-			return proxy.execute();
+			return proxy.execute().size() > 0;
 		} catch( EmptyResultDataAccessException e) {
 			return false;
 		}
 	}
 	
-	public int getNodeIdOfPrimaryIndexKey(final Object primaryIndexKey) {
-		final JdbcTemplate j = getJdbcTemplate();
-		StatisticsProxy<Integer> proxy = new StatisticsProxy<Integer>(performanceStatistics, PRIMARYINDEXREADCOUNT, PRIMARYINDEXREADFAILURES, PRIMARYINDEXREADTIME) {
-			@Override
-			protected Integer doWork() throws RuntimeException {
-				return j.queryForInt("select node from " + IndexSchema.getPrimaryIndexTableName(partitionDimension)														 
-						 + " where id = ?",		
-							new Object[] { primaryIndexKey });
-			}
-		};
-		
+	/* (non-Javadoc)
+	 * @see org.hivedb.meta.HiveDirectory#getNodeIdsOfPrimaryIndexKey(java.lang.Object)
+	 */
+	public Collection<Integer> getNodeIdsOfPrimaryIndexKey(final Object primaryIndexKey) {
+		StatisticsProxy<Collection<Integer>> proxy = 
+			Proxies.newJdbcSqlQueryProxy(
+					performanceStatistics, 
+					PRIMARY_INDEX_READ, 
+					selectNodeIdsByPrimaryIndexSql(), 
+					new Object[] { primaryIndexKey }, 
+					RowMappers.newIntegerRowMapper(), 
+					getJdbcTemplate());
 		try{
 			return proxy.execute();
 		} catch(EmptyResultDataAccessException e) {
@@ -321,101 +223,92 @@ public class Directory extends SimpleJdbcDaoSupport {
 		}
 	}
 	
-	public NodeSemaphore getNodeSemamphoreOfPrimaryIndexKey(final Object primaryIndexKey) {
-		final JdbcTemplate j = getJdbcTemplate();
-		StatisticsProxy<NodeSemaphore> proxy = 
-			new StatisticsProxy<NodeSemaphore>(performanceStatistics, PRIMARYINDEXREADCOUNT, PRIMARYINDEXREADFAILURES, PRIMARYINDEXREADTIME){
-			@Override
-			protected NodeSemaphore doWork() throws RuntimeException {
-				return (NodeSemaphore) j.queryForObject("select node,read_only from " + IndexSchema.getPrimaryIndexTableName(partitionDimension)														 
-						 + " where id = ?",		
-							new Object[] { primaryIndexKey },
-							new NodeSemaphoreRowMapper());
-			}
-		};
+	/* (non-Javadoc)
+	 * @see org.hivedb.meta.HiveDirectory#getNodeSemamphoresOfPrimaryIndexKey(java.lang.Object)
+	 */
+	public Collection<NodeSemaphore> getNodeSemamphoresOfPrimaryIndexKey(final Object primaryIndexKey) {
+		StatisticsProxy<Collection<NodeSemaphore>> proxy = Proxies.newJdbcSqlQueryProxy(
+				performanceStatistics, 
+				PRIMARY_INDEX_READ, 
+				selectNodeSemaphoreOfPrimaryIndexKeySql(partitionDimension), 
+				new Object[] { primaryIndexKey }, 
+				new NodeSemaphoreRowMapper(), 
+				getJdbcTemplate());
 		try{
 			return proxy.execute();
 		} catch(EmptyResultDataAccessException e) {
 			throw new HiveKeyNotFoundException(String.format("Unable to get nodeSemaphore of primary index key %s, key not found.", primaryIndexKey), primaryIndexKey,e);
 		}
 	}
-
+	
+	/* (non-Javadoc)
+	 * @see org.hivedb.meta.HiveDirectory#getReadOnlyOfPrimaryIndexKey(java.lang.Object)
+	 */
 	@SuppressWarnings("unchecked")
 	public boolean getReadOnlyOfPrimaryIndexKey(final Object primaryIndexKey) {
-		final JdbcTemplate j = getJdbcTemplate();
-		StatisticsProxy<Boolean> proxy = new StatisticsProxy<Boolean>(performanceStatistics, PRIMARYINDEXREADCOUNT, PRIMARYINDEXREADFAILURES, PRIMARYINDEXREADTIME) {
-			@Override
-			protected Boolean doWork() throws RuntimeException {
-				return (Boolean)j.queryForObject("select read_only from " + IndexSchema.getPrimaryIndexTableName(partitionDimension)														 
-						 + " where id =  ?",		
-							new Object[] { primaryIndexKey },
-							new BooleanRowMapper());
-			}
-		};
+		StatisticsProxy<Collection<Boolean>> proxy = Proxies.newJdbcSqlQueryProxy(performanceStatistics, PRIMARY_INDEX_READ, getReadOnlyOfPrimaryndexKeySql(partitionDimension), new Object[] { primaryIndexKey }, RowMappers.newBooleanRowMapper(), getJdbcTemplate());
 		try{
-			return proxy.execute();
+			Boolean readOnly = false;
+			for(Boolean b : proxy.execute())
+				readOnly |= b;
+			return readOnly;
 		} catch(EmptyResultDataAccessException e) {
 			throw new HiveKeyNotFoundException(String.format("Unable to get read-only of primary index key %s, key not found.", primaryIndexKey), primaryIndexKey,e);
 		}
 	}
-
+	
+	/* (non-Javadoc)
+	 * @see org.hivedb.meta.HiveDirectory#doesSecondaryIndexKeyExist(org.hivedb.meta.SecondaryIndex, java.lang.Object)
+	 */
 	public boolean doesSecondaryIndexKeyExist(final SecondaryIndex secondaryIndex,final Object secondaryIndexKey) {
-		final JdbcTemplate j = getJdbcTemplate();
-		StatisticsProxy<Boolean> proxy = new StatisticsProxy<Boolean>(performanceStatistics, SECONDARYINDEXREADCOUNT, SECONDARYINDEXREADFAILURES, SECONDARYINDEXREADTIME) {
-			@Override
-			protected Boolean doWork() throws RuntimeException {
-				return j.query("select id from " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex)
-						+ " where id = ?",
-						new Object[] { secondaryIndexKey },
-						new TrueRowMapper()).size() == 1;
-			}
-		};
+		StatisticsProxy<Collection<Integer>> proxy = 
+			Proxies.newJdbcSqlQueryProxy(
+					performanceStatistics, 
+					SECONDARY_INDEX_READ, 
+					checkExistenceOfSecondaryIndexSql(secondaryIndex), 
+					new Object[] { secondaryIndexKey }, 
+					RowMappers.newTrueRowMapper(), 
+					getJdbcTemplate());
 		try {
-			return proxy.execute();
-		} catch( EmptyResultDataAccessException e ) {
+			return proxy.execute().size() > 0;
+		} catch( EmptyResultDataAccessException e) {
 			return false;
 		}
 	}
-
+	
+	/* (non-Javadoc)
+	 * @see org.hivedb.meta.HiveDirectory#getNodeIdsOfSecondaryIndexKey(org.hivedb.meta.SecondaryIndex, java.lang.Object)
+	 */
 	@SuppressWarnings("unchecked")
 	public Collection<Integer> getNodeIdsOfSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey)
 	{
-		final JdbcTemplate j = getJdbcTemplate();
-		StatisticsProxy<Collection<Integer>> proxy = new StatisticsProxy<Collection<Integer>>(performanceStatistics, SECONDARYINDEXREADCOUNT, SECONDARYINDEXREADFAILURES, SECONDARYINDEXREADTIME) {
-			@Override
-			protected Collection<Integer> doWork() {
-				return j.query("select p.node from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
-						+ " join " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex) + " s on s.pkey = p.id"
-						+ " where s.id =  ?",
-						new Object[] { secondaryIndexKey }, new IntRowMapper());
-			}
-		};
+		StatisticsProxy<Collection<Integer>> proxy = 
+			Proxies.newJdbcSqlQueryProxy(performanceStatistics, 
+					SECONDARY_INDEX_READ, 
+					getNodeIdsOfSecondaryIndexKeySql(secondaryIndex), 
+					new Object[] { secondaryIndexKey }, 
+					RowMappers.newIntegerRowMapper(), 
+					getJdbcTemplate());
 		try{
-			return proxy.execute();
+			return Filter.getUnique(proxy.execute());
 		} catch(EmptyResultDataAccessException e) {
 			throw new HiveKeyNotFoundException(String.format("Unable to get node id of secondary index key %s, key not found.", secondaryIndexKey), secondaryIndexKey,e);
 		}
 	}
 	
-	public Collection<NodeSemaphore> getNodeSemaphoreOfSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey)
+	/* (non-Javadoc)
+	 * @see org.hivedb.meta.HiveDirectory#getNodeSemaphoresOfSecondaryIndexKey(org.hivedb.meta.SecondaryIndex, java.lang.Object)
+	 */
+	public Collection<NodeSemaphore> getNodeSemaphoresOfSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey)
 	{
-		final SimpleJdbcTemplate j = getSimpleJdbcTemplate();
-		StatisticsProxy<Collection<NodeSemaphore>> proxy = new StatisticsProxy<Collection<NodeSemaphore>>(performanceStatistics, SECONDARYINDEXREADCOUNT, SECONDARYINDEXREADFAILURES, SECONDARYINDEXREADTIME) {
-			@SuppressWarnings("unchecked")
-			@Override
-			protected Collection<NodeSemaphore> doWork() throws RuntimeException {
-				try {
-					return j.query("select p.node,p.read_only from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
-							+ " join " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex) + " s on s.pkey = p.id"
-							+ " where s.id =  ?",
-							new NodeSemaphoreRowMapper(),
-							secondaryIndexKey);
-				}
-				catch (RuntimeException e) {
-					throw new HiveKeyNotFoundException(String.format("Error looking for key %s of secondary index is not in the hive", secondaryIndexKey, secondaryIndex.getName()), e);
-				}
-			}
-		};
+		StatisticsProxy<Collection<NodeSemaphore>> proxy = 
+			Proxies.newJdbcSqlQueryProxy(performanceStatistics, 
+					SECONDARY_INDEX_READ, 
+					getNodeSemaphoreOfSecondaryIndexKeySql(secondaryIndex), 
+					new Object[] {secondaryIndexKey}, 
+					new NodeSemaphoreRowMapper(), 
+					getJdbcTemplate());
+		
 		try{
 			return proxy.execute();
 		} catch(EmptyResultDataAccessException e) {
@@ -423,25 +316,20 @@ public class Directory extends SimpleJdbcDaoSupport {
 		}
 	}
 	
+	/* (non-Javadoc)
+	 * @see org.hivedb.meta.HiveDirectory#getPrimaryIndexKeysOfSecondaryIndexKey(org.hivedb.meta.SecondaryIndex, java.lang.Object)
+	 */
 	@SuppressWarnings("unchecked")
-	public Collection<Object> getPrimaryIndexKeyOfSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey)
+	public Collection<Object> getPrimaryIndexKeysOfSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey)
 	{
-		final SimpleJdbcTemplate j = getSimpleJdbcTemplate();
-		StatisticsProxy<Collection<Object>> proxy = new StatisticsProxy<Collection<Object>>(performanceStatistics, SECONDARYINDEXREADCOUNT, SECONDARYINDEXREADFAILURES, SECONDARYINDEXREADTIME) {
-			@Override
-			protected Collection<Object> doWork() throws RuntimeException {
-				try {
-				return j.query("select p.id from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
-						+ " join " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex) + " s on s.pkey = p.id"
-						+ " where s.id =  ?",
-						new ObjectRowMapper(secondaryIndex.getResource().getPartitionDimension().getColumnType()),
-						secondaryIndexKey);
-				}
-				catch (RuntimeException e) {
-					throw new HiveKeyNotFoundException(String.format("Error looking for key %s of secondary index %s", secondaryIndexKey, secondaryIndex.getName()), e);
-				}
-			}
-		};
+		StatisticsProxy<Collection<Object>> proxy = 
+			Proxies.newJdbcSqlQueryProxy(performanceStatistics, 
+					SECONDARY_INDEX_READ, 
+					getPrimaryIndexKeysOfSecondaryIndexKeySql(secondaryIndex), 
+					new Object[] {secondaryIndexKey}, 
+					RowMappers.newObjectRowMapper(secondaryIndex.getResource().getPartitionDimension().getColumnType()), 
+					getJdbcTemplate());
+		
 		try{
 			return proxy.execute();
 		} catch(EmptyResultDataAccessException e) {
@@ -449,27 +337,21 @@ public class Directory extends SimpleJdbcDaoSupport {
 		}
 	}
 	
+	/* (non-Javadoc)
+	 * @see org.hivedb.meta.HiveDirectory#getSecondaryIndexKeysOfPrimaryIndexKey(org.hivedb.meta.SecondaryIndex, java.lang.Object)
+	 */
 	@SuppressWarnings("unchecked")
-	public Collection getSecondaryIndexKeysOfPrimaryIndexKey(final SecondaryIndex secondaryIndex, final Object primaryIndexKey)
+	public Collection<Object> getSecondaryIndexKeysOfPrimaryIndexKey(final SecondaryIndex secondaryIndex, final Object primaryIndexKey)
 	{
-		final JdbcTemplate j = getJdbcTemplate();
 		final String secondaryIndexTableName = IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex);
-		StatisticsProxy<Collection> proxy = new StatisticsProxy<Collection>(performanceStatistics, SECONDARYINDEXREADCOUNT, SECONDARYINDEXREADFAILURES, SECONDARYINDEXREADTIME) {
-			@Override
-			protected Collection doWork() throws RuntimeException {
-				return j.query("select s.id from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
-						+ " join " + secondaryIndexTableName + " s on s.pkey = p.id"
-						+ " where p.id = ?",
-						new Object[] { primaryIndexKey },
-						new ObjectRowMapper(secondaryIndex.getColumnInfo().getColumnType()));
-			}
-			
-			@Override
-			protected void onSuccess(Collection output) {
-				counter.add(successKey, output.size());
-				counter.add(timeKey, getRuntimeInMillis());
-			}
-		};	
+		StatisticsProxy<Collection<Object>> proxy = 
+			Proxies.newJdbcSqlQueryProxy(performanceStatistics, 
+					SECONDARY_INDEX_READ,
+					getSecondaryKeyOfPrimaryKeySql(secondaryIndexTableName), 
+					new Object[] { primaryIndexKey }, 
+					RowMappers.newObjectRowMapper(secondaryIndex.getColumnInfo().getColumnType()),
+					getJdbcTemplate());
+		
 		try{
 			return proxy.execute();
 		} catch(EmptyResultDataAccessException e) {
@@ -477,39 +359,82 @@ public class Directory extends SimpleJdbcDaoSupport {
 		}
 	}
 	
-	private class IntRowMapper implements RowMapper {
-		public Object mapRow(ResultSet rs, int rowNumber) throws SQLException {
-			return rs.getInt(1);		
-		}
+	/**
+	 * SQL string methods
+	 */
+	private String insertPrimaryIndexSql(PartitionDimension partitionDimension) {
+		return "insert into " + IndexSchema.getPrimaryIndexTableName(partitionDimension)
+		+ " (id, node, read_only, secondary_index_count, last_updated)"
+		+ " values(?, ?, 0, 0, ?)";
 	}
-	private class BooleanRowMapper implements RowMapper {
-		public Object mapRow(ResultSet rs, int rowNumber) throws SQLException {
-			return rs.getBoolean(1);		
-		}
+	private String deletePrimaryIndexSql(PartitionDimension partitionDimension) {
+		return "delete from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " where id = ?";
 	}
-	private class ObjectRowMapper implements ParameterizedRowMapper {
-		int jdbcType;
-		public ObjectRowMapper(int jdbcType)
-		{
-			this.jdbcType = jdbcType;
-		}
-		public Object mapRow(ResultSet rs, int rowNumber) throws SQLException {
-			JdbcTypeMapper.getJdbcTypeResult(rs, 1, jdbcType);
-			return rs.getObject(1);		
-		}
+	private String insertSecondaryIndexKeySql(SecondaryIndex secondaryIndex, PartitionDimension partitionDimension) {
+		return "insert into " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex)
+			+ " (id, pkey)"
+			+ " values(?, ?)";
 	}
-	private static class TrueRowMapper implements RowMapper {
-		public Object mapRow(ResultSet rs, int rowNumber) throws SQLException {
-			return true;
-		}
+	private String updateSecondaryIndexSql(final SecondaryIndex secondaryIndex) {
+		return "update " + IndexSchema.getSecondaryIndexTableName(secondaryIndex.getResource().getPartitionDimension(), secondaryIndex)
+			+ " set pkey = ? where id = ? and pkey = ?";
 	}
-	
+	private String deleteSecondaryIndexKeysSql(SecondaryIndex secondaryIndex) {
+		return "delete from " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex)
+			+ " where pkey = ?";
+	}
+	private String deleteSingleSecondaryIndexKey(final SecondaryIndex secondaryIndex) {
+		return "delete from " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex)
+			+ " where id = ? and pkey = ?";
+	}
+	private String selectNodeIdsByPrimaryIndexSql() {
+		return "select node from " + IndexSchema.getPrimaryIndexTableName(partitionDimension)														 
+				 + " where id = ?";
+	}
+	private String checkExistenceOfPrimaryKeySql() {
+		return "select id from " + IndexSchema.getPrimaryIndexTableName(partitionDimension)														 
+				+ " where id =  ?";
+	}	
 	private class NodeSemaphoreRowMapper implements ParameterizedRowMapper {
 		public Object mapRow(ResultSet rs, int arg1) throws SQLException {
 			return new NodeSemaphore(rs.getInt("node"), rs.getBoolean("read_only"));
 		}	
 	}
-
+	private String selectNodeSemaphoreOfPrimaryIndexKeySql(PartitionDimension partitionDimension) {
+		return "select node,read_only from " + IndexSchema.getPrimaryIndexTableName(partitionDimension)														 
+				 + " where id = ?";
+	}
+	private String getReadOnlyOfPrimaryndexKeySql(PartitionDimension partitionDimension){
+		return "select read_only from " + IndexSchema.getPrimaryIndexTableName(partitionDimension)														 
+		 + " where id =  ?";
+	}
+	private String checkExistenceOfSecondaryIndexSql(final SecondaryIndex secondaryIndex) {
+		return "select id from " + IndexSchema.getSecondaryIndexTableName(secondaryIndex.getResource().getPartitionDimension(), secondaryIndex)
+				+ " where id = ?";
+	}
+	private String getNodeIdsOfSecondaryIndexKeySql(final SecondaryIndex secondaryIndex) {
+		return "select p.node from " + IndexSchema.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()) + " p"	
+				+ " join " + IndexSchema.getSecondaryIndexTableName(secondaryIndex.getResource().getPartitionDimension(), secondaryIndex) + " s on s.pkey = p.id"
+				+ " where s.id =  ?";
+	}
+	private String getNodeSemaphoreOfSecondaryIndexKeySql(final SecondaryIndex secondaryIndex) {
+		return "select p.node,p.read_only from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
+				+ " join " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex) + " s on s.pkey = p.id"
+				+ " where s.id =  ?";
+	}
+	private String getPrimaryIndexKeysOfSecondaryIndexKeySql(final SecondaryIndex secondaryIndex) {
+		return "select p.id from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
+				+ " join " + IndexSchema.getSecondaryIndexTableName(partitionDimension, secondaryIndex) + " s on s.pkey = p.id"
+				+ " where s.id =  ?";
+	}
+	
+	private Collection<Integer> getIds(Collection<Node> nodes) {
+		return Transform.map(new Unary<Node, Integer>(){
+			public Integer f(Node item) {
+				return item.getId();
+			}}, nodes);
+	}
+	
 	public Counter getPerformanceStatistics() {
 		return performanceStatistics;
 	}
@@ -525,5 +450,11 @@ public class Directory extends SimpleJdbcDaoSupport {
 
 	public void setPerformanceMonitoringEnabled(boolean performanceMonitoringEnabled) {
 		this.performanceMonitoringEnabled = performanceMonitoringEnabled;
+	}
+
+	private String getSecondaryKeyOfPrimaryKeySql(final String secondaryIndexTableName) {
+		return "select s.id from " + IndexSchema.getPrimaryIndexTableName(partitionDimension) + " p"	
+				+ " join " + secondaryIndexTableName + " s on s.pkey = p.id"
+				+ " where p.id = ?";
 	}
 }

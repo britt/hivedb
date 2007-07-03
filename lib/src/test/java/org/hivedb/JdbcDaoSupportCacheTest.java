@@ -2,14 +2,18 @@ package org.hivedb;
 
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
+import static org.testng.AssertJUnit.assertTrue;
 
 import java.sql.SQLException;
+import java.util.Collection;
 
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.util.database.HiveTestCase;
+import org.hivedb.util.functional.Atom;
+import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -31,29 +35,31 @@ public class JdbcDaoSupportCacheTest extends HiveTestCase {
 	public void testDataSourceCacheCreation() throws HiveException, SQLException{
 		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		JdbcDaoSupportCacheImpl cache = (JdbcDaoSupportCacheImpl) hive.getJdbcDaoSupportCache(partitionDimensionName());
-		JdbcDaoSupport read = cache.get(intKey(), AccessType.Read);
-		JdbcDaoSupport readWrite = cache.get(intKey(), AccessType.ReadWrite);
+		Collection<SimpleJdbcDaoSupport> read = cache.get(intKey(), AccessType.Read);
+		Collection<SimpleJdbcDaoSupport> readWrite = cache.get(intKey(), AccessType.ReadWrite);
 		
-		assertNotNull(read);
-		assertNotNull(readWrite);
+		assertTrue(read.size() > 0);
+		assertTrue(readWrite.size() > 0);
 	}
 
 	@Test
 	public void testReadOnlyEnforcement() throws Exception {
 		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		JdbcDaoSupportCacheImpl cache = (JdbcDaoSupportCacheImpl) hive.getJdbcDaoSupportCache(partitionDimensionName());
-		JdbcDaoSupport read = cache.get(intKey(), AccessType.Read);
-		JdbcDaoSupport readWrite = cache.get(intKey(), AccessType.ReadWrite);
+		Collection<SimpleJdbcDaoSupport> read = cache.get(intKey(), AccessType.Read);
+		Collection<SimpleJdbcDaoSupport> readWrite = cache.get(intKey(), AccessType.ReadWrite);
 		
-		readWrite.getJdbcTemplate().update("create table BAR (name varchar(50))");
+		JdbcDaoSupport readWriteDao = Atom.getFirst(readWrite);
+		JdbcDaoSupport readDao = Atom.getFirst(read);
+		readWriteDao.getJdbcTemplate().update("create table BAR (name varchar(50))");
 
 		try {
-		read.getJdbcTemplate().update("insert into BAR values ('not foo')");
+			readDao.getJdbcTemplate().update("insert into BAR values ('not foo')");
 		} catch(RuntimeException e) {
 			assertNotNull(e);
 		}
-		readWrite.getJdbcTemplate().update("insert into BAR values ('foo')");
-		assertEquals(1, read.getJdbcTemplate().queryForInt("select count(1) from BAR"));
+		readWriteDao.getJdbcTemplate().update("insert into BAR values ('foo')");
+		assertEquals(1, readDao.getJdbcTemplate().queryForInt("select count(1) from BAR"));
 	}
 	
 	public void testCacheSynchronization() throws Exception {

@@ -1,24 +1,26 @@
 package org.hivedb.management.migration;
 
 import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
 import org.hivedb.Hive;
-import org.hivedb.HiveException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
 import org.hivedb.meta.Directory;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.Node;
+import org.hivedb.meta.NodeResolver;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.database.DerbyUtils;
 import org.hivedb.util.database.HiveTestCase;
+import org.hivedb.util.functional.Atom;
+import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Pair;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 import org.testng.annotations.BeforeMethod;
@@ -60,16 +62,16 @@ public class TestMigration extends HiveTestCase {
 		Pair<Node, Node> nodes = initializeTestData(hive, primaryKey, secondaryKey);
 		Node origin = nodes.getKey();
 		Node destination = nodes.getValue();
-		Directory dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), new HiveBasicDataSource(getConnectString(getHiveDatabaseName())));
+		NodeResolver dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), new HiveBasicDataSource(getConnectString(getHiveDatabaseName())));
 		PartitionKeyMover<Integer> pMover = new PrimaryMover(origin.getUri());
 		Mover<Integer> secMover = new SecondaryMover();
 		
 		//Do the actual migration
 		Migrator m = new HiveMigrator(hive, partitionDimensionName());
-		assertEquals(origin.getId(), dir.getNodeIdOfPrimaryIndexKey(primaryKey));
-		m.migrate(primaryKey, destination.getName(), pMover);
+		assertNotNull(Filter.grepItemAgainstList(origin.getId(), dir.getNodeIdsOfPrimaryIndexKey(primaryKey)));
+		m.migrate(primaryKey, Arrays.asList(new String[]{destination.getName()}), pMover);
 		//Directory points to the destination node
-		assertEquals(destination.getId(), dir.getNodeIdOfPrimaryIndexKey(primaryKey));
+		assertNotNull(Filter.grepItemAgainstList(destination.getId(), dir.getNodeIdsOfPrimaryIndexKey(primaryKey)));
 		//Records exist and are identical on the destination node
 		assertEquals(primaryKey, pMover.get(primaryKey, destination));
 		assertEquals(secondaryKey, secMover.get(secondaryKey, destination));
@@ -84,7 +86,7 @@ public class TestMigration extends HiveTestCase {
 		Pair<Node, Node> nodes = initializeTestData(hive, primaryKey, secondaryKey);
 		Node origin = nodes.getKey();
 		Node destination = nodes.getValue();
-		Directory dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), new HiveBasicDataSource(getConnectString(getHiveDatabaseName())));
+		NodeResolver dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), new HiveBasicDataSource(getConnectString(getHiveDatabaseName())));
 		PartitionKeyMover<Integer> pMover = new PrimaryMover(origin.getUri());
 		//This mover just craps out on copy
 		Mover<Integer> failingMover = new Mover<Integer>() {
@@ -99,12 +101,12 @@ public class TestMigration extends HiveTestCase {
 		pMover.getDependentMovers().clear();
 		pMover.getDependentMovers().add(new Pair<Mover, KeyLocator>(failingMover, new SecondaryKeyLocator(origin.getUri())));
 		try {
-			m.migrate(primaryKey, destination.getName(), pMover);
+			m.migrate(primaryKey, Arrays.asList(new String[]{destination.getName()}), pMover);
 		} catch( Exception e) {
 			//Quash
 		}
 		//Directory still points to the origin node
-		assertEquals(origin.getId(), dir.getNodeIdOfPrimaryIndexKey(primaryKey));
+		assertNotNull(Filter.grepItemAgainstList(origin.getId(), dir.getNodeIdsOfPrimaryIndexKey(primaryKey)));
 		//Records are intact on the origin node
 		assertEquals(primaryKey, pMover.get(primaryKey, origin));
 		assertEquals(secondaryKey, new SecondaryMover().get(secondaryKey, origin));
@@ -119,20 +121,20 @@ public class TestMigration extends HiveTestCase {
 		Pair<Node, Node> nodes = initializeTestData(hive, primaryKey, secondaryKey);
 		Node origin = nodes.getKey();
 		Node destination = nodes.getValue();
-		Directory dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), new HiveBasicDataSource(hive.getPartitionDimension(partitionDimensionName()).getIndexUri()));
+		NodeResolver dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), new HiveBasicDataSource(hive.getPartitionDimension(partitionDimensionName()).getIndexUri()));
 		PartitionKeyMover<Integer> pMover = new PrimaryMover(origin.getUri());
 		
 		NoUpdateHive noUpdateHive = new NoUpdateHive(hive.getHiveUri(), 1, false, hive.getPartitionDimensions(), null);
 		noUpdateHive.sync();
 		Migrator m = new HiveMigrator(noUpdateHive, partitionDimensionName());
 		try {
-			m.migrate(primaryKey, destination.getName(), pMover);
+			m.migrate(primaryKey, Arrays.asList(new String[]{destination.getName()}), pMover);
 		} catch( Exception e) {
 //			e.printStackTrace();
 			//Quash
 		}
 		//Directory still points to origin
-		assertEquals(origin.getId(), dir.getNodeIdOfPrimaryIndexKey(primaryKey));
+		assertNotNull(Filter.grepItemAgainstList(origin.getId(), dir.getNodeIdsOfPrimaryIndexKey(primaryKey)));
 		//Records exist on both nodes
 		assertEquals(primaryKey, pMover.get(primaryKey, origin));
 		assertEquals(secondaryKey, new SecondaryMover().get(secondaryKey, origin));
@@ -149,7 +151,7 @@ public class TestMigration extends HiveTestCase {
 		Pair<Node, Node> nodes = initializeTestData(hive, primaryKey, secondaryKey);
 		Node origin = nodes.getKey();
 		Node destination = nodes.getValue();
-		Directory dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), getDataSource(getHiveDatabaseName()));
+		NodeResolver dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), getDataSource(getHiveDatabaseName()));
 		PartitionKeyMover<Integer> pMover = new PrimaryMover(origin.getUri());
 //		This mover just craps out on delete
 		Mover<Integer> failingMover = new Mover<Integer>() {
@@ -170,23 +172,23 @@ public class TestMigration extends HiveTestCase {
 		pMover.getDependentMovers().clear();
 		pMover.getDependentMovers().add(new Pair<Mover, KeyLocator>(failingMover, new SecondaryKeyLocator(origin.getUri())));
 		try {
-			m.migrate(primaryKey,destination.getName(), pMover);
+			m.migrate(primaryKey,Arrays.asList(new String[]{destination.getName()}), pMover);
 		} catch( Exception e) {
 			//Quash
 		}
 		//Directory still points destination
-		assertEquals(destination.getId(), dir.getNodeIdOfPrimaryIndexKey(primaryKey));
+		assertNotNull(Filter.grepItemAgainstList(destination.getId(), dir.getNodeIdsOfPrimaryIndexKey(primaryKey)));
 		//Records exist ondestination
 		assertEquals(primaryKey, pMover.get(primaryKey, destination));
 		assertEquals(secondaryKey, new SecondaryMover().get(secondaryKey, destination));
 	}
 	
 	
-	private Pair<Node, Node> initializeTestData(Hive hive, Integer primaryKey, Integer secondaryKey) throws HiveException, SQLException {
+	private Pair<Node, Node> initializeTestData(Hive hive, Integer primaryKey, Integer secondaryKey) throws Exception {
 		hive.insertPrimaryIndexKey(hive.getPartitionDimension(partitionDimensionName()), primaryKey);
 		//Setup the test data on one node
-		Directory dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), getDataSource(getHiveDatabaseName()));
-		int originId = dir.getNodeIdOfPrimaryIndexKey(primaryKey);
+		NodeResolver dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), getDataSource(getHiveDatabaseName()));
+		int originId = Atom.getFirst(dir.getNodeIdsOfPrimaryIndexKey(primaryKey));
 		Node origin = hive.getPartitionDimension(partitionDimensionName()).getNodeGroup().getNode(originId);
 		Node destination = origin.getName().equals("data1") ? hive.getPartitionDimension(partitionDimensionName()).getNodeGroup().getNode("data2") : 
 			hive.getPartitionDimension(partitionDimensionName()).getNodeGroup().getNode("data1");
@@ -285,7 +287,7 @@ public class TestMigration extends HiveTestCase {
 		
 		@Override
 		public void updatePrimaryIndexNode(PartitionDimension partitionDimension,
-				Object primaryIndexKey, Node node) {
+				Object primaryIndexKey, Collection<Node> node) {
 			throw new HiveRuntimeException("");
 		}
 		

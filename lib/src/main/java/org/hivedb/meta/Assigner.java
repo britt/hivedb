@@ -8,4 +8,5 @@ import java.util.Collection;
 
 public interface Assigner {
 	Node chooseNode(Collection<Node> nodes, Object value);
+	Collection<Node> chooseNodes(Collection<Node> nodes, Object value);
 }

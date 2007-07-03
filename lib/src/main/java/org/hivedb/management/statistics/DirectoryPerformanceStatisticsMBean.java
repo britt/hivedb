@@ -6,6 +6,12 @@ import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
 
 public class DirectoryPerformanceStatisticsMBean extends StandardMBean implements DirectoryPerformanceStatistics, Counter {
+	public static final String PRIMARY_INDEX_WRITE = "PrimaryIndexWrite";
+	public static final String PRIMARY_INDEX_READ = "PrimaryIndexRead";
+	public static final String PRIMARY_INDEX_DELETE = "PrimaryIndexDelete";
+	public static final String SECONDARY_INDEX_WRITE = "SecondaryIndexWrite";
+	public static final String SECONDARY_INDEX_READ = "SecondaryIndexRead";
+	public static final String SECONDARY_INDEX_DELETE = "SecondaryIndexDelete";
 	
 	public static final String PRIMARYINDEXREADCOUNT = "PrimaryIndexReadCount";
 	

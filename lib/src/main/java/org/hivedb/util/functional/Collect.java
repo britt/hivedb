@@ -15,6 +15,14 @@ public class Collect {
 			list.add(function.f());    				
 		return list;
 	}
+	
+	public static<I,R> Collection<R> amass(Unary<I,R> function, Iterator<I> iterator) {
+		List<R> list = new ArrayList<R>();
+		while(iterator.hasNext())
+			list.add(function.f(iterator.next()));    				
+		return list;
+	}
+	
 	public static class NumberIterator implements Iterator {
 		int number;
 		int current=0;

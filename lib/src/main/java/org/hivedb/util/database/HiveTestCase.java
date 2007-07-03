@@ -70,7 +70,7 @@ public class HiveTestCase extends DerbyTestCase {
 	}
 
 	protected Node createNode(String name) {
-		return new Node("myNode",getConnectString(name), false);
+		return new Node(name,getConnectString(name), false);
 	}
 
 	protected NodeGroup createPopulatedNodeGroup() {

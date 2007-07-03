@@ -194,6 +194,13 @@ public abstract class Filter {
 			map.put(item, true);
 		return map.keySet();
 	}
+	public static<T,R> Collection<T> getUnique(Iterable<T> iterable, Unary<T, R> accessor)
+	{
+		Map<R,T> map = new Hashtable<R,T>();
+		for (T item : iterable)
+			map.put(accessor.f(item), item);
+		return map.values();
+	}
 	public static class TruePredicate implements Predicate 
 	{
 		public boolean f(Object item) {

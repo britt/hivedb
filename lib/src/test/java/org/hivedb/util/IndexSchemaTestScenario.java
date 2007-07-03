@@ -4,6 +4,7 @@ import static org.testng.AssertJUnit.fail;
 
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 
 import org.hivedb.Hive;
@@ -66,6 +67,10 @@ public class IndexSchemaTestScenario {
 			public Node chooseNode(Collection<Node> nodes, Object value) {
 				return (Node) (nodes.iterator().hasNext() ? nodes.iterator()
 						.next() : nodes.toArray()[0]);
+			}
+
+			public Collection<Node> chooseNodes(Collection<Node> nodes, Object value) {
+				return Arrays.asList(new Node[]{chooseNode(nodes,value)});
 			}
 		});
 		Collection<Node> nodes = new ArrayList<Node>();

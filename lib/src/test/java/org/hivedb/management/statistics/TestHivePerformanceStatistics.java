@@ -37,7 +37,7 @@ public class TestHivePerformanceStatistics extends HiveTestCase{
 		Collection<Connection> connections = new ArrayList<Connection>();
 		
 		for(int i=0; i<5; i++)
-			connections.add( hive.getConnection( hive.getPartitionDimension(partitionDimensionName()), intKey(), AccessType.ReadWrite));
+			connections.addAll( hive.getConnection( hive.getPartitionDimension(partitionDimensionName()), intKey(), AccessType.ReadWrite));
 		
 		Assert.assertEquals(connections.size(), hive.getPerformanceStatistics().getSumNewWriteConnections());
 	}
@@ -46,7 +46,7 @@ public class TestHivePerformanceStatistics extends HiveTestCase{
 	public void testReadConnectionTracking() throws Exception{
 		Collection<Connection> connections = new ArrayList<Connection>();
 		for(int i=0; i<5; i++)
-			connections.add( hive.getConnection( hive.getPartitionDimension(partitionDimensionName()), intKey(), AccessType.Read));
+			connections.addAll( hive.getConnection( hive.getPartitionDimension(partitionDimensionName()), intKey(), AccessType.Read));
 		
 		Assert.assertEquals(connections.size(), hive.getPerformanceStatistics().getSumNewReadConnections());
 	}
@@ -57,7 +57,7 @@ public class TestHivePerformanceStatistics extends HiveTestCase{
 		Collection<Connection> connections = new ArrayList<Connection>();
 		for(int i=0; i<5; i++){
 			try {
-				connections.add( hive.getConnection( hive.getPartitionDimension(partitionDimensionName()), intKey(), AccessType.ReadWrite));
+				connections.addAll( hive.getConnection( hive.getPartitionDimension(partitionDimensionName()), intKey(), AccessType.ReadWrite));
 			} catch( Exception e) {
 				//CRUSH! KILL! DESTROY!
 			}

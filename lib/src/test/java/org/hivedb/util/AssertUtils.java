@@ -2,6 +2,8 @@ package org.hivedb.util;
 
 import junit.framework.TestCase;
 
+import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Undoable;
 public class AssertUtils  {
 	public static interface Toss {
@@ -97,5 +99,10 @@ public class AssertUtils  {
 		} catch (Exception e) {
 			TestCase.fail("Got unexpected exception: " + e.getMessage() + e.getStackTrace());
 		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static void assertUnique(Iterable i) {
+		TestCase.assertEquals(Transform.toCollection(i).size(), Filter.getUnique(i).size());
 	}
 }

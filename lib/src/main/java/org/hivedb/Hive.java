@@ -43,6 +43,8 @@ import org.hivedb.meta.persistence.SecondaryIndexDao;
 import org.hivedb.util.DriverLoader;
 import org.hivedb.util.HiveUtils;
 import org.hivedb.util.IdentifiableUtils;
+import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Unary;
 
 /**
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
@@ -684,10 +686,10 @@ public class Hive implements Synchronizeable, Observer {
 			Object primaryIndexKey) throws HiveReadOnlyException {
 		// TODO: Consider redesign of NodeGroup to perform assignment, or at
 		// least provider direct iteration over Nodes
-		Node node = partitionDimension.getAssigner().chooseNode(
+		Collection<Node> nodes = partitionDimension.getAssigner().chooseNodes(
 				partitionDimension.getNodeGroup().getNodes(), primaryIndexKey);
-		throwIfReadOnly("Inserting a new primary index key", node);
-		directories.get(partitionDimension.getName()).insertPrimaryIndexKey(node,
+		throwIfReadOnly("Inserting a new primary index key", nodes);
+		directories.get(partitionDimension.getName()).insertPrimaryIndexKey(nodes,
 				primaryIndexKey);
 	}
 
@@ -786,28 +788,9 @@ public class Hive implements Synchronizeable, Observer {
 	 *             Throws if there is a persistence error
 	 */
 	public void updatePrimaryIndexNode(PartitionDimension partitionDimension,
-			Object primaryIndexKey, Node node) throws HiveReadOnlyException {
-		directories.get(partitionDimension.getName()).updatePrimaryIndexKey(node,
+			Object primaryIndexKey, Collection<Node> nodes) throws HiveReadOnlyException {
+		directories.get(partitionDimension.getName()).updatePrimaryIndexKey(nodes,
 				primaryIndexKey);
-	}
-
-	/**
-	 * 
-	 * Updates the node of the given primary index key for the given partition
-	 * dimension.
-	 * 
-	 * @param partitionDimensionName
-	 *            The name of a partition demension in the hive
-	 * @param primaryIndexKey
-	 *            An existing primary index key in the primary index
-	 * @param nodeUri
-	 *            A uri of a node of the node group of the partition dimension
-	 */
-	public void updatePrimaryIndexNode(String partitionDimensionName,
-			Object primaryIndexKey, String nodeUri) throws HiveReadOnlyException {
-		PartitionDimension partitionDimension = getPartitionDimension(partitionDimensionName);
-		updatePrimaryIndexNode(partitionDimension, primaryIndexKey,
-				partitionDimension.getNodeGroup().getNode(nodeUri));
 	}
 
 	/**
@@ -827,7 +810,7 @@ public class Hive implements Synchronizeable, Observer {
 			PartitionDimension partitionDimension, Object primaryIndexKey,
 			boolean isReadOnly) throws HiveReadOnlyException {
 		// This query validates the existence of the primaryIndexKey
-		getNodeSemaphoreOfPrimaryIndexKey(partitionDimension, primaryIndexKey);
+		getNodeSemaphoresOfPrimaryIndexKey(partitionDimension, primaryIndexKey);
 		directories.get(partitionDimension.getName()).updatePrimaryIndexKeyReadOnly(primaryIndexKey, isReadOnly);
 	}
 
@@ -867,13 +850,13 @@ public class Hive implements Synchronizeable, Observer {
 	 */
 	public void updatePrimaryIndexKeyOfSecondaryIndexKey(
 			SecondaryIndex secondaryIndex, Object secondaryIndexKey,
-			Object primaryIndexKey) throws HiveReadOnlyException {
+			Object originalPrimaryIndexKey, Object newPrimaryIndexKey) throws HiveReadOnlyException {
 		
 		throwIfReadOnly("Updating primary index key of secondary index key");
 		getPrimaryIndexKeyOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
 		directories.get(secondaryIndex.getResource().getPartitionDimension().getName())
 				.updatePrimaryIndexOfSecondaryKey(secondaryIndex,
-						secondaryIndexKey, primaryIndexKey);
+						secondaryIndexKey, originalPrimaryIndexKey, newPrimaryIndexKey);
 	}
 
 	/**
@@ -893,11 +876,11 @@ public class Hive implements Synchronizeable, Observer {
 	public void updatePrimaryIndexKeyOfSecondaryIndexKey(
 			String partitionDimensionName, String resourceName,
 			String secondaryIndexName, Object secondaryIndexKey,
-			Object primaryIndexKey) throws HiveReadOnlyException {
+			Object originalPrimaryIndexKey,  Object newPrimaryIndexKey) throws HiveReadOnlyException {
 		updatePrimaryIndexKeyOfSecondaryIndexKey(getPartitionDimension(
 				partitionDimensionName).getResource(resourceName)
 				.getSecondaryIndex(secondaryIndexName), secondaryIndexKey,
-				primaryIndexKey);
+				originalPrimaryIndexKey, newPrimaryIndexKey);
 	}
 
 	/**
@@ -914,10 +897,12 @@ public class Hive implements Synchronizeable, Observer {
 		if (!doesPrimaryIndexKeyExist(partitionDimension, primaryIndexKey))
 			throw new HiveKeyNotFoundException("The primary index key " + primaryIndexKey
 					+ " does not exist",primaryIndexKey);
-		throwIfReadOnly("Deleting primary index key", partitionDimension.getNodeGroup().getNode(getNodeSemaphoreOfPrimaryIndexKey(
-				partitionDimension, primaryIndexKey).getId()), primaryIndexKey,
-				getReadOnlyOfPrimaryIndexKey(partitionDimension,
-						primaryIndexKey));
+		for(NodeSemaphore node: getNodeSemaphoresOfPrimaryIndexKey(partitionDimension, primaryIndexKey)){
+			throwIfReadOnly("Deleting primary index key", partitionDimension.getNodeGroup().getNode(node.getId()), primaryIndexKey,
+					getReadOnlyOfPrimaryIndexKey(partitionDimension,
+							primaryIndexKey));
+		}
+		
 
 		for (Resource resource : partitionDimension.getResources())
 			for (SecondaryIndex secondaryIndex : resource.getSecondaryIndexes()) {
@@ -960,9 +945,7 @@ public class Hive implements Synchronizeable, Observer {
 	 *             Throws if there is a persistence error
 	 */
 	public void deleteSecondaryIndexKey(SecondaryIndex secondaryIndex,
-			Object secondaryIndexKey) throws HiveReadOnlyException{
-		Object primaryIndexKey = getPrimaryIndexKeyOfSecondaryIndexKey(
-				secondaryIndex, secondaryIndexKey);
+			Object secondaryIndexKey, Object primaryIndexKey) throws HiveReadOnlyException{
 		throwIfReadOnly("Deleting secondary index key");
 
 		if (!doesSecondaryIndexKeyExist(secondaryIndex, secondaryIndexKey))
@@ -970,7 +953,7 @@ public class Hive implements Synchronizeable, Observer {
 					+ secondaryIndexKey.toString() + " does not exist",secondaryIndexKey);
 
 		directories.get(secondaryIndex.getResource().getPartitionDimension().getName())
-				.deleteSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
+				.deleteSecondaryIndexKey(secondaryIndex, secondaryIndexKey, primaryIndexKey);
 		partitionStatistics.decrementChildRecordCount(secondaryIndex.getResource()
 				.getPartitionDimension(), primaryIndexKey, 1);
 	}
@@ -998,10 +981,10 @@ public class Hive implements Synchronizeable, Observer {
 	 */
 	public void deleteSecondaryIndexKey(String partitionDimensionName,
 			String resourceName, String secondaryIndexName,
-			Object secondaryIndexKey) throws HiveReadOnlyException {
+			Object secondaryIndexKey, Object primaryIndexKey) throws HiveReadOnlyException {
 		deleteSecondaryIndexKey(getPartitionDimension(partitionDimensionName)
 				.getResource(resourceName)
-				.getSecondaryIndex(secondaryIndexName), secondaryIndexKey);
+				.getSecondaryIndex(secondaryIndexName), secondaryIndexKey, primaryIndexKey);
 	}
 
 	/**
@@ -1053,9 +1036,9 @@ public class Hive implements Synchronizeable, Observer {
 	 * @return
 
 	 */
-	private NodeSemaphore getNodeSemaphoreOfPrimaryIndexKey(PartitionDimension partitionDimension,
+	private Collection<NodeSemaphore> getNodeSemaphoresOfPrimaryIndexKey(PartitionDimension partitionDimension,
 			Object primaryIndexKey) {
-		return directories.get(partitionDimension.getName()).getNodeSemamphoreOfPrimaryIndexKey(primaryIndexKey);
+		return directories.get(partitionDimension.getName()).getNodeSemamphoresOfPrimaryIndexKey(primaryIndexKey);
 	}
 	
 	/**
@@ -1131,11 +1114,9 @@ public class Hive implements Synchronizeable, Observer {
 				.getSecondaryIndex(secondaryIndexName), secondaryIndexKey);
 	}
 	
-	private Collection<NodeSemaphore> getNodeSemaphoreOfSecondaryIndexKey(SecondaryIndex secondaryIndex,
+	private Collection<NodeSemaphore> getNodeSemaphoresOfSecondaryIndexKey(SecondaryIndex secondaryIndex,
 			Object secondaryIndexKey) {
-		PartitionDimension partitionDimension = secondaryIndex.getResource()
-				.getPartitionDimension();
-		return directories.get(partitionDimension.getName()).getNodeSemaphoreOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
+		return directories.get(secondaryIndex.getResource().getPartitionDimension().getName()).getNodeSemaphoresOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
 	}
 
 	/**
@@ -1153,7 +1134,7 @@ public class Hive implements Synchronizeable, Observer {
 		PartitionDimension partitionDimension = secondaryIndex.getResource()
 				.getPartitionDimension();
 		Object primaryIndexKey = directories.get(partitionDimension.getName())
-				.getPrimaryIndexKeyOfSecondaryIndexKey(secondaryIndex,
+				.getPrimaryIndexKeysOfSecondaryIndexKey(secondaryIndex,
 						secondaryIndexKey);
 		if (primaryIndexKey != null)
 			return primaryIndexKey;
@@ -1247,9 +1228,12 @@ public class Hive implements Synchronizeable, Observer {
 	 * @return
 	 * @throws HiveReadOnlyException 
 	 */
-	public Connection getConnection(PartitionDimension partitionDimension,
+	public Collection<Connection> getConnection(PartitionDimension partitionDimension,
 			Object primaryIndexKey, AccessType intent) throws SQLException, HiveReadOnlyException {
-		return getConnection(partitionDimension, getNodeSemaphoreOfPrimaryIndexKey(partitionDimension, primaryIndexKey), intent);
+		Collection<Connection> connections = new ArrayList<Connection>();
+		for(NodeSemaphore semaphore : getNodeSemaphoresOfPrimaryIndexKey(partitionDimension, primaryIndexKey))
+			connections.add(getConnection(partitionDimension, semaphore, intent));
+		return connections;
 	}
 	
 	/***
@@ -1261,12 +1245,20 @@ public class Hive implements Synchronizeable, Observer {
 	 * @throws HiveException
 	 * @throws SQLException
 	 */
-	public Connection getConnection(SecondaryIndex secondaryIndex,
+	public Collection<Connection> getConnection(SecondaryIndex secondaryIndex,
 			Object secondaryIndexKey, AccessType intent) throws HiveReadOnlyException, SQLException {
-		return getConnection(
-				secondaryIndex.getResource().getPartitionDimension(), 
-				getNodeSemaphoreOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey), 
-				intent);
+		if(AccessType.ReadWrite == intent)
+			throw new UnsupportedOperationException("Writes must be performed using the primary index key.");
+		
+		Collection<Connection> connections = new ArrayList<Connection>();
+		Collection<NodeSemaphore> nodeSemaphores = getNodeSemaphoresOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
+		nodeSemaphores = Filter.getUnique(nodeSemaphores, new Unary<NodeSemaphore, Integer>(){
+			public Integer f(NodeSemaphore item) {
+				return item.getId();
+			}});
+		for(NodeSemaphore semaphore : nodeSemaphores)
+			connections.add(getConnection(secondaryIndex.getResource().getPartitionDimension(), semaphore, intent));
+		return connections;
 	}
 	
 	/***
@@ -1329,6 +1321,11 @@ public class Hive implements Synchronizeable, Observer {
 			throw new HiveReadOnlyException(errorMessage
 					+ ". This operation is invalid becuase the selected node "
 					+ node.getId() + " is currently read-only.");
+	}
+	
+	private void throwIfReadOnly(String errorMessage, Collection<Node> nodes) throws HiveReadOnlyException {
+		for(Node node : nodes)
+			throwIfReadOnly(errorMessage, node);
 	}
 
 	private void throwIfReadOnly(String errorMessage, Node node,

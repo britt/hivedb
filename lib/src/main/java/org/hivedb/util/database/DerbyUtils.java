@@ -19,11 +19,11 @@ public class DerbyUtils {
 	}
 	
 	private static Connection createConnection(String connectString, Properties properties) throws SQLException, InstantiationException {
-//		try {
-//			getDriver(); //JNDI magic
-//		} catch (Exception e) {
-//			throw new InstantiationException(e.getMessage());
-//		}  
+		try {
+			getDriver(); //JNDI magic
+		} catch (Exception e) {
+			throw new InstantiationException(e.getMessage());
+		}  
 		return DriverManager.getConnection(connectString, properties);
 	}
 	
@@ -57,9 +57,14 @@ public class DerbyUtils {
 	
 	//Kill all Derby DBs
 	public static void shutdown() {
+		Connection c = null;
 		try {
-			DriverManager.getConnection(derbyShutdownString);
+			c = DriverManager.getConnection(derbyShutdownString);
 		} catch(SQLException e) {
+			if(c!=null)
+				try {
+					c.close();
+				} catch (SQLException e1) {}
 		}
 	}
 	
