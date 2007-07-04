@@ -14,53 +14,58 @@ import java.util.List;
 import java.util.Random;
 
 import org.hivedb.Hive;
-import org.hivedb.management.HiveInstaller;
-import org.hivedb.meta.persistence.HiveBasicDataSource;
-import org.hivedb.util.IndexSchemaTestScenario;
-import org.hivedb.util.database.DerbyTestCase;
+import org.hivedb.meta.Directory;
+import org.hivedb.meta.IndexSchema;
+import org.hivedb.meta.NodeResolver;
+import org.hivedb.meta.PartitionDimension;
+import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.util.database.HiveTestCase;
 import org.hivedb.util.functional.Atom;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class TestPartitionKeyStatisticsPersistence extends DerbyTestCase {
-	private static final String DB = "hive";
+public class TestPartitionKeyStatisticsPersistence extends HiveTestCase {
 	private Collection<Integer> keys;
-	private IndexSchemaTestScenario index;
 	private Hive hive;
+	private PartitionDimension partitionDimension;
+	private SecondaryIndex secondaryIndex;
 	
 	@Override
 	public Collection<String> getDatabaseNames() {
-		return Arrays.asList(new String[] {DB});
+		return Arrays.asList(new String[] {getHiveDatabaseName()});
 	}
 	
 	@BeforeMethod
 	public void setUp() throws Exception{
-		super.beforeMethod();
-		new HiveInstaller(getConnectString(DB)).run();
-		index = new IndexSchemaTestScenario((HiveBasicDataSource)getDataSource(DB));
-		index.build();
-		hive = Hive.load(getConnectString(DB));
+		hive = Hive.load(getConnectString(getHiveDatabaseName()));
+		hive.addPartitionDimension(createPopulatedPartitionDimension());
+		hive.addSecondaryIndex(hive.getPartitionDimension(partitionDimensionName()).getResource(createResource().getName()), createSecondaryIndex());
+		new IndexSchema(hive.getPartitionDimension(partitionDimensionName())).install();
+		hive.addNode(hive.getPartitionDimension(partitionDimensionName()), createNode(getHiveDatabaseName()));
 		
+		secondaryIndex = hive.getPartitionDimension(partitionDimensionName()).getResource(createResource().getName()).getSecondaryIndex(createSecondaryIndex().getName());
+
+		partitionDimension = hive.getPartitionDimension(partitionDimensionName());
 		keys = new ArrayList<Integer>();
 		Random rand = new Random();
 		for(int i=0; i<5; i++) {
 			Integer key = new Integer(rand.nextInt());
-			hive.insertPrimaryIndexKey(index.partitionDimension(), key);
+			hive.insertPrimaryIndexKey(partitionDimension, key);
 			keys.add(key);
 		}
 	}
 	
 	@Test
 	public void testUpdate() {
-		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource(DB));
+		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource(getHiveDatabaseName()));
 		PartitionKeyStatistics frozen = null;
 		PartitionKeyStatistics thawed = null;
 		try {
-			frozen = dao.findByPrimaryPartitionKey(index.partitionDimension(), keys.iterator()
+			frozen = dao.findByPrimaryPartitionKey(partitionDimension, keys.iterator()
 					.next());
 			frozen.setChildRecordCount(23);
 			dao.update(frozen);
-			thawed = dao.findByPrimaryPartitionKey(index.partitionDimension(), frozen
+			thawed = dao.findByPrimaryPartitionKey(partitionDimension, frozen
 					.getKey());
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -74,15 +79,15 @@ public class TestPartitionKeyStatisticsPersistence extends DerbyTestCase {
 
 	@Test
 	public void testFindByPartitionKey() throws Exception {
-		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource(DB));
-		PartitionKeyStatisticsBean frozen = dao.findByPrimaryPartitionKey(index.partitionDimension(), Atom.getFirst(keys));
+		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource(getHiveDatabaseName()));
+		PartitionKeyStatisticsBean frozen = dao.findByPrimaryPartitionKey(partitionDimension, Atom.getFirst(keys));
 		assertNotNull(frozen);
 	}
 
 	@Test
 	public void testIncrementChildRecords() {
-		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource(DB));
-		PartitionKeyStatistics frozen = new PartitionKeyStatisticsBean(index.partitionDimension(), keys
+		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource(getHiveDatabaseName()));
+		PartitionKeyStatistics frozen = new PartitionKeyStatisticsBean(partitionDimension, keys
 				.iterator().next(), new Date(System.currentTimeMillis()));
 		frozen.setChildRecordCount(21);
 				dao.update(frozen);
@@ -97,8 +102,8 @@ public class TestPartitionKeyStatisticsPersistence extends DerbyTestCase {
 
 	@Test
 	public void testDecrementChildRecords() {
-		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource(DB));
-		PartitionKeyStatistics frozen = new PartitionKeyStatisticsBean(index.partitionDimension(), keys
+		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource(getHiveDatabaseName()));
+		PartitionKeyStatistics frozen = new PartitionKeyStatisticsBean(partitionDimension, keys
 				.iterator().next(), new Date(System.currentTimeMillis()));
 		frozen.setChildRecordCount(21);
 		
@@ -114,11 +119,11 @@ public class TestPartitionKeyStatisticsPersistence extends DerbyTestCase {
 	
 	@Test
 	public void testFindAllByNode() throws Exception {
-		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource(DB));
+		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource(getHiveDatabaseName()));
 
 		List<PartitionKeyStatistics> stats = dao.findAllByNodeAndDimension(
-				index.partitionDimension(),
-				index.node());
+				partitionDimension,
+				Atom.getFirst(partitionDimension.getNodeGroup().getNodes()));
 		assertNotNull(stats);
 		assertEquals(5, stats.size());
 		for(PartitionKeyStatistics s : stats) {
@@ -131,14 +136,14 @@ public class TestPartitionKeyStatisticsPersistence extends DerbyTestCase {
 	public void testSecondaryIndexHooks() throws Exception {
 		Object key = keys.iterator().next();
 
-		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource(DB));
-		PartitionKeyStatistics frozen = dao.findByPrimaryPartitionKey(index.partitionDimension(), key);
+		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource(getHiveDatabaseName()));
+		PartitionKeyStatistics frozen = dao.findByPrimaryPartitionKey(partitionDimension, key);
+		
+		hive.insertSecondaryIndexKey(secondaryIndex, new Integer(1), key);
+		hive.insertSecondaryIndexKey(secondaryIndex, new Integer(2), key);
+		hive.insertSecondaryIndexKey(secondaryIndex, new Integer(3), key);
 
-		hive.insertSecondaryIndexKey(index.secondaryIndex(), new Integer(1), key);
-		hive.insertSecondaryIndexKey(index.secondaryIndex(), new Integer(2), key);
-		hive.insertSecondaryIndexKey(index.secondaryIndex(), new Integer(3), key);
-
-		PartitionKeyStatistics thawed = dao.findByPrimaryPartitionKey(index.partitionDimension(),
+		PartitionKeyStatistics thawed = dao.findByPrimaryPartitionKey(partitionDimension,
 				frozen.getKey());
 
 		assertEquals(frozen.getChildRecordCount() + 3, thawed

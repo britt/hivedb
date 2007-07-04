@@ -730,14 +730,18 @@ public class Hive implements Synchronizeable, Observer {
 	 * @throws HiveReadOnlyException 
 	 */
 	public void insertSecondaryIndexKey(SecondaryIndex secondaryIndex,
-			Object secondaryIndexKey, Object primaryindexKey) throws HiveReadOnlyException {
-		
+			Object secondaryIndexKey, Object primaryIndexKey) throws HiveReadOnlyException {
+		String partitionDimensionName = secondaryIndex.getResource().getPartitionDimension().getName();
+		boolean primaryKeyReadOnly = getReadOnlyOfPrimaryIndexKey(getPartitionDimension(partitionDimensionName), primaryIndexKey);
+		for(Integer id : directories.get(partitionDimensionName).getNodeIdsOfPrimaryIndexKey(primaryIndexKey))
+			throwIfReadOnly("Inserting a new secondary index key", getPartitionDimension(partitionDimensionName).getNodeGroup().getNode(id), primaryIndexKey, primaryKeyReadOnly);
+
 		throwIfReadOnly("Inserting a new secondary index key");
 		directories.get(secondaryIndex.getResource().getPartitionDimension().getName())
 				.insertSecondaryIndexKey(secondaryIndex, secondaryIndexKey,
-						primaryindexKey);
+						primaryIndexKey);
 		partitionStatistics.incrementChildRecordCount(secondaryIndex.getResource()
-				.getPartitionDimension(), primaryindexKey, 1);
+				.getPartitionDimension(), primaryIndexKey, 1);
 	}
 
 	/**
@@ -922,13 +926,15 @@ public class Hive implements Synchronizeable, Observer {
 	 */
 	public void deleteSecondaryIndexKey(SecondaryIndex secondaryIndex,
 			Object secondaryIndexKey, Object primaryIndexKey) throws HiveReadOnlyException{
-		throwIfReadOnly("Deleting secondary index key");
-
+		String partitionDimensionName = secondaryIndex.getResource().getPartitionDimension().getName();
+		boolean primaryKeyReadOnly = getReadOnlyOfPrimaryIndexKey(getPartitionDimension(partitionDimensionName), primaryIndexKey);
+		for(Integer id : directories.get(partitionDimensionName).getNodeIdsOfPrimaryIndexKey(primaryIndexKey))
+			throwIfReadOnly("Deleting secondary index key", getPartitionDimension(partitionDimensionName).getNodeGroup().getNode(id), primaryIndexKey, primaryKeyReadOnly);
 		if (!doesSecondaryIndexKeyExist(secondaryIndex, secondaryIndexKey))
 			throw new HiveKeyNotFoundException("Secondary index key "
 					+ secondaryIndexKey.toString() + " does not exist",secondaryIndexKey);
 
-		directories.get(secondaryIndex.getResource().getPartitionDimension().getName())
+		directories.get(partitionDimensionName)
 				.deleteSecondaryIndexKey(secondaryIndex, secondaryIndexKey, primaryIndexKey);
 		partitionStatistics.decrementChildRecordCount(secondaryIndex.getResource()
 				.getPartitionDimension(), primaryIndexKey, 1);
