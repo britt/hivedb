@@ -125,4 +125,8 @@ public abstract class Schema extends JdbcDaoSupport {
 			return true;
 		}
 	}
+	
+	public String ifMySql(String sql, HiveDbDialect dialect) {
+		return (dialect.equals(HiveDbDialect.MySql) ? sql : "");
+	}
 }
