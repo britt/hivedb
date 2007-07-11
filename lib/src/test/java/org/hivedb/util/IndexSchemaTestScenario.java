@@ -35,7 +35,7 @@ public class IndexSchemaTestScenario {
 			hive.addPartitionDimension(dimension);
 			Resource resource = resource();
 			SecondaryIndex secondaryIndex = secondaryIndex();
-			hive.addResource(dimension, resource);
+			hive.addResource(dimension.getName(), resource);
 			hive.addSecondaryIndex(resource, secondaryIndex);
 		} catch (Exception e) {
 			e.printStackTrace();

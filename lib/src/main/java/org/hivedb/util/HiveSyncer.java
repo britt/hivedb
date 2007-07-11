@@ -57,7 +57,7 @@ public class HiveSyncer {
 			
 			public Resource f(PartitionDimension partitionDimension, Resource resource) {
 				try {
-					hive.addResource(partitionDimension, resource);
+					hive.addResource(partitionDimension.getName(), resource);
 				} catch (HiveException e) {
 					throw new HiveRuntimeException(String.format("Unable to add resource %s to partition dimesnion %s",
 							partitionDimension.getName(),

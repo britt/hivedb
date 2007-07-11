@@ -6,6 +6,7 @@ package org.hivedb.meta;
 
 import org.hivedb.Hive;
 import org.hivedb.util.HiveUtils;
+import org.hivedb.util.functional.Atom;
 
 /**
  * 
@@ -53,7 +54,7 @@ public class SecondaryIndex implements Comparable<SecondaryIndex>, IdAndNameIden
 	 * @return
 	 */
 	public String getName() {
-		return getResource().getName() + "." + getColumnInfo().getName();
+		return SecondaryIndex.getSecondaryIndexName(this, getResource());
 	}
 	
 	public ColumnInfo getColumnInfo() {
@@ -108,5 +109,13 @@ public class SecondaryIndex implements Comparable<SecondaryIndex>, IdAndNameIden
 
 	public void setId(int id) {
 		this.id = id;
+	}
+	
+	public static String getResourceName(String secondaryIndexName) {
+		return Atom.getFirstOrThrow(secondaryIndexName.split("\\."));
+	}
+	
+	public static String getSecondaryIndexName(SecondaryIndex secondaryIndex, Resource resource) {
+		return resource.getName() + "." + secondaryIndex.getColumnInfo().getName();
 	}
 }

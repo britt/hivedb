@@ -5,13 +5,14 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.dbcp.BasicDataSource;
 import org.hivedb.management.statistics.HivePerformanceStatistics;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.NodeResolver;
 import org.hivedb.meta.NodeSemaphore;
 import org.hivedb.meta.SecondaryIndex;
-import org.hivedb.meta.persistence.HiveBasicDataSource;
+import org.hivedb.meta.persistence.DataSourceProvider;
 import org.hivedb.util.HiveUtils;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Unary;
@@ -27,17 +28,19 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	private Map<Integer, SimpleJdbcDaoSupport> jdbcDaoSupports;
 	private HivePerformanceStatistics stats;
 	private NodeResolver directory;
+	private DataSourceProvider dataSourceProvider;
 	
-	public JdbcDaoSupportCacheImpl(String partitionDimension, Hive hive, NodeResolver directory) {
-		this(partitionDimension, hive, directory, null);
+	public JdbcDaoSupportCacheImpl(String partitionDimension, Hive hive, NodeResolver directory, DataSourceProvider dataSourceProvider) {
+		this(partitionDimension, hive, directory, dataSourceProvider, null);
 	}
 	
-	public JdbcDaoSupportCacheImpl(String partitionDimension, Hive hive, NodeResolver directory, HivePerformanceStatistics stats) {
+	public JdbcDaoSupportCacheImpl(String partitionDimension, Hive hive, NodeResolver directory,  DataSourceProvider dataSourceProvider, HivePerformanceStatistics stats) {
 		this.partitionDimension = partitionDimension;
 		this.hive = hive;
 		this.jdbcDaoSupports = new ConcurrentHashMap<Integer, SimpleJdbcDaoSupport>();
 		this.directory = directory;
 		this.stats = stats;
+		this.dataSourceProvider = dataSourceProvider;
 		sync();
 	}
 	
@@ -49,7 +52,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	public void sync() {
 		jdbcDaoSupports.clear();
 		for(Node node : hive.getPartitionDimension(partitionDimension).getNodeGroup().getNodes()) {
-			jdbcDaoSupports.put(hash(node.getId(), AccessType.Read), new DataNodeJdbcDaoSupport(node.getUri(), true));
+			jdbcDaoSupports.put(hash(node.getId(), AccessType.Read), new DataNodeJdbcDaoSupport((BasicDataSource) dataSourceProvider.getDataSource(node.getUri()), true));
 			if( !hive.isReadOnly() && !node.isReadOnly() )
 				addDataSource(node.getId(), AccessType.ReadWrite);
 		}
@@ -57,7 +60,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	
 	private SimpleJdbcDaoSupport addDataSource(Integer nodeId, AccessType intention) {
 		Node node = hive.getPartitionDimension(partitionDimension).getNodeGroup().getNode(nodeId);
-		jdbcDaoSupports.put(hash(nodeId, intention), new DataNodeJdbcDaoSupport(node.getUri()));
+		jdbcDaoSupports.put(hash(nodeId, intention), new DataNodeJdbcDaoSupport((BasicDataSource) dataSourceProvider.getDataSource(node.getUri())));
 		return jdbcDaoSupports.get(hash(nodeId, intention));
 	}
 	
@@ -153,16 +156,14 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	
 	private static class DataNodeJdbcDaoSupport extends SimpleJdbcDaoSupport
 	{
-		public DataNodeJdbcDaoSupport(String databaseUri)
+		public DataNodeJdbcDaoSupport(BasicDataSource dataSource)
 		{
-			this.setDataSource(new HiveBasicDataSource(databaseUri));
+			this(dataSource, false);
 		}
 		
-		public DataNodeJdbcDaoSupport(String databaseUri, boolean readOnly)
-		{
-			HiveBasicDataSource ds = new HiveBasicDataSource(databaseUri);
-			ds.setDefaultReadOnly(readOnly);
-			this.setDataSource(ds);
+		public DataNodeJdbcDaoSupport(BasicDataSource dataSource, Boolean readOnly) {
+			dataSource.setDefaultReadOnly(readOnly);
+			this.setDataSource(dataSource);
 		}
 	}
 

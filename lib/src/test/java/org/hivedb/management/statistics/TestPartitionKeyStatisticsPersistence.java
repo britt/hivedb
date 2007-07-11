@@ -14,9 +14,7 @@ import java.util.List;
 import java.util.Random;
 
 import org.hivedb.Hive;
-import org.hivedb.meta.Directory;
 import org.hivedb.meta.IndexSchema;
-import org.hivedb.meta.NodeResolver;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.database.HiveTestCase;
@@ -50,7 +48,7 @@ public class TestPartitionKeyStatisticsPersistence extends HiveTestCase {
 		Random rand = new Random();
 		for(int i=0; i<5; i++) {
 			Integer key = new Integer(rand.nextInt());
-			hive.insertPrimaryIndexKey(partitionDimension, key);
+			hive.insertPrimaryIndexKey(partitionDimension.getName(), key);
 			keys.add(key);
 		}
 	}
@@ -139,9 +137,9 @@ public class TestPartitionKeyStatisticsPersistence extends HiveTestCase {
 		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource(getHiveDatabaseName()));
 		PartitionKeyStatistics frozen = dao.findByPrimaryPartitionKey(partitionDimension, key);
 		
-		hive.insertSecondaryIndexKey(secondaryIndex, new Integer(1), key);
-		hive.insertSecondaryIndexKey(secondaryIndex, new Integer(2), key);
-		hive.insertSecondaryIndexKey(secondaryIndex, new Integer(3), key);
+		hive.insertSecondaryIndexKey(secondaryIndex.getName(), secondaryIndex.getResource().getPartitionDimension().getName(), new Integer(1), key);
+		hive.insertSecondaryIndexKey(secondaryIndex.getName(), secondaryIndex.getResource().getPartitionDimension().getName(), new Integer(2), key);
+		hive.insertSecondaryIndexKey(secondaryIndex.getName(), secondaryIndex.getResource().getPartitionDimension().getName(), new Integer(3), key);
 
 		PartitionKeyStatistics thawed = dao.findByPrimaryPartitionKey(partitionDimension,
 				frozen.getKey());

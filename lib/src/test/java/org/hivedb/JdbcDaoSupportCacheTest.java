@@ -66,7 +66,7 @@ public class JdbcDaoSupportCacheTest extends HiveTestCase {
 		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		PartitionDimension dimension = hive.deletePartitionDimension(hive.getPartitionDimension(partitionDimensionName()));
 		try {
-			hive.getJdbcDaoSupportCache(dimension);
+			hive.getJdbcDaoSupportCache(dimension.getName());
 		} catch (Exception e) {
 			assertNotNull(e);
 		}

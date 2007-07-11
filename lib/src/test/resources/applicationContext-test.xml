@@ -4,6 +4,11 @@
 		factory-method="load">
 		<constructor-arg value="jdbc:derby:storage_test" />
 		<constructor-arg>
+			<bean class="org.hivedb.meta.persistence.HiveBasicDataSourceProvider">
+				<constructor-arg value="500" />
+			</bean>
+		</constructor-arg>
+		<constructor-arg>
 			<ref bean="hiveStatistics" />
 		</constructor-arg>
 		<constructor-arg>

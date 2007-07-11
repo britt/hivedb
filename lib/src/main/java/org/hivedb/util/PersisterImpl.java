@@ -9,7 +9,7 @@ import org.hivedb.meta.SecondaryIndexIdentifiable;
 
 public class PersisterImpl implements Persister {
 	public PrimaryIndexIdentifiable persistPrimaryIndexIdentifiable(final Hive hive, final PrimaryIndexIdentifiable primaryIndexIdentifiable) throws HiveException {
-		hive.insertPrimaryIndexKey(hive.getPartitionDimension(primaryIndexIdentifiable.getPartitionDimensionName()), primaryIndexIdentifiable.getPrimaryIndexKey());
+		hive.insertPrimaryIndexKey(primaryIndexIdentifiable.getPartitionDimensionName(), primaryIndexIdentifiable.getPrimaryIndexKey());
 		return primaryIndexIdentifiable;
 	}
 	
@@ -21,7 +21,8 @@ public class PersisterImpl implements Persister {
 	}
 	
 	public SecondaryIndexIdentifiable persistSecondaryIndexIdentifiableInstance(final Hive hive, SecondaryIndexIdentifiable secondaryIndexIdentifiable) throws HiveException {
-		hive.insertSecondaryIndexKey(getSecondaryIndex(hive, secondaryIndexIdentifiable), secondaryIndexIdentifiable.getSecondaryIndexKey(), getPrimaryIndexKey(secondaryIndexIdentifiable));
+		SecondaryIndex secondaryIndex = getSecondaryIndex(hive, secondaryIndexIdentifiable);
+		hive.insertSecondaryIndexKey(secondaryIndex.getName(), secondaryIndex.getResource().getPartitionDimension().getName(),secondaryIndexIdentifiable.getSecondaryIndexKey(), getPrimaryIndexKey(secondaryIndexIdentifiable));
 		return secondaryIndexIdentifiable;
 	}
 	

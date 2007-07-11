@@ -114,7 +114,7 @@ public class HiveMigrator implements Migrator {
 	
 	private void lock(Object key) {
 		try {
-			hive.updatePrimaryIndexReadOnly(dimension, key, true);
+			hive.updatePrimaryIndexReadOnly(dimension.getName(), key, true);
 		} catch (HiveException e) {
 			throw new MigrationException("Failed to lock partition key "+ key +" for writing.", e);
 		}
@@ -122,7 +122,7 @@ public class HiveMigrator implements Migrator {
 	
 	private void unlock(Object key) {
 		try {
-			hive.updatePrimaryIndexReadOnly(dimension, key, false);
+			hive.updatePrimaryIndexReadOnly(dimension.getName(), key, false);
 		} catch (HiveException e) {
 			throw new MigrationException("Failed to unlock partition key " + key + " for writing.", e);
 		}

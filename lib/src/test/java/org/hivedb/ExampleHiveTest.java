@@ -110,7 +110,7 @@ public class ExampleHiveTest extends DerbyTestCase {
 		Resource product = new Resource(resourceName,new ArrayList<SecondaryIndex>());
 		
 		// Add it to the Hive
-		product = hive.addResource(partitionDimension, product);
+		product = hive.addResource(partitionDimension.getName(), product);
 		
 		//Now create a SecondaryIndex
 		SecondaryIndex nameIndex = new SecondaryIndex(new ColumnInfo("name", Types.VARCHAR));
@@ -132,7 +132,8 @@ public class ExampleHiveTest extends DerbyTestCase {
 		for(JdbcDaoSupport dao : sporkDaos)
 			dao.getJdbcTemplate().update(stmtFactory.newPreparedStatementCreator(parameters));
 		//Finally we update the SecondaryIndex
-		hive.insertSecondaryIndexKey(nameIndex, spork.getName(), spork.getId());
+		System.out.println(nameIndex.getName());
+		hive.insertSecondaryIndexKey("Product.name",dimensionName, spork.getName(), spork.getId());
 		
 		//Retrieve spork by Primary Key
 		sporkDaos = hive.getJdbcDaoSupportCache(dimensionName).get(spork.getId(), AccessType.ReadWrite);
