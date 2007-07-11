@@ -784,7 +784,7 @@ public class Hive implements Synchronizeable, Observer {
 	private void deletePrimaryIndexKey(PartitionDimension partitionDimension,
 			Object primaryIndexKey) throws HiveReadOnlyException {
 
-		if (!doesPrimaryIndeyKeyExist(partitionDimension.getName(), primaryIndexKey))
+		if (!doesPrimaryIndexKeyExist(partitionDimension.getName(), primaryIndexKey))
 			throw new HiveKeyNotFoundException("The primary index key " + primaryIndexKey
 					+ " does not exist",primaryIndexKey);
 		
@@ -892,7 +892,7 @@ public class Hive implements Synchronizeable, Observer {
 	 *             Throws if the partition dimension is not in the hive
 
 	 */
-	public boolean doesPrimaryIndeyKeyExist(String partitionDimensionName,
+	public boolean doesPrimaryIndexKeyExist(String partitionDimensionName,
 			Object primaryIndexKey) {
 		return directories.get(partitionDimensionName).doesPrimaryIndexKeyExist(
 				primaryIndexKey);
@@ -1173,6 +1173,10 @@ public class Hive implements Synchronizeable, Observer {
 							+ " is currently read-only.");
 	}
 
+	public HiveDbDialect getDialect() {
+		return DriverLoader.discernDialect(hiveUri);
+	}
+	
 	public PartitionKeyStatisticsDao getPartitionStatistics() {
 		return partitionStatistics;
 	}

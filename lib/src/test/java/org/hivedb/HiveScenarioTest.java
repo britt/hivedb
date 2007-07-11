@@ -413,7 +413,7 @@ public class HiveScenarioTest {
 					new Undoable() { public void f() throws Exception {
 						final PrimaryIndexIdentifiable primaryIndexInstance = resourceIdentifiable.getPrimaryIndexIdentifiable();
 						hive.deletePrimaryIndexKey(partitionDimension.getName(), primaryIndexInstance.getPrimaryIndexKey());
-						assertFalse(hive.doesPrimaryIndeyKeyExist(partitionDimension.getName(), primaryIndexInstance.getPrimaryIndexKey()));
+						assertFalse(hive.doesPrimaryIndexKeyExist(partitionDimension.getName(), primaryIndexInstance.getPrimaryIndexKey()));
 					
 						for (final SecondaryIndexIdentifiable secondaryIndexIdentifiable : resourceIdentifiable.getSecondaryIndexIdentifiables()) {	
 							final SecondaryIndex secondaryIndex = resource.getSecondaryIndex(secondaryIndexIdentifiable.getSecondaryIndexName());																								
@@ -424,7 +424,7 @@ public class HiveScenarioTest {
 						}
 						new Undo() { public void f() throws Exception {				
 							hive.insertPrimaryIndexKey(partitionDimension.getName(), primaryIndexInstance.getPrimaryIndexKey());
-							assertTrue(hive.doesPrimaryIndeyKeyExist(partitionDimension.getName(), primaryIndexInstance.getPrimaryIndexKey()));
+							assertTrue(hive.doesPrimaryIndexKeyExist(partitionDimension.getName(), primaryIndexInstance.getPrimaryIndexKey()));
 						}};
 					}}.cycle();
 				}						
