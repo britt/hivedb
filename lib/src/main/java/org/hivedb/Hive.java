@@ -277,6 +277,8 @@ public class Hive implements Synchronizeable, Observer {
 	 * @return
 	 */
 	public PartitionDimension getPartitionDimension(String name) {
+		if (!partitionDimensions.containsKey(name))
+			throw new HiveRuntimeException(String.format("Unknown partition dimension %s", name));
 		return partitionDimensions.get(name);
 	}
 	
@@ -704,7 +706,16 @@ public class Hive implements Synchronizeable, Observer {
 				.getSecondaryIndex(secondaryIndexName), secondaryIndexKey,
 				primaryIndexKey);
 	}
-
+	
+	public void insertRelatedSecondaryIndexKeys(String partitionDimensionName, Map<SecondaryIndex, Collection<Object>> secondaryIndexValueMap, final Object primaryIndexKey) throws HiveReadOnlyException {
+		boolean primaryKeyReadOnly = getReadOnlyOfPrimaryIndexKey(partitionDimensionName, primaryIndexKey);
+		for(Integer id : directories.get(partitionDimensionName).getNodeIdsOfPrimaryIndexKey(primaryIndexKey))
+			throwIfReadOnly("Inserting a new secondary index key", getPartitionDimension(partitionDimensionName).getNodeGroup().getNode(id), primaryIndexKey, primaryKeyReadOnly);
+		
+		Integer secondaryIndexesInserted = directories.get(partitionDimensionName).insertRelatedSecondaryIndexKeys(secondaryIndexValueMap, primaryIndexKey);
+		partitionStatistics.incrementChildRecordCount(getPartitionDimension(partitionDimensionName), primaryIndexKey, secondaryIndexesInserted);
+	}
+		
 	/**
 	 * 
 	 * Updates the read-only status of the given primary index key for the given
@@ -925,7 +936,7 @@ public class Hive implements Synchronizeable, Observer {
 	public boolean getReadOnlyOfPrimaryIndexKey(String partitionDimensionName,
 			Object primaryIndexKey) {
 		Boolean readOnly = directories.get(partitionDimensionName)
-		.getReadOnlyOfPrimaryIndexKey(primaryIndexKey);
+			.getReadOnlyOfPrimaryIndexKey(primaryIndexKey);
 		if (readOnly != null)
 			return readOnly;
 		throw new HiveKeyNotFoundException(String.format(
@@ -1200,5 +1211,4 @@ public class Hive implements Synchronizeable, Observer {
 	public void update(Observable o, Object arg) {
 		sync();
 	}
-
 }

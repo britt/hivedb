@@ -12,25 +12,37 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Collection;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.sql.DataSource;
 
 import org.hivedb.HiveKeyNotFoundException;
+import org.hivedb.HiveReadOnlyException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.StatisticsProxy;
 import org.hivedb.management.statistics.Counter;
 import org.hivedb.management.statistics.NoOpStatistics;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
+import org.hivedb.util.Delay;
 import org.hivedb.util.JdbcTypeMapper;
 import org.hivedb.util.Proxies;
+import org.hivedb.util.QuickCache;
 import org.hivedb.util.database.RowMappers;
 import org.hivedb.util.database.Statements;
 import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Transform;
+import org.hivedb.util.functional.Unary;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.simple.ParameterizedRowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
+import org.springframework.jdbc.core.support.JdbcDaoSupport;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallback;
+import org.springframework.transaction.support.TransactionTemplate;
 
 public class Directory extends SimpleJdbcDaoSupport implements NodeResolver {
 	private PartitionDimension partitionDimension;
@@ -102,6 +114,38 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver {
 				JdbcTypeMapper.primitiveTypeToJdbcType(secondaryIndexKey.getClass()),
 				JdbcTypeMapper.primitiveTypeToJdbcType(primaryindexKey.getClass()));
 		Proxies.newJdbcUpdateProxy(performanceStatistics, SECONDARY_INDEX_WRITE, parameters, insertFactory, getJdbcTemplate()).execute();
+	}
+	
+	public Integer insertRelatedSecondaryIndexKeys(final Map<SecondaryIndex, Collection<Object>> secondaryIndexValueMap, final Object primaryIndexKey) throws HiveReadOnlyException {
+		
+		final TransactionTemplate transactionTemplate = new TransactionTemplate();
+		setTransactionManager(transactionTemplate, this);
+		
+		return (Integer) transactionTemplate.execute(new TransactionCallback() {
+			public Integer doInTransaction(TransactionStatus status) {	
+				return Transform.flatMap(new Unary<Map.Entry<SecondaryIndex, Collection<Object>>, Collection<Object>>() {
+					public Collection<Object> f(final Entry<SecondaryIndex, Collection<Object>> secondaryIndexKeysEntry) {
+						return Transform.map(new Unary<Object, Object>() { 
+							 public Object f(Object secondaryIndexKey) {
+								 insertSecondaryIndexKey(
+											secondaryIndexKeysEntry.getKey(),
+											secondaryIndexKey,
+											primaryIndexKey);
+								 return secondaryIndexKey;
+							}}, secondaryIndexKeysEntry.getValue());
+					}},
+					secondaryIndexValueMap.entrySet()).size();
+			}
+		});
+	}
+	
+	private static QuickCache cache = new QuickCache();
+	private void setTransactionManager(TransactionTemplate transactionTemplate, final JdbcDaoSupport jdbcDaoSupport) {
+		transactionTemplate.setTransactionManager( (DataSourceTransactionManager) cache.get(jdbcDaoSupport.getDataSource(), new Delay<DataSourceTransactionManager>() {
+			public DataSourceTransactionManager f() {
+				return new DataSourceTransactionManager(jdbcDaoSupport.getDataSource());
+			}	
+		}));
 	}
 	
 	/* (non-Javadoc)
