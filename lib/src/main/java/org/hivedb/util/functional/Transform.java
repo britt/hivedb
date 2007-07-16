@@ -10,7 +10,7 @@ import java.util.Map.Entry;
 
 // Class to map each item in a set to another value
 public class Transform {
-	public static<I,R> Collection<R> map(Unary<I,R> mapper, Iterable<I> iterable)
+	public static<I,R> Collection<R> map(Unary<I,R> mapper, Iterable<? extends I> iterable)
 	{
 		List<R> list = new ArrayList<R>();
 		for (I item : iterable)

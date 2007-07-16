@@ -21,7 +21,7 @@ public interface ResourceIdentifiable {
 	 * @return
 	 */
 	ResourceIdentifiable generate(PrimaryIndexIdentifiable primaryIndexIdentifiable);
-	Collection<SecondaryIndexIdentifiable> getSecondaryIndexIdentifiables();
+	Collection<? extends SecondaryIndexIdentifiable> getSecondaryIndexIdentifiables();
 	PrimaryIndexIdentifiable getPrimaryIndexIdentifiable();
 	String getResourceName();
 	Number getId();
