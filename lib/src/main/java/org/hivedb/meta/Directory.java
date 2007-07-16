@@ -86,7 +86,6 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver {
 					Types.INTEGER, Types.DATE);
 		
 		try {
-			
 				final Object[] parameters = new Object[] {primaryIndexKey,node.getId(),new Date(System.currentTimeMillis()) };
 				StatisticsProxy<Integer> proxy = 
 					Proxies.newJdbcUpdateProxy(performanceStatistics,PRIMARY_INDEX_WRITE,parameters,insertFactory,j);

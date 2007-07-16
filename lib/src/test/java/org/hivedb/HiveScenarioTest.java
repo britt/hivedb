@@ -189,7 +189,6 @@ public class HiveScenarioTest {
 				private void updatePrimaryKeyOfSecondaryKey(final Hive hive, final PartitionDimension partitionDimension, final Resource resource, final SecondaryIndex secondaryIndex, final Object secondaryIndexKey, final Object newPrimaryIndexKey, final Object originalPrimaryIndexKey) throws HiveException, SQLException {
 					hive.updatePrimaryIndexKeyOfSecondaryIndexKey(
 							partitionDimension.getName(),
-							resource.getName(),
 							secondaryIndex.getName(),
 							secondaryIndexKey,
 							originalPrimaryIndexKey,

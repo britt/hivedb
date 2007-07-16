@@ -34,8 +34,8 @@ public class HiveMigrator implements Migrator {
 					Mover childMover = p.getKey();
 					Object child = childMover.get(childKey, origin);
 					childMover.copy(child, destination);
-					}
 				}
+			}
 		} catch( RuntimeException e) {
 			throw new MigrationException(
 					String.format("An error occured while copying records from node % to node %s.  Records may be orphaned on node %s",

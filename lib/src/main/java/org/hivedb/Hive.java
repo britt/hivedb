@@ -775,11 +775,11 @@ public class Hive implements Synchronizeable, Observer {
 	 * @throws HiveReadOnlyException 
 	 */
 	public void updatePrimaryIndexKeyOfSecondaryIndexKey(
-			String partitionDimensionName, String resourceName,
+			String partitionDimensionName,
 			String secondaryIndexName, Object secondaryIndexKey,
 			Object originalPrimaryIndexKey,  Object newPrimaryIndexKey) throws HiveReadOnlyException {
 		updatePrimaryIndexKeyOfSecondaryIndexKey(getPartitionDimension(
-				partitionDimensionName).getResource(resourceName)
+				partitionDimensionName).getResource(SecondaryIndex.getResourceName(secondaryIndexName))
 				.getSecondaryIndex(secondaryIndexName), secondaryIndexKey,
 				originalPrimaryIndexKey, newPrimaryIndexKey);
 	}
