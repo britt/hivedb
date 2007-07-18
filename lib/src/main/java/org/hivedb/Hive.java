@@ -50,7 +50,7 @@ import org.hivedb.util.functional.Unary;
  * @author Andy Likuski (alikuski@cafepress.com)
  * @author Britt Crawford (bcrawford@cafepress.com)
  */
-public class Hive implements Synchronizeable, Observer {
+public class Hive extends Observable implements Synchronizeable, Observer {
 	//logger
 	private static Logger log = Logger.getLogger(Hive.class);
 	//constants
@@ -1210,5 +1210,11 @@ public class Hive implements Synchronizeable, Observer {
 
 	public void update(Observable o, Object arg) {
 		sync();
+		notifyObservers();
+	}
+	
+	public void notifyObservers() {
+		super.setChanged();
+		super.notifyObservers();
 	}
 }
