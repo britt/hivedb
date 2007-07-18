@@ -38,4 +38,6 @@ public interface PrimaryIndexIdentifiable
 	 * unless you are extending a class and want to name the resource after the base class.
 	 */
 	String getPartitionDimensionName();
+	
+	<T> Class<T> getRepresentedClass();
 }

@@ -15,7 +15,7 @@ public class HiveScenarioMarauderClasses {
 		public static int idGenerator = 0;
 		public Pirate() { 
 			id = ++idGenerator; //Redundantly named pirates, every other pirate has the same name so that name
-			//is a many-to-one secondary index
+			//is a many-to-one sec[ondary index
 			pirateName = "name"+(id%2); }		
 		protected int id;
 		String pirateName;
@@ -101,7 +101,13 @@ public class HiveScenarioMarauderClasses {
 			return true;
 		}
 
-	
+		public String getRepresentedFieldName() {
+			return "name";
+		}
+
+		public boolean isUniqueSecondaryIndex() {
+			return false;
+		}	
 	}
 	
 	public static class Treasure implements ResourceIdentifiable, SecondaryIndexIdentifiable 
@@ -161,5 +167,13 @@ public class HiveScenarioMarauderClasses {
 		public boolean isOneToMany() {
 			return false;
 		}		
+
+		public String getRepresentedFieldName() {
+			return "id";
+		}
+
+		public boolean isUniqueSecondaryIndex() {
+			return true;
+		}
 	}	                      
 }

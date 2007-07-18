@@ -50,4 +50,11 @@ public interface SecondaryIndexIdentifiable
 	String getSecondaryIndexName();
 	
 	<T> Class<T> getRepresentedClass();
+	/**
+	 * Returns true if the secondary index represented has a one-to-one relationship with it's instance,
+	 * meaning it's value is unique to an instance.
+	 * @return
+	 */
+	boolean isUniqueSecondaryIndex();
+	String getRepresentedFieldName();
 }

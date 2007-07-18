@@ -32,19 +32,6 @@ public class HiveScenarioMarauderConfig implements HiveScenarioConfig {
 		return primaryIndexIdentifiables;
 	}
 	
-	// Classes to be used as resources and secondary indexes.
-	// If the classes are also primary indexes, then the secondary index created will be
-	// a property of class, such as name, which will reference the id of the class (an intra-class reference.)
-	// If the classes are no also primary classes, then the secondary index created will be
-	// the class's id which references the id of another class (an inter-class reference)
-//	@SuppressWarnings("unchecked")
-//	public Collection<Class<? extends ResourceIdentifiable>> getResourceClasses() {
-//		List<Class<? extends ResourceIdentifiable>> list = new ArrayList<Class<? extends ResourceIdentifiable>>();
-//		list.add(HiveScenarioMarauderClasses.Pirate.class);
-//		list.add(HiveScenarioMarauderClasses.Treasure.class);
-//		return list;
-//	}
-	
 	public String getHiveIndexesUri() {
 		return hive.getHiveUri();
 	}

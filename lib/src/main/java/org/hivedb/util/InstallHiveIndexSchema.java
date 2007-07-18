@@ -66,12 +66,12 @@ public class InstallHiveIndexSchema {
 			return 
 				Transform.map(
 					new Unary<SecondaryIndexIdentifiable, SecondaryIndex>() {
-						public SecondaryIndex f(SecondaryIndexIdentifiable secondaryIndexIdentifiable) {
+						public SecondaryIndex f(SecondaryIndexIdentifiable secondaryIndexIdentifiablePrototype) {
 							try {
 								return new SecondaryIndex(
 										new ColumnInfo(
-											secondaryIndexIdentifiable.getSecondaryIndexColumnName(),											
-											JdbcTypeMapper.primitiveTypeToJdbcType(secondaryIndexIdentifiable.getSecondaryIndexKey().getClass())));
+											secondaryIndexIdentifiablePrototype.getSecondaryIndexColumnName(),											
+											JdbcTypeMapper.primitiveTypeToJdbcType(secondaryIndexIdentifiablePrototype.getSecondaryIndexKey().getClass())));
 							} catch (Exception e) {
 								throw new RuntimeException(e);
 							}
