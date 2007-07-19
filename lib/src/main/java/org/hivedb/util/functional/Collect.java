@@ -16,8 +16,9 @@ public class Collect {
 		return list;
 	}
 	
-	public static<I,R> Collection<R> amass(Unary<I,R> function, Iterator<I> iterator) {
+	public static<I,R> Collection<R> amass(Unary<I,R> function, Iterable<I> iterable) {
 		List<R> list = new ArrayList<R>();
+		Iterator<I> iterator = iterable.iterator();
 		while(iterator.hasNext())
 			list.add(function.f(iterator.next()));    				
 		return list;

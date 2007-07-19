@@ -116,6 +116,10 @@ public class SecondaryIndex implements Comparable<SecondaryIndex>, IdAndNameIden
 	}
 	
 	public static String getSecondaryIndexName(SecondaryIndex secondaryIndex, Resource resource) {
-		return resource.getName() + "." + secondaryIndex.getColumnInfo().getName();
+		return getSecondaryIndexName(secondaryIndex.getColumnInfo().getName(), resource.getName());
+	}
+	
+	public static String getSecondaryIndexName(String index, String resource) {
+		return resource + "." + index;
 	}
 }

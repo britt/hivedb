@@ -133,7 +133,7 @@ public class HiveMigrator implements Migrator {
 
 			public Node f(String item) {
 				return getNode(item);
-			}}, destinationNames.iterator());
+			}}, destinationNames);
 		doMigration(key, destinations, mover);
 	}
 	
@@ -144,7 +144,7 @@ public class HiveMigrator implements Migrator {
 			Collection<Node> origins = Collect.amass(new Unary<Integer, Node>(){
 				public Node f(Integer item) {
 					return getNode(item);
-				}}, dir.getNodeIdsOfPrimaryIndexKey(key).iterator());
+				}}, dir.getNodeIdsOfPrimaryIndexKey(key));
 			
 			//Elect a random origin node as the authority
 			Node authority = Lists.random(origins);
