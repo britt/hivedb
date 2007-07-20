@@ -13,7 +13,7 @@ import java.util.List;
 import javax.sql.DataSource;
 
 import org.hivedb.HiveRuntimeException;
-import org.hivedb.meta.NodeGroup;
+import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.util.JdbcTypeMapper;
@@ -26,6 +26,7 @@ import org.springframework.jdbc.support.KeyHolder;
 
 /**
  * @author Justin McCarthy (jmccarthy@cafepress.com)
+ * @author Britt Crawford (bcrawford@cafepress.com)
  */
 public class PartitionDimensionDao extends JdbcDaoSupport implements DataAccessObject<PartitionDimension,Integer> {
 	DataSource ds;
@@ -35,21 +36,17 @@ public class PartitionDimensionDao extends JdbcDaoSupport implements DataAccessO
 	}
 
 	public Integer create(PartitionDimension newObject) {
-		// dependencies
-		if (newObject.getNodeGroup().getId()==0)
-			new NodeGroupDao(ds).create(newObject.getNodeGroup());
 		
 		Object[] parameters;
 		parameters = new Object[] { newObject.getName(),
-					newObject.getNodeGroup().getId(),
 					newObject.getIndexUri(),
 					JdbcTypeMapper.jdbcTypeToString(newObject.getColumnType()) };
 	
 		KeyHolder generatedKey = new GeneratedKeyHolder();
 		JdbcTemplate j = getJdbcTemplate();
 		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
-				"INSERT INTO partition_dimension_metadata (name,node_group_id,index_uri,db_type) VALUES (?,?,?,?)",
-				new int[] { Types.VARCHAR,Types.INTEGER,Types.VARCHAR,Types.VARCHAR });
+				"INSERT INTO partition_dimension_metadata (name,index_uri,db_type) VALUES (?,?,?)",
+				new int[] { Types.VARCHAR,Types.VARCHAR,Types.VARCHAR });
 		creatorFactory.setReturnGeneratedKeys(true);
 		int rows = j.update(creatorFactory
 				.newPreparedStatementCreator(parameters), generatedKey);
@@ -63,6 +60,9 @@ public class PartitionDimensionDao extends JdbcDaoSupport implements DataAccessO
 		for (Resource r : newObject.getResources())
 			new ResourceDao(ds).create(r);
 
+		for (Node node: newObject.getNodes())
+			new NodeDao(ds).create(node);
+		
 		return new Integer(newObject.getId());	
 	}
 
@@ -71,7 +71,9 @@ public class PartitionDimensionDao extends JdbcDaoSupport implements DataAccessO
 		ArrayList<PartitionDimension> results = new ArrayList<PartitionDimension>();
 		for (Object result : t.query("SELECT * FROM partition_dimension_metadata",
 				new PartitionDimensionRowMapper())) {
-			results.add((PartitionDimension) result);
+			PartitionDimension dimension = (PartitionDimension) result;
+			dimension.setNodes(new NodeDao(ds).findByPartitionDimension(dimension.getId()));
+			results.add(dimension);
 		}
 		return results;
 	}
@@ -81,14 +83,12 @@ public class PartitionDimensionDao extends JdbcDaoSupport implements DataAccessO
 		public Object mapRow(ResultSet rs, int rowNumber) throws SQLException {
 			final int id = rs.getInt("id");
 			List<Resource> resources = new ResourceDao(ds).findByDimension(id);
-			NodeGroup dataNodes = new NodeGroupDao(ds).get(rs.getInt("node_group_id"));
-			
 			PartitionDimension dimension;
 				dimension = new PartitionDimension(
 						rs.getInt("id"),
 						rs.getString("name"),
 						JdbcTypeMapper.parseJdbcType(rs.getString("db_type")),
-						dataNodes, 
+						new ArrayList<Node>(), 
 						rs.getString("index_uri"),
 						resources);
 			
@@ -100,15 +100,14 @@ public class PartitionDimensionDao extends JdbcDaoSupport implements DataAccessO
 		
 		Object[] parameters;
 		parameters = new Object[] { partitionDimension.getName(),
-					partitionDimension.getNodeGroup().getId(),
 					partitionDimension.getIndexUri(),
 					JdbcTypeMapper.jdbcTypeToString(partitionDimension.getColumnType()),
 					partitionDimension.getId()};
 	
 		JdbcTemplate j = getJdbcTemplate();
 		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
-				"UPDATE partition_dimension_metadata set name=?,node_group_id=?,index_uri=?,db_type=? where id=?",
-				new int[] { Types.VARCHAR,Types.INTEGER,Types.VARCHAR,Types.VARCHAR,Types.INTEGER });
+				"UPDATE partition_dimension_metadata set name=?,index_uri=?,db_type=? where id=?",
+				new int[] { Types.VARCHAR,Types.VARCHAR,Types.VARCHAR,Types.INTEGER });
 		int rows = j.update(creatorFactory
 				.newPreparedStatementCreator(parameters));
 		if (rows != 1)
@@ -117,7 +116,6 @@ public class PartitionDimensionDao extends JdbcDaoSupport implements DataAccessO
 
 	public void delete(PartitionDimension partitionDimension) {
 		// dependencies
-		new NodeGroupDao(ds).delete(partitionDimension.getNodeGroup());
 		for (Resource r : partitionDimension.getResources())
 			new ResourceDao(ds).delete(r);
 		

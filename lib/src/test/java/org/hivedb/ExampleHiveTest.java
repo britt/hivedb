@@ -11,7 +11,6 @@ import org.hivedb.meta.AccessType;
 import org.hivedb.meta.ColumnInfo;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.NodeGroup;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
@@ -52,14 +51,11 @@ public class ExampleHiveTest extends DerbyTestCase {
 		//Load a Hive
 		Hive hive = Hive.load(getConnectString(DerbyTestCase.TEST_DB));
 		
-		//Create an empty NodeGroup
-		NodeGroup nodeGroup = new NodeGroup(new ArrayList<Node>());
-		
 		//Create a Partition Dimension
 		String dimensionName = "ProductId";
 		
 		PartitionDimension partitionDimension = 
-			new PartitionDimension(dimensionName, Types.INTEGER, nodeGroup, getConnectString(DerbyTestCase.TEST_DB), new ArrayList<Resource>());
+			new PartitionDimension(dimensionName, Types.INTEGER, new ArrayList<Node>(), getConnectString(DerbyTestCase.TEST_DB), new ArrayList<Resource>());
 		
 		//Add it to the Hive	
 		partitionDimension = hive.addPartitionDimension(partitionDimension);
@@ -76,8 +72,8 @@ public class ExampleHiveTest extends DerbyTestCase {
 		
 		//Make sure everything we just added actually got put into the hive meta data.
 		Assert.assertTrue(hive.getPartitionDimensions().size() > 0);
-		Assert.assertNotNull(hive.getPartitionDimension(dimensionName).getNodeGroup());
-		Assert.assertTrue(hive.getPartitionDimension(dimensionName).getNodeGroup().getNodes().size() > 0);
+		Assert.assertNotNull(hive.getPartitionDimension(dimensionName).getNodes());
+		Assert.assertTrue(hive.getPartitionDimension(dimensionName).getNodes().size() > 0);
 
 		//Add a key, just to test.
 		Integer key = new Integer(7);
@@ -87,7 +83,7 @@ public class ExampleHiveTest extends DerbyTestCase {
 		
 		//At this point there is no real data in the Hive just a directory of Primary key to node mappings.
 		//First we need to load our data schema on to each data node.
-		for(Node node : hive.getPartitionDimension(dimensionName).getNodeGroup().getNodes()){
+		for(Node node : hive.getPartitionDimension(dimensionName).getNodes()){
 			/*
 			 *  
 			 * Ordinarily to get a connection to node from the hive we would have to provide a key

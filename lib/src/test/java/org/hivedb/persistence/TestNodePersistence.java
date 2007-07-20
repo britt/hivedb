@@ -16,8 +16,7 @@ public class TestNodePersistence extends HiveTestCase {
 		NodeDao dao = new NodeDao(getDataSource(getHiveDatabaseName()));
 		assertEquals(0,dao.loadAll().size());
 		final Node node = createNode(getHiveDatabaseName());
-		node.setNodeGroup(createEmptyNodeGroup());
-		node.getNodeGroup().updateId(12345);
+		node.setPartitionDimension(createEmptyPartitionDimension());
 		dao.create(node);
 		List<Node> nodes = dao.loadAll();
 		assertEquals(1,nodes.size());		

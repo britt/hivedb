@@ -41,7 +41,7 @@ public class TestSyncHive extends HiveTestCase {
 		
 //		nodeReport(passiveSync, hive);
 		
-		Assert.assertNotNull(Atom.getFirstOrNull(passiveSync.getPartitionDimensions()).getNodeGroup().getNode(createNode(getHiveDatabaseName()).getName()));
+		Assert.assertNotNull(Atom.getFirstOrNull(passiveSync.getPartitionDimensions()).getNode(createNode(getHiveDatabaseName()).getName()));
 	}
 	
 	@Test
@@ -49,16 +49,16 @@ public class TestSyncHive extends HiveTestCase {
 		Hive hive = loadHive();
 		hive.addNode(Atom.getFirstOrNull(hive.getPartitionDimensions()), createNode(getHiveDatabaseName()));
 		
-		Assert.assertNotNull(Atom.getFirstOrNull(hive.getPartitionDimensions()).getNodeGroup().getNode(createNode(getHiveDatabaseName()).getName()));
+		Assert.assertNotNull(Atom.getFirstOrNull(hive.getPartitionDimensions()).getNode(createNode(getHiveDatabaseName()).getName()));
 	}
 	
 	@SuppressWarnings("unused")
 	private void nodeReport(Hive passiveSync, Hive hive) {
 		System.out.println("Passively synced Hive:" + passiveSync.getRevision());
-		for(Node node: passiveSync.getPartitionDimension(createPopulatedPartitionDimension().getName()).getNodeGroup().getNodes())
+		for(Node node: passiveSync.getPartitionDimension(createPopulatedPartitionDimension().getName()).getNodes())
 			System.out.println(node.getName());
 		System.out.println("In-memory Hive " + hive.getRevision());
-		for(Node node: hive.getPartitionDimension(createPopulatedPartitionDimension().getName()).getNodeGroup().getNodes())
+		for(Node node: hive.getPartitionDimension(createPopulatedPartitionDimension().getName()).getNodes())
 			System.out.println(node.getName());
 	}
 	

@@ -36,16 +36,10 @@ public class GlobalSchema extends Schema {
 	private String getCreateNode() {
 		return "CREATE TABLE node_metadata ( "
 				+ "id " + getNumericPrimaryKeySequenceModifier(dialect) + ", " 
-				+ "node_group_id int not null, "
+				+ "partition_dimension_id int not null, "
 				+ "name varchar(255) not null, "
 				+ "uri varchar(255) not null, "
 				+ "read_only int " // Derby doesn't have BIT
-				+ " )";
-	}
-
-	private String getCreateNodeGroup() {
-		return "CREATE TABLE node_group_metadata ( " 
-				+ "id " + getNumericPrimaryKeySequenceModifier(dialect) 
 				+ " )";
 	}
 
@@ -59,7 +53,6 @@ public class GlobalSchema extends Schema {
 	private String getCreatePartitionDimension() {
 		return "CREATE TABLE partition_dimension_metadata ( " 
 				+ "id " + getNumericPrimaryKeySequenceModifier(dialect) + ", " 
-				+ "node_group_id int not null, " 
 				+ "name varchar(64) not null, " 
 				+ "index_uri varchar(255) not null, "
 				+ "db_type varchar(64) not null" 
@@ -93,7 +86,6 @@ public class GlobalSchema extends Schema {
 		return new String[] {
 				getCreateHive(),
 				getCreateNode(),
-				getCreateNodeGroup(),
 				getCreatePartitionDimension(),
 				getCreateSecondaryIndex(),
 				getCreateResource()};
@@ -104,7 +96,6 @@ public class GlobalSchema extends Schema {
 		Collection<TableInfo> TableInfos = new ArrayList<TableInfo>();
 		TableInfos.add(new TableInfo("semaphore_metadata", getCreateHive()));
 		TableInfos.add(new TableInfo("node_metadata", getCreateNode()));
-		TableInfos.add(new TableInfo("node_group_metadata", getCreateNodeGroup()));
 		TableInfos.add(new TableInfo("partition_dimension_metadata", getCreatePartitionDimension()));
 		TableInfos.add(new TableInfo("secondary_index_metadata", getCreateSecondaryIndex()));
 		TableInfos.add(new TableInfo("resource_metadata", getCreateResource()));

@@ -8,7 +8,6 @@ import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.ColumnInfo;
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.NodeGroup;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
@@ -73,24 +72,13 @@ public class HiveTestCase extends DerbyTestCase {
 		return new Node(name,getConnectString(name), false);
 	}
 
-	protected NodeGroup createPopulatedNodeGroup() {
-		NodeGroup group = createEmptyNodeGroup();
-		group.add(createNode(getHiveDatabaseName()));
-		return group;
-	}
-
-	protected NodeGroup createEmptyNodeGroup() {
-		ArrayList<Node> nodes = new ArrayList<Node>();
-		return new NodeGroup(nodes);
-	}
-
 	protected PartitionDimension createPopulatedPartitionDimension() {
 		return new PartitionDimension(partitionDimensionName(), Types.INTEGER,
-				createEmptyNodeGroup(), getConnectString(getHiveDatabaseName()), createResources());
+				new ArrayList<Node>(), getConnectString(getHiveDatabaseName()), createResources());
 	}
 	protected PartitionDimension createEmptyPartitionDimension() {
 		return new PartitionDimension(partitionDimensionName(), Types.INTEGER,
-				createEmptyNodeGroup(), getConnectString(getHiveDatabaseName()), new ArrayList<Resource>());
+				new ArrayList<Node>(), getConnectString(getHiveDatabaseName()), new ArrayList<Resource>());
 	}
 	protected String partitionDimensionName() {
 		return "member";

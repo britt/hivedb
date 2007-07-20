@@ -14,9 +14,9 @@ import org.hivedb.util.HiveUtils;
  * @author Andy Likuski (alikuski@cafepress.com)
  */
 public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable {
-	private int id;
+	private int id,partitionDimensionId;
 	private String uri,name;
-	private NodeGroup nodeGroup;
+	private PartitionDimension partitionDimension;
 	private boolean readOnly;
 	private double capacity;
 
@@ -25,7 +25,7 @@ public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable 
 	}
 	
 	public Node(String name, String uri, boolean readOnly) {
-		this(Hive.NEW_OBJECT_ID, name, uri, readOnly);
+		this(Hive.NEW_OBJECT_ID, name, uri, readOnly,0);
 	}
 
 	/**
@@ -35,12 +35,13 @@ public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable 
 	 * @param access
 	 * @param readOnly
 	 */
-	public Node(int id, String name, String uri, boolean readOnly) {
+	public Node(int id, String name, String uri, boolean readOnly, int partitionDimensionId) {
 		super();
 		this.id = id;
 		this.uri = uri;
 		this.name = name;
 		this.readOnly = readOnly;
+		this.partitionDimensionId = partitionDimensionId;
 	}
 
 	public int getId() {
@@ -59,22 +60,11 @@ public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable 
 		this.uri = uri;
 	}
 	
-	public NodeGroup getNodeGroup() {
-		return nodeGroup;
-	}
 	public double getCapacity() {
 		return capacity;
 	}
 	public void setCapacity(double capacity) {
 		this.capacity = capacity;
-	}
-	
-	/**
-	 *  INTERNAL USE ONLY -- Sets the nodegroup to which this node belongs
-	 * @param nodeGroup
-	 */
-	public void setNodeGroup(NodeGroup nodeGroup) {
-		this.nodeGroup = nodeGroup;
 	}
 	
 
@@ -128,5 +118,21 @@ public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable 
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public PartitionDimension getPartitionDimension() {
+		return partitionDimension;
+	}
+
+	public void setPartitionDimension(PartitionDimension partitionDimension) {
+		this.partitionDimension = partitionDimension;
+	}
+
+	public int getPartitionDimensionId() {
+		return partitionDimensionId;
+	}
+
+	public void setPartitionDimensionId(int partitionDimensionId) {
+		this.partitionDimensionId = partitionDimensionId;
 	}
 }

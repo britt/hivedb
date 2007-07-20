@@ -130,6 +130,6 @@ public class TestConnectionWriteLocking extends HiveTestCase {
 	}
 	
 	private Node getNode(PartitionDimension dim, int id) throws HiveException {
-		return dim.getNodeGroup().getNode(id);
+		return dim.getNode(id);
 	}
 }

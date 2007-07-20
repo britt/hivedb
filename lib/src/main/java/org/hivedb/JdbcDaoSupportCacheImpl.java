@@ -51,7 +51,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	 */
 	public void sync() {
 		jdbcDaoSupports.clear();
-		for(Node node : hive.getPartitionDimension(partitionDimension).getNodeGroup().getNodes()) {
+		for(Node node : hive.getPartitionDimension(partitionDimension).getNodes()) {
 			jdbcDaoSupports.put(hash(node.getId(), AccessType.Read), new DataNodeJdbcDaoSupport((BasicDataSource) dataSourceProvider.getDataSource(node.getUri()), true));
 			if( !hive.isReadOnly() && !node.isReadOnly() )
 				addDataSource(node.getId(), AccessType.ReadWrite);
@@ -59,7 +59,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	}
 	
 	private SimpleJdbcDaoSupport addDataSource(Integer nodeId, AccessType intention) {
-		Node node = hive.getPartitionDimension(partitionDimension).getNodeGroup().getNode(nodeId);
+		Node node = hive.getPartitionDimension(partitionDimension).getNode(nodeId);
 		jdbcDaoSupports.put(hash(nodeId, intention), new DataNodeJdbcDaoSupport((BasicDataSource) dataSourceProvider.getDataSource(node.getUri())));
 		return jdbcDaoSupports.get(hash(nodeId, intention));
 	}
@@ -67,7 +67,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	private SimpleJdbcDaoSupport get(NodeSemaphore semaphore, AccessType intention) throws HiveReadOnlyException { 
 		Node node = null;
 		try {
-			node = hive.getPartitionDimension(partitionDimension).getNodeGroup().getNode(semaphore.getId());
+			node = hive.getPartitionDimension(partitionDimension).getNode(semaphore.getId());
 		} catch (HiveRuntimeException e) {
 			//failure
 			countFailure();
@@ -191,7 +191,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 
 	public SimpleJdbcDaoSupport getUnsafe(String nodeName) {
 		try {
-			Node node = hive.getPartitionDimension(this.getPartitionDimension()).getNodeGroup().getNode(nodeName);
+			Node node = hive.getPartitionDimension(this.getPartitionDimension()).getNode(nodeName);
 			NodeSemaphore semaphore = new NodeSemaphore(node.getId(), node.isReadOnly());
 			return get(semaphore, AccessType.ReadWrite);
 		} catch (HiveException e) {

@@ -8,9 +8,11 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.RowMapper;
@@ -29,20 +31,15 @@ public class PartitionKeyStatisticsDao extends JdbcDaoSupport {
 	}
 	
 	public PartitionKeyStatisticsBean findByPrimaryPartitionKey(PartitionDimension dimension, Object key){
-		Object[] parameters = new Object[] {key};
-		
-		JdbcTemplate j = getJdbcTemplate();
-		PreparedStatementCreatorFactory factory = new PreparedStatementCreatorFactory(
-				selectSql(IndexSchema.getPrimaryIndexTableName(dimension)), 
-				new int[] {dimension.getColumnType()});
-		
 		PartitionKeyStatisticsBean stats = null;
 		try {
-			List results = j.query(factory.newPreparedStatementCreator(parameters), new PartitionKeyStatisticsRowMapper(dimension));
-			stats = (PartitionKeyStatisticsBean) results.get(0);
-		} catch( IndexOutOfBoundsException e) {
-			//if there is no matching key this exception will be thrown
-			//so we really just want to crush it and return null
+			stats = 
+				(PartitionKeyStatisticsBean) getJdbcTemplate().queryForObject(
+						selectSql(IndexSchema.getPrimaryIndexTableName(dimension)),
+						new Object[] {key}, 
+						new PartitionKeyStatisticsRowMapper(dimension));
+		} catch( EmptyResultDataAccessException e) {
+			throw new HiveKeyNotFoundException(String.format("PartitionKeyStatistics not found for key %s", key),key);
 		}
 		return stats;		
 	}

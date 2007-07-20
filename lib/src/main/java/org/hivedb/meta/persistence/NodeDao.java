@@ -14,6 +14,7 @@ import javax.sql.DataSource;
 
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.meta.Node;
+import org.hivedb.meta.PartitionDimension;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.RowMapper;
@@ -31,7 +32,7 @@ public class NodeDao extends JdbcDaoSupport implements DataAccessObject<Node,Int
 
 	public Integer create(Node newObject) {
 		Object[] parameters = new Object[] { 
-				newObject.getNodeGroup().getId(),
+				newObject.getPartitionDimension().getId(),
 				newObject.getName(), 
 				newObject.getUri(), 
 				newObject.isReadOnly()
@@ -39,7 +40,7 @@ public class NodeDao extends JdbcDaoSupport implements DataAccessObject<Node,Int
 		KeyHolder generatedKey = new GeneratedKeyHolder();
 		JdbcTemplate j = getJdbcTemplate();
 		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
-				"INSERT INTO node_metadata (node_group_id,name,uri,read_only) VALUES (?,?,?,?)",
+				"INSERT INTO node_metadata (partition_dimension_id,name,uri,read_only) VALUES (?,?,?,?)",
 				new int[] {Types.INTEGER,Types.VARCHAR,Types.VARCHAR,Types.INTEGER});
 		creatorFactory.setReturnGeneratedKeys(true);
 		int rows = j.update(creatorFactory
@@ -58,17 +59,17 @@ public class NodeDao extends JdbcDaoSupport implements DataAccessObject<Node,Int
 		ArrayList<Node> results = new ArrayList<Node>();
 		for (Object result : t.query("SELECT * FROM node_metadata",
 				new NodeRowMapper())) {
-			results.add((Node) result);
+			results.add((Node)result);
 		}
 		return results;
 	}
 
-	public List<Node> findByGroup(int id) {
+	public List<Node> findByPartitionDimension(int id) {
 		JdbcTemplate t = getJdbcTemplate();
 		ArrayList<Node> results = new ArrayList<Node>();
-		for (Object result : t.query("SELECT * FROM node_metadata WHERE node_group_id = ?", new Object[] { id },
+		for (Object result : t.query("SELECT * FROM node_metadata WHERE partition_dimension_id = ?", new Object[] { id },
 				new NodeRowMapper())) {
-			results.add((Node) result);
+			results.add((Node)result);
 		}
 		return results;
 	}
@@ -80,7 +81,7 @@ public class NodeDao extends JdbcDaoSupport implements DataAccessObject<Node,Int
 	
 	public void update(Node node) {
 		Object[] parameters = new Object[] { 
-				node.getNodeGroup().getId(),
+				node.getPartitionDimensionId(),
 				node.getName(), 
 				node.getUri(), 
 				node.isReadOnly(),
@@ -88,7 +89,7 @@ public class NodeDao extends JdbcDaoSupport implements DataAccessObject<Node,Int
 				};
 		JdbcTemplate j = getJdbcTemplate();
 		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
-				"UPDATE node_metadata set node_group_id=?,name=?,uri=?,read_only=? where id=?",
+				"UPDATE node_metadata set partition_dimension_id=?,name=?,uri=?,read_only=? where id=?",
 				new int[] {Types.INTEGER,Types.VARCHAR,Types.VARCHAR,Types.INTEGER,Types.INTEGER});
 		int rows = j.update(creatorFactory
 				.newPreparedStatementCreator(parameters));
@@ -111,7 +112,7 @@ public class NodeDao extends JdbcDaoSupport implements DataAccessObject<Node,Int
 
 	protected class NodeRowMapper implements RowMapper {
 		public Object mapRow(ResultSet rs, int rowNumber) throws SQLException {
-			return new Node(rs.getInt("id"), rs.getString("name"), rs.getString("uri"), rs.getInt("read_only") == 0 ? false : true);
+			return new Node(rs.getInt("id"), rs.getString("name"), rs.getString("uri"), rs.getInt("read_only") == 0 ? false : true, rs.getInt("partition_dimension_id"));
 		}
 	}
 }

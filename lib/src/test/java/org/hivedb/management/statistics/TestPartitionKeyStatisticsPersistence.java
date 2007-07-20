@@ -121,7 +121,7 @@ public class TestPartitionKeyStatisticsPersistence extends HiveTestCase {
 
 		List<PartitionKeyStatistics> stats = dao.findAllByNodeAndDimension(
 				partitionDimension,
-				Atom.getFirst(partitionDimension.getNodeGroup().getNodes()));
+				Atom.getFirst(partitionDimension.getNodes()));
 		assertNotNull(stats);
 		assertEquals(5, stats.size());
 		for(PartitionKeyStatistics s : stats) {

@@ -14,7 +14,6 @@ import org.hivedb.management.statistics.PartitionKeyStatistics;
 import org.hivedb.management.statistics.PartitionKeyStatisticsBean;
 import org.hivedb.meta.ColumnInfo;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.NodeGroup;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
@@ -46,8 +45,8 @@ public class TestObjectFactory {
 		return new PartitionDimension("aDimension", Types.INTEGER);
 	}
 	
-	public static PartitionDimension partitionDimension(int columnType, NodeGroup nodeGroup, String uri, Collection<Resource> resources) {
-		return new PartitionDimension(new Random().nextInt(), "aDimension", columnType, nodeGroup, uri, resources);
+	public static PartitionDimension partitionDimension(int columnType, Collection<Node> nodes, String uri, Collection<Resource> resources) {
+		return new PartitionDimension(new Random().nextInt(), "aDimension", columnType, nodes, uri, resources);
 	}
 	
 	public static MigrationEstimator halfFullEstimator() {

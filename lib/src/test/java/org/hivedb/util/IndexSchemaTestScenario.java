@@ -12,7 +12,6 @@ import org.hivedb.meta.Assigner;
 import org.hivedb.meta.ColumnInfo;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.NodeGroup;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
@@ -56,7 +55,7 @@ public class IndexSchemaTestScenario {
 	}
 
 	public Node node() {
-		return new Node(0, "aNode", ds.getUrl(), false);
+		return new Node(0, "aNode", ds.getUrl(), false,0);
 	}
 
 	public PartitionDimension partitionDimension() {
@@ -75,7 +74,7 @@ public class IndexSchemaTestScenario {
 		});
 		Collection<Node> nodes = new ArrayList<Node>();
 		nodes.add(node());
-		dimension.setNodeGroup(new NodeGroup(nodes));
+		dimension.setNodes(nodes);
 		return dimension;
 	}
 }

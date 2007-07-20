@@ -254,7 +254,7 @@ public class HiveScenarioTest {
 	
 			new Undoable() { 
 				public void f() throws Exception {
-					final Node node = Atom.getFirst(partitionDimension.getNodeGroup().getNodes());
+					final Node node = Atom.getFirst(partitionDimension.getNodes());
 					final boolean readOnly = node.isReadOnly();
 					final String uri = node.getUri();
 					node.setReadOnly(!readOnly);
@@ -273,7 +273,7 @@ public class HiveScenarioTest {
 				private void assertEquality(final Hive hive, final Node node) throws HiveException {
 					assertEquals(
 						node,
-						hive.getPartitionDimension(node.getNodeGroup().getPartitionDimension().getName()).getNodeGroup().getNode(node.getId()));
+						hive.getPartitionDimension(node.getPartitionDimensionId()).getNode(node.getId()));
 				}
 			}.cycle();
 			

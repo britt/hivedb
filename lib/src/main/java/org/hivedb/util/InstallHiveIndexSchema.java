@@ -5,7 +5,6 @@ import java.util.Collection;
 import org.hivedb.Hive;
 import org.hivedb.meta.ColumnInfo;
 import org.hivedb.meta.IndexSchema;
-import org.hivedb.meta.NodeGroup;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.ResourceIdentifiable;
@@ -43,8 +42,6 @@ public class InstallHiveIndexSchema {
 	}
 
 	public static PartitionDimension createPartitionDimension(final HiveScenarioConfig hiveScenarioConfig) {
-		final NodeGroup nodeGroup = new NodeGroup(hiveScenarioConfig.getDataNodes());
-		
 		final Collection<Resource> resources = 
 			Transform.map(new Unary<ResourceIdentifiable, Resource>() {
 				public Resource f(ResourceIdentifiable resourceIdentifiable) { 
@@ -54,7 +51,7 @@ public class InstallHiveIndexSchema {
 		PartitionDimension partitionDimension = new PartitionDimension(
 				hiveScenarioConfig.getPrimaryIndexIdentifiable().getPartitionDimensionName(),
 			JdbcTypeMapper.primitiveTypeToJdbcType(hiveScenarioConfig.getPrimaryIndexIdentifiable().getPrimaryIndexKey().getClass()),
-			nodeGroup,
+			hiveScenarioConfig.getDataNodes(),
 			hiveScenarioConfig.getHiveIndexesUri(),
 			resources
 		);

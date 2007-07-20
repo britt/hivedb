@@ -15,6 +15,8 @@ import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.util.HiveUtils;
 import org.hivedb.util.JdbcTypeMapper;
+import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Predicate;
 
 /**
  * PartitionDimension is the value we use to distribute records to data nodes.  It is
@@ -27,7 +29,7 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	private int id;
 	private String name;
 	private int columnType;
-	private NodeGroup nodeGroup;
+	private Collection<Node> nodes;
 	private String indexUri;
 	private Collection<Resource> resources;
 
@@ -47,15 +49,15 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	 * 
 	 * @param name
 	 * @param columnType
-	 * @param nodeGroup
+	 * @param nodes
 	 * @param indexUri The URI for the PartitionDimension's index tables.
 	 *  Specify this if it is different then that of the hive.
 	 * @param resources
 	 * @param assigner
 	 */
-	public PartitionDimension(String name, int columnType, NodeGroup nodeGroup,
+	public PartitionDimension(String name, int columnType, Collection<Node> nodes,
 			String indexUri, Collection<Resource> resources) {
-		this(Hive.NEW_OBJECT_ID, name, columnType, nodeGroup, indexUri,
+		this(Hive.NEW_OBJECT_ID, name, columnType, nodes, indexUri,
 				resources);
 	}
 	/**
@@ -66,12 +68,12 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	 * 
 	 * @param name
 	 * @param columnType
-	 * @param nodeGroup
+	 * @param nodes
 	 * @param resources
 	 */
-	public PartitionDimension(String name, int columnType, NodeGroup nodeGroup,
+	public PartitionDimension(String name, int columnType, Collection<Node> nodes,
 			Collection<Resource> resources) {
-		this(Hive.NEW_OBJECT_ID, name, columnType, nodeGroup, null,
+		this(Hive.NEW_OBJECT_ID, name, columnType, nodes, null,
 				resources);
 	}
 	
@@ -85,7 +87,7 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	 * @param columnType
 	 */
 	public PartitionDimension(String name, int columnType) {
-		this(Hive.NEW_OBJECT_ID, name, columnType, new NodeGroup(new ArrayList<Node>()), null,
+		this(Hive.NEW_OBJECT_ID, name, columnType, new ArrayList<Node>(), null,
 				new ArrayList<Resource>());
 	}
 
@@ -95,29 +97,30 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	 * @param id
 	 * @param name
 	 * @param columnType
-	 * @param nodeGroup
+	 * @param nodes
 	 * @param indexUri
 	 * @param resources
 	 */
 	public PartitionDimension(int id, String name, int columnType,
-			NodeGroup nodeGroup, String indexUri,
+			Collection<Node> nodes, String indexUri,
 			Collection<Resource> resources) {
 		super();
 		this.id = id;
 		this.name = name;
 		this.columnType = columnType;
-		this.nodeGroup = insetThisInstance(nodeGroup);
+		this.nodes = insetNodes(nodes);
 		this.indexUri = indexUri;
-		this.resources = insetThisInstance(resources);
+		this.resources = insetResources(resources);
 	}
 
 	// Modify the passed in instance by setting its PartitionInstance
-	private NodeGroup insetThisInstance(NodeGroup nodeGroup) {
-		nodeGroup.setPartitionDimension(this);
-		return nodeGroup;
+	private Collection<Node> insetNodes(Collection<Node> nodes) {
+		for(Node node: nodes)
+			node.setPartitionDimension(this);
+		return nodes;
 	}
 
-	private Collection<Resource> insetThisInstance(
+	private Collection<Resource> insetResources(
 			Collection<Resource> resources) {
 		for (Resource resource : resources)
 			resource.setPartitionDimension(this);
@@ -144,15 +147,13 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 		this.name = name;
 	}
 
-	public NodeGroup getNodeGroup() {
-		return nodeGroup;
-	}
 	@SuppressWarnings("unchecked")
-	public<T extends Nameable> T findByName(Class<T> forClass, String name){
+	public<T extends Nameable> T findByName(Class<T> forClass, final String name){
 		if (forClass.equals(Resource.class))
 			return (T)getResource(name);
 		if (forClass.equals(Node.class))
-			return (T)getNodeGroup().getNode(name);
+			return (T)getNode(name);
+		
 		throw new RuntimeException("Invalid type " + forClass.getName());
 	}
 	@SuppressWarnings("unchecked")
@@ -160,12 +161,8 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 		if (forClass.equals(Resource.class))
 			return (Collection<T>)getResources();
 		if (forClass.equals(Node.class))
-			return (Collection<T>)getNodeGroup().getNodes();
+			return (Collection<T>)getNodes();
 		throw new RuntimeException("Invalid type " + forClass.getName());
-	}
-
-	public void setNodeGroup(NodeGroup nodeGroup) {
-		this.nodeGroup = nodeGroup;
 	}
 
 	public String getIndexUri() {
@@ -209,7 +206,7 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	}
 	public int hashCode() {
 		return HiveUtils.makeHashCode(new Object[] {
-				name, columnType, nodeGroup, indexUri, resources
+				name, columnType, nodes, indexUri, resources
 		});
 	}
 	
@@ -228,7 +225,6 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 										"Name", 		getName(), 
 										"IndexUri", 	getIndexUri(),
 										"ColumnType",	columnType,
-										"NodeGroup",	getNodeGroup(),
 										"Resources",	getResources());
 	}
 	
@@ -242,5 +238,23 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	}
 	public void setId(int id) {
 		this.id = id;
+	}
+	public Collection<Node> getNodes() {
+		return nodes;
+	}
+	public Node getNode(final String name) {
+		return Filter.grepSingle(new Predicate<Node>(){
+			public boolean f(Node item) {
+				return item.getName().equals(name);
+			}}, getNodes());
+	}
+	public Node getNode(final int id) {
+		return Filter.grepSingle(new Predicate<Node>(){
+			public boolean f(Node item) {
+				return item.getId() == id;
+			}}, getNodes());
+	}
+	public void setNodes(Collection<Node> nodes) {
+		this.nodes = nodes;
 	}
 }
