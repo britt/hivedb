@@ -137,9 +137,9 @@ public class TestPartitionKeyStatisticsPersistence extends HiveTestCase {
 		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource(getHiveDatabaseName()));
 		PartitionKeyStatistics frozen = dao.findByPrimaryPartitionKey(partitionDimension, key);
 		
-		hive.insertSecondaryIndexKey(secondaryIndex.getName(), secondaryIndex.getResource().getPartitionDimension().getName(), new Integer(1), key);
-		hive.insertSecondaryIndexKey(secondaryIndex.getName(), secondaryIndex.getResource().getPartitionDimension().getName(), new Integer(2), key);
-		hive.insertSecondaryIndexKey(secondaryIndex.getName(), secondaryIndex.getResource().getPartitionDimension().getName(), new Integer(3), key);
+		hive.insertSecondaryIndexKey(secondaryIndex.getName(), secondaryIndex.getResource().getName(), secondaryIndex.getResource().getPartitionDimension().getName(), new Integer(1), key);
+		hive.insertSecondaryIndexKey(secondaryIndex.getName(), secondaryIndex.getResource().getName(), secondaryIndex.getResource().getPartitionDimension().getName(), new Integer(2), key);
+		hive.insertSecondaryIndexKey(secondaryIndex.getName(), secondaryIndex.getResource().getName(), secondaryIndex.getResource().getPartitionDimension().getName(), new Integer(3), key);
 
 		PartitionKeyStatistics thawed = dao.findByPrimaryPartitionKey(partitionDimension,
 				frozen.getKey());

@@ -12,7 +12,6 @@ import org.hivedb.management.statistics.NodeStatistics;
 import org.hivedb.management.statistics.NodeStatisticsBean;
 import org.hivedb.management.statistics.PartitionKeyStatistics;
 import org.hivedb.management.statistics.PartitionKeyStatisticsBean;
-import org.hivedb.meta.ColumnInfo;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
@@ -73,6 +72,6 @@ public class TestObjectFactory {
 	}
 	
 	public static SecondaryIndex secondaryIndex(String name) {
-		return new SecondaryIndex(new ColumnInfo(name, Types.INTEGER));
+		return new SecondaryIndex(name, Types.INTEGER);
 	}
 }

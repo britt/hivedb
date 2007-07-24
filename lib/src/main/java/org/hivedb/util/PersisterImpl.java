@@ -22,7 +22,7 @@ public class PersisterImpl implements Persister {
 	
 	public SecondaryIndexIdentifiable persistSecondaryIndexIdentifiableInstance(final Hive hive, SecondaryIndexIdentifiable secondaryIndexIdentifiable) throws HiveException {
 		SecondaryIndex secondaryIndex = getSecondaryIndex(hive, secondaryIndexIdentifiable);
-		hive.insertSecondaryIndexKey(secondaryIndex.getName(), secondaryIndex.getResource().getPartitionDimension().getName(),secondaryIndexIdentifiable.getSecondaryIndexKey(), getPrimaryIndexKey(secondaryIndexIdentifiable));
+		hive.insertSecondaryIndexKey(secondaryIndex.getName(), secondaryIndex.getResource().getName(),secondaryIndex.getResource().getPartitionDimension().getName(),secondaryIndexIdentifiable.getSecondaryIndexKey(), getPrimaryIndexKey(secondaryIndexIdentifiable));
 		return secondaryIndexIdentifiable;
 	}
 	

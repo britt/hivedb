@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.hivedb.management.HiveInstaller;
-import org.hivedb.meta.ColumnInfo;
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
@@ -56,14 +55,12 @@ public class HiveTestCase extends DerbyTestCase {
 	}
 
 	protected SecondaryIndex createSecondaryIndex() {
-		SecondaryIndex index = new SecondaryIndex(new ColumnInfo("FOO",
-				java.sql.Types.VARCHAR));
+		SecondaryIndex index = new SecondaryIndex("FOO",java.sql.Types.VARCHAR);
 		index.setResource(createResource());
 		return index;
 	}
 	protected SecondaryIndex createSecondaryIndex(int id) {
-		SecondaryIndex index = new SecondaryIndex(id, new ColumnInfo("FOO",
-				java.sql.Types.VARCHAR));
+		SecondaryIndex index = new SecondaryIndex(id, "FOO",java.sql.Types.VARCHAR);
 		index.setResource(createResource());
 		return index;
 	}

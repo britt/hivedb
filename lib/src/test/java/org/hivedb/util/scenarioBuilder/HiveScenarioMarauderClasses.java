@@ -90,7 +90,7 @@ public class HiveScenarioMarauderClasses {
 		
 		// Our Secondary Index maps pirate's name to it's id;
 		public String getSecondaryIndexName() {
-			return getResourceName() + "." + getSecondaryIndexColumnName();
+			return getSecondaryIndexColumnName();
 		}
 
 		public Object getRepresentedResourceFieldValue() {
@@ -149,7 +149,7 @@ public class HiveScenarioMarauderClasses {
 			return this;
 		}
 		public String getSecondaryIndexColumnName() { return "id"; }
-		public String getSecondaryIndexName() {return getResourceName() + "." + getSecondaryIndexColumnName(); }
+		public String getSecondaryIndexName() {return getSecondaryIndexColumnName(); }
 
 		public Object getRepresentedResourceFieldValue() {
 			return id;

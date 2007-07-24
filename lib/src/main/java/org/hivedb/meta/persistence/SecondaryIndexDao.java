@@ -13,7 +13,6 @@ import java.util.List;
 import javax.sql.DataSource;
 
 import org.hivedb.HiveRuntimeException;
-import org.hivedb.meta.ColumnInfo;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.JdbcTypeMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -74,7 +73,7 @@ public class SecondaryIndexDao extends JdbcDaoSupport implements
 			jdbcType = JdbcTypeMapper.parseJdbcType(rs.getString("db_type"));
 			
 			SecondaryIndex si = new SecondaryIndex(rs.getInt("id"),
-					new ColumnInfo(rs.getString("column_name"), jdbcType));
+					rs.getString("column_name"), jdbcType);
 			return si;
 		}
 	}

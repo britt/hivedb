@@ -713,10 +713,10 @@ public class Hive extends Observable implements Synchronizeable, Observer {
 	 *            of the partition dimension of this secondary index.
 	 * @throws HiveReadOnlyException
 	 */
-	public void insertSecondaryIndexKey(String secondaryIndexName, String partitionDimensionName,
+	public void insertSecondaryIndexKey(String secondaryIndexName, String resourceName, String partitionDimensionName,
 			Object secondaryIndexKey, Object primaryIndexKey) throws HiveReadOnlyException {
 		insertSecondaryIndexKey(getPartitionDimension(partitionDimensionName)
-				.getResource(SecondaryIndex.getResourceName(secondaryIndexName))
+				.getResource(resourceName)
 				.getSecondaryIndex(secondaryIndexName), secondaryIndexKey,
 				primaryIndexKey);
 	}
@@ -789,11 +789,11 @@ public class Hive extends Observable implements Synchronizeable, Observer {
 	 * @throws HiveReadOnlyException 
 	 */
 	public void updatePrimaryIndexKeyOfSecondaryIndexKey(
-			String partitionDimensionName,
-			String secondaryIndexName, Object secondaryIndexKey,
+			String secondaryIndexName, String resourceName,
+			String partitionDimensionName, Object secondaryIndexKey,
 			Object originalPrimaryIndexKey,  Object newPrimaryIndexKey) throws HiveReadOnlyException {
 		updatePrimaryIndexKeyOfSecondaryIndexKey(getPartitionDimension(
-				partitionDimensionName).getResource(SecondaryIndex.getResourceName(secondaryIndexName))
+				partitionDimensionName).getResource(resourceName)
 				.getSecondaryIndex(secondaryIndexName), secondaryIndexKey,
 				originalPrimaryIndexKey, newPrimaryIndexKey);
 	}
@@ -866,7 +866,7 @@ public class Hive extends Observable implements Synchronizeable, Observer {
 		boolean primaryKeyReadOnly = getReadOnlyOfPrimaryIndexKey(partitionDimensionName, primaryIndexKey);
 		for(Integer id : directories.get(partitionDimensionName).getNodeIdsOfPrimaryIndexKey(primaryIndexKey))
 			throwIfReadOnly("Deleting secondary index key", getPartitionDimension(partitionDimensionName).getNode(id), primaryIndexKey, primaryKeyReadOnly);
-		if (!doesSecondaryIndexKeyExist(secondaryIndex.getName(), partitionDimensionName, secondaryIndexKey))
+		if (!doesSecondaryIndexKeyExist(secondaryIndex.getName(), secondaryIndex.getResource().getName(), partitionDimensionName, secondaryIndexKey))
 			throw new HiveKeyNotFoundException("Secondary index key "
 					+ secondaryIndexKey.toString() + " does not exist",secondaryIndexKey);
 
@@ -897,10 +897,10 @@ public class Hive extends Observable implements Synchronizeable, Observer {
 	 * @throws SQLException
 	 *             Throws if there is a persistence error
 	 */
-	public void deleteSecondaryIndexKey(String secondaryIndexName, String partitionDimensionName,
+	public void deleteSecondaryIndexKey(String secondaryIndexName, String resourceName, String partitionDimensionName,
 			Object secondaryIndexKey, Object primaryIndexKey) throws HiveReadOnlyException {
 		deleteSecondaryIndexKey(getPartitionDimension(partitionDimensionName)
-				.getResource(SecondaryIndex.getResourceName(secondaryIndexName))
+				.getResource(resourceName)
 				.getSecondaryIndex(secondaryIndexName), secondaryIndexKey, primaryIndexKey);
 	}
 
@@ -968,9 +968,9 @@ public class Hive extends Observable implements Synchronizeable, Observer {
 	 *            The key to test
 	 * @return True if the secondary index key exists
 	 */
-	public boolean doesSecondaryIndexKeyExist(String secondaryIndexName, String dimensionName,
+	public boolean doesSecondaryIndexKeyExist(String secondaryIndexName, String resourceName, String dimensionName,
 			Object secondaryIndexKey) {
-		SecondaryIndex secondaryIndex = getPartitionDimension(dimensionName).getResource(SecondaryIndex.getResourceName(secondaryIndexName)).getSecondaryIndex(secondaryIndexName);
+		SecondaryIndex secondaryIndex = getPartitionDimension(dimensionName).getResource(resourceName).getSecondaryIndex(secondaryIndexName);
 		return directories.get(
 				secondaryIndex.getResource().getPartitionDimension().getName())
 				.doesSecondaryIndexKeyExist(secondaryIndex, secondaryIndexKey);
@@ -1042,9 +1042,10 @@ public class Hive extends Observable implements Synchronizeable, Observer {
 	 */
 	public Collection getSecondaryIndexKeysWithPrimaryKey(
 			String secondaryIndexName,
+			String resourceName,
 			String partitionDimensionName, Object primaryIndexKey) {
 		return getSecondaryIndexKeysWithPrimaryKey(getPartitionDimension(
-				partitionDimensionName).getResource(SecondaryIndex.getResourceName(secondaryIndexName))
+				partitionDimensionName).getResource(resourceName)
 				.getSecondaryIndex(secondaryIndexName), primaryIndexKey);
 	}
 	

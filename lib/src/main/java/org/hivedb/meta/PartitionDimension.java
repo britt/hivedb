@@ -178,7 +178,7 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	}
 	public Resource getResource(String resourceName) {
 		for (Resource resource : resources)
-			if (resource.getName().equals(resourceName))
+			if (resource.getName().equalsIgnoreCase(resourceName))
 				return resource;
 		throw new HiveKeyNotFoundException("Resource with name " + resourceName + " not found.", resourceName);
 	}
@@ -245,7 +245,7 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	public Node getNode(final String name) {
 		return Filter.grepSingle(new Predicate<Node>(){
 			public boolean f(Node item) {
-				return item.getName().equals(name);
+				return item.getName().equalsIgnoreCase(name);
 			}}, getNodes());
 	}
 	public Node getNode(final int id) {

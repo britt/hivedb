@@ -8,7 +8,6 @@ import java.util.Collection;
 
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.AccessType;
-import org.hivedb.meta.ColumnInfo;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
@@ -109,7 +108,7 @@ public class ExampleHiveTest extends DerbyTestCase {
 		product = hive.addResource(partitionDimension.getName(), product);
 		
 		//Now create a SecondaryIndex
-		SecondaryIndex nameIndex = new SecondaryIndex(new ColumnInfo("name", Types.VARCHAR));
+		SecondaryIndex nameIndex = new SecondaryIndex("name", Types.VARCHAR);
 		//Add it to the Hive
 		nameIndex = hive.addSecondaryIndex(product, nameIndex);
 		//Note: SecondaryIndexes are identified by ResourceName.IndexColumnName
@@ -129,7 +128,7 @@ public class ExampleHiveTest extends DerbyTestCase {
 			dao.getJdbcTemplate().update(stmtFactory.newPreparedStatementCreator(parameters));
 		//Finally we update the SecondaryIndex
 		System.out.println(nameIndex.getName());
-		hive.insertSecondaryIndexKey("Product.name",dimensionName, spork.getName(), spork.getId());
+		hive.insertSecondaryIndexKey("name","Product",dimensionName, spork.getName(), spork.getId());
 		
 		//Retrieve spork by Primary Key
 		sporkDaos = hive.getJdbcDaoSupportCache(dimensionName).get(spork.getId(), AccessType.ReadWrite);

@@ -20,7 +20,22 @@ import org.hivedb.util.functional.Atom;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 */
+import java.sql.Types;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
+
+import org.hivedb.Hive;
+import org.hivedb.HiveReadOnlyException;
+import org.hivedb.meta.persistence.HiveBasicDataSource;
+import org.hivedb.util.AssertUtils;
 import org.hivedb.util.database.HiveTestCase;
+import org.hivedb.util.functional.Atom;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+import static org.testng.AssertJUnit.*;
 public class DirectoryTest extends HiveTestCase {
 //	private PartitionDimension dimension;
 //	private SecondaryIndex nameIndex, numIndex;
@@ -36,8 +51,8 @@ public class DirectoryTest extends HiveTestCase {
 //		new IndexSchema(Atom.getFirst(hive.getPartitionDimensions())).install();
 //		
 //		dimension = hive.getPartitionDimension(createPopulatedPartitionDimension().getName());
-//		nameIndex = new SecondaryIndex(new ColumnInfo("name", Types.VARCHAR));
-//		numIndex = new SecondaryIndex(new ColumnInfo("num", Types.INTEGER));
+//		nameIndex = new SecondaryIndex("name", Types.VARCHAR);
+//		numIndex = new SecondaryIndex("num", Types.INTEGER);
 //		hive.addSecondaryIndex(Atom.getFirstOrNull(dimension.getResources()), nameIndex);
 //		hive.addSecondaryIndex(Atom.getFirstOrNull(dimension.getResources()), numIndex);
 //	}
@@ -45,8 +60,8 @@ public class DirectoryTest extends HiveTestCase {
 //	private void insertKeys(Hive hive) throws HiveReadOnlyException {
 //		for(Integer key: getPrimaryIndexKeys()) {
 //			hive.insertPrimaryIndexKey(dimension.getName(), key);
-//			hive.insertSecondaryIndexKey(nameIndex.getName(), dimension.getName(), secondaryKeyString, key);
-//			hive.insertSecondaryIndexKey(numIndex.getName(), dimension.getName(), secondaryKeyNum, key);
+//			hive.insertSecondaryIndexKey(nameIndex.getName(),nameIndex.getResource().getName(), dimension.getName(), secondaryKeyString, key);
+//			hive.insertSecondaryIndexKey(numIndex.getName(),numIndex.getResource().getName(), dimension.getName(), secondaryKeyNum, key);
 //		}
 //	}
 //	
@@ -54,8 +69,8 @@ public class DirectoryTest extends HiveTestCase {
 //	public void testInsertPrimaryIndexKey() throws Exception{
 //		NodeResolver d = getDirectory();
 //		final Integer key = new Integer(43);
-//		Node firstNode = Atom.getFirst(dimension.getNodeGroup().getNodes());
-//		d.insertPrimaryIndexKey( Atom.getFirst(dimension.getNodeGroup().getNodes()), key);
+//		Node firstNode = Atom.getFirst(dimension.getNodes());
+//		d.insertPrimaryIndexKey( Atom.getFirst(dimension.getNodes()), key);
 //		for(Integer id: d.getNodeIdsOfPrimaryIndexKey(key))
 //			assertEquals((Integer)firstNode.getId(), id);
 //	}
@@ -64,11 +79,11 @@ public class DirectoryTest extends HiveTestCase {
 //	public void testInsertPrimaryIndexKeyMultipleNodes() throws Exception{
 //		NodeResolver d = getDirectory();
 //		final Integer key = new Integer(43);
-//		for(Node node : dimension.getNodeGroup().getNodes())
+//		for(Node node : dimension.getNodes())
 //			d.insertPrimaryIndexKey( node, key);
 //		Collection<Integer> nodeIds = d.getNodeIdsOfPrimaryIndexKey(key);
 //		AssertUtils.assertUnique(nodeIds);
-//		assertEquals(dimension.getNodeGroup().getNodes().size(), nodeIds.size());
+//		assertEquals(dimension.getNodes().size(), nodeIds.size());
 //	}
 //	
 //	@Test
@@ -85,7 +100,7 @@ public class DirectoryTest extends HiveTestCase {
 //	public void testDeletePrimaryIndexKeyMultipleNodes() throws Exception {
 //		NodeResolver d = getDirectory();
 //		for(Integer key: getPrimaryIndexKeys())
-//			for(Node node : d.getPartitionDimension().getNodeGroup().getNodes())
+//			for(Node node : d.getPartitionDimension().getNodes())
 //			d.insertPrimaryIndexKey(node, key);
 //		for(Integer key : getPrimaryIndexKeys()){
 //			d.deletePrimaryIndexKey(key);
@@ -141,8 +156,8 @@ public class DirectoryTest extends HiveTestCase {
 //					secondaryKeyNum
 //			}));
 //			hive.insertRelatedSecondaryIndexKeys(dimension.getName(), secondaryIndexKeyMap, primaryIndexKey);
-//			assertEquals(1,hive.getSecondaryIndexKeysWithPrimaryKey(nameIndex.getName(), dimension.getName(), primaryIndexKey).size());
-//			assertEquals(1,hive.getSecondaryIndexKeysWithPrimaryKey(numIndex.getName(), dimension.getName(), primaryIndexKey).size());
+//			assertEquals(1,hive.getSecondaryIndexKeysWithPrimaryKey(nameIndex.getName(), nameIndex.getResource().getName(), dimension.getName(), primaryIndexKey).size());
+//			assertEquals(1,hive.getSecondaryIndexKeysWithPrimaryKey(numIndex.getName(), nameIndex.getResource().getName(),dimension.getName(), primaryIndexKey).size());
 //		}
 //	}
 //	
@@ -236,9 +251,9 @@ public class DirectoryTest extends HiveTestCase {
 //	public void testGetNodeSemaphoresOfPrimaryIndexKeyMultiNode() throws Exception {
 //		NodeResolver d = getDirectory();
 //		for(Integer pkey : getPrimaryIndexKeys()) {
-//			for(Node node : dimension.getNodeGroup().getNodes())
+//			for(Node node : dimension.getNodes())
 //				d.insertPrimaryIndexKey(node, pkey);
-//			assertEquals(dimension.getNodeGroup().getNodes().size(), d.getNodeSemamphoresOfPrimaryIndexKey(pkey).size());
+//			assertEquals(dimension.getNodes().size(), d.getNodeSemamphoresOfPrimaryIndexKey(pkey).size());
 //		}
 //	}
 //	

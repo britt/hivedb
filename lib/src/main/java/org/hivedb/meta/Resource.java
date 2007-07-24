@@ -87,7 +87,7 @@ public class Resource implements Comparable<Resource>, IdAndNameIdentifiable, Fi
 	}
 	public SecondaryIndex getSecondaryIndex(String secondaryIndexName) {
 		for (SecondaryIndex secondaryIndex : getSecondaryIndexes())
-			if (secondaryIndex.getName().equals(secondaryIndexName))
+			if (secondaryIndex.getName().equalsIgnoreCase(secondaryIndexName))
 				return secondaryIndex;
 		throw new HiveRuntimeException(String.format("Secondary index %s of resource %s of partitition dimension %s not found.",
 				secondaryIndexName,

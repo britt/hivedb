@@ -3,7 +3,6 @@ package org.hivedb.util;
 import java.util.Collection;
 
 import org.hivedb.Hive;
-import org.hivedb.meta.ColumnInfo;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
@@ -66,9 +65,8 @@ public class InstallHiveIndexSchema {
 						public SecondaryIndex f(SecondaryIndexIdentifiable secondaryIndexIdentifiablePrototype) {
 							try {
 								return new SecondaryIndex(
-										new ColumnInfo(
-											secondaryIndexIdentifiablePrototype.getSecondaryIndexColumnName(),											
-											JdbcTypeMapper.primitiveTypeToJdbcType(secondaryIndexIdentifiablePrototype.getSecondaryIndexKey().getClass())));
+										secondaryIndexIdentifiablePrototype.getSecondaryIndexColumnName(),
+										JdbcTypeMapper.primitiveTypeToJdbcType(secondaryIndexIdentifiablePrototype.getSecondaryIndexKey().getClass()));
 							} catch (Exception e) {
 								throw new RuntimeException(e);
 							}

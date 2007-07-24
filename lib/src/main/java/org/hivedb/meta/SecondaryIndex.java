@@ -25,8 +25,8 @@ public class SecondaryIndex implements Comparable<SecondaryIndex>, IdAndNameIden
 	 * 
 	 * @param columnInfo
 	 */
-	public SecondaryIndex(ColumnInfo columnInfo) {
-		this(Hive.NEW_OBJECT_ID, columnInfo);
+	public SecondaryIndex(String name, int type) {
+		this(Hive.NEW_OBJECT_ID, name,type);
 	}
 	
 	/**
@@ -37,10 +37,9 @@ public class SecondaryIndex implements Comparable<SecondaryIndex>, IdAndNameIden
 	 * @param id
 	 * @param columnInfo
 	 */
-	public SecondaryIndex(int id, ColumnInfo columnInfo) {
-		super();
+	public SecondaryIndex(int id, String name, int type) {
 		this.id = id;
-		this.columnInfo = columnInfo;
+		this.columnInfo = new ColumnInfo(name,type);
 	}
 
 	public int getId() {
@@ -54,7 +53,11 @@ public class SecondaryIndex implements Comparable<SecondaryIndex>, IdAndNameIden
 	 * @return
 	 */
 	public String getName() {
-		return SecondaryIndex.getSecondaryIndexName(this, getResource());
+		return this.getColumnInfo().getName();
+	}
+	
+	public String getTableName() {
+		return getTableName(this, this.getResource());
 	}
 	
 	public ColumnInfo getColumnInfo() {
@@ -104,7 +107,7 @@ public class SecondaryIndex implements Comparable<SecondaryIndex>, IdAndNameIden
 	
 	public Object clone()
 	{
-		return new SecondaryIndex(columnInfo);
+		return new SecondaryIndex(getColumnInfo().getName(), getColumnInfo().getColumnType());
 	}
 
 	public void setId(int id) {
@@ -115,11 +118,11 @@ public class SecondaryIndex implements Comparable<SecondaryIndex>, IdAndNameIden
 		return Atom.getFirstOrThrow(secondaryIndexName.split("\\."));
 	}
 	
-	public static String getSecondaryIndexName(SecondaryIndex secondaryIndex, Resource resource) {
-		return getSecondaryIndexName(secondaryIndex.getColumnInfo().getName(), resource.getName());
+	public static String getTableName(SecondaryIndex secondaryIndex, Resource resource) {
+		return getTableName(secondaryIndex.getColumnInfo().getName(), resource.getName());
 	}
 	
-	public static String getSecondaryIndexName(String index, String resource) {
+	public static String getTableName(String index, String resource) {
 		return resource + "." + index;
 	}
 }

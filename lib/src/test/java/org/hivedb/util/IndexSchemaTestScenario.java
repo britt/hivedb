@@ -9,7 +9,6 @@ import java.util.Collection;
 
 import org.hivedb.Hive;
 import org.hivedb.meta.Assigner;
-import org.hivedb.meta.ColumnInfo;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
@@ -43,7 +42,7 @@ public class IndexSchemaTestScenario {
 	}
 	
 	public SecondaryIndex secondaryIndex() {
-		SecondaryIndex secondary = new SecondaryIndex(new ColumnInfo("werd", Types.INTEGER));
+		SecondaryIndex secondary = new SecondaryIndex("werd", Types.INTEGER);
 		secondary.setResource(resource());
 		return secondary;
 	}
