@@ -96,7 +96,7 @@ public abstract class Schema extends JdbcDaoSupport {
 	{
 		JdbcTemplate t = getJdbcTemplate();
 		try {
-			t.query( "select * from " + tableName, new TrueRowMapper());
+			t.query( "select * from " + tableName + ifMySql(" LIMIT 1", dialect), new TrueRowMapper());
 			return true;
 		}
 		catch (Exception e) {

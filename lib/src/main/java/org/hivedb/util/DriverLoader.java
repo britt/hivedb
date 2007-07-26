@@ -28,6 +28,10 @@ public class DriverLoader {
 		loadByDialect(discernDialect(uri));
 	}
 	
+	public static String getDriverClass(HiveDbDialect dialect) {
+		return defaultDrivers.get(dialect);
+	}
+	
 	/**
 	 * From the connection URI determine the databhase type.
 	 * @param uri
