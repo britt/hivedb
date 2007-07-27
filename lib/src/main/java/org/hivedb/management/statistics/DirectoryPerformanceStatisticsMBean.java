@@ -43,7 +43,7 @@ public class DirectoryPerformanceStatisticsMBean extends StandardMBean implement
 	
 	public static final String PRIMARYINDEXDELETEFAILURES = "PrimaryIndexDeleteFailures";
 
-	public static final String SECONDARYINDEXDELETECOUNT = "SecondaryIndexDeletes";
+	public static final String SECONDARYINDEXDELETECOUNT = "SecondaryIndexDeleteCount";
 
 	public static final String SECONDARYINDEXDELETEFAILURES = "SecondaryIndexDeleteFailures";
 

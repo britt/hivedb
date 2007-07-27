@@ -102,6 +102,25 @@ public class JdbcTypeMapper {
 		throw new HiveRuntimeException("No known database type for class "
 				+ classType.getCanonicalName(), null);
 	}
+	public static Class jdbcTypeToPrimitiveClass(Integer jdbcType) {
+		if (jdbcType.equals(Types.INTEGER))
+			return Integer.class;
+		if (jdbcType.equals(Types.BIGINT))
+			return Long.class;
+		if (jdbcType.equals(Types.FLOAT))
+			return Float.class;
+		if (jdbcType.equals(Types.DOUBLE))
+			return Double.class;
+		if (jdbcType.equals(Types.VARCHAR))
+			return String.class;
+		if (jdbcType.equals(Types.DATE))
+			return Date.class;
+		if (jdbcType.equals(Types.TIMESTAMP))
+			return Timestamp.class;
+		if (jdbcType.equals(Types.CHAR))
+			return Character.class;
+		throw new HiveRuntimeException("No known database type for class " + jdbcType);
+	}
 
 	public static void insertJdbcTypeParameter(
 			PreparedStatement preparedStatement, int index, Object value)

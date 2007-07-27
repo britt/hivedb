@@ -19,23 +19,15 @@ import org.hivedb.util.AssertUtils;
 import org.hivedb.util.functional.Atom;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-*/
 import java.sql.Types;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
-
-import org.hivedb.Hive;
-import org.hivedb.HiveReadOnlyException;
-import org.hivedb.meta.persistence.HiveBasicDataSource;
-import org.hivedb.util.AssertUtils;
+*/
 import org.hivedb.util.database.HiveTestCase;
-import org.hivedb.util.functional.Atom;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-import static org.testng.AssertJUnit.*;
+
 public class DirectoryTest extends HiveTestCase {
 //	private PartitionDimension dimension;
 //	private SecondaryIndex nameIndex, numIndex;

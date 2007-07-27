@@ -2,17 +2,17 @@ package org.hivedb.management.statistics;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Hashtable;
 import java.util.Map;
 
 import org.hivedb.util.RollingAverage;
+import org.hivedb.util.functional.DebugMap;
 
 public class RollingAverageStatisticsImpl implements RollingAverageStatistics {
 	private Map<String,RollingAverage> stats;
 	private long step = 1;
 	
 	private RollingAverageStatisticsImpl() {
-		this.stats = new Hashtable<String, RollingAverage>();
+		this.stats = new DebugMap<String, RollingAverage>();
 	}
 	
 	public RollingAverageStatisticsImpl(Collection<String> keys, long windowSize, long intervalSize) {

@@ -25,5 +25,4 @@ public interface ResourceIdentifiable {
 	PrimaryIndexIdentifiable getPrimaryIndexIdentifiable();
 	String getResourceName();
 	Number getId();
-	<T> Class<T> getRepresentedClass();
 }

@@ -867,8 +867,8 @@ public class Hive extends Observable implements Synchronizeable, Observer {
 		for(Integer id : directories.get(partitionDimensionName).getNodeIdsOfPrimaryIndexKey(primaryIndexKey))
 			throwIfReadOnly("Deleting secondary index key", getPartitionDimension(partitionDimensionName).getNode(id), primaryIndexKey, primaryKeyReadOnly);
 		if (!doesSecondaryIndexKeyExist(secondaryIndex.getName(), secondaryIndex.getResource().getName(), partitionDimensionName, secondaryIndexKey))
-			throw new HiveKeyNotFoundException("Secondary index key "
-					+ secondaryIndexKey.toString() + " does not exist",secondaryIndexKey);
+			throw new HiveKeyNotFoundException(
+					String.format("Secondary index key %s of secondary index %s does not exist",secondaryIndexKey,secondaryIndex.getName()),secondaryIndexKey);
 
 		directories.get(partitionDimensionName)
 				.deleteSecondaryIndexKey(secondaryIndex, secondaryIndexKey, primaryIndexKey);
