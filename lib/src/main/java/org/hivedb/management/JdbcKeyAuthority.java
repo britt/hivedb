@@ -70,7 +70,7 @@ public abstract class JdbcKeyAuthority<T extends Number> implements KeyAuthority
 				+ returnType.toString());
 	}
 
-	private void createSchema() {
+	protected void createSchema() {
 		JdbcTemplate template = new JdbcTemplate(dataSource);
 		template.execute("CREATE TABLE " + getKeyspaceTableName() + " (" + COLUMN_NAME
 				+ " int);");

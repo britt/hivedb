@@ -109,7 +109,7 @@ public class Hive extends Observable implements Synchronizeable, Observer {
 		if( hiveStats != null) {
 			hive.setPerformanceStatistics(hiveStats);
 			hive.setPerformanceMonitoringEnabled(true);
-		}
+		} 
 		
 		if( directoryStats != null) {
 			for(Directory dir : hive.directories.values()){
