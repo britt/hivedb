@@ -44,7 +44,10 @@ public class InstallHiveIndexSchema {
 		final Collection<Resource> resources = 
 			Transform.map(new Unary<ResourceIdentifiable, Resource>() {
 				public Resource f(ResourceIdentifiable resourceIdentifiable) { 
-					return new Resource(resourceIdentifiable.getResourceName(), constructSecondaryIndexesOfResource(resourceIdentifiable));
+					return new Resource(
+							resourceIdentifiable.getResourceName(), 
+							JdbcTypeMapper.primitiveTypeToJdbcType(resourceIdentifiable.getId().getClass()), 
+							constructSecondaryIndexesOfResource(resourceIdentifiable));
 				}},
 				hiveScenarioConfig.getPrimaryIndexIdentifiable().getResourceIdentifiables());
 		PartitionDimension partitionDimension = new PartitionDimension(

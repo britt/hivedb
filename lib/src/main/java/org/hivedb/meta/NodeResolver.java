@@ -15,7 +15,7 @@ public interface NodeResolver {
 	 * @param nodes The nodes to add the primary index key to.
 	 * @param primaryIndexKey The key to be added
 	 */
-	public void insertPrimaryIndexKey(final Node node, final Object primaryIndexKey);
+	public void insertPrimaryIndexKey(Node node, Object primaryIndexKey);
 
 	/***
 	 * Add a secondary index key
@@ -23,75 +23,90 @@ public interface NodeResolver {
 	 * @param secondaryIndexKey
 	 * @param primaryindexKey
 	 */
-	public void insertSecondaryIndexKey(final SecondaryIndex secondaryIndex,final Object secondaryIndexKey, Object primaryindexKey);
+	public void insertSecondaryIndexKey(SecondaryIndex secondaryIndex,Object secondaryIndexKey, Object primaryindexKey);
 
 	/***
 	 * Set the write lock on a priamry index key.
 	 * @param primaryIndexKey
 	 * @param isReadOnly
 	 */
-	public void updatePrimaryIndexKeyReadOnly(final Object primaryIndexKey, boolean isReadOnly);
+	public void updatePrimaryIndexKeyReadOnly(Object primaryIndexKey, boolean isReadOnly);
 
 	/***
-	 * Change the primary index key that a secondary index key references.
+	 * Change the primary index key that a resource id references.
 	 * @param secondaryIndex
 	 * @param secondaryIndexKey
 	 * @param originalPrimaryIndexKey
 	 * @param newPrimaryIndexKey
 	 */
-	public void updatePrimaryIndexOfSecondaryKey(
-			final SecondaryIndex secondaryIndex,
-			final Object secondaryIndexKey,
-			final Object originalPrimaryIndexKey,
-			final Object newPrimaryIndexKey);
+	public void updatePrimaryIndexKeyOfResourceId(
+			Resource resource, 
+			Object resourceId, 
+			Object originalPrimaryIndexKey, 
+			Object newPrimaryIndexKey);
 
 	/***
-	 * Delete the secondary index keys associated with a primary index key.
-	 * @param secondaryIndex
-	 * @param primaryIndexKey
+	 * Delete all secondary index key associated with a resource id.
+	 * @param resource
+	 * @param resourceId
 	 */
-	public void deleteAllSecondaryIndexKeysOfPrimaryIndexKey(SecondaryIndex secondaryIndex, Object primaryIndexKey);
-
+	public void deleteAllSecondaryIndexKeysOfResourceId(Resource resource, Object id);
+	
 	/***
 	 * Delete a primary index key.
 	 * @param primaryIndexKey
 	 */
-	public void deletePrimaryIndexKey(final Object primaryIndexKey);
+	public void deletePrimaryIndexKey(Object primaryIndexKey);
 
 	/***
 	 * Delete a secondary index key
 	 * @param secondaryIndex
 	 * @param secondaryIndexKey
 	 */
-	public void deleteSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey, final Object primaryIndexKey);
+	public void deleteSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey, Object primaryIndexKey);
 
+	/***
+	 * Delete a resource id.
+	 * @param resource
+	 * @param id
+	 */
+	public void deleteResourceKey(Resource resource, Object id);
+	
 	/***
 	 * Test the existence of a primary key
 	 * @param primaryIndexKey
 	 * @return
 	 */
-	public boolean doesPrimaryIndexKeyExist(final Object primaryIndexKey);
+	public boolean doesPrimaryIndexKeyExist(Object primaryIndexKey);
 
+	/***
+	 * Test the existence of a resource id.
+	 * @param resource
+	 * @param id
+	 * @return
+	 */
+	public boolean doesResourceIdExist(Resource resource, Object id);
+	
 	/***
 	 * Get the ids of the nodes on which a primary keys records are stored.
 	 * @param primaryIndexKey
 	 * @return
 	 */
-	public Collection<Integer> getNodeIdsOfPrimaryIndexKey(final Object primaryIndexKey);
+	public Collection<Integer> getNodeIdsOfPrimaryIndexKey(Object primaryIndexKey);
 
 	/***
 	 * Get (id,write-lock state) of a primary index key.
 	 * @param primaryIndexKey
 	 * @return
 	 */
-	public Collection<NodeSemaphore> getNodeSemamphoresOfPrimaryIndexKey(final Object primaryIndexKey);
+	public Collection<NodeSemaphore> getNodeSemamphoresOfPrimaryIndexKey(Object primaryIndexKey);
 
 	/***
 	 * Get the write-lock state of a primary index key
 	 * @param primaryIndexKey
 	 * @return
 	 */
-	public boolean getReadOnlyOfPrimaryIndexKey(final Object primaryIndexKey);
+	public boolean getReadOnlyOfPrimaryIndexKey(Object primaryIndexKey);
 
 	/***
 	 * Test the existence of a secondary index key
@@ -99,7 +114,7 @@ public interface NodeResolver {
 	 * @param secondaryIndexKey
 	 * @return
 	 */
-	public boolean doesSecondaryIndexKeyExist(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey);
+	public boolean doesSecondaryIndexKeyExist(SecondaryIndex secondaryIndex, Object secondaryIndexKey);
 
 	/***
 	 * Get the ids of the nodes on which a secondary keys records are stored.
@@ -107,7 +122,7 @@ public interface NodeResolver {
 	 * @param secondaryIndexKey
 	 * @return
 	 */
-	public Collection<Integer> getNodeIdsOfSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey);
+	public Collection<Integer> getNodeIdsOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey);
 
 	/***
 	 * Get the (id,read-lock state) of a secondary index key
@@ -115,7 +130,7 @@ public interface NodeResolver {
 	 * @param secondaryIndexKey
 	 * @return
 	 */
-	public Collection<NodeSemaphore> getNodeSemaphoresOfSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey);
+	public Collection<NodeSemaphore> getNodeSemaphoresOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey);
 
 	/***
 	 * Get the primary indexs that have records matching the secondary index key provided.
@@ -123,14 +138,46 @@ public interface NodeResolver {
 	 * @param secondaryIndexKey
 	 * @return
 	 */
-	public Collection<Object> getPrimaryIndexKeysOfSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey);
+	public Collection getPrimaryIndexKeysOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey);
 
+	/***
+	 * Get the resource ids associated witha  secondary index key
+	 * @param secondaryIndex
+	 * @return
+	 */
+	public Collection getResourceIdsOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey);
+	
 	/***
 	 * Get all of the keys associated with a primary index for a particular secondary index.
 	 * @param secondaryIndex
 	 * @param primaryIndexKey
 	 * @return
 	 */
-	public Collection getSecondaryIndexKeysOfPrimaryIndexKey(final SecondaryIndex secondaryIndex, final Object primaryIndexKey);
+	public Collection getSecondaryIndexKeysOfPrimaryIndexKey(SecondaryIndex secondaryIndex, Object primaryIndexKey);
+	
+	/***
+	 * Get all of the keys associated with a resource id for a particular secondary index.
+	 * @param resource
+	 * @param id
+	 * @return
+	 */
+	public Collection getSecondaryIndexKeysOfResourceId(SecondaryIndex secondaryIndex, Object id);
+	
+	/***
+	 * Add a new resource key.
+	 * @param resource
+	 * @param id
+	 */
+	public void insertResourceId(Resource resource, Object id, Object primaryIndexKey);
+	
+	/***
+	 * Get the primary index key of a resource.
+	 * @param resource
+	 * @param id
+	 * @return
+	 */
+	public Object getPrimaryIndexKeyOfResourceId(Resource resource, Object id);
+	
+	public boolean getReadOnlyOfResourceId(Resource resource, Object id);
 
 }

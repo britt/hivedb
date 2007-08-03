@@ -68,7 +68,7 @@ public class TestObjectFactory {
 	}
 	
 	public static Resource resource() {
-		return new Resource(new Random().nextInt(), "aResource", new ArrayList<SecondaryIndex>());
+		return new Resource(new Random().nextInt(), "aResource", Types.INTEGER, new ArrayList<SecondaryIndex>());
 	}
 	
 	public static SecondaryIndex secondaryIndex(String name) {

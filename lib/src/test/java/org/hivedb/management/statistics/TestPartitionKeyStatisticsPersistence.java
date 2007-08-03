@@ -130,7 +130,7 @@ public class TestPartitionKeyStatisticsPersistence extends HiveTestCase {
 		}
 	}
 
-	@Test
+//	@Test
 	public void testSecondaryIndexHooks() throws Exception {
 		Object key = keys.iterator().next();
 

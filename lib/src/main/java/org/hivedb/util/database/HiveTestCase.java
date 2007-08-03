@@ -49,7 +49,7 @@ public class HiveTestCase extends DerbyTestCase {
 	}
 
 	protected Resource createResource() {
-		final Resource resource = new Resource("FOO_TABLE", new ArrayList<SecondaryIndex>());
+		final Resource resource = new Resource("FOO_TABLE", Types.INTEGER, new ArrayList<SecondaryIndex>());
 		resource.setPartitionDimension(createEmptyPartitionDimension());
 		return resource;
 	}

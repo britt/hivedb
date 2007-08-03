@@ -38,7 +38,7 @@ public class HiveMigrator implements Migrator {
 			}
 		} catch( RuntimeException e) {
 			throw new MigrationException(
-					String.format("An error occured while copying records from node % to node %s.  Records may be orphaned on node %s",
+					String.format("An error occured while copying records from node %s to node %s.  Records may be orphaned on node %s",
 						destination.getName(),
 						origin.getName(), 
 						destination.getName()), e);
@@ -86,7 +86,7 @@ public class HiveMigrator implements Migrator {
 //							destination.getName()), e);
 		} catch( RuntimeException e) {
 			throw new MigrationException(
-					String.format("An error occured while copying records from node % to node %s.  Records may be orphaned on node %s",
+					String.format("An error occured while copying records from node %s to node %s.  Records may be orphaned on node %s",
 							destination.getName(),
 							origin.getName(), 
 							destination.getName()), e);

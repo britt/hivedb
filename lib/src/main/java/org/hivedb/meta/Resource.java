@@ -12,16 +12,17 @@ import org.hivedb.HiveRuntimeException;
 import org.hivedb.util.HiveUtils;
 
 /**
- * 
+ * An index entity in the Hive.
  * 
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
  * @author Andy Likuski (alikuski@cafepress.com)
  */
 public class Resource implements Comparable<Resource>, IdAndNameIdentifiable, Finder {
 	private int id;
-	private String name;
 	private PartitionDimension partitionDimension;
 	private Collection<SecondaryIndex> secondaryIndexes = null;
+	private ColumnInfo columnInfo;
+	private ResourceIndex idIndex;
 
 	/**
 	 * 
@@ -30,8 +31,8 @@ public class Resource implements Comparable<Resource>, IdAndNameIdentifiable, Fi
 	 * @param name
 	 * @param secondaryIndexes
 	 */
-	public Resource(String name) {
-		this(Hive.NEW_OBJECT_ID, name, new ArrayList<SecondaryIndex>());
+	public Resource(String name, int columnType) {
+		this(Hive.NEW_OBJECT_ID, name, columnType, new ArrayList<SecondaryIndex>());
 	}
 	
 	/**
@@ -41,8 +42,8 @@ public class Resource implements Comparable<Resource>, IdAndNameIdentifiable, Fi
 	 * @param name
 	 * @param secondaryIndexes
 	 */
-	public Resource(String name, Collection<SecondaryIndex> secondaryIndexes) {
-		this(Hive.NEW_OBJECT_ID, name, secondaryIndexes);
+	public Resource(String name, int columnType, Collection<SecondaryIndex> secondaryIndexes) {
+		this(Hive.NEW_OBJECT_ID, name, columnType, secondaryIndexes);
 	}
 	
 	/**
@@ -54,11 +55,12 @@ public class Resource implements Comparable<Resource>, IdAndNameIdentifiable, Fi
 	 * @param name
 	 * @param secondaryIndexes
 	 */
-	public Resource(int id, String name, Collection<SecondaryIndex> secondaryIndexes) {
-		super();
+	public Resource(int id, String name, int columnType, Collection<SecondaryIndex> secondaryIndexes) {
 		this.id = id;
-		this.name = name;
+		this.columnInfo = new ColumnInfo(name, columnType);
 		this.secondaryIndexes = insetThisInstance(secondaryIndexes);		
+		this.idIndex = new ResourceIndex(name, columnType);
+		idIndex.setResource(this);
 	}
 	private Collection<SecondaryIndex> insetThisInstance(Collection<SecondaryIndex> secondaryIndexes)
 	{
@@ -71,10 +73,10 @@ public class Resource implements Comparable<Resource>, IdAndNameIdentifiable, Fi
 		return id;
 	}
 	public String getName() {
-		return name;
+		return columnInfo.getName();
 	}
 	public void setName(String name) {
-		this.name = name;
+		this.columnInfo = new ColumnInfo(name, columnInfo.getColumnType());
 	}
 	public PartitionDimension getPartitionDimension() {
 		return partitionDimension;
@@ -119,7 +121,7 @@ public class Resource implements Comparable<Resource>, IdAndNameIdentifiable, Fi
 	}
 	public int hashCode() {
 		return HiveUtils.makeHashCode(new Object[] {
-				name, HiveUtils.makeHashCode(secondaryIndexes)
+				getName(), HiveUtils.makeHashCode(secondaryIndexes)
 		});
 	}
 	
@@ -137,10 +139,23 @@ public class Resource implements Comparable<Resource>, IdAndNameIdentifiable, Fi
 	
 	public Object clone()
 	{
-		return new Resource(name, secondaryIndexes);
+		return new Resource(columnInfo.getName(), columnInfo.getColumnType(), secondaryIndexes);
 	}
 
 	public void setId(int id) {
 		this.id = id;
+	}
+	
+	
+	public ResourceIndex getIdIndex() {
+		return idIndex;
+	}
+	
+	public int getColumnType() {
+		return getIdIndex().getColumnInfo().getColumnType();
+	}
+
+	public void setSecondaryIndexes(Collection<SecondaryIndex> secondaryIndexes) {
+		this.secondaryIndexes = secondaryIndexes;
 	}
 }

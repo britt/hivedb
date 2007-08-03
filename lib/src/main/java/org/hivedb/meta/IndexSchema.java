@@ -64,14 +64,26 @@ public class IndexSchema extends Schema{
 	 */
 	protected String getCreateSecondaryIndex(SecondaryIndex secondaryIndex) {
 		return 
-			"CREATE TABLE " + getSecondaryIndexTableName(partitionDimension,secondaryIndex) 
+			"CREATE TABLE " + getSecondaryIndexTableName(secondaryIndex) 
 			+ " ( "
 			+ " id " +  addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(secondaryIndex.getColumnInfo().getColumnType())) + " not null, "
-			+ " pkey " + addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(partitionDimension.getColumnType())) + " not null"
+			+ " pkey " + addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(secondaryIndex.getResource().getColumnType())) + " not null"
 			+ ifMySql(", INDEX secondary_index_value (id),", dialect)
 			+ ifMySql(" INDEX secondary_index_to_primary_index (pkey)", dialect)
 			+ " ) " 
 			+ ifMySql(" ENGINE=InnoDB", dialect);
+	}
+	
+	protected String getCreateResourceIndex(Resource resource) {
+		return 
+		"CREATE TABLE " + getSecondaryIndexTableName(resource.getIdIndex()) 
+		+ " ( "
+		+ " id " +  addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(resource.getIdIndex().getColumnInfo().getColumnType())) + " not null, "
+		+ " pkey " + addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(resource.getPartitionDimension().getColumnType())) + " not null"
+		+ ifMySql(", INDEX resource_id_value (id),", dialect)
+		+ ifMySql(" INDEX resource_id_to_primary_index (pkey)", dialect)
+		+ " ) " 
+		+ ifMySql(" ENGINE=InnoDB", dialect);
 	}
 	
 	/**
@@ -85,7 +97,7 @@ public class IndexSchema extends Schema{
 	 * Constructs the name of the table for the secondary index.
 	 * @return
 	 */
-	public static String getSecondaryIndexTableName(PartitionDimension partitionDimension, SecondaryIndex secondaryIndex) {
+	public static String getSecondaryIndexTableName(SecondaryIndex secondaryIndex) {
 		return "hive_secondary_" + secondaryIndex.getResource().getName().toLowerCase() + "_" + secondaryIndex.getColumnInfo().getName();	
 	}
 	
@@ -93,11 +105,13 @@ public class IndexSchema extends Schema{
 	public Collection<TableInfo> getTables() {
 		Collection<TableInfo> TableInfos = new ArrayList<TableInfo>();
 		TableInfos.add(new TableInfo(getPrimaryIndexTableName(partitionDimension), getCreatePrimaryIndex()));
-		for (Resource resource : partitionDimension.getResources())
+		for (Resource resource : partitionDimension.getResources()) {
+			TableInfos.add(new TableInfo(getSecondaryIndexTableName(resource.getIdIndex()), getCreateResourceIndex(resource)));
 			for (SecondaryIndex secondaryIndex : resource.getSecondaryIndexes())
 				TableInfos.add(new TableInfo(
-						getSecondaryIndexTableName(partitionDimension,secondaryIndex), 
+						getSecondaryIndexTableName(secondaryIndex), 
 						getCreateSecondaryIndex(secondaryIndex)));
+		}
 		return TableInfos;
 	}
 }

@@ -8,9 +8,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.hivedb.management.statistics.HivePerformanceStatistics;
 import org.hivedb.meta.AccessType;
+import org.hivedb.meta.Directory;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.NodeResolver;
 import org.hivedb.meta.NodeSemaphore;
+import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.DataSourceProvider;
 import org.hivedb.util.HiveUtils;
@@ -27,14 +28,14 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	private String partitionDimension;
 	private Map<Integer, SimpleJdbcDaoSupport> jdbcDaoSupports;
 	private HivePerformanceStatistics stats;
-	private NodeResolver directory;
+	private Directory directory;
 	private DataSourceProvider dataSourceProvider;
 	
-	public JdbcDaoSupportCacheImpl(String partitionDimension, Hive hive, NodeResolver directory, DataSourceProvider dataSourceProvider) {
+	public JdbcDaoSupportCacheImpl(String partitionDimension, Hive hive, Directory directory, DataSourceProvider dataSourceProvider) {
 		this(partitionDimension, hive, directory, dataSourceProvider, null);
 	}
 	
-	public JdbcDaoSupportCacheImpl(String partitionDimension, Hive hive, NodeResolver directory,  DataSourceProvider dataSourceProvider, HivePerformanceStatistics stats) {
+	public JdbcDaoSupportCacheImpl(String partitionDimension, Hive hive, Directory directory,  DataSourceProvider dataSourceProvider, HivePerformanceStatistics stats) {
 		this.partitionDimension = partitionDimension;
 		this.hive = hive;
 		this.jdbcDaoSupports = new ConcurrentHashMap<Integer, SimpleJdbcDaoSupport>();
@@ -197,5 +198,17 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 		} catch (HiveException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public Collection<SimpleJdbcDaoSupport> get(Resource resource, Object resourceId, AccessType intention) throws HiveReadOnlyException {
+		Collection<NodeSemaphore> semaphores = directory.getNodeSemaphoresOfResourceId(resource, resourceId);
+		Collection<SimpleJdbcDaoSupport> supports = new ArrayList<SimpleJdbcDaoSupport>();
+		for(NodeSemaphore semaphore : semaphores)
+			supports.add(get(semaphore, intention));
+		return supports;
+	}
+
+	public Collection<SimpleJdbcDaoSupport> getAllUnsafe() {
+		return jdbcDaoSupports.values();
 	}
 }

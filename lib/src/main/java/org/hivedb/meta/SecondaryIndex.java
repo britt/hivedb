@@ -9,7 +9,7 @@ import org.hivedb.util.HiveUtils;
 import org.hivedb.util.functional.Atom;
 
 /**
- * 
+ * An index of a value of a resource.
  * 
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
  * @author Andy Likuski (alikuski@cafepress.com)

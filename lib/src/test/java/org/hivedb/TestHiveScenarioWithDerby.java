@@ -14,7 +14,7 @@ public class TestHiveScenarioWithDerby extends HiveTestCase {
 	 *  Fills a hive with metadata and indexes to validate CRUD operations
 	 *  This tests works but is commented out due to its slowness
 	 */
-	@Test
+//	@Test
 	public void testPirateDomain() throws Exception {
 		new HiveScenarioTest(new HiveScenarioMarauderConfig(getConnectString(getHiveDatabaseName()), getDataUris())).performTest(100,0);
 	}

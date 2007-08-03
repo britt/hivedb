@@ -8,7 +8,6 @@ import java.util.Collection;
 
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.AccessType;
-import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
@@ -37,8 +36,8 @@ import org.testng.annotations.Test;
  *
  */
 public class ExampleHiveTest extends DerbyTestCase {
-	private static final String dataTableCreateSql = "CREATE TABLE products (id integer PRIMARY KEY, name varchar(255))";
-	private static final String productInsertSql = "INSERT INTO products VALUES (?,?)";
+	private static final String dataTableCreateSql = "CREATE TABLE products (id integer PRIMARY KEY, name varchar(255), type varchar(255))";
+	private static final String productInsertSql = "INSERT INTO products VALUES (?,?,?)";
 	private static final String selectProductById = "SELECT * FROM products WHERE id = ?";
 	private static final String selectProductByName = "SELECT * FROM products WHERE name = ?";
 	
@@ -51,10 +50,11 @@ public class ExampleHiveTest extends DerbyTestCase {
 		Hive hive = Hive.load(getConnectString(DerbyTestCase.TEST_DB));
 		
 		//Create a Partition Dimension
-		String dimensionName = "ProductId";
+		//We are going to partition our Product domain using the product type string.
+		String dimensionName = "ProductType";
 		
 		PartitionDimension partitionDimension = 
-			new PartitionDimension(dimensionName, Types.INTEGER, new ArrayList<Node>(), getConnectString(DerbyTestCase.TEST_DB), new ArrayList<Resource>());
+			new PartitionDimension(dimensionName, Types.VARCHAR, new ArrayList<Node>(), getConnectString(DerbyTestCase.TEST_DB), new ArrayList<Resource>());
 		
 		//Add it to the Hive	
 		partitionDimension = hive.addPartitionDimension(partitionDimension);
@@ -65,17 +65,13 @@ public class ExampleHiveTest extends DerbyTestCase {
 		//Add it to the partition dimension
 		hive.addNode(partitionDimension, dataNode);
 		
-		//Create the directory indexes for the partition dimension
-		IndexSchema indexSchema = new IndexSchema(partitionDimension);
-		indexSchema.install();
-		
 		//Make sure everything we just added actually got put into the hive meta data.
 		Assert.assertTrue(hive.getPartitionDimensions().size() > 0);
 		Assert.assertNotNull(hive.getPartitionDimension(dimensionName).getNodes());
 		Assert.assertTrue(hive.getPartitionDimension(dimensionName).getNodes().size() > 0);
 
 		//Add a key, just to test.
-		Integer key = new Integer(7);
+		String key = "knife";
 		hive.insertPrimaryIndexKey(dimensionName, key);
 		//Just cleaning up the random key.
 		hive.deletePrimaryIndexKey(dimensionName, key);
@@ -102,7 +98,7 @@ public class ExampleHiveTest extends DerbyTestCase {
 		
 		// First create a Resource.  All Secondary Indexes will be associated with this Resource.
 		String resourceName = "Product";
-		Resource product = new Resource(resourceName,new ArrayList<SecondaryIndex>());
+		Resource product = new Resource(resourceName, Types.INTEGER, new ArrayList<SecondaryIndex>());
 		
 		// Add it to the Hive
 		product = hive.addResource(partitionDimension.getName(), product);
@@ -114,24 +110,26 @@ public class ExampleHiveTest extends DerbyTestCase {
 		//Note: SecondaryIndexes are identified by ResourceName.IndexColumnName
 		
 		//Now lets add a product to the hive.
-		Product spork = new Product(23, "Spork");
+		Product spork = new Product(23, "Spork", "Cutlery");
 		//First we have to add a primary index entry in order to get allocated to a data node.
 		//While it is possible to write a record to multiple locations within the Hive, the default implementation
 		//inserts a single copy.
-		hive.insertPrimaryIndexKey(dimensionName, spork.getId());
+		hive.insertPrimaryIndexKey(dimensionName, spork.getType());
 		//Next we insert the record into the assigned data node
-		Collection<SimpleJdbcDaoSupport> sporkDaos = hive.getJdbcDaoSupportCache(dimensionName).get(spork.getId(), AccessType.ReadWrite);
+		Collection<SimpleJdbcDaoSupport> sporkDaos = hive.getJdbcDaoSupportCache(dimensionName).get(spork.getType(), AccessType.ReadWrite);
 		PreparedStatementCreatorFactory stmtFactory = 
-			new PreparedStatementCreatorFactory(productInsertSql, new int[] {Types.INTEGER, Types.VARCHAR});
-		Object[] parameters = new Object[] {spork.getId(), spork.getName()};
+			new PreparedStatementCreatorFactory(productInsertSql, new int[] {Types.INTEGER, Types.VARCHAR, Types.VARCHAR});
+		Object[] parameters = new Object[] {spork.getId(), spork.getName(), spork.getType()};
 		for(JdbcDaoSupport dao : sporkDaos)
 			dao.getJdbcTemplate().update(stmtFactory.newPreparedStatementCreator(parameters));
+
+		//Update the resource id so that the hive can locate it
+		hive.insertResourceId(dimensionName, resourceName, spork.getId(), spork.getType());
 		//Finally we update the SecondaryIndex
-		System.out.println(nameIndex.getName());
-		hive.insertSecondaryIndexKey("name","Product",dimensionName, spork.getName(), spork.getId());
+		hive.insertSecondaryIndexKey("name",resourceName,dimensionName, spork.getName(), spork.getId());
 		
 		//Retrieve spork by Primary Key
-		sporkDaos = hive.getJdbcDaoSupportCache(dimensionName).get(spork.getId(), AccessType.ReadWrite);
+		sporkDaos = hive.getJdbcDaoSupportCache(dimensionName).get(spork.getType(), AccessType.ReadWrite);
 		parameters = new Object[] {spork.getId()};
 		
 		//Here I am taking advantage of the fact that I know there is only one copy.
@@ -154,10 +152,12 @@ public class ExampleHiveTest extends DerbyTestCase {
 	class Product {
 		private Integer id;
 		private String name;
+		private String type;
 		
-		public Product(Integer id, String name) {
+		public Product(Integer id, String name, String type) {
 			this.id = id;
 			this.name = name;
+			this.type = type;
 		}
 
 		public Integer getId() {
@@ -175,11 +175,19 @@ public class ExampleHiveTest extends DerbyTestCase {
 		public void setName(String name) {
 			this.name = name;
 		}
+		
+		public String getType() {
+			return type;
+		}
+		
+		public void setType(String type) {
+			this.type = type;
+		}
 	}
 	
 	class ProductRowMapper implements RowMapper {
 		public Object mapRow(ResultSet rs, int index) throws SQLException {
-			return new Product(rs.getInt("id"), rs.getString("name"));
+			return new Product(rs.getInt("id"), rs.getString("name"), rs.getString("type"));
 		}
 	}
 }

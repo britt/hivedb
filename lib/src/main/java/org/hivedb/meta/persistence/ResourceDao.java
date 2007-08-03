@@ -15,6 +15,7 @@ import javax.sql.DataSource;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.util.JdbcTypeMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.RowMapper;
@@ -39,18 +40,20 @@ public class ResourceDao extends JdbcDaoSupport implements
 		ArrayList<Resource> results = new ArrayList<Resource>();
 		for (Object si : t.query("SELECT * FROM resource_metadata",
 				new ResourceRowMapper())) {
-			results.add((Resource) si);
+			
+			results.add((Resource)si);
 		}
 		return results;
 	}
 
 	public Integer create(Resource newObject) {
-		Object[] parameters = new Object[] { newObject.getName(), newObject.getPartitionDimension().getId()};
+		int columnType = newObject.getIdIndex().getColumnInfo().getColumnType();
+		Object[] parameters = new Object[] { newObject.getName(), newObject.getPartitionDimension().getId(), JdbcTypeMapper.jdbcTypeToString(columnType)};
 		KeyHolder generatedKey = new GeneratedKeyHolder();
 		JdbcTemplate j = getJdbcTemplate();
 		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
-				"INSERT INTO resource_metadata (name,dimension_id) VALUES (?,?)",
-				new int[] {Types.VARCHAR,Types.INTEGER});
+				"INSERT INTO resource_metadata (name,dimension_id,db_type) VALUES (?,?,?)",
+				new int[] {Types.VARCHAR,Types.INTEGER,Types.VARCHAR});
 		creatorFactory.setReturnGeneratedKeys(true);
 		int rows = j.update(creatorFactory
 				.newPreparedStatementCreator(parameters), generatedKey);
@@ -69,12 +72,13 @@ public class ResourceDao extends JdbcDaoSupport implements
 	}
 
 	public void update(Resource resource) {
-		Object[] parameters = new Object[] { resource.getName(), resource.getPartitionDimension().getId(), resource.getId()};
+		int columnType = resource.getIdIndex().getColumnInfo().getColumnType();
+		Object[] parameters = new Object[] { resource.getName(), resource.getPartitionDimension().getId(), JdbcTypeMapper.jdbcTypeToString(columnType), resource.getId()};
 		KeyHolder generatedKey = new GeneratedKeyHolder();
 		JdbcTemplate j = getJdbcTemplate();
 		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
-				"UPDATE resource_metadata SET name=?,dimension_id=? WHERE id=?",
-				new int[] {Types.VARCHAR,Types.INTEGER,Types.INTEGER});
+				"UPDATE resource_metadata SET name=?,dimension_id=?,db_type=? WHERE id=?",
+				new int[] {Types.VARCHAR,Types.INTEGER,Types.VARCHAR,Types.INTEGER});
 		creatorFactory.setReturnGeneratedKeys(true);
 		int rows = j.update(creatorFactory
 				.newPreparedStatementCreator(parameters), generatedKey);
@@ -103,7 +107,7 @@ public class ResourceDao extends JdbcDaoSupport implements
 		public Object mapRow(ResultSet rs, int rowNumber) throws SQLException {
 			SecondaryIndexDao sDao = new SecondaryIndexDao(ds);
 			List<SecondaryIndex> indexes = sDao.findByResource(rs.getInt("id"));
-			return new Resource(rs.getInt("id"), rs.getString("name"), indexes);
+			return new Resource(rs.getInt("id"), rs.getString("name"), JdbcTypeMapper.parseJdbcType(rs.getString("db_type")), indexes);
 		}
 	}
 

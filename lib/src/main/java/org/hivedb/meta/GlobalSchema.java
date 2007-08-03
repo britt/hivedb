@@ -72,7 +72,8 @@ public class GlobalSchema extends Schema {
 		return "CREATE TABLE resource_metadata ( " 
 				+ "id " + getNumericPrimaryKeySequenceModifier(dialect) + ", " 
 				+ "dimension_id int not null, "
-				+ "name varchar(128) not null "
+				+ "name varchar(128) not null, "
+				+ "db_type varchar(64) not null "
 				+ " )";
 	}
 	
