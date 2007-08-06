@@ -17,12 +17,12 @@ import org.hivedb.Hive;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.SecondaryIndex;
-import org.hivedb.util.database.HiveTestCase;
+import org.hivedb.util.database.DerbyHiveTestCase;
 import org.hivedb.util.functional.Atom;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class TestPartitionKeyStatisticsPersistence extends HiveTestCase {
+public class TestPartitionKeyStatisticsPersistence extends DerbyHiveTestCase {
 	private Collection<Integer> keys;
 	private Hive hive;
 	private PartitionDimension partitionDimension;

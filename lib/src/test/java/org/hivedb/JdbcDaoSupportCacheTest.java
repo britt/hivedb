@@ -11,14 +11,14 @@ import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.PartitionDimension;
-import org.hivedb.util.database.HiveTestCase;
+import org.hivedb.util.database.DerbyHiveTestCase;
 import org.hivedb.util.functional.Atom;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class JdbcDaoSupportCacheTest extends HiveTestCase {
+public class JdbcDaoSupportCacheTest extends DerbyHiveTestCase {
 	protected boolean cleanupDbAfterEachTest = true;
 	
 	@BeforeMethod

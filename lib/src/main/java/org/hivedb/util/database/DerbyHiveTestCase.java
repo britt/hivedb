@@ -19,7 +19,7 @@ import org.testng.annotations.BeforeMethod;
  * 
  * @author Justin McCarthy (jmccarthy@cafepress.com)
  */
-public class HiveTestCase extends DerbyTestCase {
+public class DerbyHiveTestCase extends DerbyTestCase {
 	
 	@Override
 	@BeforeClass
@@ -49,7 +49,7 @@ public class HiveTestCase extends DerbyTestCase {
 	}
 
 	protected Resource createResource() {
-		final Resource resource = new Resource("FOO_TABLE", Types.INTEGER, new ArrayList<SecondaryIndex>());
+		final Resource resource = new Resource("FOO_TABLE", Types.INTEGER);
 		resource.setPartitionDimension(createEmptyPartitionDimension());
 		return resource;
 	}

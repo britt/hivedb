@@ -392,7 +392,8 @@ public class HiveScenarioTest {
 									|| !Filter.grepItemAgainstList(secondaryIndexIdentifiable.getResourceIdentifiable().getPrimaryIndexIdentifiable().getPrimaryIndexKey(), 
 											hive.getPrimaryIndexKeysOfSecondaryIndexKey(secondaryIndex, secondaryIndexIdentifiable.getSecondaryIndexKey())));
 			
-							new Undo() { public void f() throws Exception {
+							new Undo() { @SuppressWarnings("unchecked")
+							public void f() throws Exception {
 								hive.insertSecondaryIndexKey(
 									secondaryIndex.getName(),
 									resource.getName(),

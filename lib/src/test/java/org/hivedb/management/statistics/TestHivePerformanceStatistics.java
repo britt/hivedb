@@ -8,13 +8,13 @@ import org.hivedb.Hive;
 import org.hivedb.HiveException;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.IndexSchema;
-import org.hivedb.util.database.HiveTestCase;
+import org.hivedb.util.database.DerbyHiveTestCase;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class TestHivePerformanceStatistics extends HiveTestCase{
+public class TestHivePerformanceStatistics extends DerbyHiveTestCase{
 	private Hive hive;
 	
 	@BeforeMethod

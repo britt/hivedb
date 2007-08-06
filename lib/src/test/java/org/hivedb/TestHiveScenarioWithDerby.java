@@ -4,11 +4,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.hivedb.util.database.HiveTestCase;
+import org.hivedb.util.database.DerbyHiveTestCase;
 import org.hivedb.util.scenarioBuilder.HiveScenarioMarauderConfig;
-import org.testng.annotations.Test;
 
-public class TestHiveScenarioWithDerby extends HiveTestCase {
+public class TestHiveScenarioWithDerby extends DerbyHiveTestCase {
 	
 	/**
 	 *  Fills a hive with metadata and indexes to validate CRUD operations

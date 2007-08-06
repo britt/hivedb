@@ -8,13 +8,13 @@ import org.hivedb.HiveException;
 import org.hivedb.HiveSyncDaemon;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.Node;
-import org.hivedb.util.database.HiveTestCase;
+import org.hivedb.util.database.DerbyHiveTestCase;
 import org.hivedb.util.functional.Atom;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class TestSyncHive extends HiveTestCase {
+public class TestSyncHive extends DerbyHiveTestCase {
 
 	@BeforeMethod
 	public void setUp() throws Exception {

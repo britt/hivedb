@@ -7,10 +7,10 @@ import java.util.Observable;
 import java.util.Observer;
 
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
-import org.hivedb.util.database.HiveTestCase;
+import org.hivedb.util.database.DerbyHiveTestCase;
 import org.testng.annotations.Test;
 
-public class TestHiveSyncDaemon extends HiveTestCase {
+public class TestHiveSyncDaemon extends DerbyHiveTestCase {
 	
 	@Test
 	public void testHiveSyncDaemon() {

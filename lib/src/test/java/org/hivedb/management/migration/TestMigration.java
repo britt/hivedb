@@ -15,7 +15,7 @@ import org.hivedb.meta.Node;
 import org.hivedb.meta.NodeResolver;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.database.DerbyUtils;
-import org.hivedb.util.database.HiveTestCase;
+import org.hivedb.util.database.DerbyHiveTestCase;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Pair;
@@ -23,7 +23,7 @@ import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class TestMigration extends HiveTestCase {
+public class TestMigration extends DerbyHiveTestCase {
 	
 	@BeforeMethod
 	public void beforeMethod() {

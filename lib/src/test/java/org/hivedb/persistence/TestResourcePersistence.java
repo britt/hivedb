@@ -4,11 +4,11 @@ import static org.testng.AssertJUnit.assertEquals;
 
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.persistence.ResourceDao;
-import org.hivedb.util.database.HiveTestCase;
+import org.hivedb.util.database.DerbyHiveTestCase;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class TestResourcePersistence extends HiveTestCase {
+public class TestResourcePersistence extends DerbyHiveTestCase {
 	@BeforeMethod
 	public void setUp() throws Exception {
 		super.beforeMethod();
