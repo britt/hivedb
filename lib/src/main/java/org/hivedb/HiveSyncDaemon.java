@@ -66,10 +66,13 @@ public class HiveSyncDaemon extends Thread {
 			try {
 				detectChanges();
 				lastRun = System.currentTimeMillis();
-				sleep(getConfiguredSleepPeriodMs());
 			} catch (Exception e) {
-				log.warn("Error occurred while polling the HIveSemaphore", e);
+				log.warn("Error occurred while polling the HiveSemaphore", e);
 			}
+
+			try {
+				sleep(getConfiguredSleepPeriodMs());
+			} catch (InterruptedException e) {}
 		}
 	}
 
