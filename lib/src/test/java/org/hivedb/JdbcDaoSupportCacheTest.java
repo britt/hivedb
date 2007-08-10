@@ -1,6 +1,5 @@
 package org.hivedb;
 
-import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertTrue;
 
@@ -11,14 +10,12 @@ import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.PartitionDimension;
-import org.hivedb.util.database.DerbyHiveTestCase;
-import org.hivedb.util.functional.Atom;
+import org.hivedb.util.database.H2HiveTestCase;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
-import org.springframework.jdbc.core.support.JdbcDaoSupport;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class JdbcDaoSupportCacheTest extends DerbyHiveTestCase {
+public class JdbcDaoSupportCacheTest extends H2HiveTestCase {
 	protected boolean cleanupDbAfterEachTest = true;
 	
 	@BeforeMethod
@@ -40,26 +37,6 @@ public class JdbcDaoSupportCacheTest extends DerbyHiveTestCase {
 		
 		assertTrue(read.size() > 0);
 		assertTrue(readWrite.size() > 0);
-	}
-
-	@Test
-	public void testReadOnlyEnforcement() throws Exception {
-		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
-		JdbcDaoSupportCacheImpl cache = (JdbcDaoSupportCacheImpl) hive.getJdbcDaoSupportCache(partitionDimensionName());
-		Collection<SimpleJdbcDaoSupport> read = cache.get(intKey(), AccessType.Read);
-		Collection<SimpleJdbcDaoSupport> readWrite = cache.get(intKey(), AccessType.ReadWrite);
-		
-		JdbcDaoSupport readWriteDao = Atom.getFirst(readWrite);
-		JdbcDaoSupport readDao = Atom.getFirst(read);
-		readWriteDao.getJdbcTemplate().update("create table BAR (name varchar(50))");
-
-		try {
-			readDao.getJdbcTemplate().update("insert into BAR values ('not foo')");
-		} catch(RuntimeException e) {
-			assertNotNull(e);
-		}
-		readWriteDao.getJdbcTemplate().update("insert into BAR values ('foo')");
-		assertEquals(1, readDao.getJdbcTemplate().queryForInt("select count(1) from BAR"));
 	}
 	
 	public void testCacheSynchronization() throws Exception {

@@ -13,14 +13,7 @@ import org.hivedb.meta.SecondaryIndex;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
-/**
- * Prepares a Derby version of the Hive global schema. Also provides factory
- * methods for domain POJOs configured with test data.
- * 
- * @author Justin McCarthy (jmccarthy@cafepress.com)
- */
-public class DerbyHiveTestCase extends DerbyTestCase {
-	
+public class H2HiveTestCase extends H2TestCase {
 	@Override
 	@BeforeClass
 	protected void beforeClass() {
@@ -47,13 +40,11 @@ public class DerbyHiveTestCase extends DerbyTestCase {
 		resources.add(createResource());
 		return resources;
 	}
-
 	protected Resource createResource() {
 		final Resource resource = new Resource("FOO_TABLE", Types.INTEGER);
 		resource.setPartitionDimension(createEmptyPartitionDimension());
 		return resource;
 	}
-
 	protected SecondaryIndex createSecondaryIndex() {
 		SecondaryIndex index = new SecondaryIndex("FOO",java.sql.Types.VARCHAR);
 		index.setResource(createResource());
@@ -64,11 +55,9 @@ public class DerbyHiveTestCase extends DerbyTestCase {
 		index.setResource(createResource());
 		return index;
 	}
-
 	protected Node createNode(String name) {
 		return new Node(name,getConnectString(name), false);
 	}
-
 	protected PartitionDimension createPopulatedPartitionDimension() {
 		return new PartitionDimension(partitionDimensionName(), Types.INTEGER,
 				new ArrayList<Node>(), getConnectString(getHiveDatabaseName()), createResources());
@@ -83,8 +72,7 @@ public class DerbyHiveTestCase extends DerbyTestCase {
 	protected HiveSemaphore createHiveSemaphore() {
 		return new HiveSemaphore(false,54321);
 	}
-
 	protected String getHiveDatabaseName() {
-		return DerbyTestCase.TEST_DB;
+		return H2TestCase.TEST_DB;
 	}
 }

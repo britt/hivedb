@@ -2,7 +2,7 @@
 <beans>
 	<bean id="hive" class="org.hivedb.Hive"
 		factory-method="load">
-		<constructor-arg value="jdbc:derby:storage_test" />
+		<constructor-arg value="jdbc:h2:mem:storage_test" />
 		<constructor-arg>
 			<bean class="org.hivedb.meta.persistence.HiveBasicDataSourceProvider">
 				<constructor-arg value="500" />

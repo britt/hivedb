@@ -1,16 +1,16 @@
 package org.hivedb;
 
-import static org.testng.AssertJUnit.*;
+import static org.testng.AssertJUnit.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
 
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
-import org.hivedb.util.database.DerbyHiveTestCase;
+import org.hivedb.util.database.H2HiveTestCase;
 import org.testng.annotations.Test;
 
-public class TestHiveSyncDaemon extends DerbyHiveTestCase {
+public class TestHiveSyncDaemon extends H2HiveTestCase {
 	
 	@Test
 	public void testHiveSyncDaemon() {

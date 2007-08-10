@@ -12,7 +12,7 @@ import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
-import org.hivedb.util.database.DerbyTestCase;
+import org.hivedb.util.database.H2TestCase;
 import org.hivedb.util.functional.Atom;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.RowMapper;
@@ -35,7 +35,7 @@ import org.testng.annotations.Test;
  * @author Britt Crawford (bcrawford@cafepress.com)
  *
  */
-public class ExampleHiveTest extends DerbyTestCase {
+public class ExampleHiveTest extends H2TestCase {
 	private static final String dataTableCreateSql = "CREATE TABLE products (id integer PRIMARY KEY, name varchar(255), type varchar(255))";
 	private static final String productInsertSql = "INSERT INTO products VALUES (?,?,?)";
 	private static final String selectProductById = "SELECT * FROM products WHERE id = ?";
@@ -44,23 +44,23 @@ public class ExampleHiveTest extends DerbyTestCase {
 	@Test
 	public void createAndUseTheHive() throws Exception {
 		// Install The Hive Metadata Schema
-		new HiveInstaller(getConnectString(DerbyTestCase.TEST_DB)).run();
+		new HiveInstaller(getConnectString(H2TestCase.TEST_DB)).run();
 		
 		//Load a Hive
-		Hive hive = Hive.load(getConnectString(DerbyTestCase.TEST_DB));
+		Hive hive = Hive.load(getConnectString(H2TestCase.TEST_DB));
 		
 		//Create a Partition Dimension
 		//We are going to partition our Product domain using the product type string.
 		String dimensionName = "ProductType";
 		
 		PartitionDimension partitionDimension = 
-			new PartitionDimension(dimensionName, Types.VARCHAR, new ArrayList<Node>(), getConnectString(DerbyTestCase.TEST_DB), new ArrayList<Resource>());
+			new PartitionDimension(dimensionName, Types.VARCHAR, new ArrayList<Node>(), getConnectString(H2TestCase.TEST_DB), new ArrayList<Resource>());
 		
 		//Add it to the Hive	
 		partitionDimension = hive.addPartitionDimension(partitionDimension);
 		
 		//Create a Data Node
-		Node dataNode = new Node("aNode",getConnectString(DerbyTestCase.TEST_DB));
+		Node dataNode = new Node("aNode",getConnectString(H2TestCase.TEST_DB));
 		
 		//Add it to the partition dimension
 		hive.addNode(partitionDimension, dataNode);

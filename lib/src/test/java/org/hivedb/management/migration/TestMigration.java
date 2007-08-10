@@ -3,6 +3,8 @@ package org.hivedb.management.migration;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -14,27 +16,27 @@ import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.NodeResolver;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
-import org.hivedb.util.database.DerbyUtils;
-import org.hivedb.util.database.DerbyHiveTestCase;
+import org.hivedb.util.database.H2HiveTestCase;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Pair;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class TestMigration extends DerbyHiveTestCase {
-	
+public class TestMigration extends H2HiveTestCase {
+	private Hive hive;
+
 	@BeforeMethod
 	public void beforeMethod() {
 		super.beforeMethod();
-		Hive hive;
 		try {
 			hive = Hive.load(getConnectString(getHiveDatabaseName()));
 			hive.addPartitionDimension(createPopulatedPartitionDimension());
 			new IndexSchema(hive.getPartitionDimension(partitionDimensionName())).install();
 			for(String name : getDatabaseNames())
-				hive.addNode(hive.getPartitionDimension(partitionDimensionName()), new Node(name, DerbyUtils.connectString(name)));
+				hive.addNode(hive.getPartitionDimension(partitionDimensionName()), new Node(name, getConnectString(name)));
 			
 		} catch (Exception e) {
 			throw new RuntimeException(e.getMessage());
@@ -42,10 +44,11 @@ public class TestMigration extends DerbyHiveTestCase {
 		
 		for(String name: getDatabaseNames()) {
 			SimpleJdbcDaoSupport dao = new SimpleJdbcDaoSupport();
-			dao.setDataSource(new HiveBasicDataSource(DerbyUtils.connectString(name)));
+			dao.setDataSource(new HiveBasicDataSource(getConnectString(name)));
 			
 			dao.getJdbcTemplate().update(createPrimaryTableSql());
 			dao.getJdbcTemplate().update(createSecondaryTableSql());
+			dao.getJdbcTemplate().update("SET DB_CLOSE_DELAY 5");
 		}
 	}
 	
@@ -118,6 +121,7 @@ public class TestMigration extends DerbyHiveTestCase {
 		Pair<Node, Node> nodes = initializeTestData(hive, primaryKey, secondaryKey);
 		Node origin = nodes.getKey();
 		Node destination = nodes.getValue();
+		
 		NodeResolver dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), getDataSource(getHiveDatabaseName()));
 		PartitionKeyMover<Integer> pMover = new PrimaryMover(origin.getUri());
 //		This mover just craps out on delete
@@ -127,7 +131,7 @@ public class TestMigration extends DerbyHiveTestCase {
 				dao.setDataSource(new HiveBasicDataSource(node.getUri()));
 				dao.getJdbcTemplate().update("insert into secondary_table values (?)", new Object[]{item});
 			}
-			public void delete(Integer item, Node node) {throw new RuntimeException("");}
+			public void delete(Integer item, Node node) {throw new RuntimeException("Ach!");}
 			public Integer get(Object id, Node node) {
 				SimpleJdbcDaoSupport dao = new SimpleJdbcDaoSupport();
 				dao.setDataSource(new HiveBasicDataSource(node.getUri()));

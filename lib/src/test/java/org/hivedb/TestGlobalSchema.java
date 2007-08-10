@@ -4,10 +4,10 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.hivedb.meta.GlobalSchema;
-import org.hivedb.util.database.DerbyTestCase;
+import org.hivedb.util.database.H2TestCase;
 import org.testng.annotations.Test;
 
-public class TestGlobalSchema extends DerbyTestCase {
+public class TestGlobalSchema extends H2TestCase {
 
 	private static final String TEST_DB = "testDb";
 

@@ -15,8 +15,8 @@ public class DriverLoader {
 	static {
 		defaultDrivers = new HashMap<HiveDbDialect, String>();
 		defaultDrivers.put(HiveDbDialect.MySql, "com.mysql.jdbc.Driver");
-		defaultDrivers.put(HiveDbDialect.Derby,
-				"org.apache.derby.jdbc.EmbeddedDriver");
+		defaultDrivers.put(HiveDbDialect.Derby,"org.apache.derby.jdbc.EmbeddedDriver");
+		defaultDrivers.put(HiveDbDialect.H2,"org.h2.Driver");
 	}
 
 	public static void loadByDialect(HiveDbDialect dialect)
@@ -43,6 +43,8 @@ public class DriverLoader {
 			return HiveDbDialect.MySql;
 		if (uri.startsWith("jdbc:derby:"))
 			return HiveDbDialect.Derby;
+		if (uri.startsWith("jdbc:h2:"))
+			return HiveDbDialect.H2;
 		throw new UnsupportedDialectException("Could not discern the HiveDbDialect from the uri " + uri);
 	}
 	public static String parseConnectionUrl(String uri)

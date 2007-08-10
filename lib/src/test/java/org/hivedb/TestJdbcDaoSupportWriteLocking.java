@@ -1,8 +1,8 @@
 package org.hivedb;
 
-import org.hivedb.util.database.DerbyHiveTestCase;
+import org.hivedb.util.database.H2HiveTestCase;
 
-public class TestJdbcDaoSupportWriteLocking extends DerbyHiveTestCase {
+public class TestJdbcDaoSupportWriteLocking extends H2HiveTestCase {
 //	@BeforeMethod
 //	public void setUp() throws Exception {
 //		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));

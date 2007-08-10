@@ -12,5 +12,9 @@ public enum HiveDbDialect {
 	/**
 	 * http://db.apache.org/ddlutils/databases/derby.html
 	 */
-	Derby
+	Derby,
+	/**
+	 * http://www.h2database.com/
+	 */
+	H2
 }

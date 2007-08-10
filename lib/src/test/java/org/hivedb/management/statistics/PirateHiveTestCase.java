@@ -1,10 +1,10 @@
 package org.hivedb.management.statistics;
 
-import org.hivedb.util.database.DerbyHiveTestCase;
+import org.hivedb.util.database.H2HiveTestCase;
 import org.hivedb.util.scenarioBuilder.HiveScenario;
 
 
-public abstract class PirateHiveTestCase extends DerbyHiveTestCase {
+public abstract class PirateHiveTestCase extends H2HiveTestCase {
 	protected HiveScenario yeScenario = null;
 	
 	public void setUp() {

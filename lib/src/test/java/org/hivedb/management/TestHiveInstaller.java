@@ -3,13 +3,13 @@ package org.hivedb.management;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.hivedb.util.database.DerbyTestCase;
+import org.hivedb.util.database.H2TestCase;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class TestHiveInstaller extends DerbyTestCase {
+public class TestHiveInstaller extends H2TestCase {
 	private static String TEST_DB = "testDB";
 	@Test
 	public void testHiveInstall() {

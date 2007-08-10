@@ -1,8 +1,5 @@
 package org.hivedb.meta;
 
-import org.hivedb.util.database.DerbyHiveTestCase;
-// Commented out because it takes a long time to run.
-/*
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertTrue;
@@ -17,13 +14,13 @@ import org.hivedb.Hive;
 import org.hivedb.HiveReadOnlyException;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.AssertUtils;
-
+import org.hivedb.util.database.H2HiveTestCase;
 import org.hivedb.util.functional.Atom;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;*/
+import org.testng.annotations.Test;
 
-public class DirectoryTest extends DerbyHiveTestCase {
-	/*private PartitionDimension dimension;
+public class DirectoryTest extends H2HiveTestCase {
+	private PartitionDimension dimension;
 	private SecondaryIndex nameIndex, numIndex;
 	private String secondaryKeyString = "secondary key";
 	private Integer secondaryKeyNum = 1;
@@ -382,5 +379,5 @@ public class DirectoryTest extends DerbyHiveTestCase {
 	
 	private Hive getHive() {
 		return Hive.load(getConnectString(getHiveDatabaseName()));
-	}*/
+	}
 }

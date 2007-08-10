@@ -3,10 +3,10 @@ import static org.testng.AssertJUnit.assertEquals;
 
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
-import org.hivedb.util.database.DerbyHiveTestCase;
+import org.hivedb.util.database.H2HiveTestCase;
 import org.testng.annotations.Test;
 
-public class TestHiveSemaphorePersistence extends DerbyHiveTestCase {
+public class TestHiveSemaphorePersistence extends H2HiveTestCase {
 	
 	@Test
 	public void testUpdate() throws Exception {

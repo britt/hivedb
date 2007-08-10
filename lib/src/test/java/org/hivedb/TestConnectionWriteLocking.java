@@ -2,19 +2,19 @@ package org.hivedb;
 
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.Directory;
-import org.hivedb.meta.NodeResolver;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.Node;
+import org.hivedb.meta.NodeResolver;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.AssertUtils;
 import org.hivedb.util.AssertUtils.Toss;
-import org.hivedb.util.database.DerbyHiveTestCase;
+import org.hivedb.util.database.H2HiveTestCase;
 import org.hivedb.util.functional.Atom;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class TestConnectionWriteLocking extends DerbyHiveTestCase {
+public class TestConnectionWriteLocking extends H2HiveTestCase {
 	
 	@BeforeMethod
 	public void setUp() throws Exception {

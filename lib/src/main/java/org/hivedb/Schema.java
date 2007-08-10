@@ -56,9 +56,9 @@ public abstract class Schema extends JdbcDaoSupport {
 	 */
 	public static String getBooleanTypeForDialect(HiveDbDialect dialect)
 	{
-		if (dialect.equals(HiveDbDialect.MySql))
+		if (dialect.equals(HiveDbDialect.MySql) || dialect.equals(HiveDbDialect.H2))
 			return "BOOLEAN";
-		if (dialect.equals(HiveDbDialect.Derby))
+		else if (dialect.equals(HiveDbDialect.Derby))
 			return "INT";			
 		throw new UnsupportedDialectException("No option boolean option configured for " + dialect.name());
 	}
@@ -71,6 +71,8 @@ public abstract class Schema extends JdbcDaoSupport {
 	public String getNumericPrimaryKeySequenceModifier(HiveDbDialect dialect) {
 		String statement = "";
 		if (dialect == HiveDbDialect.MySql)
+			statement = "int not null auto_increment primary key";
+		else if (dialect == HiveDbDialect.H2)
 			statement = "int not null auto_increment primary key";
 		else if (dialect == HiveDbDialect.Derby)
 			statement = "int not null generated always as identity primary key";

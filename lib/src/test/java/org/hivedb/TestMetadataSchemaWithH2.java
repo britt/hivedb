@@ -3,17 +3,17 @@ package org.hivedb;
 import java.util.Arrays;
 
 import org.hivedb.meta.GlobalSchema;
-import org.hivedb.util.database.DerbyTestCase;
+import org.hivedb.util.database.H2TestCase;
 import org.testng.annotations.Test;
 
-public class TestMetadataSchemaWithDerby extends DerbyTestCase {
+public class TestMetadataSchemaWithH2 extends H2TestCase {
 	/**
 	 * Execute all CREATE TABLE statements for global Hive schema.  Assume
 	 * that no Exceptions means the create was successful.
 	 * 
 	 * @throws Exception
 	 */
-	public TestMetadataSchemaWithDerby() {
+	public TestMetadataSchemaWithH2() {
 		this.setDatabaseNames(Arrays.asList(new String[]{"testDb"}));
 	}
 	
