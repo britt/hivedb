@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.sql.DataSource;
+
 import org.apache.commons.dbcp.BasicDataSource;
 import org.hivedb.management.statistics.HivePerformanceStatistics;
 import org.hivedb.meta.AccessType;
@@ -53,7 +55,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	public void sync() {
 		jdbcDaoSupports.clear();
 		for(Node node : hive.getPartitionDimension(partitionDimension).getNodes()) {
-			jdbcDaoSupports.put(hash(node.getId(), AccessType.Read), new DataNodeJdbcDaoSupport((BasicDataSource) dataSourceProvider.getDataSource(node.getUri()), true));
+			jdbcDaoSupports.put(hash(node.getId(), AccessType.Read), new DataNodeJdbcDaoSupport(dataSourceProvider.getDataSource(node.getUri())));
 			if( !hive.isReadOnly() && !node.isReadOnly() )
 				addDataSource(node.getId(), AccessType.ReadWrite);
 		}
@@ -61,7 +63,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	
 	private SimpleJdbcDaoSupport addDataSource(Integer nodeId, AccessType intention) {
 		Node node = hive.getPartitionDimension(partitionDimension).getNode(nodeId);
-		jdbcDaoSupports.put(hash(nodeId, intention), new DataNodeJdbcDaoSupport((BasicDataSource) dataSourceProvider.getDataSource(node.getUri())));
+		jdbcDaoSupports.put(hash(nodeId, intention), new DataNodeJdbcDaoSupport(dataSourceProvider.getDataSource(node.getUri())));
 		return jdbcDaoSupports.get(hash(nodeId, intention));
 	}
 	
@@ -158,13 +160,8 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	
 	private static class DataNodeJdbcDaoSupport extends SimpleJdbcDaoSupport
 	{
-		public DataNodeJdbcDaoSupport(BasicDataSource dataSource)
+		public DataNodeJdbcDaoSupport(DataSource dataSource)
 		{
-			this(dataSource, false);
-		}
-		
-		public DataNodeJdbcDaoSupport(BasicDataSource dataSource, Boolean readOnly) {
-			dataSource.setDefaultReadOnly(readOnly);
 			this.setDataSource(dataSource);
 		}
 	}

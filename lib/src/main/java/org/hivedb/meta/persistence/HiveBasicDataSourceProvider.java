@@ -6,6 +6,7 @@ package org.hivedb.meta.persistence;
 import javax.sql.DataSource;
 
 import org.hivedb.meta.Node;
+import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy;
 
 public class HiveBasicDataSourceProvider implements DataSourceProvider {
 	private Long timeoutInMillis = 0l;
@@ -28,9 +29,9 @@ public class HiveBasicDataSourceProvider implements DataSourceProvider {
 
 	public DataSource getDataSource(String uri) {
 		HiveBasicDataSource ds = new HiveBasicDataSource(uri);
+		ds.setPoolPreparedStatements(true);
 		ds.addConnectionProperty("socketTimeout", timeoutInMillis.toString());
 		ds.addConnectionProperty("connectTimeout", timeoutInMillis.toString());
-		return ds;
+		return new LazyConnectionDataSourceProxy(ds);
 	}
-	
 }

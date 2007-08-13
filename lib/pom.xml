@@ -17,11 +17,6 @@
   		<artifactId>log4j</artifactId>
   		<version>1.2.14</version>
   	</dependency>
-  	<dependency>
-  		<groupId>com.h2database</groupId>
-		<artifactId>h2</artifactId>
-		<version>1.0.20070617</version>
-  	</dependency>
   </dependencies>
   <profiles>
     <profile>

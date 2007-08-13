@@ -697,8 +697,8 @@ public class Hive extends Observable implements Synchronizeable, Observer {
 	private void insertSecondaryIndexKey(SecondaryIndex secondaryIndex,
 			Object secondaryIndexKey, Object resourceId) throws HiveReadOnlyException {
 		String partitionDimensionName = secondaryIndex.getResource().getPartitionDimension().getName();
-		boolean primaryKeyReadOnly = getReadOnlyOfPrimaryIndexKey(partitionDimensionName, resourceId);
-		for(Integer id : directories.get(partitionDimensionName).getNodeIdsOfPrimaryIndexKey(resourceId))
+		boolean primaryKeyReadOnly = getReadOnOfResourceId(partitionDimensionName, secondaryIndex.getResource().getName(), resourceId);
+		for(Integer id : directories.get(partitionDimensionName).getNodeIdsOfResourceId(secondaryIndex.getResource(), resourceId))
 			throwIfReadOnly("Inserting a new secondary index key", getPartitionDimension(partitionDimensionName).getNode(id), resourceId, primaryKeyReadOnly);
 
 		throwIfReadOnly("Inserting a new secondary index key");
