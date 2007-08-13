@@ -112,16 +112,11 @@
       <artifactId>mysql-connector-java</artifactId>
       <version>5.0.4</version>
     </dependency>
-    <dependency>
-      <groupId>org.apache.derby</groupId>
-      <artifactId>derbytools</artifactId>
-      <version>10.2.2.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.derby</groupId>
-      <artifactId>derby</artifactId>
-      <version>10.2.2.0</version>
-    </dependency>
+  	<dependency>
+  		<groupId>com.h2database</groupId>
+		<artifactId>h2</artifactId>
+		<version>1.0.20070617</version>
+  	</dependency>
 <!--  Test Dependencies -->
     <dependency>
       <groupId>commons-lang</groupId>
