@@ -15,7 +15,7 @@ public class JdbcTypeMapper {
 
 	public static String CHAR = "CHAR";
 
-	public static String DATE = "DATE";
+	public static String DATE = "DATETIME";
 
 	public static String DOUBLE = "DOUBLE";
 
