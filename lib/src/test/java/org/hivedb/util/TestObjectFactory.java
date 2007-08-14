@@ -1,6 +1,6 @@
 package org.hivedb.util;
 
-import java.sql.Date;
+import java.util.Date;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;

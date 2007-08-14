@@ -1,6 +1,6 @@
 package org.hivedb.management.statistics;
 
-import java.sql.Date;
+import java.util.Date;
 
 import org.hivedb.meta.PartitionDimension;
 
