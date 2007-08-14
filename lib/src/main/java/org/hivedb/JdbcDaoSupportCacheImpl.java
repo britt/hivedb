@@ -17,6 +17,7 @@ import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.DataSourceProvider;
 import org.hivedb.util.HiveUtils;
+import org.hivedb.util.Lists;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Unary;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
@@ -206,6 +207,9 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	}
 
 	public Collection<SimpleJdbcDaoSupport> getAllUnsafe() {
-		return jdbcDaoSupports.values();
+		Collection<SimpleJdbcDaoSupport> daos = new ArrayList<SimpleJdbcDaoSupport>();
+		for(Node node : hive.getPartitionDimension(partitionDimension).getNodes())
+			daos.add(jdbcDaoSupports.get(hash(node.getId(), AccessType.ReadWrite)));
+		return daos;
 	}
 }

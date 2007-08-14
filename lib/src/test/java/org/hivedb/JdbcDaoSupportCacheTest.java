@@ -1,6 +1,6 @@
 package org.hivedb;
 
-import static org.testng.AssertJUnit.assertNotNull;
+import static org.testng.AssertJUnit.*;
 import static org.testng.AssertJUnit.assertTrue;
 
 import java.sql.SQLException;
@@ -37,6 +37,13 @@ public class JdbcDaoSupportCacheTest extends H2HiveTestCase {
 		
 		assertTrue(read.size() > 0);
 		assertTrue(readWrite.size() > 0);
+	}
+	
+	@Test
+	public void testGetAllUnsafe() {
+		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
+		JdbcDaoSupportCacheImpl cache = (JdbcDaoSupportCacheImpl) hive.getJdbcDaoSupportCache(partitionDimensionName());
+		assertEquals(1, cache.getAllUnsafe().size());
 	}
 	
 	public void testCacheSynchronization() throws Exception {
