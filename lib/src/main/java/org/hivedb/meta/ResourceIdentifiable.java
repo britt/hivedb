@@ -25,4 +25,9 @@ public interface ResourceIdentifiable {
 	PrimaryIndexIdentifiable getPrimaryIndexIdentifiable();
 	String getResourceName();
 	Number getId();
+	/**
+	 *  Indicates if the class represented by this resource is also the partition dimension class
+	 * @return
+	 */
+	boolean isPartitioningResource();
 }

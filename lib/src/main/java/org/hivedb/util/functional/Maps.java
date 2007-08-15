@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 
-
 /**
  *  Operations on single or multi-dimensional maps which take multi-argument operators. These functions eliminate the need to 
  *  write messy embedded loops for standard navigation through multi-dimensional maps
@@ -13,7 +12,30 @@ import java.util.Map.Entry;
  */
 public class Maps {
 	
-
+	public static<I1,I2,V,R> Map<I1, Map<I2, Entry<V,R>>> dig(
+			final Ternary<I1,I2,V,R> mapper, 
+			final Unary<I2,V> getV,
+			final Unary<I1,Collection<I2>> getI2Collection,
+			final Collection<I1> collection
+			) {
+		return Transform.toMap(
+			new Transform.IdentityFunction<I1>(),
+			new Unary<I1, Map<I2, Entry<V,R>>>() {
+				public Map<I2, Entry<V,R>> f(final I1 i1) {
+					return Transform.toMap(
+						new Transform.IdentityFunction<I2>(),
+						new Unary<I2, Entry<V,R>>() {
+							public Entry<V,R> f(I2 i2) {
+								V v = getV.f(i2);
+								return new Pair<V,R>(
+									v,
+									mapper.f(i1, i2, v));
+							}},
+						getI2Collection.f(i1));				
+				}},
+			collection);
+	}
+	
 	public static<I1,I2,V,R> Map<I1, Map<I2, Entry<V,R>>> digMap(
 			final Ternary<I1,I2,V,R> mapper, 
 			Map<I1, Map<I2, V>> map) {

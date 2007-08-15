@@ -98,7 +98,7 @@ public class ExampleHiveTest extends H2TestCase {
 		
 		// First create a Resource.  All Secondary Indexes will be associated with this Resource.
 		String resourceName = "Product";
-		Resource product = new Resource(resourceName, Types.INTEGER, new ArrayList<SecondaryIndex>());
+		Resource product = new Resource(resourceName, Types.INTEGER, false, new ArrayList<SecondaryIndex>());
 		
 		// Add it to the Hive
 		product = hive.addResource(partitionDimension.getName(), product);

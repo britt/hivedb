@@ -55,7 +55,17 @@ public class IndexSqlFormatter {
 	}
 	
 	public String selectSecondaryIndexKeysOfPrimaryKey(SecondaryIndex secondaryIndex) {
-		return String.format(
+		if (ResourceIndex.class.isInstance(secondaryIndex))
+			// index of a resource
+			return selectSecondaryIndexKeyOfResourceId(secondaryIndex);
+		else if (secondaryIndex.getResource().isPartitioningResource())
+		 	// secondary index of a resource that is also the partition dimension
+		 	return String.format(
+				"select s.id from %s s where s.pkey = ?", 
+				IndexSchema.getSecondaryIndexTableName(secondaryIndex));
+		else
+			// secondary index of a resource with a different partition dimension
+			return String.format(
 				"select s.id from %s p join %s r on r.pkey = p.id join %s s on s.pkey = r.id where p.id = ?", 
 				IndexSchema.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
 				IndexSchema.getSecondaryIndexTableName(secondaryIndex.getResource().getIdIndex()),
@@ -63,7 +73,21 @@ public class IndexSqlFormatter {
 	}
 	
 	public String selectNodeIdsOfSecondaryIndexKey(SecondaryIndex secondaryIndex) {
-		return String.format(
+		if (ResourceIndex.class.isInstance(secondaryIndex))		
+			// index of a resource
+			return String.format(
+				"select p.node from %s p join %s r on r.pkey = p.id where r.id = ?", 
+				IndexSchema.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
+				IndexSchema.getSecondaryIndexTableName(secondaryIndex.getResource().getIdIndex()));
+		else if (secondaryIndex.getResource().isPartitioningResource())
+			 // secondary index of a resource that is also the partition dimension
+			 return String.format(
+				"select p.node from %s p join %s s on s.pkey = p.id where s.id = ?", 
+				IndexSchema.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
+				IndexSchema.getSecondaryIndexTableName(secondaryIndex));
+		else 
+			// secondary index of a resource that is not also the partition dimension
+			return String.format(
 				"select p.node from %s p join %s r on r.pkey = p.id join %s s on s.pkey = r.id where s.id = ?", 
 				IndexSchema.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
 				IndexSchema.getSecondaryIndexTableName(secondaryIndex.getResource().getIdIndex()),
@@ -71,26 +95,42 @@ public class IndexSqlFormatter {
 	}
 	
 	public String selectNodeSemaphoresOfSecondaryIndexKey(SecondaryIndex secondaryIndex) {
-		return ResourceIndex.class.isInstance(secondaryIndex) ? 
-				String.format(
+		if (ResourceIndex.class.isInstance(secondaryIndex))		
+			// index of a resource
+			return String.format(
 				"select p.node,p.read_only from %s p join %s r on r.pkey = p.id where r.id = ?", 
 				IndexSchema.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
-				IndexSchema.getSecondaryIndexTableName(secondaryIndex.getResource().getIdIndex()),
-				IndexSchema.getSecondaryIndexTableName(secondaryIndex))
-				: String.format(
+				IndexSchema.getSecondaryIndexTableName(secondaryIndex.getResource().getIdIndex()));
+		else if (secondaryIndex.getResource().isPartitioningResource())
+			 // secondary index of a resource that is also the partition dimension
+			 return String.format(
+				"select p.node,p.read_only from %s p join %s s on s.pkey = p.id where s.id = ?", 
+				IndexSchema.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
+				IndexSchema.getSecondaryIndexTableName(secondaryIndex));
+		else 
+			// secondary index of a resource that is not also the partition dimension
+			return String.format(
 				"select p.node,p.read_only from %s p join %s r on r.pkey = p.id join %s s on s.pkey = r.id where s.id = ?", 
 				IndexSchema.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
 				IndexSchema.getSecondaryIndexTableName(secondaryIndex.getResource().getIdIndex()),
 				IndexSchema.getSecondaryIndexTableName(secondaryIndex));
 	}
 	public String selectPrimaryIndexKeysOfSecondaryIndexKey( SecondaryIndex secondaryIndex) {
-		return ResourceIndex.class.isInstance(secondaryIndex) ?  
-				String.format(
-						"select p.id from %s p join %s r on r.pkey = p.id where r.id = ?", 
-						IndexSchema.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
-						IndexSchema.getSecondaryIndexTableName(secondaryIndex.getResource().getIdIndex()),
-						IndexSchema.getSecondaryIndexTableName(secondaryIndex))
-				: String.format(
+		if (ResourceIndex.class.isInstance(secondaryIndex))
+			// index of a resource
+			return 	String.format(
+				"select p.id from %s p join %s r on r.pkey = p.id where r.id = ?", 
+				IndexSchema.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
+				IndexSchema.getSecondaryIndexTableName(secondaryIndex.getResource().getIdIndex()));
+		else if (secondaryIndex.getResource().isPartitioningResource())
+			// secondary index of a resource that is also the partition dimension
+			return String.format(
+				"select p.id from %s p join %s s on s.pkey = p.id where s.id = ?", 
+				IndexSchema.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
+				IndexSchema.getSecondaryIndexTableName(secondaryIndex));
+		else
+			// secondary index of a resource that is not also the partition dimension
+			return String.format(
 				"select p.id from %s p join %s r on r.pkey = p.id join %s s on s.pkey = r.id where s.id = ?", 
 				IndexSchema.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
 				IndexSchema.getSecondaryIndexTableName(secondaryIndex.getResource().getIdIndex()),

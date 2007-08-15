@@ -35,6 +35,12 @@ public class Atom {
 		results.remove(0);
 		return results;
 	}
+	public static<T> Collection<T> getRestOrThrow(Iterable<T> iterable) {
+		try {
+			return getRest(iterable);
+		}
+		catch (Exception e) { throw new RuntimeException(e); }
+	}
 	
 	public static<T> T getFirst(T[] array) throws Exception
 	{

@@ -1,15 +1,17 @@
 package org.hivedb.util;
 
+import java.util.Stack;
+
 import junit.framework.TestCase;
 
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Transform;
-import org.hivedb.util.functional.Undoable;
+
 public class AssertUtils  {
 	public static interface Toss {
 		void f() throws Exception;
 	}
-	public static abstract class UndoableToss extends Undoable implements Toss
+	public static abstract class UndoableToss extends ThrowableUndoable implements Toss
 	{
 	}
 	/**
@@ -104,5 +106,28 @@ public class AssertUtils  {
 	@SuppressWarnings("unchecked")
 	public static void assertUnique(Iterable i) {
 		TestCase.assertEquals(Transform.toCollection(i).size(), Filter.getUnique(i).size());
+	}
+	
+	private static abstract class ThrowableUndoable {
+		public abstract void f() throws Exception;
+		public void undo() throws Exception
+		{
+			while (undoStack.size() != 0)
+				undoStack.pop().f();
+		}
+		public void cycle() throws Exception
+		{
+			f();
+			undo();
+		}
+		Stack<Undo> undoStack = new Stack<Undo>();
+		public abstract class Undo
+		{
+			public Undo()
+			{
+				undoStack.push(this);
+			}
+			public abstract void f() throws Exception;
+		}
 	}
 }

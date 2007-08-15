@@ -937,9 +937,9 @@ public class Hive extends Observable implements Synchronizeable, Observer {
 					String.format("Secondary index key %s of secondary index %s does not exist",secondaryIndexKey,secondaryIndex.getName()),secondaryIndexKey);
 
 		directories.get(partitionDimensionName)
-				.deleteSecondaryIndexKey(secondaryIndex, secondaryIndexKey, resourceId);
-		partitionStatistics.decrementChildRecordCount(secondaryIndex.getResource()
-				.getPartitionDimension(), resourceId, 1);
+			.deleteSecondaryIndexKey(secondaryIndex, secondaryIndexKey, resourceId);
+		//partitionStatistics.decrementChildRecordCount(
+		//	secondaryIndex.getResource().getPartitionDimension(), resourceId, 1);
 	}
 
 	/**
@@ -1088,7 +1088,7 @@ public class Hive extends Observable implements Synchronizeable, Observer {
 
 	@SuppressWarnings("unchecked")
 	public Collection<Object> getResourceIdsOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey) {
-		return directories.get(secondaryIndex.getResource().getPartitionDimension()).getResourceIdsOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
+		return directories.get(secondaryIndex.getResource().getPartitionDimension().getName()).getResourceIdsOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
 	}
 	
 	/**
@@ -1104,10 +1104,8 @@ public class Hive extends Observable implements Synchronizeable, Observer {
 	 */
 	private Collection getSecondaryIndexKeysWithPrimaryKey(
 			SecondaryIndex secondaryIndex, Object primaryIndexKey) {
-		return directories.get(
-				secondaryIndex.getResource().getPartitionDimension().getName())
-				.getSecondaryIndexKeysOfPrimaryIndexKey(secondaryIndex,
-						primaryIndexKey);
+		return directories.get(secondaryIndex.getResource().getPartitionDimension().getName())
+					.getSecondaryIndexKeysOfPrimaryIndexKey(secondaryIndex, primaryIndexKey);
 	}
 
 	/**

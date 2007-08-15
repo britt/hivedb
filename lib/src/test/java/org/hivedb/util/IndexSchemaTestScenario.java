@@ -48,7 +48,7 @@ public class IndexSchemaTestScenario {
 	}
 
 	public Resource resource() {
-		Resource resource = new Resource(0, "aResource", Types.INTEGER, new ArrayList<SecondaryIndex>());
+		Resource resource = new Resource(0, "aResource", Types.INTEGER, false, new ArrayList<SecondaryIndex>());
 		resource.setPartitionDimension(partitionDimension());
 		return resource;
 	}

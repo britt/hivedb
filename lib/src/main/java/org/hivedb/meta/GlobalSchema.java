@@ -73,7 +73,8 @@ public class GlobalSchema extends Schema {
 				+ "id " + getNumericPrimaryKeySequenceModifier(dialect) + ", " 
 				+ "dimension_id int not null, "
 				+ "name varchar(128) not null, "
-				+ "db_type varchar(64) not null "
+				+ "db_type varchar(64) not null, "
+				+ "is_partitioning_resource bit not null"
 				+ " )";
 	}
 	

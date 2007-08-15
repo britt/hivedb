@@ -6,14 +6,15 @@ import java.util.Collection;
 
 import org.hivedb.util.database.H2HiveTestCase;
 import org.hivedb.util.scenarioBuilder.HiveScenarioMarauderConfig;
+import org.testng.annotations.Test;
 
 public class TestHiveScenarioWithH2 extends H2HiveTestCase {
 	
 	/**
 	 *  Fills a hive with metadata and indexes to validate CRUD operations
-	 *  This tests works but is commented out due to its slowness
+	 * 
 	 */
-//	@Test
+	@Test
 	public void testPirateDomain() throws Exception {
 		new HiveScenarioTest(new HiveScenarioMarauderConfig(getConnectString(getHiveDatabaseName()), getDataUris())).performTest(100,0);
 	}

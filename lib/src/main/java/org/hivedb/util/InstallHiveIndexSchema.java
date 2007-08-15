@@ -46,7 +46,8 @@ public class InstallHiveIndexSchema {
 				public Resource f(ResourceIdentifiable resourceIdentifiable) { 
 					return new Resource(
 							resourceIdentifiable.getResourceName(), 
-							JdbcTypeMapper.primitiveTypeToJdbcType(resourceIdentifiable.getId().getClass()), 
+							JdbcTypeMapper.primitiveTypeToJdbcType(resourceIdentifiable.getId().getClass()),
+							resourceIdentifiable.isPartitioningResource(),
 							constructSecondaryIndexesOfResource(resourceIdentifiable));
 				}},
 				hiveScenarioConfig.getPrimaryIndexIdentifiable().getResourceIdentifiables());

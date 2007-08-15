@@ -23,6 +23,7 @@ public class Resource implements Comparable<Resource>, IdAndNameIdentifiable, Fi
 	private Collection<SecondaryIndex> secondaryIndexes = null;
 	private ColumnInfo columnInfo;
 	private ResourceIndex idIndex;
+	private boolean isPartitioningResource;
 
 	/**
 	 * 
@@ -31,8 +32,8 @@ public class Resource implements Comparable<Resource>, IdAndNameIdentifiable, Fi
 	 * @param name
 	 * @param secondaryIndexes
 	 */
-	public Resource(String name, int columnType) {
-		this(Hive.NEW_OBJECT_ID, name, columnType, new ArrayList<SecondaryIndex>());
+	public Resource(String name, int columnType, boolean isPartitioningResource) {
+		this(Hive.NEW_OBJECT_ID, name, columnType, isPartitioningResource, new ArrayList<SecondaryIndex>());
 	}
 	
 	/**
@@ -42,8 +43,8 @@ public class Resource implements Comparable<Resource>, IdAndNameIdentifiable, Fi
 	 * @param name
 	 * @param secondaryIndexes
 	 */
-	public Resource(String name, int columnType, Collection<SecondaryIndex> secondaryIndexes) {
-		this(Hive.NEW_OBJECT_ID, name, columnType, secondaryIndexes);
+	public Resource(String name, int columnType, boolean isPartitioningResource, Collection<SecondaryIndex> secondaryIndexes) {
+		this(Hive.NEW_OBJECT_ID, name, columnType, isPartitioningResource, secondaryIndexes);
 	}
 	
 	/**
@@ -55,9 +56,10 @@ public class Resource implements Comparable<Resource>, IdAndNameIdentifiable, Fi
 	 * @param name
 	 * @param secondaryIndexes
 	 */
-	public Resource(int id, String name, int columnType, Collection<SecondaryIndex> secondaryIndexes) {
+	public Resource(int id, String name, int columnType, boolean isPartitioningResource, Collection<SecondaryIndex> secondaryIndexes) {
 		this.id = id;
 		this.columnInfo = new ColumnInfo(name, columnType);
+		this.isPartitioningResource = isPartitioningResource;
 		this.secondaryIndexes = insetThisInstance(secondaryIndexes);		
 		this.idIndex = new ResourceIndex(name, columnType);
 		idIndex.setResource(this);
@@ -80,6 +82,12 @@ public class Resource implements Comparable<Resource>, IdAndNameIdentifiable, Fi
 	}
 	public PartitionDimension getPartitionDimension() {
 		return partitionDimension;
+	}
+	public boolean isPartitioningResource() {
+		return isPartitioningResource;
+	}
+	public void setIsPartitioningResource(boolean value) {
+		isPartitioningResource = value;
 	}
 	public void setPartitionDimension(PartitionDimension partitionDimension) {
 		this.partitionDimension = partitionDimension;
@@ -139,7 +147,7 @@ public class Resource implements Comparable<Resource>, IdAndNameIdentifiable, Fi
 	
 	public Object clone()
 	{
-		return new Resource(columnInfo.getName(), columnInfo.getColumnType(), secondaryIndexes);
+		return new Resource(columnInfo.getName(), columnInfo.getColumnType(), isPartitioningResource, secondaryIndexes);
 	}
 
 	public void setId(int id) {

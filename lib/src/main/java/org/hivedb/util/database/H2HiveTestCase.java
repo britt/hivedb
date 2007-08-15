@@ -41,7 +41,7 @@ public class H2HiveTestCase extends H2TestCase {
 		return resources;
 	}
 	protected Resource createResource() {
-		final Resource resource = new Resource("FOO_TABLE", Types.INTEGER);
+		final Resource resource = new Resource("FOO_TABLE", Types.INTEGER, false);
 		resource.setPartitionDimension(createEmptyPartitionDimension());
 		return resource;
 	}

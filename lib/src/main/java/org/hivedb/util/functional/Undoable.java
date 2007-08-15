@@ -10,11 +10,11 @@ import java.util.Stack;
  *  Synopsis:
  *  final Foo foo;
  *  try {
- *  new Undoable() { public void f() throws Exception {
+ *  new Undoable() { public void f() {
  *  	// store some data that will need undoing
  *  	final Bar bar = foo.getBar();
  *  	foo.setBar(new Bar(3.14))
- *  	new Undo() { public void f() throws Exception
+ *  	new Undo() { public void f() 
  *  		foo.setBar(bar);
  *  	}
  *  	// add more new Undo() calls here
@@ -25,13 +25,13 @@ import java.util.Stack;
  *
  */
 public abstract class Undoable {
-	public abstract void f() throws Exception;
-	public void undo() throws Exception
+	public abstract void f();
+	public void undo()
 	{
 		while (undoStack.size() != 0)
 			undoStack.pop().f();
 	}
-	public void cycle() throws Exception
+	public void cycle()
 	{
 		f();
 		undo();
@@ -43,6 +43,6 @@ public abstract class Undoable {
 		{
 			undoStack.push(this);
 		}
-		public abstract void f() throws Exception;
+		public abstract void f();
 	}
 }

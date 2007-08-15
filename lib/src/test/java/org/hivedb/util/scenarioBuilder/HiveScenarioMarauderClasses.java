@@ -71,6 +71,10 @@ public class HiveScenarioMarauderClasses {
 			return id;
 		}
 		
+		public boolean isPartitioningResource() {
+			return true;
+		}
+		
 		/* SecondaryIndex METHODS */
 		
 		// Since Pirate is also a ResourceIdentifiable the argument is equal to this
@@ -108,18 +112,18 @@ public class HiveScenarioMarauderClasses {
 		public boolean isUniqueSecondaryIndex() {
 			return false;
 		}
-
-		
 	}
 	
 	public static class Treasure implements ResourceIdentifiable, SecondaryIndexIdentifiable 
 	{
 		public static int idGenerator = 0;
 		protected int id;
+		protected int secondaryIndexKey;
 		Pirate pirate;
 
 		public Treasure(Pirate pirate) {
 			id = ++idGenerator;
+			secondaryIndexKey = idGenerator * 10;
 			this.pirate = pirate;
 		}
 		
@@ -138,6 +142,10 @@ public class HiveScenarioMarauderClasses {
 			return Arrays.asList(new SecondaryIndexIdentifiable[] { this });
 		}
 		
+		public Number getId() {
+			return id;
+		}
+		
 		/* SecondaryIndexIdentifiable Methods */
 		
 		// Since Treasure is also a ResourceIdentifiable, return this instead of creating a new instance
@@ -146,11 +154,11 @@ public class HiveScenarioMarauderClasses {
 				throw new RuntimeException("Expected equality here");
 			return this;
 		}
-		public Integer getSecondaryIndexKey() { return id; }
+		public Integer getSecondaryIndexKey() { return secondaryIndexKey; }
 		public ResourceIdentifiable getResourceIdentifiable() {
 			return this;
 		}
-		public String getSecondaryIndexColumnName() { return "id"; }
+		public String getSecondaryIndexColumnName() { return "secondaryIndexColumn"; }
 		public String getSecondaryIndexName() {return getSecondaryIndexColumnName(); }
 
 		public Object getRepresentedResourceFieldValue() {
@@ -159,23 +167,19 @@ public class HiveScenarioMarauderClasses {
 
 		@SuppressWarnings("unchecked")
 		public String getRepresentedField() {
-			return "id";
-		}
-
-		public Number getId() {
-			return id;
+			return "secondaryIndexKey";
 		}
 
 		public boolean isOneToMany() {
 			return false;
 		}		
 
-		public String getRepresentedFieldName() {
-			return "id";
-		}
-
 		public boolean isUniqueSecondaryIndex() {
 			return true;
+		}
+		
+		public boolean isPartitioningResource() {
+			return false;
 		}
 	}	                      
 }

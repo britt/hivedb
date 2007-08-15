@@ -6,7 +6,6 @@ package org.hivedb.meta;
 
 import org.hivedb.Hive;
 import org.hivedb.util.HiveUtils;
-import org.hivedb.util.functional.Atom;
 
 /**
  * An index of a value of a resource.
@@ -112,10 +111,6 @@ public class SecondaryIndex implements Comparable<SecondaryIndex>, IdAndNameIden
 
 	public void setId(int id) {
 		this.id = id;
-	}
-	
-	public static String getResourceName(String secondaryIndexName) {
-		return Atom.getFirstOrThrow(secondaryIndexName.split("\\."));
 	}
 	
 	public static String getTableName(SecondaryIndex secondaryIndex, Resource resource) {

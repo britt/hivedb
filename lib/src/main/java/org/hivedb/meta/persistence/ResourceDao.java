@@ -46,14 +46,14 @@ public class ResourceDao extends JdbcDaoSupport implements
 		return results;
 	}
 
-	public Integer create(Resource newObject) {
-		int columnType = newObject.getIdIndex().getColumnInfo().getColumnType();
-		Object[] parameters = new Object[] { newObject.getName(), newObject.getPartitionDimension().getId(), JdbcTypeMapper.jdbcTypeToString(columnType)};
+	public Integer create(Resource newResource) {
+		int columnType = newResource.getIdIndex().getColumnInfo().getColumnType();
+		Object[] parameters = new Object[] { newResource.getName(), newResource.getPartitionDimension().getId(), JdbcTypeMapper.jdbcTypeToString(columnType),newResource.isPartitioningResource()};
 		KeyHolder generatedKey = new GeneratedKeyHolder();
 		JdbcTemplate j = getJdbcTemplate();
 		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
-				"INSERT INTO resource_metadata (name,dimension_id,db_type) VALUES (?,?,?)",
-				new int[] {Types.VARCHAR,Types.INTEGER,Types.VARCHAR});
+				"INSERT INTO resource_metadata (name,dimension_id,db_type,is_partitioning_resource) VALUES (?,?,?,?)",
+				new int[] {Types.VARCHAR,Types.INTEGER,Types.VARCHAR,Types.BIT});
 		creatorFactory.setReturnGeneratedKeys(true);
 		int rows = j.update(creatorFactory
 				.newPreparedStatementCreator(parameters), generatedKey);
@@ -62,23 +62,23 @@ public class ResourceDao extends JdbcDaoSupport implements
 					+ parameters);
 		if (generatedKey.getKeyList().size() == 0)
 			throw new HiveRuntimeException("Unable to retrieve generated primary key");
-		newObject.updateId(generatedKey.getKey().intValue());
+		newResource.updateId(generatedKey.getKey().intValue());
 		
 		// dependencies
-		for (SecondaryIndex si : newObject.getSecondaryIndexes())
+		for (SecondaryIndex si : newResource.getSecondaryIndexes())
 			new SecondaryIndexDao(ds).create(si);
 			
-		return new Integer(newObject.getId());
+		return new Integer(newResource.getId());
 	}
 
 	public void update(Resource resource) {
 		int columnType = resource.getIdIndex().getColumnInfo().getColumnType();
-		Object[] parameters = new Object[] { resource.getName(), resource.getPartitionDimension().getId(), JdbcTypeMapper.jdbcTypeToString(columnType), resource.getId()};
+		Object[] parameters = new Object[] { resource.getName(), resource.getPartitionDimension().getId(), JdbcTypeMapper.jdbcTypeToString(columnType),resource.isPartitioningResource(),resource.getId()};
 		KeyHolder generatedKey = new GeneratedKeyHolder();
 		JdbcTemplate j = getJdbcTemplate();
 		PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
-				"UPDATE resource_metadata SET name=?,dimension_id=?,db_type=? WHERE id=?",
-				new int[] {Types.VARCHAR,Types.INTEGER,Types.VARCHAR,Types.INTEGER});
+				"UPDATE resource_metadata SET name=?,dimension_id=?,db_type=?,is_partitioning_resource=? WHERE id=?",
+				new int[] {Types.VARCHAR,Types.INTEGER,Types.VARCHAR,Types.INTEGER,Types.BIT});
 		creatorFactory.setReturnGeneratedKeys(true);
 		int rows = j.update(creatorFactory
 				.newPreparedStatementCreator(parameters), generatedKey);
@@ -107,7 +107,7 @@ public class ResourceDao extends JdbcDaoSupport implements
 		public Object mapRow(ResultSet rs, int rowNumber) throws SQLException {
 			SecondaryIndexDao sDao = new SecondaryIndexDao(ds);
 			List<SecondaryIndex> indexes = sDao.findByResource(rs.getInt("id"));
-			return new Resource(rs.getInt("id"), rs.getString("name"), JdbcTypeMapper.parseJdbcType(rs.getString("db_type")), indexes);
+			return new Resource(rs.getInt("id"), rs.getString("name"), JdbcTypeMapper.parseJdbcType(rs.getString("db_type")), rs.getBoolean("is_partitioning_resource"), indexes);
 		}
 	}
 

@@ -113,30 +113,20 @@ public class GenerateHiveIndexKeys {
 				
 				// Persist all the secondary indexes here. This really should be called after creating
 				// all secondary indexes for all primary idexes identifiables, but it's easier to do here
-				for (ResourceIdentifiable resourceIdentifiable : resourceIdentifiables)
+				for (ResourceIdentifiable resourceIdentifiable : resourceIdentifiables) {
+					resourceIdentifiable = persister.persistResourceIdentifiableInstance(hive, resourceIdentifiable);
 					for (SecondaryIndexIdentifiable secondaryIndexIdentifiable : resourceIdentifiable.getSecondaryIndexIdentifiables()) 
-						persistSecondaryIndexIdentifiable(hive, secondaryIndexIdentifiable);
+						persister.persistSecondaryIndexIdentifiableInstance(hive, secondaryIndexIdentifiable);
+				}
 				
 				return resourceIdentifiables;
 		}};	
 	}
 		
-	private void persistSecondaryIndexIdentifiable(final Hive hive, SecondaryIndexIdentifiable secondaryIndexIdentifiable) {
-		try {
-			persister.persistSecondaryIndexIdentifiableInstance(hive, secondaryIndexIdentifiable);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
 	private Unary<PrimaryIndexIdentifiable, ResourceIdentifiable> makeResourceIdentifiableGrower(final Hive hive, final HiveScenarioConfig hiveScenarioConfig, final ResourceIdentifiable resourceIdentifiablePrototype) {
 		return new Unary<PrimaryIndexIdentifiable, ResourceIdentifiable>() { 
 			public ResourceIdentifiable f(PrimaryIndexIdentifiable primaryIndexIdentifiable) {
-				ResourceIdentifiable resourceIdentifiable = resourceIdentifiablePrototype.generate(primaryIndexIdentifiable);
-				resourceIdentifiable = persister.persistResourceIdentifiableInstance(hive, resourceIdentifiable);
-				for (SecondaryIndexIdentifiable secondaryIndexIdentifiable : resourceIdentifiable.getSecondaryIndexIdentifiables()) {
-					persistSecondaryIndexIdentifiable(hive, secondaryIndexIdentifiable);
-				}
-				return resourceIdentifiable;
+				return resourceIdentifiablePrototype.generate(primaryIndexIdentifiable);
 		}};
 	}	
 }
