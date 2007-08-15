@@ -7,19 +7,16 @@ import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBe
 import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.SECONDARY_INDEX_READ;
 import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.SECONDARY_INDEX_WRITE;
 
-import java.util.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Collection;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Date;
 
 import javax.sql.DataSource;
 
 import org.hivedb.DirectoryCorruptionException;
 import org.hivedb.HiveKeyNotFoundException;
-import org.hivedb.HiveReadOnlyException;
 import org.hivedb.StatisticsProxy;
 import org.hivedb.management.statistics.Counter;
 import org.hivedb.management.statistics.NoOpStatistics;
@@ -38,11 +35,6 @@ import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.ParameterizedRowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
-import org.springframework.jdbc.core.support.JdbcDaoSupport;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallback;
-import org.springframework.transaction.support.TransactionTemplate;
 
 public class Directory extends SimpleJdbcDaoSupport implements NodeResolver {
 	private PartitionDimension partitionDimension;
@@ -94,38 +86,8 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver {
 		doUpdate(sql.insertSecondaryIndexKey(secondaryIndex), types, parameters, SECONDARY_INDEX_WRITE);
 	}
 	
-	public Integer insertRelatedSecondaryIndexKeys(final Map<SecondaryIndex, Collection<Object>> secondaryIndexValueMap, final Object resourceId) throws HiveReadOnlyException {
-		
-		TransactionTemplate transactionTemplate = new TransactionTemplate();
-		setTransactionManager(transactionTemplate, this);
-		
-		return (Integer) transactionTemplate.execute(new TransactionCallback() {
-			public Integer doInTransaction(TransactionStatus status) {	
-				return Transform.flatMap(new Unary<Map.Entry<SecondaryIndex, Collection<Object>>, Collection<Object>>() {
-					public Collection<Object> f(final Entry<SecondaryIndex, Collection<Object>> secondaryIndexKeysEntry) {
-						return Transform.map(new Unary<Object, Object>() { 
-							 public Object f(Object secondaryIndexKey) {
-								 insertSecondaryIndexKey(
-											secondaryIndexKeysEntry.getKey(),
-											secondaryIndexKey,
-											resourceId);
-								 return secondaryIndexKey;
-							}}, secondaryIndexKeysEntry.getValue());
-					}},
-					secondaryIndexValueMap.entrySet()).size();
-			}
-		});
-	}
-	
 	private static QuickCache cache = new QuickCache();
-	private void setTransactionManager(TransactionTemplate transactionTemplate, final JdbcDaoSupport jdbcDaoSupport) {
-		transactionTemplate.setTransactionManager( (DataSourceTransactionManager) cache.get(jdbcDaoSupport.getDataSource(), new Delay<DataSourceTransactionManager>() {
-			public DataSourceTransactionManager f() {
-				return new DataSourceTransactionManager(jdbcDaoSupport.getDataSource());
-			}	
-		}));
-	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.hivedb.meta.HiveDirectory#updatePrimaryIndexKeyReadOnly(java.lang.Object, boolean)
 	 */
@@ -170,14 +132,14 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver {
 	/* (non-Javadoc)
 	 * @see org.hivedb.meta.HiveDirectory#deleteSecondaryIndexKey(org.hivedb.meta.SecondaryIndex, java.lang.Object)
 	 */
-	public void deleteSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey, Object primaryIndexKey) {
+	public void deleteSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey, Object resourceId) {
 		Object[] parameters = new Object[] {
 			secondaryIndexKey,
-			primaryIndexKey
+			resourceId
 		};
 		int[] types = new int[] {
 			secondaryIndex.getColumnInfo().getColumnType(),
-			JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass())	
+			JdbcTypeMapper.primitiveTypeToJdbcType(resourceId.getClass())	
 		};
 		doUpdate(sql.deleteSingleSecondaryIndexKey(secondaryIndex), types, parameters, SECONDARY_INDEX_DELETE);
 	}
@@ -296,27 +258,6 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver {
 
 	public void setPerformanceMonitoringEnabled(boolean performanceMonitoringEnabled) {
 		this.performanceMonitoringEnabled = performanceMonitoringEnabled;
-	}
-
-	
-	public void deleteAllSecondaryIndexKeysOfResourceId(final Resource resource, Object id) {
-		final Object[] parameters = new Object[] {id};
-		final PreparedStatementCreatorFactory deleteFactory = 
-			Statements.newStmtCreatorFactory(sql.deleteAllSecondaryIndexKeysForResourceId(resource.getIdIndex()), resource.getColumnType());
-		
-		TransactionTemplate transactionTemplate = new TransactionTemplate();
-		setTransactionManager(transactionTemplate, this);
-		
-		transactionTemplate.execute(new TransactionCallback(){
-			public Object doInTransaction(TransactionStatus arg0) {
-				Integer rowsAffected = 0;
-				for(SecondaryIndex secondaryIndex : resource.getSecondaryIndexes()){
-					deleteFactory.setSqlToUse(sql.deleteAllSecondaryIndexKeysForResourceId(secondaryIndex));
-					rowsAffected += Proxies.newJdbcUpdateProxy(performanceStatistics, SECONDARY_INDEX_DELETE, parameters, deleteFactory, getJdbcTemplate()).execute();
-				}
-				return rowsAffected;
-			}}
-		);
 	}
 
 	public void deleteResourceKey(Resource resource, Object id) {
@@ -449,5 +390,14 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver {
 			public Boolean f(NodeSemaphore item) {
 				return item.isReadOnly();
 			}};
+	}
+	
+	public BatchIndexWriter batch() {
+		final Directory d = this;
+		return cache.get(BatchIndexWriter.class, new Delay<BatchIndexWriter>() {
+			public BatchIndexWriter f() {
+				return new BatchIndexWriter(d);
+			}	
+		});
 	}
 }

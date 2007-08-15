@@ -3,74 +3,13 @@ package org.hivedb.meta;
 import java.util.Collection;
 
 public interface NodeResolver {
-
 	/***
 	 * Get the Partition Dimension that this directory applies to. 
 	 * @return 
 	 */
 	public PartitionDimension getPartitionDimension();
 
-	/***
-	 * Add a primary index key
-	 * @param nodes The nodes to add the primary index key to.
-	 * @param primaryIndexKey The key to be added
-	 */
-	public void insertPrimaryIndexKey(Node node, Object primaryIndexKey);
-
-	/***
-	 * Add a secondary index key
-	 * @param secondaryIndex
-	 * @param secondaryIndexKey
-	 * @param primaryindexKey
-	 */
-	public void insertSecondaryIndexKey(SecondaryIndex secondaryIndex,Object secondaryIndexKey, Object primaryindexKey);
-
-	/***
-	 * Set the write lock on a priamry index key.
-	 * @param primaryIndexKey
-	 * @param isReadOnly
-	 */
-	public void updatePrimaryIndexKeyReadOnly(Object primaryIndexKey, boolean isReadOnly);
-
-	/***
-	 * Change the primary index key that a resource id references.
-	 * @param secondaryIndex
-	 * @param secondaryIndexKey
-	 * @param originalPrimaryIndexKey
-	 * @param newPrimaryIndexKey
-	 */
-	public void updatePrimaryIndexKeyOfResourceId(
-			Resource resource, 
-			Object resourceId, 
-			Object originalPrimaryIndexKey, 
-			Object newPrimaryIndexKey);
-
-	/***
-	 * Delete all secondary index key associated with a resource id.
-	 * @param resource
-	 * @param resourceId
-	 */
-	public void deleteAllSecondaryIndexKeysOfResourceId(Resource resource, Object id);
 	
-	/***
-	 * Delete a primary index key.
-	 * @param primaryIndexKey
-	 */
-	public void deletePrimaryIndexKey(Object primaryIndexKey);
-
-	/***
-	 * Delete a secondary index key
-	 * @param secondaryIndex
-	 * @param secondaryIndexKey
-	 */
-	public void deleteSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey, Object primaryIndexKey);
-
-	/***
-	 * Delete a resource id.
-	 * @param resource
-	 * @param id
-	 */
-	public void deleteResourceKey(Resource resource, Object id);
 	
 	/***
 	 * Test the existence of a primary key
@@ -162,13 +101,6 @@ public interface NodeResolver {
 	 * @return
 	 */
 	public Collection getSecondaryIndexKeysOfResourceId(SecondaryIndex secondaryIndex, Object id);
-	
-	/***
-	 * Add a new resource key.
-	 * @param resource
-	 * @param id
-	 */
-	public void insertResourceId(Resource resource, Object id, Object primaryIndexKey);
 	
 	/***
 	 * Get the primary index key of a resource.

@@ -745,7 +745,7 @@ public class Hive extends Observable implements Synchronizeable, Observer {
 			.getNodeIdsOfResourceId(getPartitionDimension(partitionDimensionName).getResource(resourceName), resourceId))
 			throwIfReadOnly("Inserting a new resource id", getPartitionDimension(partitionDimensionName).getNode(id), id, readOnly);
 		
-		directories.get(partitionDimensionName).insertRelatedSecondaryIndexKeys(secondaryIndexValueMap, resourceId);
+		directories.get(partitionDimensionName).batch().insertSecondaryIndexKeys(secondaryIndexValueMap, resourceId);
 //TODO Proper statistics
 		//		partitionStatistics.incrementChildRecordCount(getPartitionDimension(partitionDimensionName), resourceId, secondaryIndexesInserted);
 	}
@@ -864,7 +864,7 @@ public class Hive extends Observable implements Synchronizeable, Observer {
 		
 		for (Resource resource : partitionDimension.getResources()){
 			for(Object resourceId : directory.getResourceIdsOfPrimaryIndexKey(resource, primaryIndexKey)) {
-				directory.deleteAllSecondaryIndexKeysOfResourceId(resource, resourceId);
+				directory.batch().deleteAllSecondaryIndexKeysOfResourceId(resource, resourceId);
 				directory.deleteResourceKey(resource, resourceId);
 			}
 		}
@@ -906,7 +906,7 @@ public class Hive extends Observable implements Synchronizeable, Observer {
 				return resource.getPartitionDimension().getNode(item);
 			}}, semaphores));
 		// TODO check primary index key readOnly
-		directory.deleteAllSecondaryIndexKeysOfResourceId(resource, id);
+		directory.batch().deleteAllSecondaryIndexKeysOfResourceId(resource, id);
 		directory.deleteResourceKey(resource, id);
 		// TODO statistics gathering
 	}
@@ -937,9 +937,10 @@ public class Hive extends Observable implements Synchronizeable, Observer {
 					String.format("Secondary index key %s of secondary index %s does not exist",secondaryIndexKey,secondaryIndex.getName()),secondaryIndexKey);
 
 		directories.get(partitionDimensionName)
-			.deleteSecondaryIndexKey(secondaryIndex, secondaryIndexKey, resourceId);
-		//partitionStatistics.decrementChildRecordCount(
-		//	secondaryIndex.getResource().getPartitionDimension(), resourceId, 1);
+				.deleteSecondaryIndexKey(secondaryIndex, secondaryIndexKey, resourceId);
+//		partitionStatistics.decrementChildRecordCount(secondaryIndex.getResource()
+//				.getPartitionDimension(), resourceId, 1);
+
 	}
 
 	/**

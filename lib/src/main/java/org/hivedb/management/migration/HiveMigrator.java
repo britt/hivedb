@@ -140,7 +140,7 @@ public class HiveMigrator implements Migrator {
 	private void doMigration(Object key, Collection<Node> destinations, PartitionKeyMover mover) {
 		try {
 			lock(key);
-			NodeResolver dir = new Directory(dimension);
+			Directory dir = new Directory(dimension);
 			Collection<Node> origins = Collect.amass(new Unary<Integer, Node>(){
 				public Node f(Integer item) {
 					return getNode(item);
