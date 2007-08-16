@@ -911,6 +911,21 @@ public class Hive extends Observable implements Synchronizeable, Observer {
 		// TODO statistics gathering
 	}
 	
+	public void deleteAllSecondaryIndexKeysOfResourceId(String partitionDimensionName, String resourceName, Object id) throws HiveReadOnlyException {
+		throwIfReadOnly("Deleting resource id");
+		PartitionDimension partitionDimension = getPartitionDimension(partitionDimensionName);
+		final Resource resource = partitionDimension.getResource(resourceName);
+		Directory directory = directories.get(partitionDimensionName);
+		Collection<Integer> semaphores = directory.getNodeIdsOfResourceId(resource, id);
+		throwIfReadOnly("Deleting resource id", Transform.map(new Unary<Integer, Node>(){
+			public Node f(Integer item) {
+				return resource.getPartitionDimension().getNode(item);
+			}}, semaphores));
+		// TODO check primary index key readOnly
+		directory.batch().deleteAllSecondaryIndexKeysOfResourceId(resource, id);
+//		 TODO statistics gathering
+	}
+	
 	/**
 	 * Deletes a secondary index key of the give secondary index
 	 * 
