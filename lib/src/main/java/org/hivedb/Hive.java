@@ -705,9 +705,7 @@ public class Hive extends Observable implements Synchronizeable, Observer {
 		directories.get(secondaryIndex.getResource().getPartitionDimension().getName())
 				.insertSecondaryIndexKey(secondaryIndex, secondaryIndexKey,
 						resourceId);
-		// TODO fix stats
-//		partitionStatistics.incrementChildRecordCount(secondaryIndex.getResource()
-//				.getPartitionDimension(), resourceId, 1);
+		partitionStatistics.incrementChildRecordCount(secondaryIndex.getResource(), resourceId, 1);
 	}
 
 	/**
@@ -745,9 +743,12 @@ public class Hive extends Observable implements Synchronizeable, Observer {
 			.getNodeIdsOfResourceId(getPartitionDimension(partitionDimensionName).getResource(resourceName), resourceId))
 			throwIfReadOnly("Inserting a new resource id", getPartitionDimension(partitionDimensionName).getNode(id), id, readOnly);
 		
-		directories.get(partitionDimensionName).batch().insertSecondaryIndexKeys(secondaryIndexValueMap, resourceId);
-//TODO Proper statistics
-		//		partitionStatistics.incrementChildRecordCount(getPartitionDimension(partitionDimensionName), resourceId, secondaryIndexesInserted);
+		Integer indexesUpdated = directories.get(partitionDimensionName).batch().insertSecondaryIndexKeys(secondaryIndexValueMap, resourceId);
+
+		partitionStatistics.incrementChildRecordCount(
+				getPartitionDimension(partitionDimensionName).getResource(resourceName), 
+				resourceId, 
+				indexesUpdated);
 	}
 		
 	/**
@@ -792,7 +793,9 @@ public class Hive extends Observable implements Synchronizeable, Observer {
 			throw new HiveReadOnlyException("Updating resource id of secondary index key");
 		directories.get(secondaryIndex.getResource().getPartitionDimension().getName())
 				.updateResourceIdOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey, originalResourceId, newResourceId);
-		// TODO Proper statistics
+
+		partitionStatistics.decrementChildRecordCount(secondaryIndex.getResource(), originalResourceId, 1);
+		partitionStatistics.incrementChildRecordCount(secondaryIndex.getResource(), newResourceId, 1);
 	}
 
 	/**
@@ -863,10 +866,8 @@ public class Hive extends Observable implements Synchronizeable, Observer {
 		Directory directory = directories.get(partitionDimension.getName());
 		
 		for (Resource resource : partitionDimension.getResources()){
-			for(Object resourceId : directory.getResourceIdsOfPrimaryIndexKey(resource, primaryIndexKey)) {
-				directory.batch().deleteAllSecondaryIndexKeysOfResourceId(resource, resourceId);
-				directory.deleteResourceKey(resource, resourceId);
-			}
+			for(Object resourceId : directory.getResourceIdsOfPrimaryIndexKey(resource, primaryIndexKey))
+				directory.deleteResourceId(resource, resourceId);
 		}
 		directory.deletePrimaryIndexKey(primaryIndexKey);
 	}
@@ -906,9 +907,11 @@ public class Hive extends Observable implements Synchronizeable, Observer {
 				return resource.getPartitionDimension().getNode(item);
 			}}, semaphores));
 		// TODO check primary index key readOnly
-		directory.batch().deleteAllSecondaryIndexKeysOfResourceId(resource, id);
-		directory.deleteResourceKey(resource, id);
-		// TODO statistics gathering
+		deleteAllSecondaryIndexKeysOfResourceId(resource.getPartitionDimension().getName(), resource.getName(), id);
+		partitionStatistics.decrementChildRecordCount(
+				resource.getPartitionDimension(), 
+				directories.get(resource.getPartitionDimension().getName()).getPrimaryIndexKeyOfResourceId(resource, id),1);
+		directory.deleteResourceId(resource, id);
 	}
 	
 	public void deleteAllSecondaryIndexKeysOfResourceId(String partitionDimensionName, String resourceName, Object id) throws HiveReadOnlyException {
@@ -922,8 +925,8 @@ public class Hive extends Observable implements Synchronizeable, Observer {
 				return resource.getPartitionDimension().getNode(item);
 			}}, semaphores));
 		// TODO check primary index key readOnly
-		directory.batch().deleteAllSecondaryIndexKeysOfResourceId(resource, id);
-//		 TODO statistics gathering
+		Integer rowsAffected = directory.batch().deleteAllSecondaryIndexKeysOfResourceId(resource, id);
+		partitionStatistics.decrementChildRecordCount(resource, id, rowsAffected);
 	}
 	
 	/**
@@ -953,9 +956,7 @@ public class Hive extends Observable implements Synchronizeable, Observer {
 
 		directories.get(partitionDimensionName)
 				.deleteSecondaryIndexKey(secondaryIndex, secondaryIndexKey, resourceId);
-//		partitionStatistics.decrementChildRecordCount(secondaryIndex.getResource()
-//				.getPartitionDimension(), resourceId, 1);
-
+		partitionStatistics.decrementChildRecordCount(secondaryIndex.getResource(), resourceId, 1);
 	}
 
 	/**

@@ -260,7 +260,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver {
 		this.performanceMonitoringEnabled = performanceMonitoringEnabled;
 	}
 
-	public void deleteResourceKey(Resource resource, Object id) {
+	public void deleteResourceId(Resource resource, Object id) {
 		doUpdate(sql.deleteResourceId(resource), new int[] {resource.getColumnType()}, new Object[] {id}, SECONDARY_INDEX_DELETE);
 	}
 

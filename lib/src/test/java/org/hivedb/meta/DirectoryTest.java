@@ -121,6 +121,26 @@ public class DirectoryTest extends H2HiveTestCase {
 	}
 	
 	@Test
+	public void testGetNodeSemaphoresOfPartitioningResourceIds() throws Exception{
+		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
+		hive.deleteResource(resource);
+		resource = Atom.getFirstOrNull(dimension.getResources());
+		resource.setIsPartitioningResource(true);
+		hive.addResource(dimension.getName(), resource);
+		
+		nameIndex = new SecondaryIndex("name", Types.VARCHAR);
+		numIndex = new SecondaryIndex("num", Types.INTEGER);
+		hive.addSecondaryIndex(resource, nameIndex);
+		hive.addSecondaryIndex(resource, numIndex);
+		resource = hive.getPartitionDimension(dimension.getName()).getResource(resource.getName());
+		
+		insertKeys(getHive());
+		Directory d = getDirectory();
+		for(Integer key : getPrimaryIndexKeys())
+			assertEquals(1, d.getNodeSemaphoresOfSecondaryIndexKey(resource.getIdIndex(), key).size());
+	}
+	
+	@Test
 	public void testGetPrimaryIndexKeysOfSecondaryIndexKey() throws Exception {
 		insertKeys(getHive());
 		Directory d = getDirectory();
@@ -315,7 +335,7 @@ public class DirectoryTest extends H2HiveTestCase {
 		for(Integer key : getPrimaryIndexKeys()) {
 			d.batch().deleteAllSecondaryIndexKeysOfResourceId(resource, key);
 			assertEquals(0,d.getSecondaryIndexKeysOfResourceId(numIndex, key).size());
-			d.deleteResourceKey(resource, key);
+			d.deleteResourceId(resource, key);
 			assertFalse(d.doesResourceIdExist(resource, key));
 		}
 	}

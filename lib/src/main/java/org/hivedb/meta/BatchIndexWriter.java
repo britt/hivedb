@@ -85,7 +85,7 @@ public class BatchIndexWriter extends SimpleJdbcDaoSupport {
 		});
 	}
 	
-	public void deleteAllSecondaryIndexKeysOfResourceId(final Resource resource, Object id) {
+	public Integer deleteAllSecondaryIndexKeysOfResourceId(final Resource resource, Object id) {
 		final Object[] parameters = new Object[] {id};
 		final PreparedStatementCreatorFactory deleteFactory = 
 			Statements.newStmtCreatorFactory(sql.deleteAllSecondaryIndexKeysForResourceId(resource.getIdIndex()), resource.getColumnType());
@@ -93,7 +93,7 @@ public class BatchIndexWriter extends SimpleJdbcDaoSupport {
 		TransactionTemplate transactionTemplate = new TransactionTemplate();
 		setTransactionManager(transactionTemplate, this);
 		
-		transactionTemplate.execute(new TransactionCallback(){
+		return (Integer) transactionTemplate.execute(new TransactionCallback(){
 			public Object doInTransaction(TransactionStatus arg0) {
 				Integer rowsAffected = 0;
 				for(SecondaryIndex secondaryIndex : resource.getSecondaryIndexes()){

@@ -12,6 +12,7 @@ import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
+import org.hivedb.meta.Resource;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
@@ -30,7 +31,23 @@ public class PartitionKeyStatisticsDao extends JdbcDaoSupport {
 		this.setDataSource(ds);
 	}
 	
-	public PartitionKeyStatisticsBean findByPrimaryPartitionKey(PartitionDimension dimension, Object key){
+	public PartitionKeyStatisticsBean findByResourceId(Resource resource, Object id){
+		PartitionKeyStatisticsBean stats = null;
+		try {
+			stats = 
+				(PartitionKeyStatisticsBean) getJdbcTemplate().queryForObject(
+						selectByResourceIdSql(
+								IndexSchema.getPrimaryIndexTableName(resource.getPartitionDimension()),
+								IndexSchema.getSecondaryIndexTableName(resource.getIdIndex())),
+						new Object[] {id}, 
+						new PartitionKeyStatisticsRowMapper(resource.getPartitionDimension()));
+		} catch( EmptyResultDataAccessException e) {
+			throw new HiveKeyNotFoundException(String.format("PartitionKeyStatistics not found for key %s", id),id);
+		}
+		return stats;		
+	}
+	
+	public PartitionKeyStatisticsBean findByPartitionKey(PartitionDimension dimension, Object key){
 		PartitionKeyStatisticsBean stats = null;
 		try {
 			stats = 
@@ -86,6 +103,12 @@ public class PartitionKeyStatisticsDao extends JdbcDaoSupport {
 		return sql.toString();
 	}
 	
+	private String selectByResourceIdSql(String primaryIndexTableName, String resourceIndexTableName) {
+		return String.format(
+				"select * from %s p join %s r on r.pkey = p.id where r.id = ?", 
+				primaryIndexTableName, resourceIndexTableName);
+	}
+	
 	private String selectByNodeSql(String tableName) {
 		StringBuilder sql = new StringBuilder("select * from ");
 		sql.append(tableName);
@@ -94,14 +117,23 @@ public class PartitionKeyStatisticsDao extends JdbcDaoSupport {
 	}
 
 	public void decrementChildRecordCount(PartitionDimension dimension, Object primaryIndexKey, int increment) {
-		PartitionKeyStatistics stats = findByPrimaryPartitionKey(dimension, primaryIndexKey);
-		stats.setChildRecordCount( stats.getChildRecordCount() - increment);
-		update(stats);
+		modifyChildRecordCount(findByPartitionKey(dimension, primaryIndexKey), -1*increment);
+	}
+	
+	public void decrementChildRecordCount(Resource resource, Object resourceId, int increment) {
+		modifyChildRecordCount(findByResourceId(resource, resourceId), -1*increment);
 	}
 
 	public void incrementChildRecordCount(PartitionDimension dimension, Object primaryIndexKey, int increment) {
-		PartitionKeyStatistics stats = findByPrimaryPartitionKey(dimension, primaryIndexKey);
-		stats.setChildRecordCount( stats.getChildRecordCount() + increment);
+		modifyChildRecordCount(findByPartitionKey(dimension, primaryIndexKey), increment);
+	}
+	
+	public void incrementChildRecordCount(Resource resource, Object resourceId, int increment) {
+		modifyChildRecordCount(findByResourceId(resource, resourceId), increment);
+	}
+	
+	private void modifyChildRecordCount(PartitionKeyStatistics stats, int count) {
+		stats.setChildRecordCount(stats.getChildRecordCount() + count);
 		update(stats);
 	}
 	

@@ -59,11 +59,11 @@ public class TestPartitionKeyStatisticsPersistence extends H2HiveTestCase {
 		PartitionKeyStatistics frozen = null;
 		PartitionKeyStatistics thawed = null;
 		try {
-			frozen = dao.findByPrimaryPartitionKey(partitionDimension, keys.iterator()
+			frozen = dao.findByPartitionKey(partitionDimension, keys.iterator()
 					.next());
 			frozen.setChildRecordCount(23);
 			dao.update(frozen);
-			thawed = dao.findByPrimaryPartitionKey(partitionDimension, frozen
+			thawed = dao.findByPartitionKey(partitionDimension, frozen
 					.getKey());
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -78,7 +78,7 @@ public class TestPartitionKeyStatisticsPersistence extends H2HiveTestCase {
 	@Test
 	public void testFindByPartitionKey() throws Exception {
 		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource(getHiveDatabaseName()));
-		PartitionKeyStatisticsBean frozen = dao.findByPrimaryPartitionKey(partitionDimension, Atom.getFirst(keys));
+		PartitionKeyStatisticsBean frozen = dao.findByPartitionKey(partitionDimension, Atom.getFirst(keys));
 		assertNotNull(frozen);
 	}
 
@@ -91,7 +91,7 @@ public class TestPartitionKeyStatisticsPersistence extends H2HiveTestCase {
 				dao.update(frozen);
 			dao.incrementChildRecordCount(frozen.getPartitionDimension(),
 					frozen.getKey(), 2);
-			PartitionKeyStatistics thawed = dao.findByPrimaryPartitionKey(frozen
+			PartitionKeyStatistics thawed = dao.findByPartitionKey(frozen
 					.getPartitionDimension(), frozen.getKey());
 			assertEquals(frozen.getChildRecordCount() + 2, thawed
 					.getChildRecordCount());
@@ -108,7 +108,7 @@ public class TestPartitionKeyStatisticsPersistence extends H2HiveTestCase {
 			dao.update(frozen);
 			dao.decrementChildRecordCount(frozen.getPartitionDimension(),
 					frozen.getKey(), 2);
-			PartitionKeyStatistics thawed = dao.findByPrimaryPartitionKey(frozen
+			PartitionKeyStatistics thawed = dao.findByPartitionKey(frozen
 					.getPartitionDimension(), frozen.getKey());
 			assertEquals(frozen.getChildRecordCount() - 2, thawed
 					.getChildRecordCount());
@@ -135,13 +135,13 @@ public class TestPartitionKeyStatisticsPersistence extends H2HiveTestCase {
 		Object key = keys.iterator().next();
 
 		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource(getHiveDatabaseName()));
-		PartitionKeyStatistics frozen = dao.findByPrimaryPartitionKey(partitionDimension, key);
+		PartitionKeyStatistics frozen = dao.findByPartitionKey(partitionDimension, key);
 		
 		hive.insertSecondaryIndexKey(secondaryIndex.getName(), secondaryIndex.getResource().getName(), secondaryIndex.getResource().getPartitionDimension().getName(), new Integer(1), key);
 		hive.insertSecondaryIndexKey(secondaryIndex.getName(), secondaryIndex.getResource().getName(), secondaryIndex.getResource().getPartitionDimension().getName(), new Integer(2), key);
 		hive.insertSecondaryIndexKey(secondaryIndex.getName(), secondaryIndex.getResource().getName(), secondaryIndex.getResource().getPartitionDimension().getName(), new Integer(3), key);
 
-		PartitionKeyStatistics thawed = dao.findByPrimaryPartitionKey(partitionDimension,
+		PartitionKeyStatistics thawed = dao.findByPartitionKey(partitionDimension,
 				frozen.getKey());
 
 		assertEquals(frozen.getChildRecordCount() + 3, thawed
