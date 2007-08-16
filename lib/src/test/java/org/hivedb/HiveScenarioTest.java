@@ -74,7 +74,7 @@ public class HiveScenarioTest {
 		PartitionDimension partitionDimension = hiveScenario.getCreatedPartitionDimension();
 		PartitionDimension partitionDimensionFromHive = hive.getPartitionDimension(partitionDimension.getName());
 
-		directory = new Directory(partitionDimensionFromHive,new HiveBasicDataSource(hive.getHiveUri()));
+		directory = new Directory(partitionDimensionFromHive,new HiveBasicDataSource(hive.getUri()));
 		for (PrimaryIndexIdentifiable primaryIndexInstance : hiveScenario.getPrimaryIndexInstancesCreatedByThisPartitionDimension(partitionDimension))
 			assertTrue(directory.getNodeSemamphoresOfPrimaryIndexKey(primaryIndexInstance.getPrimaryIndexKey()).size() > 0);
 		

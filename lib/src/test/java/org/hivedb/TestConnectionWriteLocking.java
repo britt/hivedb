@@ -64,7 +64,7 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 		
 		final PartitionDimension partitionDimension = Atom.getFirst(hive.getPartitionDimensions());
 		hive.insertPrimaryIndexKey(partitionDimension.getName(), key);
-		NodeResolver directory = new Directory(partitionDimension, new HiveBasicDataSource(hive.getHiveUri()));
+		NodeResolver directory = new Directory(partitionDimension, new HiveBasicDataSource(hive.getUri()));
 		for(Integer id : directory.getNodeIdsOfPrimaryIndexKey(key))
 			getNode(partitionDimension,id).setReadOnly(true);
 		
@@ -81,7 +81,7 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 		
 		PartitionDimension partitionDimension = Atom.getFirst(hive.getPartitionDimensions());
 		hive.insertPrimaryIndexKey(partitionDimension.getName(), key);
-		NodeResolver directory = new Directory(partitionDimension, new HiveBasicDataSource(hive.getHiveUri()));
+		NodeResolver directory = new Directory(partitionDimension, new HiveBasicDataSource(hive.getUri()));
 		for(Integer id : directory.getNodeIdsOfPrimaryIndexKey(key))
 			hive.updateNodeReadOnly(getNode(partitionDimension, id), true);
 		hive = null;

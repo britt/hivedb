@@ -49,7 +49,7 @@ public class IndexSchema extends Schema{
 			+ " node SMALLINT not null, "
 			+ " secondary_index_count INTEGER not null, "
 			+ " last_updated "+ JdbcTypeMapper.jdbcTypeToString(Types.DATE) +" not null, "
-			+ " read_only " +  GlobalSchema.getBooleanTypeForDialect(dialect) + " default 0,"	
+			+ " read_only " +  HiveConfigurationSchema.getBooleanTypeForDialect(dialect) + " default 0,"	
 			+ " PRIMARY KEY (id,node)"
 			+ ifMySql(", INDEX node_id (node),", dialect)
 			+ ifMySql(" INDEX last_updated (last_updated),", dialect)

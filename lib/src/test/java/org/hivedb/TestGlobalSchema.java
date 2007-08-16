@@ -3,7 +3,7 @@ package org.hivedb;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.hivedb.meta.GlobalSchema;
+import org.hivedb.meta.HiveConfigurationSchema;
 import org.hivedb.util.database.H2TestCase;
 import org.testng.annotations.Test;
 
@@ -19,7 +19,7 @@ public class TestGlobalSchema extends H2TestCase {
 	 */
 	@Test
 	public void testInstallDerby() throws Exception {
-		GlobalSchema schema = new GlobalSchema(getConnectString(TEST_DB));
+		HiveConfigurationSchema schema = new HiveConfigurationSchema(getConnectString(TEST_DB));
 		schema.install();
 	}
 	

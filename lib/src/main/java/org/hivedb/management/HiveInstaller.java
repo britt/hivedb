@@ -5,7 +5,7 @@ import java.sql.DriverManager;
 import java.util.Map;
 
 import org.hivedb.HiveRuntimeException;
-import org.hivedb.meta.GlobalSchema;
+import org.hivedb.meta.HiveConfigurationSchema;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
 import org.hivedb.util.GetOpt;
@@ -19,7 +19,7 @@ public class HiveInstaller implements Runnable {
 
 	public void run() {
 		try {
-			new GlobalSchema(uri).install();
+			new HiveConfigurationSchema(uri).install();
 			new HiveSemaphoreDao(new HiveBasicDataSource(uri)).create();
 		} catch(Exception e) {
 			throw new HiveRuntimeException(e.getMessage(), e);

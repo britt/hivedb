@@ -1,7 +1,7 @@
 package org.hivedb.util;
 
 import org.apache.commons.dbcp.BasicDataSource;
-import org.hivedb.meta.GlobalSchema;
+import org.hivedb.meta.HiveConfigurationSchema;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
 
@@ -13,7 +13,7 @@ public class InstallHiveGlobalSchema {
 	 */
 	public static void install(String connectString) {
 		try {
-			new GlobalSchema(connectString).install();
+			new HiveConfigurationSchema(connectString).install();
 			BasicDataSource ds = new HiveBasicDataSource(connectString);
 			HiveSemaphoreDao dao = new HiveSemaphoreDao(ds);
 			

@@ -22,14 +22,14 @@ import org.hivedb.Schema;
  * @author Justin McCarthy (jmccarthy@cafepress.com)
  * @author Britt Crawford (bcrawford@cafepress.com)
  */
-public class GlobalSchema extends Schema {	
+public class HiveConfigurationSchema extends Schema {	
 	/**
 	 * GlobalSchema is constructed against a JDBC URI, which will be the destination
 	 * for the schema tables.
 	 * 
 	 * @param dbURI Empty target database connect string, including username, password & catalog
 	 */
-	public GlobalSchema(String dbURI){
+	public HiveConfigurationSchema(String dbURI){
 		super(dbURI);
 	}
 	
@@ -74,7 +74,7 @@ public class GlobalSchema extends Schema {
 				+ "dimension_id int not null, "
 				+ "name varchar(128) not null, "
 				+ "db_type varchar(64) not null, "
-				+ "is_partitioning_resource bit not null"
+				+ "is_partitioning_resource bit not null default 1"
 				+ " )";
 	}
 	

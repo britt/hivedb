@@ -5,6 +5,7 @@
 package org.hivedb.meta;
 
 import org.hivedb.Hive;
+import org.hivedb.Lockable;
 import org.hivedb.util.HiveUtils;
 
 /**
@@ -13,7 +14,7 @@ import org.hivedb.util.HiveUtils;
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
  * @author Andy Likuski (alikuski@cafepress.com)
  */
-public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable {
+public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable, Lockable {
 	private int id,partitionDimensionId;
 	private String uri,name;
 	private PartitionDimension partitionDimension;

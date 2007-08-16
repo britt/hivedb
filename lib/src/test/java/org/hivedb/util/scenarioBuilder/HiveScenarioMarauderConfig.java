@@ -33,7 +33,7 @@ public class HiveScenarioMarauderConfig implements HiveScenarioConfig {
 	}
 	
 	public String getHiveIndexesUri() {
-		return hive.getHiveUri();
+		return hive.getUri();
 	}
 	
 	public Collection<Node> getDataNodes() {
