@@ -2,9 +2,9 @@ package org.hivedb.management.migration;
 
 import java.util.Collection;
 
-import org.hivedb.meta.Directory;
-import org.hivedb.meta.NodeResolver;
 import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.meta.directory.Directory;
+import org.hivedb.meta.directory.NodeResolver;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 
 public class SecondaryIndexKeyLocator<PARENT_KEY, CHILD_KEY> implements KeyLocator<PARENT_KEY, CHILD_KEY> {

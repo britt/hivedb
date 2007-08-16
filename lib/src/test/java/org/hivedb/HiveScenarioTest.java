@@ -16,9 +16,7 @@ import java.util.TreeSet;
 
 import org.hivedb.meta.Assigner;
 import org.hivedb.meta.ColumnInfo;
-import org.hivedb.meta.Directory;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.NodeResolver;
 import org.hivedb.meta.NodeSemaphore;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.PrimaryIndexIdentifiable;
@@ -26,6 +24,8 @@ import org.hivedb.meta.Resource;
 import org.hivedb.meta.ResourceIdentifiable;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.SecondaryIndexIdentifiable;
+import org.hivedb.meta.directory.Directory;
+import org.hivedb.meta.directory.NodeResolver;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.AssertUtils;
 import org.hivedb.util.JdbcTypeMapper;

@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveReadOnlyException;
+import org.hivedb.meta.directory.Directory;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.AssertUtils;
 import org.hivedb.util.database.H2HiveTestCase;

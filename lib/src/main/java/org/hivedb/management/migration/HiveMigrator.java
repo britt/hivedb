@@ -5,10 +5,10 @@ import java.util.List;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
-import org.hivedb.meta.Directory;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.NodeResolver;
 import org.hivedb.meta.PartitionDimension;
+import org.hivedb.meta.directory.Directory;
+import org.hivedb.meta.directory.NodeResolver;
 import org.hivedb.util.Lists;
 import org.hivedb.util.functional.Collect;
 import org.hivedb.util.functional.Pair;

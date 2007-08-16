@@ -1,11 +1,11 @@
 package org.hivedb;
 
 import org.hivedb.meta.AccessType;
-import org.hivedb.meta.Directory;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.NodeResolver;
 import org.hivedb.meta.PartitionDimension;
+import org.hivedb.meta.directory.Directory;
+import org.hivedb.meta.directory.NodeResolver;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.AssertUtils;
 import org.hivedb.util.AssertUtils.Toss;

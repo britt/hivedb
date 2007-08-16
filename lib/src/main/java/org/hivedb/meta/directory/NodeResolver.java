@@ -1,6 +1,11 @@
-package org.hivedb.meta;
+package org.hivedb.meta.directory;
 
 import java.util.Collection;
+
+import org.hivedb.meta.NodeSemaphore;
+import org.hivedb.meta.PartitionDimension;
+import org.hivedb.meta.Resource;
+import org.hivedb.meta.SecondaryIndex;
 
 public interface NodeResolver {
 	/***

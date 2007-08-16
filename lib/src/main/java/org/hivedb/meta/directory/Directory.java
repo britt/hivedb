@@ -1,4 +1,4 @@
-package org.hivedb.meta;
+package org.hivedb.meta.directory;
 
 import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.PRIMARY_INDEX_DELETE;
 import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.PRIMARY_INDEX_READ;
@@ -20,6 +20,11 @@ import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.StatisticsProxy;
 import org.hivedb.management.statistics.Counter;
 import org.hivedb.management.statistics.NoOpStatistics;
+import org.hivedb.meta.Node;
+import org.hivedb.meta.NodeSemaphore;
+import org.hivedb.meta.PartitionDimension;
+import org.hivedb.meta.Resource;
+import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.Delay;
 import org.hivedb.util.JdbcTypeMapper;
@@ -36,7 +41,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.ParameterizedRowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 
-public class Directory extends SimpleJdbcDaoSupport implements NodeResolver {
+public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, IndexWriter {
 	private PartitionDimension partitionDimension;
 	private Counter performanceStatistics;
 	private boolean performanceMonitoringEnabled = false;

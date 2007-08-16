@@ -1,4 +1,4 @@
-package org.hivedb.meta;
+package org.hivedb.meta.directory;
 
 import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.SECONDARY_INDEX_DELETE;
 
@@ -6,6 +6,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.hivedb.meta.Resource;
+import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.Delay;
 import org.hivedb.util.Proxies;
 import org.hivedb.util.QuickCache;
