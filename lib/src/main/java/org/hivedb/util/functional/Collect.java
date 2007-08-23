@@ -8,6 +8,7 @@ import java.util.List;
 public class Collect {
 	public static abstract class Function<R> {public abstract R f();}
 	
+	@SuppressWarnings("unchecked")
 	public static<R> Collection<R> create(Function<R> function, Iterator iterator)
 	{
 		List<R> list = new ArrayList<R>();
@@ -22,24 +23,5 @@ public class Collect {
 		while(iterator.hasNext())
 			list.add(function.f(iterator.next()));    				
 		return list;
-	}
-	
-	public static class NumberIterator implements Iterator {
-		int number;
-		int current=0;
-		public NumberIterator(int number)
-		{
-			this.number = number;
-		}
-		public boolean hasNext() {
-			return current < number;
-		}
-
-		public Object next() {
-			return ++current;
-		}
-
-		public void remove() {
-		}
 	}
 }

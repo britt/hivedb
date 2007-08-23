@@ -2,15 +2,14 @@ package org.hivedb.util;
 
 import java.util.Stack;
 
+import junit.framework.Assert;
 import junit.framework.TestCase;
 
 import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Toss;
 import org.hivedb.util.functional.Transform;
 
 public class AssertUtils  {
-	public static interface Toss {
-		void f() throws Exception;
-	}
 	public static abstract class UndoableToss extends ThrowableUndoable implements Toss
 	{
 	}
@@ -129,5 +128,13 @@ public class AssertUtils  {
 			}
 			public abstract void f() throws Exception;
 		}
+	}
+	
+	public static void assertImplements(Class expected, Object actual) {
+		Class[] implemented = actual.getClass().getInterfaces();
+		boolean implementsInterface = false;
+		for(Class inter : implemented)
+			implementsInterface |= expected.equals(inter);
+		Assert.assertTrue("Object did not implement " + expected.toString(), implementsInterface);
 	}
 }

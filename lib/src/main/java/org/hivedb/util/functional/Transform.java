@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-
 // Class to map each item in a set to another value
 public class Transform {
 	public static<I,R> Collection<R> map(Unary<I,R> mapper, Iterable<? extends I> iterable)
@@ -18,7 +17,7 @@ public class Transform {
 		return list;
 	}
 	
-	public static <OUTER, INNER> Collection<INNER> flatMap(Unary<OUTER, Collection<INNER>> mapper, Iterable<OUTER> iterable)
+	public static <OUTER, INNER> Collection<INNER> flatMap(Unary<OUTER, Collection<INNER>> mapper, Iterable<? extends OUTER> iterable)
 	{
 		List<INNER> results = new ArrayList<INNER>();
 		for (Collection<INNER> collection : map(mapper, iterable))
@@ -103,6 +102,25 @@ public class Transform {
 			results.addAll(c);
 		return results;
 	}
+	public static<T> Collection<T> flatten(Collection<T>... collections) {
+		Collection<T> results = new ArrayList<T>();
+		for (Collection<T> c : collections)
+			results.addAll(c);
+		return results;
+	}
+	public static<K,V> Map<K,V> toOrderedMap(Entry<K,V>[] entries) {
+		Map<K,V> map = new OrderedDebugMap<K,V>();
+		for (Entry<K,V> entry : entries)
+			map.put(entry.getKey(), entry.getValue());
+		return map;
+	}
+	public static<K,V> Map<K,V> toOrderedMap(Collection<Entry<K,V>> entries)
+	{
+		Map<K,V> map = new OrderedDebugMap<K,V>();
+		for (Entry<K,V> entry : entries)
+			map.put(entry.getKey(), entry.getValue());
+		return map;
+	}
 
 	public static<K,V> Map<V, K> reverseMap(Map<K, V> map) {
 		return
@@ -117,5 +135,23 @@ public class Transform {
 		return (Collection<T>)collection;
 	}
 	
+	public static int[] toIntArray(Collection<Integer> collection)
+	{
+		int[] stupid = new int[collection.size()];
+		int i = 0;
+		for (int item : collection)
+			stupid[i++] = item;
+		return stupid;
+	}
+	public static class MapKeyToValueFunction<K, V> implements Unary<K, V>
+	{
+		Map<K,V> map;
+		public MapKeyToValueFunction(Map<K,V> map) {
+			this.map = map;
+		}
+		public V f(K key) {
+			return map.get(key);
+		}
+	}
 }
 

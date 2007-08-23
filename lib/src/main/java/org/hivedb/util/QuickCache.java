@@ -2,6 +2,8 @@ package org.hivedb.util;
 
 import java.util.Hashtable;
 import java.util.Map;
+
+import org.hivedb.util.functional.Delay;
 public class QuickCache {
 	Map<Object, Object> cache = new Hashtable<Object, Object>();
 	@SuppressWarnings("unchecked")

@@ -8,9 +8,9 @@ import org.hivedb.meta.directory.Directory;
 import org.hivedb.meta.directory.NodeResolver;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.AssertUtils;
-import org.hivedb.util.AssertUtils.Toss;
 import org.hivedb.util.database.H2HiveTestCase;
 import org.hivedb.util.functional.Atom;
+import org.hivedb.util.functional.Toss;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 

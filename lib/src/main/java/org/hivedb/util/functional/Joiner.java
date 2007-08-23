@@ -14,4 +14,16 @@ public abstract class Joiner<C,R> {
 			return result + separator + item.toString();
 		}		
 	}
+	
+	/**
+	 *  A Joiner that appends each item's hash code to the running total. Null items are ignored
+	 * @author andylikuski
+	 *
+	 */
+	public static class ConcatHashCodesOfValues extends Joiner<Object, String>
+	{
+		public String f(Object item, String result) {
+			return result + (item != null ? new Integer(item.hashCode()).toString() : "");
+		}		
+	}
 }
