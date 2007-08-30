@@ -17,7 +17,7 @@ import org.hivedb.util.HiveUtils;
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
  * @author Andy Likuski (alikuski@cafepress.com)
  */
-public class Resource implements Comparable<Resource>, IdAndNameIdentifiable, Finder {
+public class Resource implements Comparable<Resource>, IdAndNameIdentifiable<Integer>, Finder {
 	private int id;
 	private PartitionDimension partitionDimension;
 	private Collection<SecondaryIndex> secondaryIndexes = null;
@@ -71,7 +71,7 @@ public class Resource implements Comparable<Resource>, IdAndNameIdentifiable, Fi
 		return secondaryIndexes;
 	}
 	
-	public int getId() {
+	public Integer getId() {
 		return id;
 	}
 	public String getName() {
@@ -149,10 +149,6 @@ public class Resource implements Comparable<Resource>, IdAndNameIdentifiable, Fi
 	{
 		return new Resource(columnInfo.getName(), columnInfo.getColumnType(), isPartitioningResource, secondaryIndexes);
 	}
-
-	public void setId(int id) {
-		this.id = id;
-	}
 	
 	
 	public ResourceIndex getIdIndex() {
@@ -165,5 +161,9 @@ public class Resource implements Comparable<Resource>, IdAndNameIdentifiable, Fi
 
 	public void setSecondaryIndexes(Collection<SecondaryIndex> secondaryIndexes) {
 		this.secondaryIndexes = secondaryIndexes;
+	}
+
+	public void setId(Integer field) {
+		this.id = field;
 	}
 }

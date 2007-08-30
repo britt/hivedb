@@ -16,4 +16,10 @@ public class Lists {
 		List<T> list = new ArrayList<T>(items);
 		return list.get(pick);
 	}
+	
+	public static<T> List<T> newList(Collection<T> items) {
+		List<T> list = new ArrayList<T>();
+		list.addAll(items);
+		return list;
+	}
 }

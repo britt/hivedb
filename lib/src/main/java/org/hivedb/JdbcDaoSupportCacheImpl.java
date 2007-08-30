@@ -7,7 +7,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.dbcp.BasicDataSource;
 import org.hivedb.management.statistics.HivePerformanceStatistics;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.Node;
@@ -17,7 +16,6 @@ import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.directory.Directory;
 import org.hivedb.meta.persistence.DataSourceProvider;
 import org.hivedb.util.HiveUtils;
-import org.hivedb.util.Lists;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Unary;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
@@ -53,13 +51,14 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	 * This method destroys and recreates all SimpleJdbcDaoSupport in the cache.
 	 * @throws HiveException
 	 */
-	public void sync() {
+	public boolean sync() {
 		jdbcDaoSupports.clear();
 		for(Node node : hive.getPartitionDimension(partitionDimension).getNodes()) {
 			jdbcDaoSupports.put(hash(node.getId(), AccessType.Read), new DataNodeJdbcDaoSupport(dataSourceProvider.getDataSource(node.getUri())));
 			if( !hive.isReadOnly() && !node.isReadOnly() )
 				addDataSource(node.getId(), AccessType.ReadWrite);
 		}
+		return true;
 	}
 	
 	private SimpleJdbcDaoSupport addDataSource(Integer nodeId, AccessType intention) {

@@ -13,7 +13,7 @@ import org.hivedb.util.HiveUtils;
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
  * @author Andy Likuski (alikuski@cafepress.com)
  */
-public class SecondaryIndex implements Comparable<SecondaryIndex>, IdAndNameIdentifiable {
+public class SecondaryIndex implements Comparable<SecondaryIndex>, IdAndNameIdentifiable<Integer> {
 	private int id;
 	private Resource resource;
 	private ColumnInfo columnInfo;
@@ -41,7 +41,7 @@ public class SecondaryIndex implements Comparable<SecondaryIndex>, IdAndNameIden
 		this.columnInfo = new ColumnInfo(name,type);
 	}
 
-	public int getId() {
+	public Integer getId() {
 		return id;
 	}
 	
@@ -108,10 +108,6 @@ public class SecondaryIndex implements Comparable<SecondaryIndex>, IdAndNameIden
 	{
 		return new SecondaryIndex(getColumnInfo().getName(), getColumnInfo().getColumnType());
 	}
-
-	public void setId(int id) {
-		this.id = id;
-	}
 	
 	public static String getTableName(SecondaryIndex secondaryIndex, Resource resource) {
 		return getTableName(secondaryIndex.getColumnInfo().getName(), resource.getName());
@@ -119,5 +115,9 @@ public class SecondaryIndex implements Comparable<SecondaryIndex>, IdAndNameIden
 	
 	public static String getTableName(String index, String resource) {
 		return resource + "." + index;
+	}
+
+	public void setId(Integer field) {
+		this.id = field;
 	}
 }

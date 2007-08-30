@@ -25,7 +25,7 @@ import org.hivedb.util.functional.Predicate;
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
  * @author Andy Likuski (alikuski@cafepress.com)
  */
-public class PartitionDimension implements Comparable<PartitionDimension>, Cloneable, IdAndNameIdentifiable, Finder {
+public class PartitionDimension implements Comparable<PartitionDimension>, Cloneable, IdAndNameIdentifiable<Integer>, Finder {
 	private int id;
 	private String name;
 	private int columnType;
@@ -135,7 +135,7 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 		this.columnType = columnType;
 	}
 
-	public int getId() {
+	public Integer getId() {
 		return id;
 	}
 
@@ -236,7 +236,7 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	{
 		return new PartitionDimension(name, columnType);
 	}
-	public void setId(int id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 	public Collection<Node> getNodes() {

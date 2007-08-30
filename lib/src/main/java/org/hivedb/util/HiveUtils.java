@@ -7,6 +7,12 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.hivedb.meta.Node;
+import org.hivedb.meta.NodeSemaphore;
+import org.hivedb.meta.PartitionDimension;
+import org.hivedb.util.functional.Transform;
+import org.hivedb.util.functional.Unary;
+
 public class HiveUtils {
 	/**
 	 *  This belongs in a utility class. Takes field values of an instance to generate a hash code
@@ -16,7 +22,7 @@ public class HiveUtils {
 	public static int makeHashCode(Object[] objects) {
 		return makeHashCode(Arrays.asList(objects));
 	}
-	public static int makeHashCode(Collection collection) {
+	public static int makeHashCode(Collection<?> collection) {
 		String result = "";
 		for (Object object : collection)
 			if (object != null)
@@ -51,7 +57,7 @@ public class HiveUtils {
 		Object[] objects = new Object[1+set.size()];
 		String formatString = "[(Collection HashCode:%s)\n";
 		objects[0] = set.hashCode();
-		Iterator iterator = set.iterator();
+		Iterator<?> iterator = set.iterator();
 		for(int i=1; i<objects.length; i++) {
 			objects[i] = iterator.next();
 			formatString += tabs + "%s" + (iterator.hasNext() ? ", " : "");
@@ -65,5 +71,12 @@ public class HiveUtils {
 		String tabs = "";
 		for (int i=0; i<count; i++) tabs += "\t";
 		return tabs;
+	}
+	
+	public static Collection<Node> getNodesForSemaphores(Collection<NodeSemaphore> semaphores, final PartitionDimension dimension) {
+		return Transform.map(new Unary<NodeSemaphore, Node>(){
+			public Node f(NodeSemaphore item) {
+				return dimension.getNode(item.getId());
+			}}, semaphores);
 	}
 }

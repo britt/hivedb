@@ -14,7 +14,7 @@ import org.hivedb.util.HiveUtils;
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
  * @author Andy Likuski (alikuski@cafepress.com)
  */
-public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable, Lockable {
+public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable<Integer>, Lockable {
 	private int id,partitionDimensionId;
 	private String uri,name;
 	private PartitionDimension partitionDimension;
@@ -45,7 +45,7 @@ public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable,
 		this.partitionDimensionId = partitionDimensionId;
 	}
 
-	public int getId() {
+	public Integer getId() {
 		return id;
 	}
 	public boolean isReadOnly() {
@@ -113,7 +113,7 @@ public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable,
 		return name;
 	}
 
-	public void setId(int id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 
