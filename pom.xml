@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.hivedb</groupId>
   <artifactId>hivedb</artifactId>
-  <packaging>pom</packaging>
+  <packaging>jar</packaging>
   <version>0.9.2</version>
   <name>hivedb</name>
   <url>http://www.hivedb.org</url>
@@ -79,6 +79,11 @@
     </plugins>
   </reporting>
   <dependencies>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.14</version>
+    </dependency>
 <!-- commons stuff -->
     <dependency>
       <groupId>commons-io</groupId>
@@ -112,11 +117,11 @@
       <artifactId>mysql-connector-java</artifactId>
       <version>5.0.4</version>
     </dependency>
-  	<dependency>
-  		<groupId>com.h2database</groupId>
-		<artifactId>h2</artifactId>
-		<version>1.0.20070617</version>
-  	</dependency>
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <version>1.0.20070617</version>
+    </dependency>
 <!--  Test Dependencies -->
     <dependency>
       <groupId>commons-lang</groupId>
@@ -138,6 +143,7 @@
     </dependency>
   </dependencies>
   <build>
+    <finalName>hivedb</finalName>
     <plugins>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
@@ -186,8 +192,4 @@
       </plugin>
     </plugins>
   </build>
-  <modules>
-    <module>lib</module>
-    <module>tools</module>
-  </modules>
 </project>
