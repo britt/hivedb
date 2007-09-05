@@ -24,7 +24,7 @@ import org.hivedb.meta.AccessType;
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.NodeSemaphore;
+import org.hivedb.meta.KeySemaphore;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
@@ -231,7 +231,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	
 	public PartitionDimension getPartitionDimension(String name) {
 		if (!partitionDimensions.containsKey(name))
-			throw new HiveRuntimeException(String.format("Unknown partition dimension %s", name));
+			throw new HiveKeyNotFoundException(String.format("Unknown partition dimension %s", name), name);
 		return partitionDimensions.get(name);
 	}
 	
@@ -416,7 +416,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	public void insertResourceId(String partitionDimensionName, String resourceName, Object id, Object primaryIndexKey) throws HiveReadOnlyException{
 		PartitionDimension dimension = getPartitionDimension(partitionDimensionName);
 		Resource resource = dimension.getResource(resourceName);
-		Collection<NodeSemaphore> semaphores = directories.get(partitionDimensionName).getNodeSemamphoresOfPrimaryIndexKey(primaryIndexKey);
+		Collection<KeySemaphore> semaphores = directories.get(partitionDimensionName).getNodeSemamphoresOfPrimaryIndexKey(primaryIndexKey);
 		Preconditions.isWritable(semaphores, this);
 		directories.get(dimension.getName()).insertResourceId(resource, id, primaryIndexKey);
 		partitionStatistics.incrementChildRecordCount(dimension, primaryIndexKey, 1);
@@ -425,7 +425,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	private void insertSecondaryIndexKey(SecondaryIndex secondaryIndex,
 			Object secondaryIndexKey, Object resourceId) throws HiveReadOnlyException {
 		String partitionDimensionName = secondaryIndex.getResource().getPartitionDimension().getName();
-		Collection<NodeSemaphore> semaphores = 
+		Collection<KeySemaphore> semaphores = 
 			directories.get(partitionDimensionName).getNodeSemaphoresOfResourceId(secondaryIndex.getResource(), resourceId);
 		Preconditions.isWritable(semaphores, this);
 		directories.get(partitionDimensionName)
@@ -443,7 +443,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	}
 	
 	public void insertRelatedSecondaryIndexKeys(String partitionDimensionName, String resourceName, Map<SecondaryIndex, Collection<Object>> secondaryIndexValueMap, final Object resourceId) throws HiveReadOnlyException {
-		Collection<NodeSemaphore> semaphores = directories.get(partitionDimensionName).getNodeSemaphoresOfResourceId(getPartitionDimension(partitionDimensionName).getResource(resourceName), resourceId);
+		Collection<KeySemaphore> semaphores = directories.get(partitionDimensionName).getNodeSemaphoresOfResourceId(getPartitionDimension(partitionDimensionName).getResource(resourceName), resourceId);
 		Preconditions.isWritable(semaphores,this);
 		Integer indexesUpdated = directories.get(partitionDimensionName).batch().insertSecondaryIndexKeys(secondaryIndexValueMap, resourceId);
 		partitionStatistics.incrementChildRecordCount(
@@ -455,7 +455,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	public void updatePrimaryIndexReadOnly(String partitionDimensionName,
 			Object primaryIndexKey, boolean isReadOnly) throws HiveReadOnlyException {
 		PartitionDimension partitionDimension = getPartitionDimension(partitionDimensionName);
-		Collection<NodeSemaphore> semaphores = directories.get(partitionDimensionName).getNodeSemamphoresOfPrimaryIndexKey(primaryIndexKey);
+		Collection<KeySemaphore> semaphores = directories.get(partitionDimensionName).getNodeSemamphoresOfPrimaryIndexKey(primaryIndexKey);
 		Preconditions.isWritable(semaphores);
 		
 		directories.get(partitionDimension.getName()).updatePrimaryIndexKeyReadOnly(primaryIndexKey, isReadOnly);
@@ -498,7 +498,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 			throw new HiveKeyNotFoundException("The primary index key " + primaryIndexKey
 					+ " does not exist",primaryIndexKey);
 		
-		Preconditions.isWritable(directories.get(partitionDimension.getName()).getNodeSemamphoresOfPrimaryIndexKey(primaryIndexKey));
+		Preconditions.isWritable(directories.get(partitionDimension.getName()).getNodeSemamphoresOfPrimaryIndexKey(primaryIndexKey), this);
 		
 		Directory directory = directories.get(partitionDimension.getName());
 		for (Resource resource : partitionDimension.getResources()){
@@ -637,7 +637,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		return directories.get(partitionDimensionName).getResourceIdsOfPrimaryIndexKey(partitionDimensions.get(partitionDimensionName).getResource(resourceName), primaryIndexKey);
 	}
 	
-	private Connection getConnection(PartitionDimension partitionDimension, NodeSemaphore semaphore, AccessType intention) throws HiveReadOnlyException,SQLException {
+	private Connection getConnection(PartitionDimension partitionDimension, KeySemaphore semaphore, AccessType intention) throws HiveReadOnlyException,SQLException {
 		try{
 			if(intention == AccessType.ReadWrite)
 				Preconditions.isWritable(this, semaphore, partitionDimension.getNode(semaphore.getId()));
@@ -672,7 +672,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	public Collection<Connection> getConnection(String partitionDimensionName,
 			Object primaryIndexKey, AccessType intent) throws SQLException, HiveReadOnlyException {
 		Collection<Connection> connections = new ArrayList<Connection>();
-		for(NodeSemaphore semaphore : directories.get(partitionDimensionName).getNodeSemamphoresOfPrimaryIndexKey(primaryIndexKey))
+		for(KeySemaphore semaphore : directories.get(partitionDimensionName).getNodeSemamphoresOfPrimaryIndexKey(primaryIndexKey))
 			connections.add(getConnection(getPartitionDimension(partitionDimensionName), semaphore, intent));
 		return connections;
 	}
@@ -684,12 +684,12 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		
 		SecondaryIndex secondaryIndex = getPartitionDimension(dimensionName).getResource(resourceName).getSecondaryIndex(secondaryIndexName);
 		Collection<Connection> connections = new ArrayList<Connection>();
-		Collection<NodeSemaphore> nodeSemaphores = directories.get(dimensionName).getNodeSemaphoresOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
-		nodeSemaphores = Filter.getUnique(nodeSemaphores, new Unary<NodeSemaphore, Integer>(){
-			public Integer f(NodeSemaphore item) {
+		Collection<KeySemaphore> nodeSemaphores = directories.get(dimensionName).getNodeSemaphoresOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
+		nodeSemaphores = Filter.getUnique(nodeSemaphores, new Unary<KeySemaphore, Integer>(){
+			public Integer f(KeySemaphore item) {
 				return item.getId();
 			}});
-		for(NodeSemaphore semaphore : nodeSemaphores)
+		for(KeySemaphore semaphore : nodeSemaphores)
 			connections.add(getConnection(secondaryIndex.getResource().getPartitionDimension(), semaphore, intent));
 		return connections;
 	}
@@ -698,7 +698,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		Collection<Connection> connections = new ArrayList<Connection>();
 		Directory directory = directories.get(dimensionName);
 		Resource resource = partitionDimensions.get(dimensionName).getResource(resourceName);
-		for(NodeSemaphore semaphore : directory.getNodeSemaphoresOfResourceId(resource, resourceId))
+		for(KeySemaphore semaphore : directory.getNodeSemaphoresOfResourceId(resource, resourceId))
 			connections.add(getConnection(getPartitionDimension(dimensionName), semaphore, intent));
 		return connections;
 	}

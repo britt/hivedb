@@ -2,7 +2,7 @@ package org.hivedb.meta.directory;
 
 import java.util.Collection;
 
-import org.hivedb.meta.NodeSemaphore;
+import org.hivedb.meta.KeySemaphore;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
@@ -43,7 +43,7 @@ public interface NodeResolver {
 	 * @param primaryIndexKey
 	 * @return
 	 */
-	public Collection<NodeSemaphore> getNodeSemamphoresOfPrimaryIndexKey(Object primaryIndexKey);
+	public Collection<KeySemaphore> getNodeSemamphoresOfPrimaryIndexKey(Object primaryIndexKey);
 
 	/***
 	 * Get the write-lock state of a primary index key
@@ -74,7 +74,7 @@ public interface NodeResolver {
 	 * @param secondaryIndexKey
 	 * @return
 	 */
-	public Collection<NodeSemaphore> getNodeSemaphoresOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey);
+	public Collection<KeySemaphore> getNodeSemaphoresOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey);
 
 	/***
 	 * Get the primary indexs that have records matching the secondary index key provided.

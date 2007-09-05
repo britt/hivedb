@@ -3,11 +3,11 @@ package org.hivedb.meta;
 import org.hivedb.Lockable;
 import org.hivedb.util.HiveUtils;
 
-public class NodeSemaphore implements Lockable {
+public class KeySemaphore implements Lockable {
 	private boolean readOnly;
 	private int id;
 	
-	public NodeSemaphore(int id, boolean readOnly) {
+	public KeySemaphore(int id, boolean readOnly) {
 		this.id = id;
 		this.readOnly = readOnly;
 	}

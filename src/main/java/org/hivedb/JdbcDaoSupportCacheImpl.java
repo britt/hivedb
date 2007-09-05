@@ -10,7 +10,7 @@ import javax.sql.DataSource;
 import org.hivedb.management.statistics.HivePerformanceStatistics;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.NodeSemaphore;
+import org.hivedb.meta.KeySemaphore;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.directory.Directory;
@@ -67,7 +67,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 		return jdbcDaoSupports.get(hash(nodeId, intention));
 	}
 	
-	private SimpleJdbcDaoSupport get(NodeSemaphore semaphore, AccessType intention) throws HiveReadOnlyException { 
+	private SimpleJdbcDaoSupport get(KeySemaphore semaphore, AccessType intention) throws HiveReadOnlyException { 
 		Node node = null;
 		try {
 			node = hive.getPartitionDimension(partitionDimension).getNode(semaphore.getId());
@@ -123,9 +123,9 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	 * @throws HiveReadOnlyException
 	 */
 	public Collection<SimpleJdbcDaoSupport> get(Object primaryIndexKey, final AccessType intention) throws HiveReadOnlyException {
-		Collection<NodeSemaphore> semaphores = directory.getNodeSemamphoresOfPrimaryIndexKey(primaryIndexKey);
+		Collection<KeySemaphore> semaphores = directory.getNodeSemamphoresOfPrimaryIndexKey(primaryIndexKey);
 		Collection<SimpleJdbcDaoSupport> supports = new ArrayList<SimpleJdbcDaoSupport>();
-		for(NodeSemaphore semaphore : semaphores)
+		for(KeySemaphore semaphore : semaphores)
 			supports.add(get(semaphore, intention));
 		return supports;
 	}
@@ -143,14 +143,14 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 			if(Filter.getUnique(hive.getPrimaryIndexKeysOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey)).size() > 1)
 				throw new UnsupportedOperationException("Writes for non-unique secondary indexes must be performed using the primary index key.");
 		
-		Collection<NodeSemaphore> nodeSemaphores = directory.getNodeSemaphoresOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
-		nodeSemaphores = Filter.getUnique(nodeSemaphores, new Unary<NodeSemaphore, Integer>(){
-			public Integer f(NodeSemaphore item) {
+		Collection<KeySemaphore> nodeSemaphores = directory.getNodeSemaphoresOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
+		nodeSemaphores = Filter.getUnique(nodeSemaphores, new Unary<KeySemaphore, Integer>(){
+			public Integer f(KeySemaphore item) {
 				return item.getId();
 		}});
 		
 		Collection<SimpleJdbcDaoSupport> supports = new ArrayList<SimpleJdbcDaoSupport>();
-		for(NodeSemaphore semaphore : nodeSemaphores)
+		for(KeySemaphore semaphore : nodeSemaphores)
 			supports.add(get(semaphore, intention));
 		return supports;
 	}
@@ -172,7 +172,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	 */
 	public SimpleJdbcDaoSupport getUnsafe(Node node) {
 		try {
-			NodeSemaphore semaphore = new NodeSemaphore(node.getId(), node.isReadOnly());
+			KeySemaphore semaphore = new KeySemaphore(node.getId(), node.isReadOnly());
 			return get(semaphore, AccessType.ReadWrite);
 		} catch (HiveException e) {
 			throw new RuntimeException(e);
@@ -190,7 +190,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	public SimpleJdbcDaoSupport getUnsafe(String nodeName) {
 		try {
 			Node node = hive.getPartitionDimension(this.getPartitionDimension()).getNode(nodeName);
-			NodeSemaphore semaphore = new NodeSemaphore(node.getId(), node.isReadOnly());
+			KeySemaphore semaphore = new KeySemaphore(node.getId(), node.isReadOnly());
 			return get(semaphore, AccessType.ReadWrite);
 		} catch (HiveException e) {
 			throw new RuntimeException(e);
@@ -198,9 +198,9 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	}
 
 	public Collection<SimpleJdbcDaoSupport> get(Resource resource, Object resourceId, AccessType intention) throws HiveReadOnlyException {
-		Collection<NodeSemaphore> semaphores = directory.getNodeSemaphoresOfResourceId(resource, resourceId);
+		Collection<KeySemaphore> semaphores = directory.getNodeSemaphoresOfResourceId(resource, resourceId);
 		Collection<SimpleJdbcDaoSupport> supports = new ArrayList<SimpleJdbcDaoSupport>();
-		for(NodeSemaphore semaphore : semaphores)
+		for(KeySemaphore semaphore : semaphores)
 			supports.add(get(semaphore, intention));
 		return supports;
 	}

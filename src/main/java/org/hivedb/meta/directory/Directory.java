@@ -21,7 +21,7 @@ import org.hivedb.StatisticsProxy;
 import org.hivedb.management.statistics.Counter;
 import org.hivedb.management.statistics.NoOpStatistics;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.NodeSemaphore;
+import org.hivedb.meta.KeySemaphore;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
@@ -170,7 +170,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	/* (non-Javadoc)
 	 * @see org.hivedb.meta.HiveDirectory#getNodeSemamphoresOfPrimaryIndexKey(java.lang.Object)
 	 */
-	public Collection<NodeSemaphore> getNodeSemamphoresOfPrimaryIndexKey(Object primaryIndexKey) {
+	public Collection<KeySemaphore> getNodeSemamphoresOfPrimaryIndexKey(Object primaryIndexKey) {
 		return doRead(sql.selectNodeSemaphoreOfPrimaryIndexKey(partitionDimension), 
 				new Object[] { primaryIndexKey }, 
 				new NodeSemaphoreRowMapper(),
@@ -213,7 +213,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	/* (non-Javadoc)
 	 * @see org.hivedb.meta.HiveDirectory#getNodeSemaphoresOfSecondaryIndexKey(org.hivedb.meta.SecondaryIndex, java.lang.Object)
 	 */
-	public Collection<NodeSemaphore> getNodeSemaphoresOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey)
+	public Collection<KeySemaphore> getNodeSemaphoresOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey)
 	{
 		return doRead(
 			sql.selectNodeSemaphoresOfSecondaryIndexKey(secondaryIndex), 
@@ -291,7 +291,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	
 	public class NodeSemaphoreRowMapper implements ParameterizedRowMapper {
 		public Object mapRow(ResultSet rs, int arg1) throws SQLException {
-			return new NodeSemaphore(rs.getInt("node"), rs.getBoolean("read_only"));
+			return new KeySemaphore(rs.getInt("node"), rs.getBoolean("read_only"));
 		}	
 	}
 
@@ -345,11 +345,11 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	}
 
 	public boolean getReadOnlyOfResourceId(Resource resource, Object id) {
-		Collection<NodeSemaphore> semaphores = getNodeSemaphoresOfSecondaryIndexKey(resource.getIdIndex(), id);
+		Collection<KeySemaphore> semaphores = getNodeSemaphoresOfSecondaryIndexKey(resource.getIdIndex(), id);
 		if( semaphores.size() == 0)
 			throw new HiveKeyNotFoundException(String.format("Unable to find resource %s with id %s", resource.getName(), id), id);
 		boolean readOnly = false;
-		for(NodeSemaphore s : semaphores)
+		for(KeySemaphore s : semaphores)
 			readOnly |= s.isReadOnly();
 		return readOnly;
 	}
@@ -358,7 +358,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 		return Transform.map(semaphoreToId(), getNodeSemaphoresOfSecondaryIndexKey(resource.getIdIndex(), id));
 	}
 	
-	public Collection<NodeSemaphore> getNodeSemaphoresOfResourceId(Resource resource, Object id) {
+	public Collection<KeySemaphore> getNodeSemaphoresOfResourceId(Resource resource, Object id) {
 		return getNodeSemaphoresOfSecondaryIndexKey(resource.getIdIndex(), id);
 	}
 	
@@ -381,18 +381,18 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 				SECONDARY_INDEX_WRITE);
 	}
 	
-	public Unary<NodeSemaphore,Integer> semaphoreToId() {
-		return new Unary<NodeSemaphore, Integer>(){
+	public Unary<KeySemaphore,Integer> semaphoreToId() {
+		return new Unary<KeySemaphore, Integer>(){
 
-			public Integer f(NodeSemaphore item) {
+			public Integer f(KeySemaphore item) {
 				return item.getId();
 			}};
 	}
 	
-	public Unary<NodeSemaphore, Boolean> semaphoreToReadOnly() {
-		return new Unary<NodeSemaphore, Boolean>(){
+	public Unary<KeySemaphore, Boolean> semaphoreToReadOnly() {
+		return new Unary<KeySemaphore, Boolean>(){
 
-			public Boolean f(NodeSemaphore item) {
+			public Boolean f(KeySemaphore item) {
 				return item.isReadOnly();
 			}};
 	}
