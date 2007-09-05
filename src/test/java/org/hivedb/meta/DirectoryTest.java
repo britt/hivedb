@@ -189,7 +189,7 @@ public class DirectoryTest extends H2HiveTestCase {
 		Directory d = getDirectory();
 		for(Integer key : getPrimaryIndexKeys()){
 			d.updatePrimaryIndexKeyReadOnly(key, true);
-			for(NodeSemaphore s : d.getNodeSemamphoresOfPrimaryIndexKey(key))
+			for(KeySemaphore s : d.getNodeSemamphoresOfPrimaryIndexKey(key))
 				assertTrue(s.isReadOnly());
 		}
 	}
@@ -281,7 +281,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	public void testGetNodeSemphoresOfSecondaryIndexKey() throws Exception {
 		insertKeys(getHive());
 		Directory d = getDirectory();
-		Collection<NodeSemaphore> skeys = d.getNodeSemaphoresOfSecondaryIndexKey(nameIndex, secondaryKeyString);
+		Collection<KeySemaphore> skeys = d.getNodeSemaphoresOfSecondaryIndexKey(nameIndex, secondaryKeyString);
 		assertEquals(getPrimaryIndexKeys().size(), skeys.size());
 	}
 	

@@ -17,7 +17,7 @@ import java.util.TreeSet;
 import org.hivedb.meta.Assigner;
 import org.hivedb.meta.ColumnInfo;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.NodeSemaphore;
+import org.hivedb.meta.KeySemaphore;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.PrimaryIndexIdentifiable;
 import org.hivedb.meta.Resource;
@@ -102,7 +102,7 @@ public class HiveScenarioTest {
 					assertTrue(String.format("directory.getSecondaryIndexKeysWithPrimaryKey(%s,%s,%s,%s)", secondaryIndex.getName(), resource.getName(), partitionDimension.getName(), secondaryIndexIdentifiable.getSecondaryIndexKey()),
 							secondaryIndexKeys.contains(secondaryIndexIdentifiable.getSecondaryIndexKey()));
 			
-					Collection<NodeSemaphore> nodeSemaphoreOfSecondaryIndexKeys = directory.getNodeSemaphoresOfSecondaryIndexKey(secondaryIndex, secondaryIndexIdentifiable.getSecondaryIndexKey());
+					Collection<KeySemaphore> nodeSemaphoreOfSecondaryIndexKeys = directory.getNodeSemaphoresOfSecondaryIndexKey(secondaryIndex, secondaryIndexIdentifiable.getSecondaryIndexKey());
 					assertTrue(String.format("directory.getNodeSemaphoresOfSecondaryIndexKey(%s,%s)", secondaryIndex.getName(), secondaryIndexIdentifiable.getSecondaryIndexKey()),
 							   nodeSemaphoreOfSecondaryIndexKeys.size() > 0);
 						
@@ -116,8 +116,8 @@ public class HiveScenarioTest {
 					
 					// Assert that one of the nodes of the secondary index key is the same as that of the primary index key
 					// There are multiple nodes returned when multiple primray index keys exist for a secondary index key
-					Collection<NodeSemaphore> nodeSemaphoreOfPrimaryIndexKey = directory.getNodeSemamphoresOfPrimaryIndexKey(expectedPrimaryIndexKey);
-					for(NodeSemaphore semaphore : nodeSemaphoreOfPrimaryIndexKey)
+					Collection<KeySemaphore> nodeSemaphoreOfPrimaryIndexKey = directory.getNodeSemamphoresOfPrimaryIndexKey(expectedPrimaryIndexKey);
+					for(KeySemaphore semaphore : nodeSemaphoreOfPrimaryIndexKey)
 						assertTrue(Filter.grepItemAgainstList(semaphore, nodeSemaphoreOfSecondaryIndexKeys));						
 				}
 			}	
