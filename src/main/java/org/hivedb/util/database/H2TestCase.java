@@ -48,7 +48,7 @@ public class H2TestCase extends DatabaseTestCase {
 
 	@Override
 	protected String getConnectString(String name) {
-		return String.format("jdbc:h2:mem:%s", name);
+		return String.format("jdbc:h2:mem:%s;LOCK_MODE=3", name);
 	}
 
 	@Override
