@@ -20,12 +20,15 @@ public class TestSyncHive extends H2HiveTestCase {
 	public void setUp() throws Exception {
 		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		hive.addPartitionDimension(createPopulatedPartitionDimension());
-		Node node = createNode(getHiveDatabaseName());
-		node.setName("firstNode");
+		Node node = createNode("firstNode");
 		hive.addNode(Atom.getFirst(hive.getPartitionDimensions()), node);
 		new IndexSchema(Atom.getFirst(hive.getPartitionDimensions())).install();
 	}
 	
+	/**
+	 * Load two Hive instances, use one to update the hive, and have the other listen for updates
+	 * from the HiveSyncDaeon.
+	 */ 
 	@Test
 	public void testDaemonSync() throws Exception {
 		Hive hive = loadHive();
@@ -42,14 +45,6 @@ public class TestSyncHive extends H2HiveTestCase {
 //		nodeReport(passiveSync, hive);
 		
 		Assert.assertNotNull(Atom.getFirstOrNull(passiveSync.getPartitionDimensions()).getNode(createNode(getHiveDatabaseName()).getName()));
-	}
-	
-	@Test
-	public void testSync() throws Exception {
-		Hive hive = loadHive();
-		hive.addNode(Atom.getFirstOrNull(hive.getPartitionDimensions()), createNode(getHiveDatabaseName()));
-		
-		Assert.assertNotNull(Atom.getFirstOrNull(hive.getPartitionDimensions()).getNode(createNode(getHiveDatabaseName()).getName()));
 	}
 	
 	@SuppressWarnings("unused")

@@ -71,10 +71,24 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	 * @param nodes
 	 * @param resources
 	 */
-	public PartitionDimension(String name, int columnType, Collection<Node> nodes,
-			Collection<Resource> resources) {
+	public PartitionDimension(String name, int columnType, Collection<Node> nodes, Collection<Resource> resources) {
 		this(Hive.NEW_OBJECT_ID, name, columnType, nodes, null,
 				resources);
+	}
+	
+	/**
+	 * 
+	 * Create constructor. This version does not require an index URI. The index
+	 * URI will be inherited from the hive so that the indexes are stored at the same
+	 * URI as the hive metadata. This should be the typical configuration.
+	 * 
+	 * @param name
+	 * @param columnType
+	 * @param nodes
+	 * @param resources
+	 */
+	public PartitionDimension(String name, int columnType, Collection<Resource> resources) {
+		this(name, columnType, new ArrayList<Node>(), resources);
 	}
 	
 	/**
@@ -87,8 +101,7 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	 * @param columnType
 	 */
 	public PartitionDimension(String name, int columnType) {
-		this(Hive.NEW_OBJECT_ID, name, columnType, new ArrayList<Node>(), null,
-				new ArrayList<Resource>());
+		this(name, columnType, new ArrayList<Node>(), new ArrayList<Resource>());
 	}
 
 	/**

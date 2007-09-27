@@ -6,7 +6,6 @@ import java.util.Collection;
 import org.hivedb.meta.Finder;
 import org.hivedb.meta.Nameable;
 import org.hivedb.meta.PartitionDimension;
-import org.hivedb.util.InstallHiveIndexSchema;
 
 public class HiveConfigurationHiveFinder implements Finder {
 	
@@ -16,7 +15,7 @@ public class HiveConfigurationHiveFinder implements Finder {
 	private PartitionDimension partitionDimension;
 	public HiveConfigurationHiveFinder(HiveScenarioConfig hiveScenarioConfig) {
 		this.hiveScenarioConfig = hiveScenarioConfig;
-		this.partitionDimension = InstallHiveIndexSchema.createPartitionDimension(hiveScenarioConfig);
+		this.partitionDimension = PartitionDimensionCreator.create(hiveScenarioConfig);
 	}
 	@SuppressWarnings("unchecked")
 	public <T extends Nameable> T findByName(Class<T> forClass, final String name) {

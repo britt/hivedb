@@ -19,7 +19,7 @@ public abstract class Filter {
 	 */
 	public abstract<T> Collection<T> f(Iterable<T> iterable);
 	
-	public static<T> Collection<T> grep(Predicate<T> filterer, Iterable<T> iterable)
+	public static<T> Collection<T> grep(Predicate<T> filterer, Iterable<? extends T> iterable)
 	{
 		List<T> list = new ArrayList<T>();
 		for (T item : iterable)
@@ -71,7 +71,7 @@ public abstract class Filter {
 		return array.length > 0;
 	}
 	
-	public static<T> Boolean isMatch(final Predicate<T> filterer, Iterable<T> iterable)
+	public static<T> Boolean isMatch(final Predicate<T> filterer, Iterable<? extends T> iterable)
 	{
 		for (T item : iterable)
 			if (filterer.f(item))
@@ -103,12 +103,12 @@ public abstract class Filter {
 	// The match is determined by passing all permutations needed of subset and superset item to CompareFunction, which returns true to indicate a match and false otherwise.
 	// Using Grep.EqualsFunction is the same as not passing in any CompareFunction
 	// If you need to pass in an array, use Arrays.asList() to make it iterable
-	public static<SUP,SUB> Collection<SUP> grepAgainstList(final Iterable<SUB> subset, Iterable<SUP> superset, BinaryPredicate<SUB, SUP> compareFunction)
+	public static<SUP,SUB> Collection<SUP> grepAgainstList(final Iterable<? extends SUB> subset, Iterable<? extends SUP> superset, BinaryPredicate<SUB, SUP> compareFunction)
 	{
 		Predicate<SUP> doesThisSupersetItemMatchAnySubsetItem = makeDoesSupersetItemMatchAnySubsetItem(subset, compareFunction);
 		return grep(doesThisSupersetItemMatchAnySubsetItem, superset);
 	}
-	public static<SUP,SUB> boolean grepItemAgainstList(final SUB subItem, Iterable<SUP> superset, BinaryPredicate<SUB, SUP> compareFunction)
+	public static<SUP,SUB> boolean grepItemAgainstList(final SUB subItem, Iterable<? extends SUP> superset, BinaryPredicate<SUB, SUP> compareFunction)
 	{
 		List<SUB> list = new ArrayList<SUB>(1);
 		list.add(subItem);
@@ -128,7 +128,7 @@ public abstract class Filter {
 		Predicate<T> doesThisSupersetItemNotMatchAnySubsetItem = makeDoesSupersetItemNotMatchAnySubsetItem(list, new EqualFunction<T>());
 		return grep(doesThisSupersetItemNotMatchAnySubsetItem, superset);
 	}
-	public static<SUP,SUB> Collection<SUP> grepFalseAgainstList(final Iterable<SUB> subset, Iterable<SUP> superset, BinaryPredicate<SUB, SUP> compareFunction)
+	public static<SUP,SUB> Collection<SUP> grepFalseAgainstList(final Iterable<? extends SUB> subset, Iterable<? extends SUP> superset, BinaryPredicate<SUB, SUP> compareFunction)
 	{
 		Predicate<SUP> doesThisSupersetItemNotMatchAnySubsetItem = makeDoesSupersetItemNotMatchAnySubsetItem(subset, compareFunction);
 		return grep(doesThisSupersetItemNotMatchAnySubsetItem, superset);
@@ -154,7 +154,7 @@ public abstract class Filter {
 	}
 	
 	
-	private static <SUB,SUP> Predicate<SUP> makeDoesSupersetItemMatchAnySubsetItem(final Iterable<SUB> subset, final BinaryPredicate<SUB, SUP> compareFunction) {
+	private static <SUB,SUP> Predicate<SUP> makeDoesSupersetItemMatchAnySubsetItem(final Iterable<? extends SUB> subset, final BinaryPredicate<SUB, SUP> compareFunction) {
 		Predicate<SUP> doesThisSupersetItemMatchAnySubsetItem = new Predicate<SUP>()
 		{
 			public boolean f(final SUP supersetItem)
@@ -170,7 +170,7 @@ public abstract class Filter {
 		};
 		return doesThisSupersetItemMatchAnySubsetItem;
 	}
-	private static <SUB,SUP> Predicate<SUP> makeDoesSupersetItemNotMatchAnySubsetItem(final Iterable<SUB> subset, final BinaryPredicate<SUB, SUP> compareFunction) {
+	private static <SUB,SUP> Predicate<SUP> makeDoesSupersetItemNotMatchAnySubsetItem(final Iterable<? extends SUB> subset, final BinaryPredicate<SUB, SUP> compareFunction) {
 		Predicate<SUP> doesThisSupersetItemMatchAnySubsetItem = new Predicate<SUP>()
 		{
 			public boolean f(final SUP supersetItem)

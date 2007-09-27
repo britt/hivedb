@@ -8,17 +8,17 @@ import java.util.Iterator;
 
 public class RingIteratorable<T> implements Iterator<T>, Iterable<T>
 {
-	Collection<T> collection;
-	Iterator<T> iterator; 
+	Collection<? extends T> collection;
+	Iterator<? extends T> iterator; 
 	int stopAfterThisManyCalls = -1;
 	int numberOfCalls;
 	
-	public RingIteratorable(Collection<T> collection)
+	public RingIteratorable(Collection<? extends T> collection)
 	{
 		this.collection = collection;
 		this.iterator = collection.iterator();
 	}
-	public RingIteratorable(Collection<T> collection, int stopAfterThisManyCalls)
+	public RingIteratorable(Collection<? extends T> collection, int stopAfterThisManyCalls)
 	{
 		this.collection = collection;
 		this.iterator = collection.iterator();

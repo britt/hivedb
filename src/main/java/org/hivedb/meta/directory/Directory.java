@@ -86,8 +86,8 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	 * @see org.hivedb.meta.HiveDirectory#insertSecondaryIndexKey(org.hivedb.meta.SecondaryIndex, java.lang.Object, java.lang.Object)
 	 */
 	public void insertSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey, Object primaryindexKey) {
-		Object[] parameters = new Object[] {secondaryIndexKey,primaryindexKey};
-		int[] types = new int[]{secondaryIndex.getColumnInfo().getColumnType(),secondaryIndex.getResource().getColumnType()};
+		Object[] parameters = new Object[] {secondaryIndexKey, primaryindexKey};
+		int[] types = new int[]{secondaryIndex.getColumnInfo().getColumnType(), secondaryIndex.getResource().getColumnType()};
 		doUpdate(sql.insertSecondaryIndexKey(secondaryIndex), types, parameters, SECONDARY_INDEX_WRITE);
 	}
 	
@@ -277,7 +277,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 		return doRead(
 				sql.selectResourceIdsOfSecondaryIndexKey(secondaryIndex),
 				new Object[] { secondaryIndexKey }, 
-				RowMappers.newObjectRowMapper(secondaryIndex.getColumnInfo().getColumnType()),
+				RowMappers.newObjectRowMapper(secondaryIndex.getResource().getColumnType()),
 				SECONDARY_INDEX_READ);
 	}
 	

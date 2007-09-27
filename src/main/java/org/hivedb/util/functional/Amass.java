@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
-
 public class Amass {
 	public static<C,R> R join(Joiner<C,R> joiner, Iterable<C> iterable, R initialValue)
 	{
@@ -17,7 +16,6 @@ public class Amass {
 		}					
 		return result;
 	}
-	
 	
 	/**
 	 *  Joins with the given function. The initial value is the first item of the iterable
@@ -125,7 +123,11 @@ public class Amass {
 			return rightOnly;
 		}
 	}
+	
 	public static int makeHashCode(Object[] objects) {
+		return makeHashCode(Arrays.asList(objects));
+	}
+	public static int makeHashCode(Collection<Object> objects) {
 		return Amass.join(
 				new Joiner.ConcatHashCodesOfValues(),
 				new Unary<Object, String>() {
@@ -133,7 +135,7 @@ public class Amass {
 						return new Integer(item.hashCode()).toString();
 					}
 				},
-				Arrays.asList(objects)).hashCode();
+				objects).hashCode();
 	}
 
 	@SuppressWarnings("unchecked")

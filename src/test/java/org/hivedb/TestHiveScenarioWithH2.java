@@ -1,36 +1,36 @@
 package org.hivedb;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
+import org.hivedb.meta.Node;
 import org.hivedb.util.database.H2HiveTestCase;
-import org.hivedb.util.scenarioBuilder.HiveScenarioMarauderConfig;
+import org.hivedb.util.functional.Transform;
+import org.hivedb.util.functional.Unary;
 import org.testng.annotations.Test;
 
 public class TestHiveScenarioWithH2 extends H2HiveTestCase {
-	
-	/**
-	 *  Fills a hive with metadata and indexes to validate CRUD operations
-	 * 
-	 */
-//	@Test
-	public void testPirateDomain() throws Exception {
-		new HiveScenarioTest(new HiveScenarioMarauderConfig(getConnectString(getHiveDatabaseName()), getDataUris())).performTest(100,0);
+	@Test
+	public void testResourceOnlyEntity() {
+		new TestHiveScenario(getConnectString(getHiveDatabaseName()), getDataNodes()).testResourceEntity();
 	}
-	private Collection<String> getDataUris() {
-		Collection<String> uris = new ArrayList<String>();
-		for(String name : getDataNodeNames())
-			uris.add(getConnectString(name));
-		return uris;
+	@Test
+	public void testResourceAndPartitionDimensionEntity() {
+		new TestHiveScenario(getConnectString(getHiveDatabaseName()), getDataNodes()).testResourceAndPartitionDimensionEntity();
 	}
-	
+	private Collection<Node> getDataNodes() {
+		return Transform.map(new Unary<String, Node>() {
+			public Node f(String dataNodeName) {
+				return new Node(dataNodeName, getConnectString(dataNodeName));
+		}},
+		getDataNodeNames());
+	}
 	private Collection<String> getDataNodeNames() {
 		return Arrays.asList(new String[]{"data1","data2","data3"});
 	}
-
-	@Override
+	@SuppressWarnings("unchecked")
 	public Collection<String> getDatabaseNames() {
-		return Arrays.asList(new String[]{getHiveDatabaseName(),"data1","data2","data3"});
+		return Transform.flatten(Collections.singletonList(getHiveDatabaseName()),getDataNodeNames());
 	}
 }

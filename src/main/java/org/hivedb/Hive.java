@@ -23,8 +23,8 @@ import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.IndexSchema;
-import org.hivedb.meta.Node;
 import org.hivedb.meta.KeySemaphore;
+import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
@@ -434,8 +434,12 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		partitionStatistics.incrementChildRecordCount(secondaryIndex.getResource(), resourceId, 1);
 	}
 
-	public void insertSecondaryIndexKey(String secondaryIndexName, String resourceName, String partitionDimensionName,
-			Object secondaryIndexKey, Object resourceId) throws HiveReadOnlyException {
+	public void insertSecondaryIndexKey(
+			String secondaryIndexName, 
+			String resourceName, 
+			String partitionDimensionName,
+			Object secondaryIndexKey,
+			Object resourceId) throws HiveReadOnlyException {
 		insertSecondaryIndexKey(getPartitionDimension(partitionDimensionName)
 				.getResource(resourceName)
 				.getSecondaryIndex(secondaryIndexName), secondaryIndexKey,
@@ -455,9 +459,8 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	public void updatePrimaryIndexReadOnly(String partitionDimensionName,
 			Object primaryIndexKey, boolean isReadOnly) throws HiveReadOnlyException {
 		PartitionDimension partitionDimension = getPartitionDimension(partitionDimensionName);
-		Collection<KeySemaphore> semaphores = directories.get(partitionDimensionName).getNodeSemamphoresOfPrimaryIndexKey(primaryIndexKey);
-		Preconditions.isWritable(semaphores);
-		
+		Collection<KeySemaphore> semaphores = directories.get(partitionDimensionName). getNodeSemamphoresOfPrimaryIndexKey(primaryIndexKey);
+		Preconditions.isWritable(HiveUtils.getNodesForSemaphores(semaphores, partitionDimension));
 		directories.get(partitionDimension.getName()).updatePrimaryIndexKeyReadOnly(primaryIndexKey, isReadOnly);
 	}
 

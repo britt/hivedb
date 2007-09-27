@@ -15,6 +15,7 @@ import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.functional.Binary;
 import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Maps;
 import org.hivedb.util.functional.Pair;
 import org.hivedb.util.functional.Ternary;
 import org.hivedb.util.functional.Transform;
@@ -22,8 +23,16 @@ import org.hivedb.util.functional.Unary;
 import org.hivedb.util.functional.Filter.BinaryPredicate;
 import org.hivedb.util.scenarioBuilder.HiveConfigurationHiveFinder;
 import org.hivedb.util.scenarioBuilder.HiveScenarioConfig;
-import org.hivedb.util.functional.Maps;
 
+/**
+ * HiveUpdater updates a hive to the configuration of a HiveScenarioConfig. When the HiveScenarioConfig's 
+ * configuration of its primary index, resources, and secondary indexes differ from that of its Hive
+ * instance, it will update the referenced hive to match its configuration. This includes name changes,
+ * and the addition or removal of resources and secondary indexes.
+ * 
+ * @author Andy Likuski
+ * TODO rename HiveUpdater
+ */
 public class HiveSyncer {
 
 	private HiveFinder hiveFinder;
@@ -33,13 +42,21 @@ public class HiveSyncer {
 		this.hive = hive;
 		this.hiveFinder = new HiveFinder(hive);
 	}
+	/**
+	 *  Sync a Hive to the configuration of the given HiveScenarioConfig. This is an additive process only:
+	 *  If the Hive contains Partition Dimensions, Resources, Secondary Indexes, or Data Nodes not
+	 *  specified by the HiveScenarioConfig they will be left alone, not deleted.
+	 * @param hiveScenarioConfig
+	 * @return
+	 */
 	public HiveDiff syncHive(HiveScenarioConfig hiveScenarioConfig)
 	{
-		HiveDiff hiveDiff = diffHive(hiveScenarioConfig);
+		HiveDiff hiveDiff = diffHive(
+			new HiveConfigurationHiveFinder(hiveScenarioConfig));
 		
-		// Sync missing secondary indexes
-		Maps.digMapToCollection(new Ternary<PartitionDimension, Resource, SecondaryIndex, SecondaryIndex>() {
-			public SecondaryIndex f(PartitionDimension partitionDimension, Resource resource, SecondaryIndex secondaryIndex) {
+		// Add missing secondary indexes
+		Maps.digMapToCollection(new Ternary<PartitionDimension, Resource, SecondaryIndex, Void>() {
+			public Void f(PartitionDimension partitionDimension, Resource resource, SecondaryIndex secondaryIndex) {
 				try {
 					hive.addSecondaryIndex(resource, secondaryIndex);
 				} catch (HiveException e) {
@@ -48,14 +65,14 @@ public class HiveSyncer {
 							resource.getName(),
 							secondaryIndex.getName()));
 				}
-				return secondaryIndex;
+				return null;
 			}
 		}, hiveDiff.getMissingSecondaryIndexesOfExistingResources());
 		
-		// Sync missing resources
-		Maps.digMapToCollection(new Binary<PartitionDimension, Resource, Resource>() {
+		// Add missing resources
+		Maps.digMapToCollection(new Binary<PartitionDimension, Resource, Void>() {
 			
-			public Resource f(PartitionDimension partitionDimension, Resource resource) {
+			public Void f(PartitionDimension partitionDimension, Resource resource) {
 				try {
 					hive.addResource(partitionDimension.getName(), resource);
 				} catch (HiveException e) {
@@ -63,13 +80,13 @@ public class HiveSyncer {
 							partitionDimension.getName(),
 							resource.getName()), e);
 				}
-				return resource;
+				return null;
 			}
 		}, hiveDiff.getMissingResourcesOfExistingPartitionDimension());
 		
-		// Sync missing nodes
-		Maps.digMapToCollection(new Binary<PartitionDimension, Node, Node>() {
-			public Node f(PartitionDimension partitionDimension, Node node) {
+		// Add missing nodes
+		Maps.digMapToCollection(new Binary<PartitionDimension, Node, Void>() {
+			public Void f(PartitionDimension partitionDimension, Node node) {
 				try {
 					hive.addNode(partitionDimension, node);
 				} catch (HiveException e) {
@@ -77,23 +94,22 @@ public class HiveSyncer {
 							partitionDimension.getName(),
 							node.getName()), e);
 				}
-				return node;
+				return null;
 			}
 		}, hiveDiff.getMissingNodesOfExistingPartitionDimension());
 		
-		// Sync missing partition dimensions
-		Transform.map(new Unary<PartitionDimension, PartitionDimension>() {
-				public PartitionDimension f(PartitionDimension partitionDimension) {
+		// Add missing partition dimensions
+		Transform.map(new Unary<PartitionDimension, Void>() {
+				public Void f(PartitionDimension partitionDimension) {
 					try {
 						hive.addPartitionDimension(partitionDimension);
 					} catch (HiveException e) {
 						throw new HiveRuntimeException(String.format("Unable to add partition dimension %s to the hive",
 								partitionDimension.getName()), e);
 					}
-					return partitionDimension;
+					return null;
 				}
-			},
-			hiveDiff.getMissingPartitionDimensions());
+		},	hiveDiff.getMissingPartitionDimensions());
 		
 		return hiveDiff;
 	}
@@ -104,11 +120,8 @@ public class HiveSyncer {
 	 * @return a HiveDiff class that describes what partition dimensions are missing, what resources and nodes are missing
 	 * from existing partion dimensions, and what secondary indexes are missing from existing resources
 	 */
-	public HiveDiff diffHive(HiveScenarioConfig hiveScenarioConfig)
+	public HiveDiff diffHive(final HiveConfigurationHiveFinder updater)
 	{	
-		// Add missing partition dimensions
-		final Finder updater =  new HiveConfigurationHiveFinder(hiveScenarioConfig);
-		
 		Collection<PartitionDimension> missingPartitionDimensions = getMissingItems(PartitionDimension.class, hiveFinder, updater);
 		
 		Collection<Entry<PartitionDimension, PartitionDimension>> partitionDimensionPairs =	getLikeNamedInstances(PartitionDimension.class, hiveFinder, updater);
@@ -127,8 +140,8 @@ public class HiveSyncer {
 						try {
 							Collection<Entry<Resource, Resource>> resourcePairs = getLikeNamedInstances(
 									Resource.class, 
-									(Finder)hiveFinder.findByName(PartitionDimension.class, partitionDimension.getName()), 
-									(Finder)updater.findByName(PartitionDimension.class, partitionDimension.getName()));
+									hiveFinder.findByName(PartitionDimension.class, partitionDimension.getName()), 
+									updater.findByName(PartitionDimension.class, partitionDimension.getName()));
 							return getMissingItems(SecondaryIndex.class, resourcePairs);
 						} catch (Exception e) { throw new RuntimeException(e); }
 				}},

@@ -66,6 +66,10 @@ public abstract class DatabaseTestCase {
 		}
 	}
 
+	/**
+	 * The name of all databases that need to be created and deleted by this test
+	 * @return
+	 */
 	public Collection<String> getDatabaseNames() {
 		return this.databaseNames;
 	}

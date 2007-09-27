@@ -1,9 +1,16 @@
 package org.hivedb.util;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 
+import org.hivedb.util.functional.Amass;
+import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Predicate;
 import org.hivedb.util.functional.Transform;
@@ -11,33 +18,85 @@ import org.hivedb.util.functional.Unary;
 
 public class ReflectionTools {
 	
+	/**
+	 *  Creates a hash code based on the getters of an interface
+	 * @param clazz
+	 * @return
+	 */
+	public static <T> int getInterfaceHashCode(T instance, Class<T> basedUponThisInterface) {
+		return Amass.makeHashCode(invokeGetters(instance, basedUponThisInterface));
+	}
 	// Since Java has dumb getters and setters, this helps match
 	// a private field to it's corresponding getter and/or setter
 	public static String capitalize(String s) {
 	    if (s.length() == 0) return s;
 	    return s.substring(0, 1).toUpperCase() + s.substring(1);
 	}
+	public static boolean isGetter(String s) {
+		return s.startsWith("get");
+	}
+	public static boolean isSetter(String s) {
+		return s.startsWith("set");
+	}
+	
+	/*
+	 *  Strip the get or set off a getter or setter and lower case
+	 *  the name to rveal the underlying property name
+	 * 
+	 */
+	public static String getPropertyNameOfAccessor(Method accessor)
+	{
+		return accessor.getName().substring(3,4).toLowerCase()
+			+ accessor.getName().substring(4);
+	}
+	public static boolean isGetter(Method method) {
+		return 
+			method.getName().startsWith("get") &&
+			method.getReturnType() != void.class &&
+			method.getParameterTypes().length == 0;
+	}
+	public static boolean isSetter(Method method) {
+		return 
+			method.getName().startsWith("set") &&
+			method.getReturnType() == void.class &&
+			method.getParameterTypes().length == 1;
+	}
+	public static Method getCorrespondingSetter(Object instance, String getterName, Class argumentType) {
+		try {
+			return instance.getClass().getMethod("set" + getterName.substring(3), new Class[] {argumentType});
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	public static Method getCorrespondingGetter(Object instance, String setterName) {
+		try {
+			return instance.getClass().getMethod("get" + setterName.substring(3), new Class[] {});
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
 	public static Collection<Method> getDeclaredPublicMethods(Class subject) {
 		return Filter.grepAgainstList( // get declared in the class and public
 			   Arrays.asList(subject.getMethods()),						   
 			   Arrays.asList(subject.getDeclaredMethods()));
 	}
-	public static boolean doesImplement(Class doesClass, Class implementThisInterface)
+	public static boolean doesImplementOrExtend(Class doesClass, Class implementOrExtendThisClass)
 	{
-		return doesClass.equals(implementThisInterface) ||
-			doesImplement(doesClass.getInterfaces(), implementThisInterface) ||
+		return doesClass.equals(implementOrExtendThisClass) ||
+			doesImplementOrExtend(doesClass.getInterfaces(), implementOrExtendThisClass) ||
 				(doesClass.getSuperclass() != null &&
 				!doesClass.getSuperclass().equals(Object.class) &&	
-				 doesImplement(doesClass.getSuperclass(), implementThisInterface));
+				 doesImplementOrExtend(doesClass.getSuperclass(), implementOrExtendThisClass));
 		 
 	}
-	public static boolean doesImplement(final Class[] doesOneOfThese, final Class matchOrImplementThisInterface)
+	
+	public static boolean doesImplementOrExtend(final Class[] doesOneOfThese, final Class matchOrImplementThisInterface)
 	{
 		return Filter.isMatch(new Predicate<Class>() {
 			
 			public boolean f(Class anInterface) {
 				return anInterface.equals(matchOrImplementThisInterface) || 
-						doesImplement(anInterface.getInterfaces(), matchOrImplementThisInterface);
+						doesImplementOrExtend(anInterface.getInterfaces(), matchOrImplementThisInterface);
 					
 			}},
 			doesOneOfThese);
@@ -108,4 +167,226 @@ public class ReflectionTools {
 			throw new RuntimeException();
 		}
 	}
+	public static<T> Collection<Method> getNullFields(final T checkMembersOfThis, Class<T> basedUponThisInterface) {
+		return
+			new MethodGrepper<T>() {
+				public boolean invokableMemberPredicate(Method getter) {
+					try {
+						return getter.invoke(checkMembersOfThis) == null;
+					} catch(Exception e) {
+						throw new RuntimeException(e);
+					}
+				}
+			}.grepMethods(basedUponThisInterface);
+	}
+	public static<T> Collection<Object> invokeGetters(final T instance, Class<T> basedUponThisInterface) {
+		return Transform.map(new Unary<Method, Object>() {
+			public Object f(Method method) {
+				try {
+					return method.invoke(instance, new Object[] {});
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+			}},
+			getGetters(basedUponThisInterface));	
+	}
+	public static Object invokeGetter(Object instance, String propertyName)
+    {
+		final String getterName = "get"+capitalize(propertyName);
+		// try to match on the value's type
+    	try {
+    		return instance.getClass().getMethod(getterName, new Class[] {})
+    			.invoke(instance, new Object[] {});
+    	}
+    	catch (Exception e) {
+	    	throw new RuntimeException(String.format("Error invoking %s of class %s", getterName, instance), e);
+    	}
+    }
+	
+	public static void invokeSetter(Object instance, String propertyName, Object value)
+    {
+		final String setterName = "set"+capitalize(propertyName);
+		// try to match on the value's type
+    	try {
+    		instance.getClass().getMethod(setterName, new Class[] {value.getClass()})
+    			.invoke(instance, new Object[] {value});
+    	}
+    	catch (Exception exception) {
+    		// iterate through all methods until a name-matched setter is found
+    		try {
+	    		getMethod(instance, setterName).invoke(instance, new Object[] {value});
+    		}
+	    	catch (Exception e)
+	    	{
+	    		throw new RuntimeException("Exception calling method set" + propertyName 
+	    								+ " with a value of type " + value.getClass(), e);
+	    	}
+    	}
+    }
+	private static Method getMethod(Object instance, final String setterName) {
+		return Filter.grepSingle(
+			new Predicate<Method>() {	public boolean f(Method m) {
+				return m.getName().equals(setterName);						
+			}},
+			Arrays.asList(instance.getClass().getMethods()));
+	}
+	
+	public static<T> Collection<Method> getGetters(final Class<T> ofThisInterface) {
+		return new MethodGrepper<T>().grepMethods(ofThisInterface);
+	}
+	
+	public static<T> DiffCollection getEqualFields(final T expected, final T actual, Class<T> basedUponThisInterface) { 
+		return compareFields(expected, actual, basedUponThisInterface, new Filter.EqualFunction<Object>());
+	}
+	
+	public static<T> DiffCollection getDifferingFields(final T expected, final T actual, Class<T> basedUponThisInterface) {
+		return compareFields(expected, actual, basedUponThisInterface, new Filter.UnequalFunction<Object>());
+	}
+	public static class Diff
+	{
+		private Method method;
+		private Object fieldValueOfInstance1;
+		private Object fieldValueOfInstance2;
+		public Diff(Method method, Object fieldValueOfInstance1, Object fieldValueOfInstance2)
+		{
+			this.method = method;
+			this.fieldValueOfInstance1 = fieldValueOfInstance1;
+			this.fieldValueOfInstance2 = fieldValueOfInstance2;
+		}
+		public Object getFieldOfInstance1() {
+			return fieldValueOfInstance1;
+		}
+		public Object getFieldOfInstance2() {
+			return fieldValueOfInstance2;
+		}
+		public Method getMethod() {
+			return method;
+		}
+	
+		public String toString() {			
+			return String.format("Method: %s, FieldValue1: %s, FieldValue2: %s", method, fieldValueOfInstance1, fieldValueOfInstance2);
+		}
+	}
+	public static class DiffCollection extends ArrayList<Diff>
+	{
+		private static final long serialVersionUID = 1L;
+
+		public DiffCollection(Collection<Diff> c) {
+			super(c);
+		}
+		public boolean containsGetter(final String getterName)
+		{
+			return Filter.isMatch(new Predicate<Diff>() {
+				public boolean f(Diff diff) {
+					return diff.getMethod().getName().equals(getterName);
+				}
+			}, this);
+		}
+	}
+	
+	private static <T> DiffCollection compareFields(final T expected, final T actual, Class<T> basedUponThisInterface, final Filter.BinaryPredicate<Object, Object> compare) {
+		return 
+			new DiffCollection(Transform.map(new Unary<Method, Diff>() {
+			public Diff f(Method getter) {
+				try {
+					return new Diff(getter, getter.invoke(expected), getter.invoke((actual)));
+				} catch(Exception e) {
+					throw new RuntimeException(e);
+				}
+			}},
+			new MethodGrepper<T>() {
+				public boolean invokableMemberPredicate(Method getter) {
+					try {
+						if (expected == null || actual == null)
+							return !(expected==null ^ actual==null);
+						return compare.f(wrapIfNeeded(getter.invoke(expected)), wrapIfNeeded(getter.invoke((actual))));
+					} catch(Exception e) {
+						throw new RuntimeException(e);
+					}
+				}
+				@SuppressWarnings("unchecked")
+				private Object wrapIfNeeded(Object fieldValue)
+				{
+					if (fieldValue instanceof Collection)
+						return new HashSet((Collection)fieldValue);
+					return fieldValue;
+				}
+			}.grepMethods(basedUponThisInterface)));
+		
+	}
+	
+	private static class MethodGrepper<T> {
+		public Collection<Method> grepMethods(Class<T> basedUponThisInterface) {
+			return Filter.grep(new Predicate<Method>() {
+					public boolean f(Method method) {
+						try {
+							return isGetter(method) &&
+								method.getParameterTypes().length == 0 &&
+								invokableMemberPredicate(method);
+						} catch (Exception e) {
+							throw new RuntimeException(e);
+						}
+					}
+				},
+				Arrays.asList(basedUponThisInterface.getMethods()));
+		}
+		/**
+		 *  Override this to filter for specific methods
+		 * @param getter
+		 * @return
+		 */
+		public boolean invokableMemberPredicate(Method getter) { return true; }
+	}
+
+	public static class AccessorGrepper<T> {
+		public Collection<Method> grepAccessors(Class<? extends T> basedUponThisInterface) {
+			return Filter.grep(new Predicate<Method>() {
+					public boolean f(Method method) {
+						try {
+							return ReflectionTools.doesImplementOrExtend(
+										method.getReturnType(),
+										AccessorFunction.class) &&
+								 invokableMemberPredicate(method);
+						} catch (Exception e) {
+							throw new RuntimeException(e);
+						}
+					}
+				},
+				Arrays.asList(basedUponThisInterface.getMethods()));
+		}
+		/**
+		 *  Override this to filter for specific methods
+		 * @param accessor
+		 * @return
+		 */
+		public boolean invokableMemberPredicate(Method accessor) { return true; }
+		
+	}
+
+	public static Class<?> getPropertyType(final Class<?> ofThisInterface, String propertyName) {
+		try {
+			return ofThisInterface.getMethod("get"+capitalize(propertyName), new Class[] {}).getReturnType();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	public static Class<?> getCollectionItemType(final Class<?> ofThisInterface, String propertyName) {	
+		
+		Type type;
+		try {
+			type = ofThisInterface.getMethod("get"+capitalize(propertyName), new Class[] {}).getGenericReturnType();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	
+		if (type instanceof ParameterizedType) {
+			Type typeArgument = Atom.getFirstOrThrow(((ParameterizedType)type).getActualTypeArguments());
+			return (Class)(typeArgument instanceof WildcardType
+						? Atom.getFirstOrThrow(((WildcardType)typeArgument).getUpperBounds())
+						: typeArgument);
+		}
+		else
+			throw new RuntimeException(String.format("Expected ParameterizedType or WildcardType: %s", type));	
+	}
+
 }

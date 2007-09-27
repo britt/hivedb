@@ -14,6 +14,14 @@ import org.apache.log4j.Logger;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
 
+/**
+ *  HiveSyncDaemon continually polls the hive and notifies listeners when
+ *  the revision number increments. Listeners use this notification to reload the hive.
+ *  The hive's revision number increase increments when any metadata of the hive changes,
+ *  such as a new data node or secondary index. See Hive for more details.
+ * @author Britt Crawford
+ *
+ */
 public class HiveSyncDaemon extends Thread {
 	Logger log = Logger.getLogger(HiveSyncDaemon.class);
 	private Observable hiveStatus;

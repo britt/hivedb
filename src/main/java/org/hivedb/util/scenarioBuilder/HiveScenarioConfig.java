@@ -4,25 +4,29 @@ import java.util.Collection;
 
 import org.hivedb.Hive;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.PrimaryIndexIdentifiable;
+import org.hivedb.meta.ResourceIdentifiable;
 
 /**
- *  An interface to allow generating a hive schema and filling it with test data.
- *  The interface allows listing of various classes to represent a PartitionDimension and/or Resource
- *  PartitionDimension classes must implement PrimaryIndexIdentifiable to allow the HiveScenario to mode a PartitionDimension after it
- *  Resource classes must implement ResourceIdentifiable which in turn references a collection of SecondaryIndexIdentifiable instances.
- *  A class may be both a PrimaryIndexIdentifiable and ResourceIdentifiable if it is the basis of the PartitionDimension but also
- *  has SecondaryIndexes, such as an index for its getName() values.
+ *  An interface representing the configuration of a class that is represented as a resource in the hive.
  * @author andylikuski
  *
  */
 public interface HiveScenarioConfig {
 	
-	PrimaryIndexIdentifiable getPrimaryIndexIdentifiable();
+	/**
+	 *  A tree of prototype instances representing the classes stored in the hive. The primaryIndexIdentifiable represents the partition dimension class.
+	 *  The PrimaryIndexIdentifiable possesses one or more ResourceIdentifiable instances representing the resource classes.
+	 *  Each ResourceIdentifiable possesses or or more SecondaryIndexIdentifiable instances represnting secondary index classes. 
+	 * @return The top of the tree, the PrimaryIndexIdentifiable
+	 */
+	ResourceIdentifiable<Object> getResourceIdentifiable();
 	
-	Hive getHive();
-	// The URI of the database that stores the hive indexes. This will probably always be the same as the hive URI, and might go away
-	String getHiveIndexesUri();
-	// The nodes of representing the data storage databases.
 	Collection<Node> getDataNodes();
+	/**
+	 *  Returns the location and current configuration of the hive. The hive's current configuration should match that of the PrimaryIndexIdentifiable 
+	 *  and its subordinates. If the PrimaryIndexIdentifiable structure has been updated then the Hive should be synced to it using HiveSyncer.
+	 * @return
+	 */
+	Hive getHive();
+	
 }
