@@ -144,6 +144,10 @@ public class IndexSqlFormatter {
 	}
 	
 	public String checkExistenceOfSecondaryIndexSql( SecondaryIndex secondaryIndex) {
+		return String.format("select id from %s where id = ? and pkey = ?", IndexSchema.getSecondaryIndexTableName(secondaryIndex));
+	}
+	
+	public String checkExistenceOfResourceIndexSql( SecondaryIndex secondaryIndex) {
 		return String.format("select id from %s where id = ?", IndexSchema.getSecondaryIndexTableName(secondaryIndex));
 	}
 	
@@ -164,9 +168,12 @@ public class IndexSqlFormatter {
 	 */
 
 	public String selectResourceIdsOfSecondaryIndexKey(SecondaryIndex secondaryIndex) {
+		final Resource resource = secondaryIndex.getResource();
+		if (resource.isPartitioningResource())
+			return selectPrimaryIndexKeysOfSecondaryIndexKey(secondaryIndex);
 		return String.format(
 				"select r.id from %s r join %s s on s.pkey = r.id where s.id = ?",
-				IndexSchema.getSecondaryIndexTableName(secondaryIndex.getResource().getIdIndex()),
+				IndexSchema.getSecondaryIndexTableName(resource.getIdIndex()),
 				IndexSchema.getSecondaryIndexTableName(secondaryIndex));
 	}
 	
@@ -193,7 +200,7 @@ public class IndexSqlFormatter {
 	
 	public String selectSecondaryIndexKeyOfResourceId(SecondaryIndex secondaryIndex) {
 		return String.format(
-				"select s.id from %s s join %s r on s.pkey = r.id where r.id = ?", 
+				"select s.id from %s s where s.pkey = ?", 
 				IndexSchema.getSecondaryIndexTableName(secondaryIndex),
 				IndexSchema.getSecondaryIndexTableName(secondaryIndex.getResource().getIdIndex()));
 	}

@@ -3,8 +3,10 @@ package org.hivedb.util.scenarioBuilder;
 import java.util.Collection;
 
 import org.hivedb.HiveException;
+import org.hivedb.meta.HiveConfig;
 import org.hivedb.util.GenerateHiveIndexKeys;
 import org.hivedb.util.InstallHiveIndexSchema;
+import org.hivedb.util.Persister;
 import org.hivedb.util.PersisterImpl;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Transform;
@@ -25,7 +27,7 @@ public class HiveScenario {
 	/**
 	 *  Create a hive based on the give HiveScenarioConfig and dataNodes. Populate the primary index, resource,
 	 *  and secondary index rows with generated values.
-	 * @param hiveScenarioConfig - A configuration describing a hive
+	 * @param hiveConfig - A configuration describing a hive
 	 * @param primaryIndexInstanceCount - The number of primary index rows to create
 	 * @param resourceInstanceCount - The number of resource rows to create. Resource indexes will be
 	 * assigned round-robing to the created primary index rows. 
@@ -33,54 +35,44 @@ public class HiveScenario {
 	 * that represent each row inserted in the Hive indexes.
 	 * @throws HiveException
 	 */
-	public static HiveScenario run(HiveScenarioConfig hiveScenarioConfig, int primaryIndexInstanceCount, int resourceInstanceCount) {
-		InstallHiveIndexSchema.install(hiveScenarioConfig);
-		HiveScenario hiveScenario = new HiveScenario(hiveScenarioConfig, primaryIndexInstanceCount, resourceInstanceCount);
+	public static HiveScenario run(HiveConfig hiveConfig, int primaryIndexInstanceCount, int resourceInstanceCount, Persister persister) {
+		InstallHiveIndexSchema.install(hiveConfig);
+		HiveScenario hiveScenario = new HiveScenario(hiveConfig, primaryIndexInstanceCount, resourceInstanceCount, persister);
 		return hiveScenario;
 	}
 
-	private final  HiveScenarioConfig hiveScenarioConfig;
+	private final  HiveConfig hiveConfig;
 	Collection<Object> primaryIndexKeys;
 	Collection<Object> resourceinstances;
-	protected HiveScenario(final HiveScenarioConfig hiveScenarioConfig, int primaryIndexInstanceCount, int resourceInstanceCount)
+	protected HiveScenario(final HiveConfig hiveConfig, int primaryIndexInstanceCount, int resourceInstanceCount, final Persister persister)
 	{
-		this.hiveScenarioConfig = hiveScenarioConfig; 
+		this.hiveConfig = hiveConfig; 
 		GenerateHiveIndexKeys generateHiveIndexKeys = new GenerateHiveIndexKeys(
-				new PersisterImpl(), 
+				persister, 
 				primaryIndexInstanceCount,
 				resourceInstanceCount);
 		 
 			
-		this.resourceinstances = generateHiveIndexKeys.createResourceInstances(hiveScenarioConfig);
+		this.resourceinstances = generateHiveIndexKeys.createResourceInstances(hiveConfig);
 		this.primaryIndexKeys = Filter.getUnique(
 			Transform.map(new Unary<Object,Object>() {
 				public Object f(Object resourceInstance) {
-					return hiveScenarioConfig.getResourceIdentifiable().getPrimaryIndexIdentifiable().getPrimaryIndexKey(resourceInstance);
-				
+					return hiveConfig.getEntityConfig().getPrimaryIndexKey(resourceInstance);
 				}},
 				resourceinstances));
 	}
-	
-	/** 
-	 * @return The PrimaryIndexIdentifiable instances created to correspond to each row inserted in 
-	 * the hive's primary index. Use these instances to verify the integrity of the Hive or as representations
-	 * of your business objects that are the primary index of the hive.
-	 */
+
 	public Collection<Object> getGeneratedPrimaryIndexKeys()
 	{
 		return primaryIndexKeys;
 	}
-	/** 
-	 * @return The ResourceIdentifiable instances created to correspond to each row inserted in 
-	 * the each of the hive's resource index. Use these instances to verify the integrity of the Hive or as represetations
-	 * of your business objects that are the resources of the hive.
-	 */
+
 	public Collection<Object> getGeneratedResourceInstances() {
 		return resourceinstances;
 	}
 
-	public HiveScenarioConfig getHiveScenarioConfig() {
-		return hiveScenarioConfig;
+	public HiveConfig getHiveConfig() {
+		return hiveConfig;
 	}
 }
 

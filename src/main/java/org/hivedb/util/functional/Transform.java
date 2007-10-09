@@ -121,6 +121,13 @@ public class Transform {
 			map.put(entry.getKey(), entry.getValue());
 		return map;
 	}
+	public static<K,V,I> Map<K,V> toOrderedMap(Unary<I,K> keyMapper, Unary<I,V> valueMapper, Iterable<I> iterable)
+	{
+		Map<K,V> map = new OrderedDebugMap<K,V>();
+		for (I item : iterable)
+			map.put(keyMapper.f(item), valueMapper.f(item));
+		return map;
+	}
 
 	public static<K,V> Map<V, K> reverseMap(Map<K, V> map) {
 		return

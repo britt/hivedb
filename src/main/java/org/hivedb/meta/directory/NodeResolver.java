@@ -56,9 +56,10 @@ public interface NodeResolver {
 	 * Test the existence of a secondary index key
 	 * @param secondaryIndex
 	 * @param secondaryIndexKey
+	 * @param resourceId
 	 * @return
 	 */
-	public boolean doesSecondaryIndexKeyExist(SecondaryIndex secondaryIndex, Object secondaryIndexKey);
+	public boolean doesSecondaryIndexKeyExist(SecondaryIndex secondaryIndex, Object secondaryIndexKey, Object resourceId);
 
 	/***
 	 * Get the ids of the nodes on which a secondary keys records are stored.

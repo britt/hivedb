@@ -6,22 +6,22 @@ import java.util.Collections;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveScenarioTest;
+import org.hivedb.meta.HiveConfig;
 import org.hivedb.meta.Node;
 import org.hivedb.util.database.H2HiveTestCase;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
-import org.hivedb.util.scenarioBuilder.HiveScenarioConfig;
 import org.hivedb.util.scenarioBuilder.HiveScenarioConfigForResourceEntity;
 import org.testng.annotations.Test;
 
 public class TestHiveUpdater extends H2HiveTestCase {
 	@Test
 	public void testHiveUpdater() {
-		HiveScenarioConfig hiveScenarioConfig = new HiveScenarioConfigForResourceEntity(
+		HiveConfig hiveConfig = new HiveScenarioConfigForResourceEntity(
 			Hive.load(getConnectString(getHiveDatabaseName())),
 			getDataNodes());
-		new HiveScenarioTest(hiveScenarioConfig)
-			.performTest(10, 20);
+		new HiveScenarioTest(hiveConfig)
+			.performTest(10, 2, new PersisterImpl());
 		
 	}
 	private Collection<Node> getDataNodes() {

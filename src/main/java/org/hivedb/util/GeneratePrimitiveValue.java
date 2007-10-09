@@ -18,7 +18,7 @@ public class GeneratePrimitiveValue<F> implements Generator<F> {
 	/**
 	 *  Generate random values that are zero or positive when applicable
 	 */
-	public F f() {
+	public F generate() {
 		if (PrimitiveUtils.isInteger(clazz))
 			return (F)new Integer(Math.abs(random.nextInt(Integer.MAX_VALUE))); 
 		else if (PrimitiveUtils.isLong(clazz))

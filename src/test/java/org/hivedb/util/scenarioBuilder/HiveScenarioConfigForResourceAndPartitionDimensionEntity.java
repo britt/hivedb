@@ -6,10 +6,11 @@ package org.hivedb.util.scenarioBuilder;
 import java.util.Collection;
 
 import org.hivedb.Hive;
+import org.hivedb.meta.HiveConfig;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.ResourceIdentifiable;
+import org.hivedb.meta.EntityConfig;
 
-public class HiveScenarioConfigForResourceAndPartitionDimensionEntity implements HiveScenarioConfig {
+public class HiveScenarioConfigForResourceAndPartitionDimensionEntity implements HiveConfig {
 	
 	private Hive hive;
 	private Collection<Node> dataNodes;
@@ -22,7 +23,7 @@ public class HiveScenarioConfigForResourceAndPartitionDimensionEntity implements
 		return hive;
 	}
 
-	public  ResourceIdentifiable<Object> getResourceIdentifiable() {
+	public  EntityConfig<Object> getEntityConfig() {
 		return HiveScenarioMarauderClasses.getPirateConfiguration();
 	}
 

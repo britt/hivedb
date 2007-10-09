@@ -4,51 +4,58 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.hivedb.meta.PrimaryIndexIdentifiableImpl;
-import org.hivedb.meta.ResourceIdentifiable;
-import org.hivedb.meta.ResourceIdentifiableImpl;
-import org.hivedb.meta.SecondaryIndexIdentifiable;
-import org.hivedb.meta.SecondaryIndexIdentifiableImpl;
+import org.hivedb.meta.EntityConfig;
+import org.hivedb.meta.EntityConfigImpl;
+import org.hivedb.meta.EntityIndexConfig;
+import org.hivedb.meta.EntityIndexConfigImpl;
+import org.hivedb.util.AccessorFunction;
 
 
 public class HiveScenarioMarauderClasses {
 	
-	public static ResourceIdentifiable<Object> getPirateConfiguration()
+	public static EntityConfig<Object> getPirateConfiguration()
 	{
-		return new ResourceIdentifiableImpl<Object>(
+		return EntityConfigImpl.createPartitioningResourceEntity(
 				Pirate.class,
-				Pirate.class.getSimpleName(),
-				new PrimaryIndexIdentifiableImpl(Pirate.class.getSimpleName(),"id"),
-				(Collection<? extends SecondaryIndexIdentifiable>)Collections.singletonList(new SecondaryIndexIdentifiableImpl("name",false)),
-				true,
+				Pirate.class.getSimpleName().toLowerCase(),
+				(Collection<? extends EntityIndexConfig>)Collections.singletonList(
+						new EntityIndexConfigImpl(Pirate.class,"name")),
 				"id");
 						
 	}
-	public static ResourceIdentifiable<Object> getTreasureConfiguration()
+	public static EntityConfig<Object> getTreasureConfiguration()
 	{
-		return new ResourceIdentifiableImpl<Object>(
-				Treasure.class,
-				Treasure.class.getSimpleName(),
-				new PrimaryIndexIdentifiableImpl(Pirate.class.getSimpleName(),"pirateId"),
-				Arrays.asList(new SecondaryIndexIdentifiable[] {
-					new SecondaryIndexIdentifiableImpl("jewels",true),
-					new SecondaryIndexIdentifiableImpl("price", false)
-				}),
-				false,
-				"id");					
+		return EntityConfigImpl.createEntity(
+	 			Treasure.class,
+				Pirate.class.getSimpleName().toLowerCase(),
+				Treasure.class.getSimpleName().toLowerCase(),
+				"pirateId",
+				"id",
+				Arrays.asList(new EntityIndexConfig[] {
+					new EntityIndexConfigImpl(Treasure.class,"jewels"),
+					new EntityIndexConfigImpl(Treasure.class,"parrots", "id"),
+					new EntityIndexConfigImpl(Treasure.class,"price")
+				}));					
 	}
 	
 	public interface Pirate
 	{
-		public Integer getId();
-		public String getName();
+		Integer getId();
+		String getName();
 	}
 		
 	public interface Treasure
 	{
-		public Long getId();
-		public Integer getPirateId();
-		public Collection<? extends String> getJewels();
-		public Integer getPrice();
+		Long getId();
+		Integer getPirateId();
+		Collection<? extends String> getJewels();
+		Collection<? extends Parrot> getParrots();
+		Integer getPrice();
 	}	                      
+	
+	public interface Parrot
+	{
+		Short getId();
+		Integer getElocution();
+	}
 }

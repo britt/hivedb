@@ -177,7 +177,7 @@ public class ReflectionTools {
 						throw new RuntimeException(e);
 					}
 				}
-			}.grepMethods(basedUponThisInterface);
+			}.grepGetters(basedUponThisInterface);
 	}
 	public static<T> Collection<Object> invokeGetters(final T instance, Class<T> basedUponThisInterface) {
 		return Transform.map(new Unary<Method, Object>() {
@@ -232,7 +232,16 @@ public class ReflectionTools {
 	}
 	
 	public static<T> Collection<Method> getGetters(final Class<T> ofThisInterface) {
-		return new MethodGrepper<T>().grepMethods(ofThisInterface);
+		return new MethodGrepper<T>().grepGetters(ofThisInterface);
+	}
+	
+	public static<T> Collection<String> getPropertiesOfGetters(final Class<T> ofThisInterface) {
+		return Transform.map(new Unary<Method,String>() {
+			public String f(Method method) {
+				return getPropertyNameOfAccessor(method);
+			}
+		},
+		new MethodGrepper<T>().grepGetters(ofThisInterface));
 	}
 	
 	public static<T> DiffCollection getEqualFields(final T expected, final T actual, Class<T> basedUponThisInterface) { 
@@ -311,12 +320,12 @@ public class ReflectionTools {
 						return new HashSet((Collection)fieldValue);
 					return fieldValue;
 				}
-			}.grepMethods(basedUponThisInterface)));
+			}.grepGetters(basedUponThisInterface)));
 		
 	}
 	
 	private static class MethodGrepper<T> {
-		public Collection<Method> grepMethods(Class<T> basedUponThisInterface) {
+		public Collection<Method> grepGetters(Class<T> basedUponThisInterface) {
 			return Filter.grep(new Predicate<Method>() {
 					public boolean f(Method method) {
 						try {
@@ -388,5 +397,63 @@ public class ReflectionTools {
 		else
 			throw new RuntimeException(String.format("Expected ParameterizedType or WildcardType: %s", type));	
 	}
-
+	/**
+	 *  Returns the given property's return type or the type of item in the collection if its return type 
+	 *  is a collection.
+	 */
+	public static Class<?> getPropertyTypeOrPropertyCollectionItemType(final Class<?> ofThisInterface, String propertyName) {
+		return isCollectionProperty(ofThisInterface, propertyName)
+			? getCollectionItemType(ofThisInterface, propertyName)
+			: getPropertyType(ofThisInterface, propertyName);
+	}
+	
+	public static boolean isCollectionProperty(final Class<?> ofThisInterface, String propertyName) {
+		return ReflectionTools.doesImplementOrExtend(
+					ReflectionTools.getPropertyType(ofThisInterface, propertyName),
+					Collection.class); 
+	}
+	
+	public static Collection<String> getPropertiesOfScalarGetters(final Class<?> ofThisInterface) {
+		return getScalarGetters(ofThisInterface);
+	}
+	public static Collection<String> getScalarGetters(final Class<?> ofThisInterface) {
+		return Filter.grep(new Predicate<String>() {
+			public boolean f(String propertyName) {
+				return !isCollectionProperty(ofThisInterface, propertyName);
+		}},
+		getPropertiesOfGetters(ofThisInterface));
+	}
+	
+	public static Collection<String> getPropertiesOfCollectionGetters(final Class<?> ofThisInterface) {
+		return getCollectionGetters(ofThisInterface);
+	}
+	public static Collection<String> getCollectionGetters(final Class<?> ofThisInterface) {
+		return Filter.grep(new Predicate<String>() {
+			public boolean f(String propertyName) {
+				return isCollectionProperty(ofThisInterface, propertyName);
+		}},
+		getPropertiesOfGetters(ofThisInterface));
+	}
+	
+	public static Collection<String> getPropertiesOfPrimitiveGetters(final Class<?> ofThisInterface) {
+		return getPrimitiveGetters(ofThisInterface);
+	}
+	public static Collection<String> getPrimitiveGetters(final Class<?> ofThisInterface) {
+		return Filter.grep(new Predicate<String>() {
+			public boolean f(String propertyName) {
+				return PrimitiveUtils.isPrimitiveClass(getPropertyType(ofThisInterface, propertyName));
+		}},
+		getPropertiesOfGetters(ofThisInterface));
+	}
+	
+	public static Collection<String> getPropertiesOfComplexGetters(final Class<?> ofThisInterface) {
+		return getComplexGetters(ofThisInterface);
+	}
+	public static Collection<String> getComplexGetters(final Class<?> ofThisInterface) {
+		return Filter.grep(new Predicate<String>() {
+			public boolean f(String propertyName) {
+				return !PrimitiveUtils.isPrimitiveClass(getPropertyType(ofThisInterface, propertyName));
+		}},
+		getPropertiesOfGetters(ofThisInterface));
+	}
 }

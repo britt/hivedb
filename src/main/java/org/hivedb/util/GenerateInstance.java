@@ -12,6 +12,7 @@ import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
+import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.Generator;
 
 public class GenerateInstance<T> implements Generator<T> {
@@ -23,8 +24,18 @@ public class GenerateInstance<T> implements Generator<T> {
 		this.interfaceToImplement = interfaceToImplement;
 	}
 	
+	public T generateAndCopyProperties(Object templateInstance) {
+		T instance = generate();
+		for (String propertyName : ReflectionTools.getPropertiesOfGetters(interfaceToImplement))
+			ReflectionTools.invokeSetter(
+					instance, 
+				propertyName, 
+				ReflectionTools.invokeGetter(templateInstance, propertyName));
+		return instance;
+	}
+	
 	@SuppressWarnings("unchecked")
-	public T f() {
+	public T generate() {
 		T instance = (T)Interceptor.newInstance( interfaceToImplement );
 		    
 	    for (Method getter : ReflectionTools.getGetters(interfaceToImplement))
@@ -33,24 +44,20 @@ public class GenerateInstance<T> implements Generator<T> {
 	    	Class<Object> clazz = (Class<Object>) getter.getReturnType();
 			if (ReflectionTools.doesImplementOrExtend(clazz, Collection.class)) {
 	    		Class<Object> collectionItemClass = (Class<Object>) ReflectionTools.getCollectionItemType(interfaceToImplement,propertyName);
-	    		((PropertySetter)instance).set(propertyName,
+	    		((PropertySetter<T>)instance).set(propertyName,
 	    				PrimitiveUtils.isPrimitiveClass(collectionItemClass)
-	    					? new GeneratePrimitiveCollection<Object>(collectionItemClass,COLLECTION_SIZE).f()
-	    					: new GenerateInstanceCollection<Object>(collectionItemClass, COLLECTION_SIZE).f());
+	    					? new GeneratePrimitiveCollection<Object>(collectionItemClass,COLLECTION_SIZE).generate()
+	    					: new GenerateInstanceCollection<Object>(collectionItemClass, COLLECTION_SIZE).generate());
 	    	}
 	    	else 
-	    		((PropertySetter)instance).set(propertyName,
+	    		((PropertySetter<T>)instance).set(propertyName,
 	    				PrimitiveUtils.isPrimitiveClass(clazz)
-	    					? new GeneratePrimitiveValue<Object>(clazz).f()
-	    					: new GenerateInstance<Object>(clazz).f());
+	    					? new GeneratePrimitiveValue<Object>(clazz).generate()
+	    					: new GenerateInstance<Object>(clazz).generate());
 	    }
 	    return instance;
 	}
 	
-	public interface PropertySetter {
-		void set(String property, Object value);
-	}
-	    
 	private static class Interceptor implements MethodInterceptor {
 		private PropertyChangeSupport propertySupport;
 		   
@@ -61,7 +68,8 @@ public class GenerateInstance<T> implements Generator<T> {
 		public void removePropertyChangeListener(PropertyChangeListener listener) {
 			propertySupport.removePropertyChangeListener(listener);
 		}
-		    
+		   
+		private final static String IMPLEMENTS_INTERFACE_PROPERTY = "_implementsInterface";
 		public static Object newInstance( Class clazz ){
 			try{
 				Interceptor interceptor = new Interceptor();
@@ -70,6 +78,8 @@ public class GenerateInstance<T> implements Generator<T> {
 				e.setCallback(interceptor);
 				Object instance = e.create();
 				interceptor.propertySupport = new PropertyChangeSupport( instance );
+			
+				((PropertySetter)instance).set(IMPLEMENTS_INTERFACE_PROPERTY, clazz);
 				return instance;
 			}catch( Throwable e ){
 				 e.printStackTrace();
@@ -97,7 +107,7 @@ public class GenerateInstance<T> implements Generator<T> {
 				dictionary.put(new String( propName ), args[1]);
 				propertySupport.firePropertyChange( new String( propName ) , null , args[0]);
 			}
-			if( name.startsWith("set") && args.length == 1 && method.getReturnType() == Void.TYPE ) {
+			else if( name.startsWith("set") && args.length == 1 && method.getReturnType() == Void.TYPE ) {
 				char propName[] = name.substring("set".length()).toCharArray();
 				propName[0] = Character.toLowerCase( propName[0] );
 				dictionary.put(new String( propName ), args[0]);
@@ -110,6 +120,14 @@ public class GenerateInstance<T> implements Generator<T> {
 				if (propertyValue != null)
 					return propertyValue;
 			}
+			else if ( name.equals("hashCode")) {
+				Class implementsInterface = (Class) dictionary.get(IMPLEMENTS_INTERFACE_PROPERTY);
+				Amass.makeHashCode(ReflectionTools.invokeGetters(obj, implementsInterface));
+			}
+			else if ( name.equals("equals")) {
+				return obj.hashCode() == args[1].hashCode();
+			}
+				
 			return retValFromSuper;
 		}
 	}

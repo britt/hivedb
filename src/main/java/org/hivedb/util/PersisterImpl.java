@@ -2,30 +2,30 @@ package org.hivedb.util;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveReadOnlyException;
-import org.hivedb.meta.ResourceIdentifiable;
+import org.hivedb.meta.EntityConfig;
+import org.hivedb.meta.HiveConfig;
 import org.hivedb.meta.SecondaryIndex;
-import org.hivedb.meta.SecondaryIndexIdentifiable;
+import org.hivedb.meta.EntityIndexConfig;
 import org.hivedb.util.functional.Actor;
-import org.hivedb.util.scenarioBuilder.HiveScenarioConfig;
 
 public class PersisterImpl implements Persister {
-	public Object persistPrimaryIndexKey(HiveScenarioConfig hiveScenarioConfig, Object primaryIndexKey) {
+	public Object persistPrimaryIndexKey(HiveConfig hiveConfig, Object primaryIndexKey) {
 		try {
-			hiveScenarioConfig.getHive().insertPrimaryIndexKey(hiveScenarioConfig.getResourceIdentifiable().getPrimaryIndexIdentifiable().getPartitionDimensionName(), primaryIndexKey);
+			hiveConfig.getHive().insertPrimaryIndexKey(hiveConfig.getEntityConfig().getPartitionDimensionName(), primaryIndexKey);
 		} catch (HiveReadOnlyException e) {
 			throw new RuntimeException(e);
 		}
 		return primaryIndexKey;
 	}
 	
-	public Object persistResourceInstance(HiveScenarioConfig hiveScenarioConfig, Object instance) {
-		ResourceIdentifiable<Object> resourceIdentifiable = hiveScenarioConfig.getResourceIdentifiable();
+	public Object persistResourceInstance(HiveConfig hiveConfig, Object instance) {
+		EntityConfig<Object> entityConfig = hiveConfig.getEntityConfig();
 		try {
-			hiveScenarioConfig.getHive().insertResourceId(
-					resourceIdentifiable.getPrimaryIndexIdentifiable().getPartitionDimensionName(),
-					resourceIdentifiable.getResourceName(),
-					resourceIdentifiable.getId(instance),
-					resourceIdentifiable.getPrimaryIndexIdentifiable().getPrimaryIndexKey(instance));
+			hiveConfig.getHive().insertResourceId(
+					entityConfig.getPartitionDimensionName(),
+					entityConfig.getResourceName(),
+					entityConfig.getId(instance),
+					entityConfig.getPrimaryIndexKey(instance));
 		} catch (HiveReadOnlyException e) {
 			throw new RuntimeException(e);
 		}
@@ -33,33 +33,33 @@ public class PersisterImpl implements Persister {
 	}
 	
 	public Object persistSecondaryIndexKey(
-			final HiveScenarioConfig hiveScenarioConfig, 
-			final SecondaryIndexIdentifiable secondaryIndexIdentifiable, 
+			final HiveConfig hiveConfig, 
+			final EntityIndexConfig entitySecondaryIndexConfig, 
 			final Object resourceInstance) {
-		final ResourceIdentifiable<Object> resourceIdentifiable = hiveScenarioConfig.getResourceIdentifiable();
-		final SecondaryIndex secondaryIndex = getSecondaryIndex(hiveScenarioConfig.getHive(), secondaryIndexIdentifiable, resourceIdentifiable);
+		final EntityConfig<Object> entityConfig = hiveConfig.getEntityConfig();
+		final SecondaryIndex secondaryIndex = getSecondaryIndex(hiveConfig.getHive(), entitySecondaryIndexConfig, entityConfig);
 		
-			new Actor<Object>(secondaryIndexIdentifiable.getSecondaryIndexValue(resourceInstance)) {	
+			new Actor<Object>(entitySecondaryIndexConfig.getIndexValues(resourceInstance)) {	
 				public void f(Object secondaryIndexKey) {
 					try {
-						hiveScenarioConfig.getHive().insertSecondaryIndexKey(
+						hiveConfig.getHive().insertSecondaryIndexKey(
 							secondaryIndex.getName(), 
 							secondaryIndex.getResource().getName(),
 							secondaryIndex.getResource().getPartitionDimension().getName(),
 							secondaryIndexKey, 
-							resourceIdentifiable.getId(resourceInstance));
+							entityConfig.getId(resourceInstance));
 					} catch (HiveReadOnlyException e) {
 						throw new RuntimeException(e);
 					}
 			}}.perform();
-		return secondaryIndexIdentifiable;
+		return entitySecondaryIndexConfig;
 	}
 	
-	private SecondaryIndex getSecondaryIndex(Hive hive, SecondaryIndexIdentifiable secondaryIndexIdentifable, ResourceIdentifiable<Object> resourceIdentifiable)
+	private SecondaryIndex getSecondaryIndex(Hive hive, EntityIndexConfig secondaryIndexIdentifable, EntityConfig<Object> entityConfig)
 	{
-		String resourceName = resourceIdentifiable.getResourceName();
-		String partitionDimensionName = resourceIdentifiable.getPrimaryIndexIdentifiable().getPartitionDimensionName();
-		return hive.getPartitionDimension(partitionDimensionName).getResource(resourceName).getSecondaryIndex(secondaryIndexIdentifable.getSecondaryIndexKeyPropertyName());
+		String resourceName = entityConfig.getResourceName();
+		String partitionDimensionName = entityConfig.getPartitionDimensionName();
+		return hive.getPartitionDimension(partitionDimensionName).getResource(resourceName).getSecondaryIndex(secondaryIndexIdentifable.getIndexName());
 	}
 
 	

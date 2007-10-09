@@ -191,13 +191,30 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	/* (non-Javadoc)
 	 * @see org.hivedb.meta.HiveDirectory#doesSecondaryIndexKeyExist(org.hivedb.meta.SecondaryIndex, java.lang.Object)
 	 */
-	public boolean doesSecondaryIndexKeyExist(SecondaryIndex secondaryIndex,Object secondaryIndexKey) {
+	public boolean doesResourceIdExist(Resource resource, Object resourceId) {
+		if (resource.isPartitioningResource())
+			return doesPrimaryIndexKeyExist(resourceId);
 		Collection<Object> count = 
 				doRead(
-					sql.checkExistenceOfSecondaryIndexSql(secondaryIndex), 
-					new Object[] { secondaryIndexKey }, 
+					sql.checkExistenceOfResourceIndexSql(resource.getIdIndex()), 
+					new Object[] { resourceId }, 
 					RowMappers.newTrueRowMapper(),
 					SECONDARY_INDEX_READ);
+		return count.size() > 0;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.hivedb.meta.HiveDirectory#doesSecondaryIndexKeyExist(org.hivedb.meta.SecondaryIndex,
+	 *      java.lang.Object, java.lang.Object)
+	 */
+	public boolean doesSecondaryIndexKeyExist(SecondaryIndex secondaryIndex, Object secondaryIndexKey, Object resourceId) {
+		Collection<Object> count = doRead(
+				sql.checkExistenceOfSecondaryIndexSql(secondaryIndex),
+				new Object[] { secondaryIndexKey, resourceId },
+				RowMappers.newTrueRowMapper(), 
+				SECONDARY_INDEX_READ);
 		return count.size() > 0;
 	}
 	
@@ -267,10 +284,6 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 
 	public void deleteResourceId(Resource resource, Object id) {
 		doUpdate(sql.deleteResourceId(resource), new int[] {resource.getColumnType()}, new Object[] {id}, SECONDARY_INDEX_DELETE);
-	}
-
-	public boolean doesResourceIdExist(Resource resource, Object id) {
-		return doesSecondaryIndexKeyExist(resource.getIdIndex(), id);
 	}
 
 	public Collection getResourceIdsOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey) {
@@ -359,7 +372,9 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	}
 	
 	public Collection<KeySemaphore> getNodeSemaphoresOfResourceId(Resource resource, Object id) {
-		return getNodeSemaphoresOfSecondaryIndexKey(resource.getIdIndex(), id);
+		return resource.isPartitioningResource()
+			? getNodeSemamphoresOfPrimaryIndexKey(id)
+			: getNodeSemaphoresOfSecondaryIndexKey(resource.getIdIndex(), id);
 	}
 	
 	public void updateResourceIdOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey, 

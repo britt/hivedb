@@ -8,6 +8,7 @@ import org.hivedb.Hive;
 import org.hivedb.HiveException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.meta.Finder;
+import org.hivedb.meta.HiveConfig;
 import org.hivedb.meta.Nameable;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
@@ -21,8 +22,6 @@ import org.hivedb.util.functional.Ternary;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.hivedb.util.functional.Filter.BinaryPredicate;
-import org.hivedb.util.scenarioBuilder.HiveConfigurationHiveFinder;
-import org.hivedb.util.scenarioBuilder.HiveScenarioConfig;
 
 /**
  * HiveUpdater updates a hive to the configuration of a HiveScenarioConfig. When the HiveScenarioConfig's 
@@ -46,13 +45,13 @@ public class HiveSyncer {
 	 *  Sync a Hive to the configuration of the given HiveScenarioConfig. This is an additive process only:
 	 *  If the Hive contains Partition Dimensions, Resources, Secondary Indexes, or Data Nodes not
 	 *  specified by the HiveScenarioConfig they will be left alone, not deleted.
-	 * @param hiveScenarioConfig
+	 * @param hiveConfig
 	 * @return
 	 */
-	public HiveDiff syncHive(HiveScenarioConfig hiveScenarioConfig)
+	public HiveDiff syncHive(HiveConfig hiveConfig)
 	{
 		HiveDiff hiveDiff = diffHive(
-			new HiveConfigurationHiveFinder(hiveScenarioConfig));
+			new HiveConfigFinder(hiveConfig));
 		
 		// Add missing secondary indexes
 		Maps.digMapToCollection(new Ternary<PartitionDimension, Resource, SecondaryIndex, Void>() {
@@ -116,11 +115,11 @@ public class HiveSyncer {
 
 	/**
 	 *  Returns a HiveDiff the difference between the HiveScenarioConfig instance and the current hive
-	 * @param hiveScenarioConfig Config file file for the given hive
+	 * @param hiveConfig Config file file for the given hive
 	 * @return a HiveDiff class that describes what partition dimensions are missing, what resources and nodes are missing
 	 * from existing partion dimensions, and what secondary indexes are missing from existing resources
 	 */
-	public HiveDiff diffHive(final HiveConfigurationHiveFinder updater)
+	public HiveDiff diffHive(final HiveConfigFinder updater)
 	{	
 		Collection<PartitionDimension> missingPartitionDimensions = getMissingItems(PartitionDimension.class, hiveFinder, updater);
 		

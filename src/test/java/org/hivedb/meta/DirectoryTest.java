@@ -176,10 +176,10 @@ public class DirectoryTest extends H2HiveTestCase {
 					secondaryKeyNum
 			}));
 			d.batch().insertSecondaryIndexKeys(secondaryIndexKeyMap, primaryIndexKey);
-			assertEquals(1,hive.getSecondaryIndexKeysWithPrimaryKey(nameIndex.getName(), nameIndex.getResource().getName(), dimension.getName(), primaryIndexKey).size());
-			assertEquals(secondaryKeyString, Atom.getFirst(hive.getSecondaryIndexKeysWithPrimaryKey(nameIndex.getName(), nameIndex.getResource().getName(), dimension.getName(), primaryIndexKey)));
-			assertEquals(1,hive.getSecondaryIndexKeysWithPrimaryKey(numIndex.getName(), nameIndex.getResource().getName(),dimension.getName(), primaryIndexKey).size());
-			assertEquals(secondaryKeyNum, Atom.getFirst(hive.getSecondaryIndexKeysWithPrimaryKey(numIndex.getName(), numIndex.getResource().getName(), dimension.getName(), primaryIndexKey)));
+			assertEquals(1,hive.getSecondaryIndexKeysWithResourceId(nameIndex.getName(), nameIndex.getResource().getName(), dimension.getName(), primaryIndexKey).size());
+			assertEquals(secondaryKeyString, Atom.getFirst(hive.getSecondaryIndexKeysWithResourceId(nameIndex.getName(), nameIndex.getResource().getName(), dimension.getName(), primaryIndexKey)));
+			assertEquals(1,hive.getSecondaryIndexKeysWithResourceId(numIndex.getName(), nameIndex.getResource().getName(),dimension.getName(), primaryIndexKey).size());
+			assertEquals(secondaryKeyNum, Atom.getFirst(hive.getSecondaryIndexKeysWithResourceId(numIndex.getName(), numIndex.getResource().getName(), dimension.getName(), primaryIndexKey)));
 		}
 	}
 	

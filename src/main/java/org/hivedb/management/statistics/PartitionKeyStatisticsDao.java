@@ -121,7 +121,10 @@ public class PartitionKeyStatisticsDao extends JdbcDaoSupport {
 	}
 	
 	public void decrementChildRecordCount(Resource resource, Object resourceId, int increment) {
-		modifyChildRecordCount(findByResourceId(resource, resourceId), -1*increment);
+		if (resource.isPartitioningResource())
+			modifyChildRecordCount(findByPartitionKey(resource.getPartitionDimension(), resourceId), -1*increment);
+		else
+			modifyChildRecordCount(findByResourceId(resource, resourceId), -1*increment);
 	}
 
 	public void incrementChildRecordCount(PartitionDimension dimension, Object primaryIndexKey, int increment) {
@@ -129,7 +132,10 @@ public class PartitionKeyStatisticsDao extends JdbcDaoSupport {
 	}
 	
 	public void incrementChildRecordCount(Resource resource, Object resourceId, int increment) {
-		modifyChildRecordCount(findByResourceId(resource, resourceId), increment);
+		if (resource.isPartitioningResource())
+			modifyChildRecordCount(findByPartitionKey(resource.getPartitionDimension(), resourceId), increment);
+		else
+			modifyChildRecordCount(findByResourceId(resource, resourceId), increment);
 	}
 	
 	private void modifyChildRecordCount(PartitionKeyStatistics stats, int count) {

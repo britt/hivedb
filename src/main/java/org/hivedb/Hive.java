@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
@@ -416,6 +417,9 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	public void insertResourceId(String partitionDimensionName, String resourceName, Object id, Object primaryIndexKey) throws HiveReadOnlyException{
 		PartitionDimension dimension = getPartitionDimension(partitionDimensionName);
 		Resource resource = dimension.getResource(resourceName);
+		// insertResourceId is a noop if the resource is the same index as the partition dimension
+		if (resource.isPartitioningResource()) 
+			return; // TODO consider throwing a runtime exception here to disallow this condition
 		Collection<KeySemaphore> semaphores = directories.get(partitionDimensionName).getNodeSemamphoresOfPrimaryIndexKey(primaryIndexKey);
 		Preconditions.isWritable(semaphores, this);
 		directories.get(dimension.getName()).insertResourceId(resource, id, primaryIndexKey);
@@ -487,8 +491,12 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 
 	public void updatePrimaryIndexKeyOfResourceId(String partitionDimensionName,String resourceName, Object resourceId, Object originalPrimaryIndexKey, Object newPrimaryIndexKey) throws HiveReadOnlyException {
 		Preconditions.isWritable(directories.get(partitionDimensionName).getNodeSemamphoresOfPrimaryIndexKey(newPrimaryIndexKey), this);
+		final Resource resource = getPartitionDimension(partitionDimensionName).getResource(resourceName);
+		if (resource.isPartitioningResource()) 
+			throw new HiveRuntimeException(String.format("Resource %s is a partitioning dimension, you cannot update its primary index key because it is the resource id", resource.getName()));
+			
 		directories.get(partitionDimensionName).updatePrimaryIndexKeyOfResourceId(
-				getPartitionDimension(partitionDimensionName).getResource(resourceName), 
+				resource, 
 				resourceId, 
 				originalPrimaryIndexKey, 
 				newPrimaryIndexKey);
@@ -505,8 +513,9 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		
 		Directory directory = directories.get(partitionDimension.getName());
 		for (Resource resource : partitionDimension.getResources()){
-			for(Object resourceId : directory.getResourceIdsOfPrimaryIndexKey(resource, primaryIndexKey))
-				directory.deleteResourceId(resource, resourceId);
+			if (!resource.isPartitioningResource())
+				for(Object resourceId : directory.getResourceIdsOfPrimaryIndexKey(resource, primaryIndexKey))
+					directory.deleteResourceId(resource, resourceId);
 		}
 		directory.deletePrimaryIndexKey(primaryIndexKey);
 	}
@@ -522,7 +531,9 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	}
 	
 	private void deleteResourceId(final Resource resource, Object id) throws HiveReadOnlyException {
-		
+		if (resource.isPartitioningResource())
+			throw new HiveRuntimeException(String.format("Attempt to delete a resource id of resource %s, which is a partitioning dimension. It can only be deleted as a primary index key", id));
+			
 		Directory directory = directories.get(resource.getPartitionDimension().getName());
 		Preconditions.isWritable(directory.getNodeSemaphoresOfResourceId(resource, id), this);
 	
@@ -550,7 +561,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		
 		Preconditions.isWritable(directories.get(partitionDimensionName).getNodeSemaphoresOfResourceId(secondaryIndex.getResource(), resourceId),this);
 		
-		if (!doesSecondaryIndexKeyExist(secondaryIndex.getName(), secondaryIndex.getResource().getName(), partitionDimensionName, secondaryIndexKey))
+		if (!doesSecondaryIndexKeyExist(secondaryIndex.getName(), secondaryIndex.getResource().getName(), partitionDimensionName, secondaryIndexKey, resourceId))
 			throw new HiveKeyNotFoundException(
 					String.format("Secondary index key %s of secondary index %s does not exist",secondaryIndexKey,secondaryIndex.getName()),secondaryIndexKey);
 
@@ -590,11 +601,10 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	}
 
 	public boolean doesSecondaryIndexKeyExist(String secondaryIndexName, String resourceName, String dimensionName,
-			Object secondaryIndexKey) {
+			Object secondaryIndexKey, Object resourceId) {
 		SecondaryIndex secondaryIndex = getPartitionDimension(dimensionName).getResource(resourceName).getSecondaryIndex(secondaryIndexName);
-		return directories.get(
-				secondaryIndex.getResource().getPartitionDimension().getName())
-				.doesSecondaryIndexKeyExist(secondaryIndex, secondaryIndexKey);
+		return directories.get(dimensionName)
+				.doesSecondaryIndexKeyExist(secondaryIndex, secondaryIndexKey, resourceId);
 	}
 
 	public boolean doesResourceIdExist(String resourceName, String partitionDimensionName, Object id) {
@@ -625,19 +635,25 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		return directories.get(secondaryIndex.getResource().getPartitionDimension().getName()).getResourceIdsOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
 	}
 
-	public Collection<?> getSecondaryIndexKeysWithPrimaryKey(
+	public Collection<?> getSecondaryIndexKeysWithResourceId(
 			String secondaryIndexName,
 			String resourceName,
-			String partitionDimensionName, Object primaryIndexKey) {
-		return directories.get(partitionDimensionName).getSecondaryIndexKeysOfPrimaryIndexKey(getPartitionDimension(
-				partitionDimensionName).getResource(resourceName)
-				.getSecondaryIndex(secondaryIndexName), primaryIndexKey);
+			String partitionDimensionName, 
+			Object resourceId) {
+		return directories.get(partitionDimensionName).getSecondaryIndexKeysOfResourceId(
+				getPartitionDimension(partitionDimensionName).getResource(resourceName)
+					.getSecondaryIndex(secondaryIndexName), 
+				resourceId);
 	}
 
 	public Collection<?> getResourceIdsWithPrimaryKey(
 			String resourceName,
 			String partitionDimensionName, Object primaryIndexKey) {
-		return directories.get(partitionDimensionName).getResourceIdsOfPrimaryIndexKey(partitionDimensions.get(partitionDimensionName).getResource(resourceName), primaryIndexKey);
+		
+		final Resource resource = partitionDimensions.get(partitionDimensionName).getResource(resourceName);
+		if (resource.isPartitioningResource())
+			return Collections.singletonList(primaryIndexKey); // TODO consider throwing a runtime exception here to disallow this condition
+		return directories.get(partitionDimensionName).getResourceIdsOfPrimaryIndexKey(resource, primaryIndexKey);
 	}
 	
 	private Connection getConnection(PartitionDimension partitionDimension, KeySemaphore semaphore, AccessType intention) throws HiveReadOnlyException,SQLException {

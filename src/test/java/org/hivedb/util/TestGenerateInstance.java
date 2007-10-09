@@ -19,7 +19,7 @@ public class TestGenerateInstance {
 	}
 	
 	public void testGenerateInstance() {
-		Foo foo = (Foo)new GenerateInstance<Foo>(Foo.class).f();
+		Foo foo = (Foo)new GenerateInstance<Foo>(Foo.class).generate();
 		Assert.assertTrue(foo.getInt() != 0);
 		Assert.assertTrue(foo.getBoos().size() > 0);
 		Boo boo = Atom.getFirstOrThrow(foo.getBoos());

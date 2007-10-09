@@ -106,7 +106,8 @@ public class IndexSchema extends Schema{
 		Collection<TableInfo> TableInfos = new ArrayList<TableInfo>();
 		TableInfos.add(new TableInfo(getPrimaryIndexTableName(partitionDimension), getCreatePrimaryIndex()));
 		for (Resource resource : partitionDimension.getResources()) {
-			TableInfos.add(new TableInfo(getSecondaryIndexTableName(resource.getIdIndex()), getCreateResourceIndex(resource)));
+			if (!resource.isPartitioningResource())
+				TableInfos.add(new TableInfo(getSecondaryIndexTableName(resource.getIdIndex()), getCreateResourceIndex(resource)));
 			for (SecondaryIndex secondaryIndex : resource.getSecondaryIndexes())
 				TableInfos.add(new TableInfo(
 						getSecondaryIndexTableName(secondaryIndex), 

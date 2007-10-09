@@ -13,14 +13,14 @@ public class MemoryKeyAuthority implements KeyAuthorityCreator {
 		if (returnType.equals(int.class) || returnType.equals(Integer.class))
 			 incrementor = new Generator<Integer>() {
 				private int i=0;;
-				public Integer f() {
+				public Integer generate() {
 					return ++i;
 				}
 			};
 		else if (returnType.equals(long.class) || returnType.equals(Long.class))
 			incrementor = new Generator<Long>() {
 				private long i=0;;
-				public Long f() {
+				public Long generate() {
 					return ++i;
 				}
 			};
@@ -35,7 +35,7 @@ public class MemoryKeyAuthority implements KeyAuthorityCreator {
 			@SuppressWarnings("unchecked")
 			private T increment()
 			{
-				return (T)incrementor.f();
+				return (T)incrementor.generate();
 			}
 		};
 	}

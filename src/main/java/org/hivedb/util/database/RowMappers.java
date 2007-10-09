@@ -47,8 +47,7 @@ public class RowMappers {
 			this.jdbcType = jdbcType;
 		}
 		public Object mapRow(ResultSet rs, int rowNumber) throws SQLException {
-			JdbcTypeMapper.getJdbcTypeResult(rs, 1, jdbcType);
-			return rs.getObject(1);		
+			return JdbcTypeMapper.getJdbcTypeResult(rs, 1, jdbcType);		
 		}
 	}
 	static class TrueRowMapper implements RowMapper {

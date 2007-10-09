@@ -85,6 +85,8 @@ public class JdbcTypeMapper {
 	public static int primitiveTypeToJdbcType(Class<?> classType) {
 		if (classType.equals(int.class) || classType.equals(Integer.class))
 			return Types.INTEGER;
+		if (classType.equals(short.class) || classType.equals(Short.class))
+			return Types.SMALLINT;
 		if (classType.equals(long.class) || classType.equals(Long.class))
 			return Types.BIGINT;
 		if (classType.equals(float.class) || classType.equals(Float.class))
@@ -105,6 +107,8 @@ public class JdbcTypeMapper {
 	public static Class jdbcTypeToPrimitiveClass(Integer jdbcType) {
 		if (jdbcType.equals(Types.INTEGER))
 			return Integer.class;
+		if (jdbcType.equals(Types.SMALLINT))
+			return Short.class;
 		if (jdbcType.equals(Types.BIGINT))
 			return Long.class;
 		if (jdbcType.equals(Types.FLOAT))
@@ -128,6 +132,8 @@ public class JdbcTypeMapper {
 		Class classType = value.getClass();
 		if (classType.equals(int.class) || classType.equals(Integer.class))
 			preparedStatement.setInt(index, (Integer) value);
+		if (classType.equals(short.class) || classType.equals(Short.class))
+			preparedStatement.setShort(index, (Short) value);
 		else if (classType.equals(long.class) || classType.equals(Long.class))
 			preparedStatement.setLong(index, (Long) value);
 		else if (classType.equals(float.class) || classType.equals(Float.class))

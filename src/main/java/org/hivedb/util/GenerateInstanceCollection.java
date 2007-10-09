@@ -15,7 +15,7 @@ public class GenerateInstanceCollection<T> implements Generator<Collection<T>> {
 		this.size = size;
 	}
 	@SuppressWarnings("unchecked")
-	public Collection<T> f() {
+	public Collection<T> generate() {
 		return Generate.create(new GenerateInstance<T>(this.collectionItemClazz), new NumberIterator(size));
 	}
 }

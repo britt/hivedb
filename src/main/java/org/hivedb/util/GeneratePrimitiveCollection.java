@@ -16,7 +16,7 @@ public class GeneratePrimitiveCollection<F> implements Generator<Collection<F>> 
 		this.size = size;
 	}
 	@SuppressWarnings("unchecked")
-	public Collection<F> f() {
+	public Collection<F> generate() {
 		return  Generate.create(new GeneratePrimitiveValue<F>(this.collectionItemClazz), new NumberIterator(size));
 	}
 }

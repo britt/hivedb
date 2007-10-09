@@ -2,17 +2,17 @@ package org.hivedb.util;
 
 import java.util.Collection;
 
-import org.hivedb.meta.PrimaryIndexIdentifiableGeneratableImpl;
-import org.hivedb.meta.ResourceIdentifiableGeneratable;
-import org.hivedb.meta.ResourceIdentifiableGeneratableImpl;
-import org.hivedb.meta.SecondaryIndexIdentifiable;
+import org.hivedb.meta.HiveConfig;
+import org.hivedb.meta.PrimaryIndexKeyGenerator;
+import org.hivedb.meta.EntityGenerator;
+import org.hivedb.meta.EntityGeneratorImpl;
+import org.hivedb.meta.EntityIndexConfig;
 import org.hivedb.util.functional.Generate;
 import org.hivedb.util.functional.Generator;
 import org.hivedb.util.functional.NumberIterator;
 import org.hivedb.util.functional.RingIteratorable;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
-import org.hivedb.util.scenarioBuilder.HiveScenarioConfig;
 
 public class GenerateHiveIndexKeys {
 	
@@ -27,11 +27,11 @@ public class GenerateHiveIndexKeys {
 	}
 	
 	public Collection<Object> createResourceInstances(
-		final HiveScenarioConfig hiveScenarioConfig)
+		final HiveConfig hiveConfig)
 	{
-		final Collection<Object> primaryIndexIdentifiables = createPrimaryIndexKeys(hiveScenarioConfig);
-		final ResourceIdentifiableGeneratable<Object> resourceIdentifiableGenerator =
-				new ResourceIdentifiableGeneratableImpl<Object>(hiveScenarioConfig.getResourceIdentifiable());
+		final Collection<Object> primaryIndexIdentifiables = createPrimaryIndexKeys(hiveConfig);
+		final EntityGenerator<Object> entityConfigGenerator =
+				new EntityGeneratorImpl<Object>(hiveConfig.getEntityConfig());
 		
 		final Iterable<Object> primaryIndexKeysIterable = new RingIteratorable<Object>(
 			primaryIndexIdentifiables,
@@ -40,16 +40,16 @@ public class GenerateHiveIndexKeys {
 		Collection<Object> resourceInstances = Transform.map(
 			new Unary<Object, Object>() {
 				public Object f(Object primaryIndexKey) {
-					return resourceIdentifiableGenerator.generate(primaryIndexKey);
+					return entityConfigGenerator.generate(primaryIndexKey);
 			}},
 			primaryIndexKeysIterable);	
 		
 		for (Object resourceInstance : resourceInstances) {
 			// reassign to the result. The returned instance need not be that passed in.
-			resourceInstance = persister.persistResourceInstance(hiveScenarioConfig, resourceInstance);
-			Collection<? extends SecondaryIndexIdentifiable> secondaryIndexIdentifiables = hiveScenarioConfig.getResourceIdentifiable().getSecondaryIndexIdentifiables();
-			for (SecondaryIndexIdentifiable secondaryIndexIdentifiable : secondaryIndexIdentifiables) {
-				persister.persistSecondaryIndexKey(hiveScenarioConfig, secondaryIndexIdentifiable, resourceInstance);
+			resourceInstance = persister.persistResourceInstance(hiveConfig, resourceInstance);
+			Collection<? extends EntityIndexConfig> entitySecondaryIndexConfigs = hiveConfig.getEntityConfig().getEntitySecondaryIndexConfigs();
+			for (EntityIndexConfig entitySecondaryIndexConfig : entitySecondaryIndexConfigs) {
+				persister.persistSecondaryIndexKey(hiveConfig, entitySecondaryIndexConfig, resourceInstance);
 			}
 		}
 		
@@ -58,19 +58,19 @@ public class GenerateHiveIndexKeys {
 	
 
 	/**
-	 * @param hiveScenarioConfig
+	 * @param hiveConfig
 	 * @return
 	 */
-	private Collection<Object> createPrimaryIndexKeys(final HiveScenarioConfig hiveScenarioConfig)
+	private Collection<Object> createPrimaryIndexKeys(final HiveConfig hiveConfig)
 	{	
 		final Generator primaryIndexIdentifiableGenerator = 
-			new PrimaryIndexIdentifiableGeneratableImpl(hiveScenarioConfig.getResourceIdentifiable());
+			new PrimaryIndexKeyGenerator(hiveConfig.getEntityConfig());
 		
 		return Generate.create(new Generator<Object>() { 
-			public Object f() {
+			public Object generate() {
 				try {
-					Object primaryIndexKey = primaryIndexIdentifiableGenerator.f();
-					persister.persistPrimaryIndexKey(hiveScenarioConfig, primaryIndexKey);						
+					Object primaryIndexKey = primaryIndexIdentifiableGenerator.generate();
+					persister.persistPrimaryIndexKey(hiveConfig, primaryIndexKey);						
 					return primaryIndexKey;
 				} catch (Exception e) { throw new RuntimeException(e); }
 			}},

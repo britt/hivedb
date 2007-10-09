@@ -10,7 +10,7 @@ public class Generate {
 	{
 		List<R> list = new ArrayList<R>();
 		for (;iterator.hasNext();iterator.next())
-			list.add(function.f());    				
+			list.add(function.generate());    				
 		return list;
 	}
 }
