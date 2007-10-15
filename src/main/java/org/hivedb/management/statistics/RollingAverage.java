@@ -1,4 +1,4 @@
-package org.hivedb.util;
+package org.hivedb.management.statistics;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -9,10 +9,10 @@ import java.util.List;
 import javax.sql.DataSource;
 
 import org.hivedb.HiveKeyNotFoundException;
-import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
+import org.hivedb.meta.persistence.IndexSchema;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;

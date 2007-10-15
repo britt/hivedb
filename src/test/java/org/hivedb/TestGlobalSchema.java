@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.hivedb.meta.HiveConfigurationSchema;
-import org.hivedb.util.database.H2TestCase;
+import org.hivedb.util.database.test.H2TestCase;
 import org.testng.annotations.Test;
 
 public class TestGlobalSchema extends H2TestCase {

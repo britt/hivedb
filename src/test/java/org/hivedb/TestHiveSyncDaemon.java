@@ -7,7 +7,7 @@ import java.util.Observable;
 import java.util.Observer;
 
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
-import org.hivedb.util.database.H2HiveTestCase;
+import org.hivedb.util.database.test.H2HiveTestCase;
 import org.testng.annotations.Test;
 
 public class TestHiveSyncDaemon extends H2HiveTestCase {

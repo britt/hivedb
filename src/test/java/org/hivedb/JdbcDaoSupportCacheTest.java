@@ -9,9 +9,9 @@ import java.util.Collection;
 
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.AccessType;
-import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.PartitionDimension;
-import org.hivedb.util.database.H2HiveTestCase;
+import org.hivedb.meta.persistence.IndexSchema;
+import org.hivedb.util.database.test.H2HiveTestCase;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;

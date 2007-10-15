@@ -8,12 +8,12 @@ import java.util.Map.Entry;
 
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
-import org.hivedb.util.Proxies;
 import org.hivedb.util.QuickCache;
 import org.hivedb.util.database.Statements;
 import org.hivedb.util.functional.Delay;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
+import org.hivedb.util.proxy.Proxies;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;

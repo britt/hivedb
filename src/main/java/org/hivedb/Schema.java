@@ -4,9 +4,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
 
-import org.hivedb.meta.TableInfo;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
-import org.hivedb.util.DriverLoader;
+import org.hivedb.meta.persistence.TableInfo;
+import org.hivedb.util.database.DriverLoader;
+import org.hivedb.util.database.HiveDbDialect;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.RowMapper;

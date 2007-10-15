@@ -1,7 +1,7 @@
 package org.hivedb.persistence;
 
 import org.hivedb.meta.persistence.HiveBasicDataSource;
-import org.hivedb.util.database.H2TestCase;
+import org.hivedb.util.database.test.H2TestCase;
 import org.testng.AssertJUnit;
 import org.testng.annotations.Test;
 

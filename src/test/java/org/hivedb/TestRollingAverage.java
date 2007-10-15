@@ -6,7 +6,7 @@ import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.AssertJUnit.fail;
 
 import org.apache.commons.lang.time.DateUtils;
-import org.hivedb.util.RollingAverage;
+import org.hivedb.management.statistics.RollingAverage;
 import org.testng.annotations.Test;
 
 public class TestRollingAverage {

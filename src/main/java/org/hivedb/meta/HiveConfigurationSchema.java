@@ -9,6 +9,7 @@ import java.util.Collection;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.hivedb.Schema;
+import org.hivedb.meta.persistence.TableInfo;
 
 /**
  * The Global Hive Configuration schema contains records of the Hive's internal

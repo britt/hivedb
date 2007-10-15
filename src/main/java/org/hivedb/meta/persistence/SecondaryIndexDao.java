@@ -14,7 +14,7 @@ import javax.sql.DataSource;
 
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.meta.SecondaryIndex;
-import org.hivedb.util.JdbcTypeMapper;
+import org.hivedb.util.database.JdbcTypeMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.RowMapper;

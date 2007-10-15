@@ -9,7 +9,7 @@ import javax.sql.DataSource;
 
 import org.hivedb.management.KeyAuthority;
 import org.hivedb.management.MySqlKeyAuthority;
-import org.hivedb.util.database.HiveMySqlTestCase;
+import org.hivedb.util.database.test.HiveMySqlTestCase;
 import org.testng.annotations.Test;
 
 public class TestMysqlKeyAuthority extends HiveMySqlTestCase{

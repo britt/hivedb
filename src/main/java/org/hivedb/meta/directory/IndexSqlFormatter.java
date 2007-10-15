@@ -1,10 +1,10 @@
 package org.hivedb.meta.directory;
 
-import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.ResourceIndex;
 import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.meta.persistence.IndexSchema;
 
 /***
  * Methods for generating SQL strings used to read and write from the HiveDB directory.

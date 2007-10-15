@@ -1,6 +1,7 @@
 package org.hivedb;
 
 import org.hivedb.management.statistics.Counter;
+import org.hivedb.util.proxy.BenchmarkingProxy;
 
 public abstract class StatisticsProxy<R> extends BenchmarkingProxy<R> {
 	private static final String count = "Count";

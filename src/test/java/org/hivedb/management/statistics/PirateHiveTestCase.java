@@ -1,6 +1,6 @@
 package org.hivedb.management.statistics;
 
-import org.hivedb.util.database.H2HiveTestCase;
+import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.scenarioBuilder.HiveScenario;
 
 

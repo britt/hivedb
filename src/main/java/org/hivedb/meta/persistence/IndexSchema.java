@@ -2,14 +2,18 @@
  * HiveDB is an Open Source (LGPL) system for creating large, high-transaction-volume
  * data storage systems.
  */
-package org.hivedb.meta;
+package org.hivedb.meta.persistence;
 
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 
 import org.hivedb.Schema;
-import org.hivedb.util.JdbcTypeMapper;
+import org.hivedb.meta.HiveConfigurationSchema;
+import org.hivedb.meta.PartitionDimension;
+import org.hivedb.meta.Resource;
+import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.util.database.JdbcTypeMapper;
 
 /**
  * IndexSchema contains tables of primary and secondary indexes in

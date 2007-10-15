@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.hivedb.meta.Node;
 import org.hivedb.meta.persistence.NodeDao;
-import org.hivedb.util.database.H2HiveTestCase;
+import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.functional.Atom;
 import org.testng.annotations.Test;
 

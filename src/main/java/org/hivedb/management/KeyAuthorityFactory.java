@@ -1,6 +1,6 @@
 package org.hivedb.management;
 
-import org.hivedb.HiveDbDialect;
+import org.hivedb.util.database.HiveDbDialect;
 
 public class KeyAuthorityFactory {
 	public static KeyAuthority create(

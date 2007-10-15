@@ -14,7 +14,7 @@ import org.hivedb.Hive;
 import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.util.HiveUtils;
-import org.hivedb.util.JdbcTypeMapper;
+import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Predicate;
 

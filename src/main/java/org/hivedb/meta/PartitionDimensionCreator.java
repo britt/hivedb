@@ -4,9 +4,9 @@ import java.util.Collection;
 import java.util.Collections;
 
 import org.hivedb.util.HiveUtils;
-import org.hivedb.util.JdbcTypeMapper;
 import org.hivedb.util.PrimitiveUtils;
 import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 

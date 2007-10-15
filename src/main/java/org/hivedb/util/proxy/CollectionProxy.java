@@ -1,7 +1,8 @@
-package org.hivedb;
+package org.hivedb.util.proxy;
 
 import java.util.Collection;
 
+import org.hivedb.StatisticsProxy;
 import org.hivedb.management.statistics.Counter;
 
 public  abstract class CollectionProxy<T> extends StatisticsProxy<Collection<T>>{

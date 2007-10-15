@@ -4,6 +4,7 @@ import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertTrue;
 
+import org.hivedb.util.proxy.BenchmarkingProxy;
 import org.testng.annotations.Test;
 
 public class BenchmarkingProxyTest {

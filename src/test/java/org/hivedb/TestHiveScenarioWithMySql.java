@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 import org.hivedb.meta.Node;
-import org.hivedb.util.database.HiveMySqlTestCase;
+import org.hivedb.util.database.test.HiveMySqlTestCase;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.testng.annotations.Test;

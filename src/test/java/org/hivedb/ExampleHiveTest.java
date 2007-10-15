@@ -12,7 +12,7 @@ import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
-import org.hivedb.util.database.H2TestCase;
+import org.hivedb.util.database.test.H2TestCase;
 import org.hivedb.util.functional.Atom;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.RowMapper;

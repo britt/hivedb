@@ -1,4 +1,4 @@
-package org.hivedb.util.database;
+package org.hivedb.util.database.test;
 
 import java.sql.Connection;
 import java.util.Collection;

@@ -9,6 +9,7 @@ import java.util.Collection;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveRuntimeException;
+import org.hivedb.meta.persistence.ColumnInfo;
 import org.hivedb.util.HiveUtils;
 
 /**

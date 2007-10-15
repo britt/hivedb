@@ -16,7 +16,7 @@ import org.hivedb.HiveRuntimeException;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
-import org.hivedb.util.JdbcTypeMapper;
+import org.hivedb.util.database.JdbcTypeMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.RowMapper;

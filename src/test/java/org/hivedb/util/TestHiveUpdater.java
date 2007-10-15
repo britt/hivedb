@@ -8,7 +8,7 @@ import org.hivedb.Hive;
 import org.hivedb.HiveScenarioTest;
 import org.hivedb.meta.HiveConfig;
 import org.hivedb.meta.Node;
-import org.hivedb.util.database.H2HiveTestCase;
+import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.hivedb.util.scenarioBuilder.HiveScenarioConfigForResourceEntity;

@@ -1,14 +1,14 @@
 package org.hivedb;
 
 import org.hivedb.meta.AccessType;
-import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.directory.Directory;
 import org.hivedb.meta.directory.NodeResolver;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
+import org.hivedb.meta.persistence.IndexSchema;
 import org.hivedb.util.AssertUtils;
-import org.hivedb.util.database.H2HiveTestCase;
+import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Toss;
 import org.testng.annotations.BeforeMethod;

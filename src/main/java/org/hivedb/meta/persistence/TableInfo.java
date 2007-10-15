@@ -1,4 +1,4 @@
-package org.hivedb.meta;
+package org.hivedb.meta.persistence;
 
 import org.hivedb.util.HiveUtils;
 

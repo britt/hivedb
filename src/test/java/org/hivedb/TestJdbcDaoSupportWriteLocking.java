@@ -1,6 +1,6 @@
 package org.hivedb;
 
-import org.hivedb.util.database.H2HiveTestCase;
+import org.hivedb.util.database.test.H2HiveTestCase;
 
 public class TestJdbcDaoSupportWriteLocking extends H2HiveTestCase {
 //	@BeforeMethod

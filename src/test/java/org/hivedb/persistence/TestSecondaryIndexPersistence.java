@@ -4,7 +4,7 @@ import static org.testng.AssertJUnit.assertEquals;
 
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.SecondaryIndexDao;
-import org.hivedb.util.database.H2HiveTestCase;
+import org.hivedb.util.database.test.H2HiveTestCase;
 import org.testng.annotations.Test;
 
 public class TestSecondaryIndexPersistence extends H2HiveTestCase {

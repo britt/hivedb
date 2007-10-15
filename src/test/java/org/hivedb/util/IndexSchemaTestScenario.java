@@ -9,12 +9,12 @@ import java.util.Collection;
 
 import org.hivedb.Hive;
 import org.hivedb.meta.Assigner;
-import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
+import org.hivedb.meta.persistence.IndexSchema;
 
 public class IndexSchemaTestScenario {
 	public static final String DIMENSION = "aSignificantDimension";

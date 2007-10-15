@@ -3,7 +3,6 @@ package org.hivedb.util.database;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.hivedb.util.JdbcTypeMapper;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.ParameterizedRowMapper;
 

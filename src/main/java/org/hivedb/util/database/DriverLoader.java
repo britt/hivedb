@@ -1,8 +1,7 @@
-package org.hivedb.util;
+package org.hivedb.util.database;
 
 import java.util.HashMap;
 
-import org.hivedb.HiveDbDialect;
 import org.hivedb.UnsupportedDialectException;
 
 /**

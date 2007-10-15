@@ -13,10 +13,10 @@ import java.util.List;
 import java.util.Random;
 
 import org.hivedb.Hive;
-import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.SecondaryIndex;
-import org.hivedb.util.database.H2HiveTestCase;
+import org.hivedb.meta.persistence.IndexSchema;
+import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.functional.Atom;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;

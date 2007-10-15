@@ -9,12 +9,12 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hivedb.Hive;
-import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.directory.Directory;
 import org.hivedb.meta.directory.NodeResolver;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
-import org.hivedb.util.database.H2HiveTestCase;
+import org.hivedb.meta.persistence.IndexSchema;
+import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Pair;

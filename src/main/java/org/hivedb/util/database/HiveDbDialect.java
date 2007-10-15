@@ -2,7 +2,7 @@
  * HiveDB is an Open Source (LGPL) system for creating large, high-transaction-volume
  * data storage systems.
  */
-package org.hivedb;
+package org.hivedb.util.database;
 
 public enum HiveDbDialect {
 	/**

@@ -2,8 +2,8 @@ package org.hivedb.util;
 
 import org.apache.log4j.Logger;
 import org.hivedb.meta.HiveConfig;
-import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.PartitionDimension;
+import org.hivedb.meta.persistence.IndexSchema;
 
 
 public class InstallHiveIndexSchema {

@@ -1,4 +1,4 @@
-package org.hivedb;
+package org.hivedb.util.proxy;
 
 public abstract class BenchmarkingProxy<R> {
 	private long start, stop;
