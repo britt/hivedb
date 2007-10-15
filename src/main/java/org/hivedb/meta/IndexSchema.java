@@ -80,7 +80,7 @@ public class IndexSchema extends Schema{
 		+ " ( "
 		+ " id " +  addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(resource.getIdIndex().getColumnInfo().getColumnType())) + " not null, "
 		+ " pkey " + addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(resource.getPartitionDimension().getColumnType())) + " not null"
-		+ ifMySql(", INDEX resource_id_value (id),", dialect)
+		+ " PRIMARY KEY (id)"
 		+ ifMySql(" INDEX resource_id_to_primary_index (pkey)", dialect)
 		+ " ) " 
 		+ ifMySql(" ENGINE=InnoDB", dialect);

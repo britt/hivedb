@@ -85,7 +85,7 @@ public class PartitionKeyStatisticsDao extends JdbcDaoSupport {
 		JdbcTemplate j = getJdbcTemplate();
 		PreparedStatementCreatorFactory factory = new PreparedStatementCreatorFactory(
 				updateSql(IndexSchema.getPrimaryIndexTableName(stats.getPartitionDimension())), 
-				new int[] {Types.INTEGER, Types.DATE, stats.getPartitionDimension().getColumnType()});
+				new int[] {Types.INTEGER, Types.TIMESTAMP, stats.getPartitionDimension().getColumnType()});
 		j.update(factory.newPreparedStatementCreator(parameters));
 	}
 	
@@ -149,7 +149,7 @@ public class PartitionKeyStatisticsDao extends JdbcDaoSupport {
 			this.dimension = dimension;
 		}
 		public Object mapRow(ResultSet rs, int rowNumber) throws SQLException {
-			PartitionKeyStatisticsBean stats = new PartitionKeyStatisticsBean(dimension, rs.getObject("id"), rs.getDate("last_updated"));
+			PartitionKeyStatisticsBean stats = new PartitionKeyStatisticsBean(dimension, rs.getObject("id"), rs.getTimestamp("last_updated"));
 			stats.setChildRecordCount(rs.getInt("secondary_index_count"));
 			return stats;
 		}

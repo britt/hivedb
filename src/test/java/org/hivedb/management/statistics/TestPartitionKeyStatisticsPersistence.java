@@ -1,15 +1,14 @@
 package org.hivedb.management.statistics;
 
 import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.AssertJUnit.fail;
 
-import java.util.Date;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
@@ -69,9 +68,11 @@ public class TestPartitionKeyStatisticsPersistence extends H2HiveTestCase {
 			e.printStackTrace();
 			fail("Error creating the statistics entry");
 		}
+	
 		assertEquals(frozen.getChildRecordCount(), thawed.getChildRecordCount());
-		assertFalse("Last updated date was not properly set", !frozen
-				.getLastUpdated().equals(thawed.getLastUpdated()));
+		//microsecond discrepancies between test time and update time since update 
+		//time is set in the DAO
+		assertTrue(Math.abs(frozen.getLastUpdated().getTime() - thawed.getLastUpdated().getTime()) < 10);
 
 	}
 
@@ -130,21 +131,50 @@ public class TestPartitionKeyStatisticsPersistence extends H2HiveTestCase {
 		}
 	}
 
+	//TODO: update to accommodate indexing changes
 //	@Test
-	public void testSecondaryIndexHooks() throws Exception {
-		Object key = keys.iterator().next();
-
+//	public void testSecondaryIndexHooks() throws Exception {
+//		Object key = Atom.getFirst(keys);
+//
+//		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource(getHiveDatabaseName()));
+//		PartitionKeyStatistics frozen = dao.findByPartitionKey(partitionDimension, key);
+//		
+//		hive.insertSecondaryIndexKey(secondaryIndex.getName(), secondaryIndex.getResource().getName(), secondaryIndex.getResource().getPartitionDimension().getName(), new Integer(1), key);
+//		hive.insertSecondaryIndexKey(secondaryIndex.getName(), secondaryIndex.getResource().getName(), secondaryIndex.getResource().getPartitionDimension().getName(), new Integer(2), key);
+//		hive.insertSecondaryIndexKey(secondaryIndex.getName(), secondaryIndex.getResource().getName(), secondaryIndex.getResource().getPartitionDimension().getName(), new Integer(3), key);
+//
+//		PartitionKeyStatistics thawed = dao.findByPartitionKey(partitionDimension,
+//				frozen.getKey());
+//
+//		assertEquals(frozen.getChildRecordCount() + 3, thawed
+//				.getChildRecordCount());
+//	}
+	
+	@Test
+	public void testRetrieval() {
+		int failures = 0;
 		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource(getHiveDatabaseName()));
-		PartitionKeyStatistics frozen = dao.findByPartitionKey(partitionDimension, key);
 		
-		hive.insertSecondaryIndexKey(secondaryIndex.getName(), secondaryIndex.getResource().getName(), secondaryIndex.getResource().getPartitionDimension().getName(), new Integer(1), key);
-		hive.insertSecondaryIndexKey(secondaryIndex.getName(), secondaryIndex.getResource().getName(), secondaryIndex.getResource().getPartitionDimension().getName(), new Integer(2), key);
-		hive.insertSecondaryIndexKey(secondaryIndex.getName(), secondaryIndex.getResource().getName(), secondaryIndex.getResource().getPartitionDimension().getName(), new Integer(3), key);
-
-		PartitionKeyStatistics thawed = dao.findByPartitionKey(partitionDimension,
-				frozen.getKey());
-
-		assertEquals(frozen.getChildRecordCount() + 3, thawed
-				.getChildRecordCount());
+		for(Object key : keys)
+			try {
+				dao.findByPartitionKey(partitionDimension, key);
+			} catch( Exception e) {
+				failures++;
+			}
+		assertEquals(0, failures);
+	}
+	
+	@Test
+	public void testUpdateDates() {
+		int failures = 0;
+		PartitionKeyStatisticsDao dao = new PartitionKeyStatisticsDao(getDataSource(getHiveDatabaseName()));
+		for(Object key : keys)
+			try {
+				PartitionKeyStatistics stats = dao.findByPartitionKey(partitionDimension, key);
+				System.out.println(stats.getLastUpdated());
+			} catch( Exception e) {
+				failures++;
+			}
+		assertEquals(0, failures);
 	}
 }

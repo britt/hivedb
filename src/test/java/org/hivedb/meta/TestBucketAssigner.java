@@ -1,11 +1,12 @@
 package org.hivedb.meta;
 
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
+
 import java.util.ArrayList;
 import java.util.Collection;
 
 import org.testng.annotations.Test;
-
-import static org.testng.AssertJUnit.*;
 
 public class TestBucketAssigner {
 
@@ -15,13 +16,13 @@ public class TestBucketAssigner {
 		Collection<Node> nodes = createNodes(6);
 		Node assigned = assigner.chooseNode(nodes, 6);
 		assertNotNull(assigned);
-		assertEquals(new Integer(0), assigned.getId());
+		assertEquals(0, assigned.getId());
 		assigned = assigner.chooseNode(nodes, 1);
 		assertNotNull(assigned);
-		assertEquals(new Integer(1), assigned.getId());
+		assertEquals(1, assigned.getId());
 		assigned = assigner.chooseNode(nodes, 8);
 		assertNotNull(assigned);
-		assertEquals(new Integer(2), assigned.getId());
+		assertEquals(2, assigned.getId());
 	}
 	
 	private Collection<Node> createNodes(int nodeCount) {

@@ -416,15 +416,12 @@ public class HiveScenarioTest {
 				Collection<? extends EntityIndexConfig> secondaryIndexConfigs = 
 					entityConfig .getEntitySecondaryIndexConfigs();
 				final Object secondaryIndexValue = Atom.getFirst(secondaryIndexConfigs).getIndexValues(newResourceInstance);
-				new ExceptionalActor<Object,HiveReadOnlyException>(secondaryIndexValue) {
-					public void f(Object secondaryIndexKey) throws HiveReadOnlyException {
-						hive.insertSecondaryIndexKey(
-								secondaryIndex.getName(), 
-								resource.getName(), 
-								secondaryIndex.getResource().getPartitionDimension().getName(),
-								secondaryIndexKey,
-								primaryIndexKey);
-				}}.perform();
+				hive.insertSecondaryIndexKey(
+						secondaryIndex.getName(), 
+						resource.getName(), 
+						secondaryIndex.getResource().getPartitionDimension().getName(),
+						secondaryIndexValue,
+						primaryIndexKey);
 			}}, HiveReadOnlyException.class);	
 			
 			// Attempt to insert a primary index key
@@ -520,7 +517,7 @@ public class HiveScenarioTest {
 							final SecondaryIndex secondaryIndex = resource.getSecondaryIndex(secondaryIndexConfig.getIndexName());
 							Object secondaryIndexValue = secondaryIndexConfig.getIndexValues(resourceInstance);
 							new Actor(secondaryIndexValue) {
-								public void f(Object secondaryIndexKey) throws Exception {
+								public void f(Object secondaryIndexKey){
 									assertFalse(Filter.grepItemAgainstList(
 											entityConfig.getId(resourceInstance),
 											hive.getResourceIdsOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey)));

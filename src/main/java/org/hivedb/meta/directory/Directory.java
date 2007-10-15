@@ -76,7 +76,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	 * @see org.hivedb.meta.HiveDirectory#insertPrimaryIndexKey(org.hivedb.meta.Node, java.lang.Object)
 	 */
 	public void insertPrimaryIndexKey(Node node, Object primaryIndexKey) {
-		int[] types = new int[]{JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass()), Types.INTEGER, Types.DATE};
+		int[] types = new int[]{JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass()), Types.INTEGER, Types.TIMESTAMP};
 		Object[] parameters = new Object[] {primaryIndexKey,node.getId(),new Date(System.currentTimeMillis()) };
 		doUpdate(sql.insertPrimaryIndexKey(partitionDimension), types, parameters, PRIMARY_INDEX_WRITE);
 	}

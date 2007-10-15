@@ -22,6 +22,7 @@ import org.hivedb.management.statistics.DirectoryPerformanceStatistics;
 import org.hivedb.management.statistics.HivePerformanceStatistics;
 import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
 import org.hivedb.meta.AccessType;
+import org.hivedb.meta.Assigner;
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.IndexSchema;
 import org.hivedb.meta.KeySemaphore;
@@ -69,6 +70,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	private DataSource hiveDataSource;
 	private Map<String, DataSource> nodeDataSources;
 	private DataSourceProvider dataSourceProvider;
+	private Assigner defaultNodeAssigner = null;
 	
 	/**
 	 * System entry point. Factory method for all Hive interaction.
@@ -111,6 +113,28 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		return hive;
 	}
 
+	public static Hive load(String hiveDatabaseUri, DataSourceProvider dataSourceProvider, HivePerformanceStatistics hiveStats, DirectoryPerformanceStatistics directoryStats, Assigner assigner) {
+		log.debug("Loading Hive from " + hiveDatabaseUri);
+		
+		//Tickle driver
+		try {
+			DriverLoader.load(hiveDatabaseUri);
+		} catch (ClassNotFoundException e) {
+			throw new HiveRuntimeException("Unable to load database driver: " + e.getMessage(), e);
+		} 
+		
+		Hive hive = new Hive(hiveDatabaseUri, 0, false, new ArrayList<PartitionDimension>(), dataSourceProvider);
+		hive.setDefaultNodeAssigner(assigner);
+		//Inject the statistics monitoring beans
+		if( hiveStats != null) {
+			hive.setPerformanceStatistics(hiveStats);
+			hive.setPerformanceMonitoringEnabled(true);
+		} 
+		hive.sync();
+		log.debug("Successfully loaded Hive from " + hiveDatabaseUri);
+		return hive;
+		
+	}
 
 	public boolean sync() {
 		boolean updated = false;
@@ -131,6 +155,8 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 				directoryStats = directories.values().iterator().next().getPerformanceStatistics();
 			
 			for (PartitionDimension p : new PartitionDimensionDao(hiveDataSource).loadAll()){
+				if(this.getDefaultNodeAssigner() != null)
+					p.setAssigner(this.getDefaultNodeAssigner());
 				dimensionMap.put(p.getName(),p);
 				
 				for(Node node : p.getNodes())
@@ -772,5 +798,13 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	public void notifyObservers() {
 		super.setChanged();
 		super.notifyObservers();
+	}
+
+	public Assigner getDefaultNodeAssigner() {
+		return defaultNodeAssigner;
+	}
+
+	public void setDefaultNodeAssigner(Assigner defaultNodeAssigner) {
+		this.defaultNodeAssigner = defaultNodeAssigner;
 	}
 }

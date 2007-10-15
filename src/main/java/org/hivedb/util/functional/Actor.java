@@ -10,10 +10,22 @@ import java.util.Collections;
  *
  * @param <T> The type of the scalar or of each type of the collection
  */
-public abstract class Actor<T> extends ExceptionalActor<T, RuntimeException>  {
+public abstract class Actor<T>{
+	private Object obj;
 	public Actor(Object obj) {
-		super(obj);
+		this.obj = obj;
 	}
+	public abstract void f(T t);
+	@SuppressWarnings("unchecked")
+	public void perform()
+	{
+		if (obj instanceof Collection)
+			for (T t : (Collection<T>)obj)
+				f(t);
+		else
+			f((T)obj);
+	}
+	
 	@SuppressWarnings("unchecked")
 	public static Collection<Object> forceCollection(Object obj) {
 		if (obj instanceof Collection)

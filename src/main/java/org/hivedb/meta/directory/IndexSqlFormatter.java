@@ -144,11 +144,11 @@ public class IndexSqlFormatter {
 	}
 	
 	public String checkExistenceOfSecondaryIndexSql( SecondaryIndex secondaryIndex) {
-		return String.format("select id from %s where id = ? and pkey = ?", IndexSchema.getSecondaryIndexTableName(secondaryIndex));
+		return String.format("select id from %s where id = ? and pkey = ? limit 1", IndexSchema.getSecondaryIndexTableName(secondaryIndex));
 	}
 	
 	public String checkExistenceOfResourceIndexSql( SecondaryIndex secondaryIndex) {
-		return String.format("select id from %s where id = ?", IndexSchema.getSecondaryIndexTableName(secondaryIndex));
+		return String.format("select id from %s where id = ? limit 1", IndexSchema.getSecondaryIndexTableName(secondaryIndex));
 	}
 	
 	public String updateSecondaryIndexKey( SecondaryIndex secondaryIndex) {
