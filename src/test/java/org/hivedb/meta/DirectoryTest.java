@@ -257,7 +257,6 @@ public class DirectoryTest extends H2HiveTestCase {
 		insertKeys(getHive());
 		Directory d = getDirectory();
 		for(Integer pkey : getPrimaryIndexKeys()){
-			d.insertResourceId(resource, pkey, pkey);
 			assertEquals(false, d.getReadOnlyOfResourceId(resource, pkey));
 			d.updatePrimaryIndexKeyReadOnly(pkey, true);
 			assertTrue(d.getReadOnlyOfResourceId(resource, pkey));

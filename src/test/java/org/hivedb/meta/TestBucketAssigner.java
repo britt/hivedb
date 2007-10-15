@@ -16,13 +16,13 @@ public class TestBucketAssigner {
 		Collection<Node> nodes = createNodes(6);
 		Node assigned = assigner.chooseNode(nodes, 6);
 		assertNotNull(assigned);
-		assertEquals(0, assigned.getId());
+		assertEquals(new Integer(0), assigned.getId());
 		assigned = assigner.chooseNode(nodes, 1);
 		assertNotNull(assigned);
-		assertEquals(1, assigned.getId());
+		assertEquals(new Integer(1), assigned.getId());
 		assigned = assigner.chooseNode(nodes, 8);
 		assertNotNull(assigned);
-		assertEquals(2, assigned.getId());
+		assertEquals(new Integer(2), assigned.getId());
 	}
 	
 	private Collection<Node> createNodes(int nodeCount) {

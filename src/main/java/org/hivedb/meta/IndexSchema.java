@@ -79,9 +79,9 @@ public class IndexSchema extends Schema{
 		"CREATE TABLE " + getSecondaryIndexTableName(resource.getIdIndex()) 
 		+ " ( "
 		+ " id " +  addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(resource.getIdIndex().getColumnInfo().getColumnType())) + " not null, "
-		+ " pkey " + addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(resource.getPartitionDimension().getColumnType())) + " not null"
-		+ " PRIMARY KEY (id)"
-		+ ifMySql(" INDEX resource_id_to_primary_index (pkey)", dialect)
+		+ " pkey " + addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(resource.getPartitionDimension().getColumnType())) + " not null,"
+		+ " PRIMARY KEY (id) "
+		+ ifMySql(", INDEX resource_id_to_primary_index (pkey)", dialect)
 		+ " ) " 
 		+ ifMySql(" ENGINE=InnoDB", dialect);
 	}
