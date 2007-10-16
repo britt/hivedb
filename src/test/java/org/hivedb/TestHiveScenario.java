@@ -6,6 +6,7 @@ import org.hivedb.meta.Node;
 import org.hivedb.util.PersisterImpl;
 import org.hivedb.util.scenarioBuilder.HiveScenarioConfigForResourceAndPartitionDimensionEntity;
 import org.hivedb.util.scenarioBuilder.HiveScenarioConfigForResourceEntity;
+import org.hivedb.util.scenarioBuilder.HiveScenarioTest;
 
 public class TestHiveScenario {
 	

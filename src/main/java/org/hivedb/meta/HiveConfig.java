@@ -11,7 +11,7 @@ import org.hivedb.Hive;
  */
 public interface HiveConfig {
 	
-	EntityConfig<Object> getEntityConfig();
+	EntityConfig<?> getEntityConfig();
 	Collection<Node> getDataNodes();
 	Hive getHive();
 }

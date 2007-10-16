@@ -18,10 +18,10 @@ public class TestMysqlKeyAuthority extends HiveMySqlTestCase{
 	@Test(groups={"mysql"})
 	@SuppressWarnings("unchecked")
 	public void testAssign() throws Exception {
-		KeyAuthority<Integer> authority = new MySqlKeyAuthority<Integer>(
+		KeyAuthority authority = new MySqlKeyAuthority(
 				getDataSource("test"), this.getClass(), Integer.class);
-		int firstKey = authority.nextAvailableKey().intValue();
-		int secondKey = authority.nextAvailableKey().intValue();
+		int firstKey = (Integer) authority.nextAvailableKey();
+		int secondKey = (Integer) authority.nextAvailableKey();
 		assertTrue(secondKey > firstKey);
 	}
 	

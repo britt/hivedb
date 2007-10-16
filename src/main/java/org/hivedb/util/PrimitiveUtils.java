@@ -1,6 +1,19 @@
 package org.hivedb.util;
 
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+
+
 public class PrimitiveUtils {
+	
+	static Date date;
+	static {
+		Calendar calendar = GregorianCalendar.getInstance();
+		calendar.clear();
+		date = calendar.getTime();
+	}
+	
 	public static boolean isUndefinedId(Object id) {
 		return getUndefinedValue(id.getClass()).equals(id);
 	}
@@ -17,15 +30,20 @@ public class PrimitiveUtils {
 			return (float) 0;
 		if (isString(clazz))
 			return "";
+		if (isDate(clazz)) {		
+			return date;
+		}
+			 
 		throw new RuntimeException(String.format("Class %s not supported", clazz.getSimpleName()));
 	}
+	
 	
 	/**
 	 *  Is this class representable as one our supported noncomplex types
 	 * @param clazz
 	 */
 	public static boolean isPrimitiveClass(Class clazz) {
-		return isInteger(clazz) || isLong(clazz) || isShort(clazz) || isDouble(clazz) || isFloat(clazz) || isString(clazz);
+		return isInteger(clazz) || isLong(clazz) || isShort(clazz) || isDouble(clazz) || isFloat(clazz) || isString(clazz) || isDate(clazz);
 	}
 	
 	public static boolean isString(Class clazz) {
@@ -51,5 +69,9 @@ public class PrimitiveUtils {
 	public static boolean isFloat(Class clazz) {
 		return clazz.equals(float.class)
 		|| clazz.equals(Float.class);
+	}
+	
+	private static boolean isDate(Class clazz) {
+		return clazz.equals(Date.class);
 	}
 }

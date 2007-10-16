@@ -8,7 +8,7 @@ import org.hivedb.util.functional.Generator;
 
 public class MemoryKeyAuthority implements KeyAuthorityCreator {
 	
-	public <T extends Number> KeyAuthority<T> create(Class keySpace, final Class<T> returnType) {
+	public  KeyAuthority create(Class keySpace, final Class returnType) {
 		final Generator incrementor;
 		if (returnType.equals(int.class) || returnType.equals(Integer.class))
 			 incrementor = new Generator<Integer>() {
@@ -27,15 +27,15 @@ public class MemoryKeyAuthority implements KeyAuthorityCreator {
 		else
 			throw new RuntimeException("Only Integers and Longs are supported");
 		
-		return new KeyAuthority<T>() {
+		return new KeyAuthority() {
 
-			public T nextAvailableKey() {
+			public Object nextAvailableKey() {
 				return increment();
 			}
 			@SuppressWarnings("unchecked")
-			private T increment()
+			private Object increment()
 			{
-				return (T)incrementor.generate();
+				return incrementor.generate();
 			}
 		};
 	}

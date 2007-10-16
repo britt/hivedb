@@ -43,8 +43,8 @@ public class EntityConfigImpl<F> implements EntityConfig<F> {
 	public static EntityConfig<Object> createPartitioningResourceEntity(
 			Class<?> representedInterface, 
 			String partitionDimensionName,
-			Collection<? extends EntityIndexConfig> secondaryIndexIdentifiables,
-			String idPropertyName) {
+			String idPropertyName,
+			Collection<? extends EntityIndexConfig> secondaryIndexIdentifiables) {
 		return new EntityConfigImpl<Object>(
 				representedInterface, 
 				partitionDimensionName,
@@ -107,5 +107,8 @@ public class EntityConfigImpl<F> implements EntityConfig<F> {
 	
 	public Object getPrimaryIndexKey(Object resourceInstance) {
 		return ReflectionTools.invokeGetter(resourceInstance, primaryIndexKeyPropertyName);
+	}
+	public Class getIdClass() {
+		return ReflectionTools.getPropertyType(getRepresentedInterface(), getIdPropertyName());
 	}
 }

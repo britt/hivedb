@@ -14,7 +14,7 @@ import org.springframework.jdbc.support.incrementer.DataFieldMaxValueIncrementer
  * @author Justin McCarthy (jmccarthy@cafepress.com)
  */
 
-public class JdbcKeyAuthority<T extends Number> implements KeyAuthority<T> {
+public class JdbcKeyAuthority implements KeyAuthority {
 
 	DataFieldMaxValueIncrementer incrementer = null;
 
@@ -32,7 +32,7 @@ public class JdbcKeyAuthority<T extends Number> implements KeyAuthority<T> {
 	 *            Type of the numeric keys this KeyAuthority generates (Integer
 	 *            or Float)
 	 */
-	public JdbcKeyAuthority(Class keySpace, Class<T> returnType) {
+	public JdbcKeyAuthority(Class keySpace, Class returnType) {
 		this.keySpace = keySpace;
 		this.returnType = returnType;
 	}
@@ -49,8 +49,8 @@ public class JdbcKeyAuthority<T extends Number> implements KeyAuthority<T> {
 		return this.dataSource;
 	}
 
-	public T nextAvailableKey() {
-		T result = null;
+	public Object nextAvailableKey() {
+		Object result = null;
 		try {
 			result = nextKey();
 		} catch (Exception ex) {
@@ -61,11 +61,11 @@ public class JdbcKeyAuthority<T extends Number> implements KeyAuthority<T> {
 	}
 
 	@SuppressWarnings("unchecked")
-	private T nextKey() {
+	private Object nextKey() {
 		if (Integer.class.equals(returnType))
-			return (T) new Integer(incrementer.nextIntValue());
+			return new Integer(incrementer.nextIntValue());
 		if (Long.class.equals(returnType))
-			return (T) new Long(incrementer.nextLongValue());
+			return new Long(incrementer.nextLongValue());
 		throw new HiveRuntimeException("Unable to generate key for type "
 				+ returnType.toString());
 	}

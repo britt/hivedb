@@ -17,7 +17,7 @@ public abstract class Filter {
 	 * @param iterable
 	 * @return
 	 */
-	public abstract<T> Collection<T> f(Iterable<T> iterable);
+	public abstract<T> Collection<T> f(Iterable<? extends T> iterable);
 	
 	public static<T> Collection<T> grep(Predicate<T> filterer, Iterable<? extends T> iterable)
 	{
@@ -32,14 +32,14 @@ public abstract class Filter {
 		return grep(filterer, Arrays.asList(array));
 	}
 	
-	public static<T> T grepSingle(Predicate<T> filterer, Iterable<T> iterable) throws NoSuchElementException
+	public static<T> T grepSingle(Predicate<T> filterer, Iterable<? extends T> iterable) throws NoSuchElementException
 	{
 		T match = grepSingleOrNull(filterer, iterable);
 		if (match != null)
 			return match;
 		throw new RuntimeException("No match found");
 	}
-	public static<T> T grepSingleOrNull(Predicate<T> filterer, Iterable<T> iterable) throws NoSuchElementException
+	public static<T> T grepSingleOrNull(Predicate<T> filterer, Iterable<? extends T> iterable) throws NoSuchElementException
 	{
 		for (T item : iterable)
 			if (filterer.f(item))
@@ -48,9 +48,9 @@ public abstract class Filter {
 	}
 
 	
-	public static<T> T getFirst(Iterable<T> iterable) throws NoSuchElementException
+	public static<T> T getFirst(Iterable<? extends T> iterable) throws NoSuchElementException
 	{
-		Iterator<T> iterator = iterable.iterator();
+		Iterator<? extends T> iterator = iterable.iterator();
 		if (iterator.hasNext())
 			return iterator.next();
 		throw new NoSuchElementException("No first element of the iterable exists");
@@ -87,12 +87,12 @@ public abstract class Filter {
 	// The match is determined by calling the equals method of either the superset or subset item.
 	// Therefore the type of both Iterable must match (probably need wildcards here actually)
 	// If you need to pass in an array, use Arrays.asList() to make it iterable
-	public static<T> Collection<T> grepAgainstList(final Iterable<T> subset, Iterable<T> superset)
+	public static<T> Collection<T> grepAgainstList(final Iterable<? extends T> subset, Iterable<? extends T> superset)
 	{
 		Predicate<T> doesThisSupersetItemMatchAnySubsetItem = makeDoesSupersetItemMatchAnySubsetItem(subset, new EqualFunction<T>());
 		return grep(doesThisSupersetItemMatchAnySubsetItem, superset);
 	}
-	public static<T> boolean grepItemAgainstList(final T subItem, Iterable<T> superset)
+	public static<T> boolean grepItemAgainstList(final T subItem, Iterable<? extends T> superset)
 	{
 		List<T> list = new ArrayList<T>(1);
 		list.add(subItem);
@@ -116,12 +116,12 @@ public abstract class Filter {
 		return isMatch(doesThisSupersetItemMatchAnySubsetItem, superset);
 	}
 	
-	public static<T> Collection<T> grepFalseAgainstList(final Iterable<T> subset, Iterable<T> superset)
+	public static<T> Collection<T> grepFalseAgainstList(final Iterable<? extends T> subset, Iterable<? extends T> superset)
 	{
 		Predicate<T> doesThisSupersetItemNotMatchAnySubsetItem = makeDoesSupersetItemNotMatchAnySubsetItem(subset, new EqualFunction<T>());
 		return grep(doesThisSupersetItemNotMatchAnySubsetItem, superset);
 	}
-	public static<T> Collection<T> grepItemFalseAgainstList(final T subItem, Iterable<T> superset)
+	public static<T> Collection<T> grepItemFalseAgainstList(final T subItem, Iterable<? extends T> superset)
 	{
 		List<T> list = new ArrayList<T>();
 		list.add(subItem);
@@ -144,7 +144,7 @@ public abstract class Filter {
 	// Returns true if all superset items match a subset item
 	// The match is determined by callin the equals method of either the superset or subset item
 	// If you need to pass in an array, use Arrays.asList() to make it iterable
-	public static<T> Boolean allMatch(final Iterable<T> subset, Iterable<T> superset)
+	public static<T> Boolean allMatch(final Iterable<? extends T> subset, Iterable<? extends T> superset)
 	{
 		Predicate<T> doesThisSupersetItemMatchAnySubsetItem = makeDoesSupersetItemMatchAnySubsetItem(subset, new EqualFunction<T>());
 		for (T supersetItem : superset)
@@ -187,14 +187,14 @@ public abstract class Filter {
 		return doesThisSupersetItemMatchAnySubsetItem;
 	}
 	
-	public static<T> Collection<T> getUnique(Iterable<T> iterable)
+	public static<T> Collection<T> getUnique(Iterable<? extends T> iterable)
 	{
 		Map<T,Boolean> map = new Hashtable<T,Boolean>();
 		for (T item : iterable)
 			map.put(item, true);
 		return map.keySet();
 	}
-	public static<T,R> Collection<T> getUnique(Iterable<T> iterable, Unary<T, R> accessor)
+	public static<T,R> Collection<T> getUnique(Iterable<? extends T> iterable, Unary<T, R> accessor)
 	{
 		Map<R,T> map = new Hashtable<R,T>();
 		for (T item : iterable)
@@ -226,7 +226,7 @@ public abstract class Filter {
 	}
 	public static class FirstOnlyFilter extends Filter
 	{
-		public <T> Collection<T> f(Iterable<T> iterable) {
+		public <T> Collection<T> f(Iterable<? extends T> iterable) {
 			return grep(new FirstOnlyPredicate<T>(), iterable);
 		}
 	}
@@ -256,13 +256,13 @@ public abstract class Filter {
 	public static class AllowAllFilter extends Filter
 	{
 		@SuppressWarnings("unchecked")
-		public <T> Collection<T> f(Iterable<T> iterable) {
+		public <T> Collection<T> f(Iterable<? extends T> iterable) {
 			return (Collection<T>)grep(new TruePredicate(), iterable);
 		}
 	}
 	public static class BlockAllFilter extends Filter
 	{
-		public <T> Collection<T> f(Iterable<T> iterable) {
+		public <T> Collection<T> f(Iterable<? extends T> iterable) {
 			return new ArrayList<T>();
 		}
 	}

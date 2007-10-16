@@ -98,8 +98,10 @@ public abstract class Schema extends JdbcDaoSupport {
 	private void createTable(TableInfo table) {
 		JdbcTemplate j = getJdbcTemplate();
 		if(!tableExists(table.getName())) {
+			final String createStatement = table.getCreateStatement();
+			System.err.println(createStatement);
 			PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
-					table.getCreateStatement());
+					createStatement);
 			j.update(creatorFactory.newPreparedStatementCreator(new Object[] {}));
 		}
 	}

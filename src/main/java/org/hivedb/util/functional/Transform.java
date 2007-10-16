@@ -121,7 +121,7 @@ public class Transform {
 			map.put(entry.getKey(), entry.getValue());
 		return map;
 	}
-	public static<K,V,I> Map<K,V> toOrderedMap(Unary<I,K> keyMapper, Unary<I,V> valueMapper, Iterable<I> iterable)
+	public static<K,V,I> Map<K,V> toOrderedMap(Unary<I,K> keyMapper, Unary<I,V> valueMapper, Iterable<? extends I> iterable)
 	{
 		Map<K,V> map = new OrderedDebugMap<K,V>();
 		for (I item : iterable)

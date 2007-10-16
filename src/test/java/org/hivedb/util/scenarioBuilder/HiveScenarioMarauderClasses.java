@@ -8,8 +8,6 @@ import org.hivedb.meta.EntityConfig;
 import org.hivedb.meta.EntityConfigImpl;
 import org.hivedb.meta.EntityIndexConfig;
 import org.hivedb.meta.EntityIndexConfigImpl;
-import org.hivedb.util.AccessorFunction;
-
 
 public class HiveScenarioMarauderClasses {
 	
@@ -18,9 +16,10 @@ public class HiveScenarioMarauderClasses {
 		return EntityConfigImpl.createPartitioningResourceEntity(
 				Pirate.class,
 				Pirate.class.getSimpleName().toLowerCase(),
+				"id",
 				(Collection<? extends EntityIndexConfig>)Collections.singletonList(
-						new EntityIndexConfigImpl(Pirate.class,"name")),
-				"id");
+						new EntityIndexConfigImpl(Pirate.class,"name"))
+				);
 						
 	}
 	public static EntityConfig<Object> getTreasureConfiguration()

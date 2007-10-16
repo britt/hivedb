@@ -16,4 +16,5 @@ public interface EntityConfig<F extends Object> {
 	
 	boolean isPartitioningResource();
 	Class getRepresentedInterface();
+	Class getIdClass();
 }

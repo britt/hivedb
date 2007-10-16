@@ -27,7 +27,7 @@ public class EntityIndexConfigImpl implements EntityIndexConfig {
 	}
 	/**
 	 *  Constructor for a property of a collection of complex types. This assumes the complex type's
-	 *  indexed property is a primitive value, thought this could be refactored to support a property
+	 *  indexed property is a primitive value, though this could be refactored to support a property
 	 *  at any depth in the object graph. 
 	 *  
 	 * @param secondaryIndexKeyPropertyName name of the collection property

@@ -1,4 +1,4 @@
-package org.hivedb;
+package org.hivedb.util.scenarioBuilder;
 
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
@@ -14,6 +14,9 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.TreeSet;
 
+import org.hivedb.Hive;
+import org.hivedb.HiveException;
+import org.hivedb.HiveReadOnlyException;
 import org.hivedb.meta.Assigner;
 import org.hivedb.meta.EntityConfig;
 import org.hivedb.meta.EntityGeneratorImpl;
@@ -27,7 +30,6 @@ import org.hivedb.meta.PrimaryIndexKeyGenerator;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.directory.Directory;
-import org.hivedb.meta.directory.NodeResolver;
 import org.hivedb.meta.persistence.ColumnInfo;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.AssertUtils;
@@ -41,31 +43,28 @@ import org.hivedb.util.functional.RingIteratorable;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.hivedb.util.functional.Undoable;
-import org.hivedb.util.scenarioBuilder.HiveScenario;
 
 public class HiveScenarioTest {
 	
 	HiveConfig hiveConfig;
-	Collection<Node> dataNodes;
-	private NodeResolver directory;
 	public HiveScenarioTest(HiveConfig hiveConfig)
 	{
 		this.hiveConfig = hiveConfig;
 	}
 	public void performTest(int primaryIndexInstanceCount, int resourceInstanceCount, Persister persister) {
 		HiveScenario hiveScenario = HiveScenario.run(hiveConfig, primaryIndexInstanceCount, resourceInstanceCount, persister);
-		validate(hiveScenario);
+		validate(hiveConfig, hiveScenario.getGeneratedResourceInstances());
 	}
 
-	protected void validate(HiveScenario hiveScenario) {
+	public static void validate(final HiveConfig hiveConfig, Collection<Object> resourceInstances) {
 		try {
-			validateHiveMetadata(hiveScenario.getHiveConfig());
+			validateHiveMetadata(hiveConfig);
 			// Validate CRUD operations. Read at the beginning and after updates
 			// to verify that the update restored the data to its original state.
-			validateReadsFromPersistence(hiveScenario.getHiveConfig(), hiveScenario.getGeneratedResourceInstances());
-			validateUpdatesToPersistence(hiveScenario.getHiveConfig(), hiveScenario.getGeneratedResourceInstances());
-			validateReadsFromPersistence(hiveScenario.getHiveConfig(), hiveScenario.getGeneratedResourceInstances());
-			validateDeletesToPersistence(hiveScenario.getHiveConfig(), hiveScenario.getGeneratedResourceInstances());
+			validateReadsFromPersistence(hiveConfig, resourceInstances);
+			validateUpdatesToPersistence(hiveConfig, resourceInstances);
+			validateReadsFromPersistence(hiveConfig, resourceInstances);
+			validateDeletesToPersistence(hiveConfig, resourceInstances);
 			// data is reinserted after deletes but nodes can change so we can't validate equality again
 		}
 		catch (Exception e) {
@@ -73,7 +72,7 @@ public class HiveScenarioTest {
 		}
 	}
 	
-	public void validateHiveMetadata(final HiveConfig hiveConfig) throws HiveException, SQLException
+	private static void validateHiveMetadata(final HiveConfig hiveConfig) throws HiveException, SQLException
 	{
 		Hive hive = hiveConfig.getHive();
 		String partitionDimensionName = hiveConfig.getEntityConfig().getPartitionDimensionName();
@@ -88,7 +87,7 @@ public class HiveScenarioTest {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public void validateReadsFromPersistence(final HiveConfig hiveConfig, Collection<Object> resourceInstances) throws HiveException, SQLException
+	private static void validateReadsFromPersistence(final HiveConfig hiveConfig, Collection<Object> resourceInstances) throws HiveException, SQLException
 	{
 		Hive hive = hiveConfig.getHive();
 		String partitionDimensionName = hiveConfig.getEntityConfig().getPartitionDimensionName();
@@ -96,7 +95,7 @@ public class HiveScenarioTest {
 		final PartitionDimension actualPartitionDimension = hive.getPartitionDimension(partitionDimensionName);
 		
 		Collection<Object> primaryIndexKeys = getGeneratedPrimaryIndexKeys(hiveConfig, resourceInstances);
-		directory = new Directory(actualPartitionDimension,new HiveBasicDataSource(hive.getUri()));
+		Directory directory = new Directory(actualPartitionDimension,new HiveBasicDataSource(hive.getUri()));
 		for (Object primaryindexKey : primaryIndexKeys)
 			assertTrue(directory.getNodeSemamphoresOfPrimaryIndexKey(primaryindexKey).size() > 0);
 		
@@ -107,7 +106,7 @@ public class HiveScenarioTest {
 		// Validate that the secondary index keys are in the database with the right primary index key
 		for (final Resource resource : actualPartitionDimension.getResources()) {
 			for (final Object resourceInstance : resourceInstances) {
-				final EntityConfig<Object> entityConfig = hiveConfig.getEntityConfig();					
+				final EntityConfig<?> entityConfig = hiveConfig.getEntityConfig();					
 				Collection<? extends EntityIndexConfig> secondaryIndexConfigs = entityConfig.getEntitySecondaryIndexConfigs();
 				for (EntityIndexConfig secondaryIndexConfig : secondaryIndexConfigs) {	
 					final SecondaryIndex secondaryIndex = resource.getSecondaryIndex(secondaryIndexConfig.getIndexName());
@@ -155,7 +154,7 @@ public class HiveScenarioTest {
 		}, resourceInstances);
 	}
 
-	public void validateUpdatesToPersistence(final HiveConfig hiveConfig, Collection<Object> resourceInstances) throws HiveException, SQLException
+	private static void validateUpdatesToPersistence(final HiveConfig hiveConfig, Collection<Object> resourceInstances) throws HiveException, SQLException
 	{
 		updatePimaryIndexKeys(hiveConfig, resourceInstances, new Filter.AllowAllFilter());
 		updatePrimaryIndexKeyOfResource(hiveConfig, resourceInstances, new Filter.AllowAllFilter());			
@@ -200,7 +199,7 @@ public class HiveScenarioTest {
 		
 		final Hive hive = hiveConfig.getHive();
 		final PartitionDimension partitionDimension = hive.getPartitionDimension(hiveConfig.getEntityConfig().getPartitionDimensionName());
-		final EntityConfig<Object> entityConfig = hiveConfig.getEntityConfig();
+		final EntityConfig<?> entityConfig = hiveConfig.getEntityConfig();
 		final Resource resource = partitionDimension.getResource(entityConfig.getResourceName());
 		if (resource.isPartitioningResource())
 			return;
@@ -242,7 +241,7 @@ public class HiveScenarioTest {
 	{
 		final Hive hive = hiveConfig.getHive();
 		final PartitionDimension partitionDimension = hive.getPartitionDimension(hiveConfig.getEntityConfig().getPartitionDimensionName());
-		final EntityConfig<Object> entityConfig = hiveConfig.getEntityConfig();
+		final EntityConfig<?> entityConfig = hiveConfig.getEntityConfig();
 		final Resource resource = partitionDimension.getResource(entityConfig.getResourceName());
 		try {
 			new Undoable() {
@@ -396,7 +395,7 @@ public class HiveScenarioTest {
 	private static void commitReadonlyViolations(final HiveConfig hiveConfig, Collection<Object> resourceInstances) throws HiveException 
 	{
 		final Hive hive = hiveConfig.getHive();
-		final EntityConfig<Object> entityConfig = hiveConfig.getEntityConfig();
+		final EntityConfig<?> entityConfig = hiveConfig.getEntityConfig();
 		final PartitionDimension partitionDimension = hive.getPartitionDimension(entityConfig.getPartitionDimensionName());
 		final Resource resource = partitionDimension.getResource(entityConfig.getResourceName());
 		
@@ -414,12 +413,13 @@ public class HiveScenarioTest {
 										.generate(primaryIndexKey);
 				Collection<? extends EntityIndexConfig> secondaryIndexConfigs = 
 					entityConfig .getEntitySecondaryIndexConfigs();
-				final Object secondaryIndexValue = Atom.getFirst(secondaryIndexConfigs).getIndexValues(newResourceInstance);
-				hive.insertSecondaryIndexKey(
+				final Collection<Object> secondaryIndexKeys = Atom.getFirst(secondaryIndexConfigs).getIndexValues(newResourceInstance);
+				for (final Object secondaryIndexKey : secondaryIndexKeys)
+					hive.insertSecondaryIndexKey(
 						secondaryIndex.getName(), 
 						resource.getName(), 
 						secondaryIndex.getResource().getPartitionDimension().getName(),
-						secondaryIndexValue,
+						secondaryIndexKey,
 						primaryIndexKey);
 			}}, HiveReadOnlyException.class);	
 			
@@ -434,7 +434,7 @@ public class HiveScenarioTest {
 		} catch (Exception e) { throw new HiveException("Undoable exception", e); }
 	}	
 	
-	public void validateDeletesToPersistence(final HiveConfig hiveConfig, Collection<Object> resourceInstances) throws HiveException, SQLException
+	private static void validateDeletesToPersistence(final HiveConfig hiveConfig, Collection<Object> resourceInstances) throws HiveException, SQLException
 	{	
 		validateDeletePrimaryIndexKey(hiveConfig, resourceInstances);	
 		validateDeleteResourceInstances(hiveConfig, resourceInstances);
@@ -442,9 +442,9 @@ public class HiveScenarioTest {
 	}
 	
 	
-	private void validateDeletePrimaryIndexKey(final HiveConfig hiveConfig, final Collection<Object> resourceInstances) {
+	private static void validateDeletePrimaryIndexKey(final HiveConfig hiveConfig, final Collection<Object> resourceInstances) {
 		final Hive hive = hiveConfig.getHive();
-		final EntityConfig<Object> entityConfig = hiveConfig.getEntityConfig();
+		final EntityConfig<?> entityConfig = hiveConfig.getEntityConfig();
 		final PartitionDimension partitionDimension = hive.getPartitionDimension(entityConfig.getPartitionDimensionName());
 		final Resource resource = partitionDimension.getResource(entityConfig.getResourceName());
 		
@@ -493,9 +493,9 @@ public class HiveScenarioTest {
 		
 		}
 	}
-	private void validateDeleteResourceInstances(final HiveConfig hiveConfig, final Collection<Object> resourceInstances) {
+	private static void validateDeleteResourceInstances(final HiveConfig hiveConfig, final Collection<Object> resourceInstances) {
 		final Hive hive = hiveConfig.getHive();
-		final EntityConfig<Object> entityConfig = hiveConfig.getEntityConfig();
+		final EntityConfig<?> entityConfig = hiveConfig.getEntityConfig();
 		final PartitionDimension partitionDimension = hive.getPartitionDimension(entityConfig.getPartitionDimensionName());
 		final Resource resource = partitionDimension.getResource(entityConfig.getResourceName());
 	
@@ -514,16 +514,12 @@ public class HiveScenarioTest {
 						Collection<? extends EntityIndexConfig> secondaryIndexConfigs = entityConfig.getEntitySecondaryIndexConfigs();
 						for (final EntityIndexConfig secondaryIndexConfig : secondaryIndexConfigs) {	
 							final SecondaryIndex secondaryIndex = resource.getSecondaryIndex(secondaryIndexConfig.getIndexName());
-							Object secondaryIndexValue = secondaryIndexConfig.getIndexValues(resourceInstance);
-							new Actor(secondaryIndexValue) {
-								public void f(Object secondaryIndexKey){
+							Collection<Object> secondaryIndexKeys = secondaryIndexConfig.getIndexValues(resourceInstance);
+							for (Object secondaryIndexKey : secondaryIndexKeys)
 									assertFalse(Filter.grepItemAgainstList(
 											entityConfig.getId(resourceInstance),
 											hive.getResourceIdsOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey)));
-								}
-							};
-							
-						
+												
 							new Undo() { public void f()  {
 								try {
 									undoSecondaryIndexDelete(hiveConfig, secondaryIndexConfig, resourceInstance);
@@ -544,9 +540,9 @@ public class HiveScenarioTest {
 		}
 	
 	}
-	private void validateDeleteSecondaryIndexKeys(final HiveConfig hiveConfig, final Collection<Object> resourceInstances) {
+	private static void validateDeleteSecondaryIndexKeys(final HiveConfig hiveConfig, final Collection<Object> resourceInstances) {
 		final Hive hive = hiveConfig.getHive();
-		final EntityConfig<Object> entityConfig = hiveConfig.getEntityConfig();
+		final EntityConfig<?> entityConfig = hiveConfig.getEntityConfig();
 		final PartitionDimension partitionDimension = hive.getPartitionDimension(entityConfig.getPartitionDimensionName());
 		final Resource resource = partitionDimension.getResource(entityConfig.getResourceName());
 		
@@ -594,12 +590,12 @@ public class HiveScenarioTest {
 		}
 	}
 	
-	private void undoSecondaryIndexDelete(
+	private static void undoSecondaryIndexDelete(
 			final HiveConfig hiveConfig, 
 			final EntityIndexConfig secondaryIndexConfig,
 			final Object resourceInstance) {
 		final Hive hive = hiveConfig.getHive();
-		EntityConfig<Object> entityConfig = hiveConfig.getEntityConfig();
+		EntityConfig<?> entityConfig = hiveConfig.getEntityConfig();
 		final PartitionDimension partitionDimension = hive.getPartitionDimension(entityConfig.getPartitionDimensionName());
 		final Resource resource = partitionDimension.getResource(entityConfig.getResourceName());
 		final SecondaryIndex secondaryIndex = resource.getSecondaryIndex(secondaryIndexConfig.getIndexName());																								

@@ -12,8 +12,8 @@ import org.springframework.jdbc.support.incrementer.MySQLMaxValueIncrementer;
  *
  * @param <T> Type of generated keys (Long or Integer)
  */
-public class MySqlKeyAuthority<T extends Number> extends JdbcKeyAuthority<T> {
-	public MySqlKeyAuthority(DataSource ds, Class keySpace, Class<T> returnType) {
+public class MySqlKeyAuthority<T extends Number> extends JdbcKeyAuthority {
+	public MySqlKeyAuthority(DataSource ds, Class keySpace, Class returnType) {
 		super(keySpace, returnType);
 		this.setDataSource(ds);
 		setIncrementer(this.getIncrementer(ds));

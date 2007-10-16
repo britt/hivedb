@@ -3,8 +3,6 @@ package org.hivedb.meta;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.hivedb.util.HiveUtils;
-import org.hivedb.util.PrimitiveUtils;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.functional.Transform;
@@ -27,7 +25,7 @@ public class PartitionDimensionCreator {
 		);
 	}
 	private static Resource createResource(final HiveConfig hiveConfig) {
-		EntityConfig<Object> entityConfig = hiveConfig.getEntityConfig();
+		EntityConfig<?> entityConfig = hiveConfig.getEntityConfig();
 		return new Resource(
 				entityConfig.getResourceName(), 
 				JdbcTypeMapper.primitiveTypeToJdbcType(
@@ -38,7 +36,7 @@ public class PartitionDimensionCreator {
 				constructSecondaryIndexesOfResource(entityConfig));
 	}
 	
-	public static Collection<SecondaryIndex> constructSecondaryIndexesOfResource(final EntityConfig<Object> entityConfig) {	
+	public static Collection<SecondaryIndex> constructSecondaryIndexesOfResource(final EntityConfig<?> entityConfig) {	
 		try {
 			return 
 				Transform.map(

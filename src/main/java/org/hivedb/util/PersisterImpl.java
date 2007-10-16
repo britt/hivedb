@@ -19,7 +19,7 @@ public class PersisterImpl implements Persister {
 	}
 	
 	public Object persistResourceInstance(HiveConfig hiveConfig, Object instance) {
-		EntityConfig<Object> entityConfig = hiveConfig.getEntityConfig();
+		EntityConfig<?> entityConfig = hiveConfig.getEntityConfig();
 		try {
 			hiveConfig.getHive().insertResourceId(
 					entityConfig.getPartitionDimensionName(),
@@ -36,7 +36,7 @@ public class PersisterImpl implements Persister {
 			final HiveConfig hiveConfig, 
 			final EntityIndexConfig entitySecondaryIndexConfig, 
 			final Object resourceInstance) {
-		final EntityConfig<Object> entityConfig = hiveConfig.getEntityConfig();
+		final EntityConfig<?> entityConfig = hiveConfig.getEntityConfig();
 		final SecondaryIndex secondaryIndex = getSecondaryIndex(hiveConfig.getHive(), entitySecondaryIndexConfig, entityConfig);
 		
 			new Actor<Object>(entitySecondaryIndexConfig.getIndexValues(resourceInstance)) {	
@@ -55,7 +55,7 @@ public class PersisterImpl implements Persister {
 		return entitySecondaryIndexConfig;
 	}
 	
-	private SecondaryIndex getSecondaryIndex(Hive hive, EntityIndexConfig secondaryIndexIdentifable, EntityConfig<Object> entityConfig)
+	private SecondaryIndex getSecondaryIndex(Hive hive, EntityIndexConfig secondaryIndexIdentifable, EntityConfig<?> entityConfig)
 	{
 		String resourceName = entityConfig.getResourceName();
 		String partitionDimensionName = entityConfig.getPartitionDimensionName();

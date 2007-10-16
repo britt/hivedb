@@ -8,14 +8,14 @@ public class PrimaryIndexKeyGenerator implements Generator<Object>{
 
 	@SuppressWarnings("unchecked")
 	public PrimaryIndexKeyGenerator(
-			EntityConfig<Object> entityConfig) {
+			EntityConfig<?> entityConfig) {
 		
 		this.generator = new GeneratePrimitiveValue(ReflectionTools.getPropertyType(
 				entityConfig.getRepresentedInterface(),
 				entityConfig.getPrimaryIndexKeyPropertyName()));
 	}
 	
-	private Generator<Object> generator;
+	private Generator<?> generator;
 	public Object generate() {
 		return generator.generate();
 	}
