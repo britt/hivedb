@@ -1,6 +1,7 @@
 package org.hivedb.persistence;
 
 import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertNotNull;
 
 import java.util.List;
@@ -41,6 +42,9 @@ public class TestNodePersistence extends H2HiveTestCase {
 		
 		assertEquals(full, fetchedFull);
 		assertEquals(minimal, fetchedMinimal);
+		
+		assertFalse(fetchedFull.isReadOnly());
+		assertFalse(fetchedMinimal.isReadOnly());
 	}
 	
 	@Test

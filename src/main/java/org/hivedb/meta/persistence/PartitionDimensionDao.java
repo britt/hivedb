@@ -61,9 +61,10 @@ public class PartitionDimensionDao extends JdbcDaoSupport {
 			new ResourceDao(ds).create(r);
 
 		NodeDao nodeDao = new NodeDao(ds);
-		for (Node node: newObject.getNodes())
+		for (Node node: newObject.getNodes()) {
+			node.setPartitionDimensionId(newObject.getId());
 			nodeDao.create(node);
-		
+		}
 		return new Integer(newObject.getId());	
 	}
 

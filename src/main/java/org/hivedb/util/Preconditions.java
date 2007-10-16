@@ -38,7 +38,7 @@ public class Preconditions {
 	}
 	
 	public static void isWritable(Lockable lockable) throws HiveReadOnlyException {
-		if (lockable.isReadOnly())
+		if(lockable.isReadOnly())
 			throw new HiveReadOnlyException(
 					String.format("This operation is invalid because the %s is currently read-only.", lockable.getClass().getSimpleName()));
 	}

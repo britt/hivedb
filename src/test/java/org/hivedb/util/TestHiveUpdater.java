@@ -17,17 +17,18 @@ import org.testng.annotations.Test;
 public class TestHiveUpdater extends H2HiveTestCase {
 	@Test
 	public void testHiveUpdater() {
+		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		HiveConfig hiveConfig = new HiveScenarioConfigForResourceEntity(
-			Hive.load(getConnectString(getHiveDatabaseName())),
-			getDataNodes());
+			hive,
+			getDataNodes(hive));
 		new HiveScenarioTest(hiveConfig)
 			.performTest(10, 2, new PersisterImpl());
 		
 	}
-	private Collection<Node> getDataNodes() {
+	private Collection<Node> getDataNodes(final Hive hive) {
 		return Transform.map(new Unary<String, Node>() {
 			public Node f(String dataNodeName) {
-				return new Node(0, dataNodeName, getConnectString(dataNodeName), cleanupAfterEachTest, 0);
+				return new Node(Hive.NEW_OBJECT_ID, dataNodeName, getConnectString(dataNodeName), false, Hive.NEW_OBJECT_ID);
 		}},
 		getDataNodeNames());
 	}
