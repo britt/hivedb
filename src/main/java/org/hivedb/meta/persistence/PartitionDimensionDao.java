@@ -28,7 +28,7 @@ import org.springframework.jdbc.support.KeyHolder;
  * @author Justin McCarthy (jmccarthy@cafepress.com)
  * @author Britt Crawford (bcrawford@cafepress.com)
  */
-public class PartitionDimensionDao extends JdbcDaoSupport implements DataAccessObject<PartitionDimension,Integer> {
+public class PartitionDimensionDao extends JdbcDaoSupport {
 	DataSource ds;
 	public PartitionDimensionDao(DataSource ds) {
 		this.setDataSource(ds);
@@ -60,8 +60,9 @@ public class PartitionDimensionDao extends JdbcDaoSupport implements DataAccessO
 		for (Resource r : newObject.getResources())
 			new ResourceDao(ds).create(r);
 
+		NodeDao nodeDao = new NodeDao(ds);
 		for (Node node: newObject.getNodes())
-			new NodeDao(ds).create(node);
+			nodeDao.create(node);
 		
 		return new Integer(newObject.getId());	
 	}

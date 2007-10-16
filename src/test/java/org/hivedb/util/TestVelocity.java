@@ -1,17 +1,14 @@
 package org.hivedb.util;
 
+import static org.testng.AssertJUnit.assertEquals;
+
 import java.io.StringWriter;
-import java.sql.Types;
 import java.util.Properties;
 
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
-import org.hivedb.meta.PartitionDimension;
-import org.hivedb.meta.persistence.IndexSchema;
 import org.testng.annotations.Test;
-
-import static org.testng.AssertJUnit.*;
 
 public class TestVelocity {
 	private static String expected = "Hello HiveDB World!";

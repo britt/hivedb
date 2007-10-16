@@ -2,6 +2,14 @@ CREATE TABLE node_metadata (
 	id $sequenceModifier,
 	partition_dimension_id int not null,
 	name varchar(64) not null,
-	uri varchar(255) not null,
-	read_only int
+	read_only int not null default 0,
+	database_name varchar(255) not null,
+	host varchar(255) not null,
+	dialect varchar(64) not null,
+	uri varchar(255),
+	port int,
+	username varchar(255),
+	password varchar(255),
+	options varchar(255),
+	capacity int
 )

@@ -34,7 +34,7 @@ public class TestMigration extends H2HiveTestCase {
 			hive.addPartitionDimension(createPopulatedPartitionDimension());
 			new IndexSchema(hive.getPartitionDimension(partitionDimensionName())).install();
 			for(String name : getDatabaseNames())
-				hive.addNode(hive.getPartitionDimension(partitionDimensionName()), new Node(name, getConnectString(name)));
+				hive.addNode(hive.getPartitionDimension(partitionDimensionName()), new Node(0, name, getConnectString(name), cleanupAfterEachTest, 0));
 			
 		} catch (Exception e) {
 			throw new RuntimeException(e.getMessage());

@@ -7,6 +7,7 @@ package org.hivedb.meta;
 import org.hivedb.Hive;
 import org.hivedb.Lockable;
 import org.hivedb.util.HiveUtils;
+import org.hivedb.util.database.HiveDbDialect;
 
 /**
  * Node models a database instance suitable for storage of partitioned Data.
@@ -15,36 +16,98 @@ import org.hivedb.util.HiveUtils;
  * @author Andy Likuski (alikuski@cafepress.com)
  */
 public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable<Integer>, Lockable {
-	private int id,partitionDimensionId;
-	private String uri,name;
-	private PartitionDimension partitionDimension;
-	private boolean readOnly;
+	private int id,partitionDimensionId,port;
+	private String uri,name, host,databaseName, username, password, options;
+	private boolean readOnly = false;
 	private double capacity;
+	private HiveDbDialect dialect;
 
-	public Node(String name, String uri) {
-		this(name, uri, false);
+	public Node(int id, String name, String databaseName, String host, int partitionDimensionId, HiveDbDialect dialect) {
+		this.id = id;
+		this.name = name;
+		this.databaseName = databaseName;
+		this.host = host;
+		this.partitionDimensionId = partitionDimensionId;
+		this.dialect = dialect;
 	}
 	
-	public Node(String name, String uri, boolean readOnly) {
-		this(Hive.NEW_OBJECT_ID, name, uri, readOnly,0);
-	}
-
-	/**
-	 * 
-	 * @param id
-	 * @param uri
-	 * @param access
-	 * @param readOnly
-	 */
 	public Node(int id, String name, String uri, boolean readOnly, int partitionDimensionId) {
-		super();
-		this.id = id;
+		this(id, name, "", "", partitionDimensionId, HiveDbDialect.MySql);
 		this.uri = uri;
-		this.name = name;
 		this.readOnly = readOnly;
-		this.partitionDimensionId = partitionDimensionId;
+	}
+	
+//	public Node(String name, String uri) {
+//		this(name, uri, false);
+//	}
+//	
+//	public Node(String name, String uri, boolean readOnly) {
+//		this(Hive.NEW_OBJECT_ID, name, uri, readOnly,0);
+//	}
+	
+//	reinstate me
+//	public Node() {}
+	
+	public int getPort() {
+		return port;
 	}
 
+	public void setPort(int port) {
+		this.port = port;
+	}
+
+	public String getHost() {
+		return host;
+	}
+
+	public void setHost(String host) {
+		this.host = host;
+	}
+
+	public String getDatabaseName() {
+		return databaseName;
+	}
+
+	public void setDatabaseName(String databaseName) {
+		this.databaseName = databaseName;
+	}
+
+	public String getUsername() {
+		return username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public String getOptions() {
+		return options;
+	}
+
+	public void setOptions(String options) {
+		this.options = options;
+	}
+
+	public HiveDbDialect getDialect() {
+		return dialect;
+	}
+
+	public void setDialect(HiveDbDialect dialect) {
+		this.dialect = dialect;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+	
 	public Integer getId() {
 		return id;
 	}
@@ -68,46 +131,9 @@ public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable<
 		this.capacity = capacity;
 	}
 	
-
-	/**
-	 * For use by persistence layer and unit tests.  Otherwise, id should be considered immmutable.
-	 * 
-	 * @param id Database-generated identifier with which this instance should be updated
-	 */
 	public void updateId(int id) {
 		this.id = id;
 	}	
-
-	public boolean equals(Object obj)
-	{
-		return obj.hashCode() == hashCode();
-	}
-	public int hashCode() {
-		return HiveUtils.makeHashCode(new Object[] {
-				uri, readOnly
-		});
-	}
-	
-	public String toString()
-	{
-		return HiveUtils.toDeepFormatedString(this, 
-										"Id", 		getId(), 
-										"Name", 	getName(), 
-										"Uri", 		getUri(), 
-										"ReadOnly",	isReadOnly());									
-	}
-
-	public int compareTo(Node o) {
-		return getUri().compareTo(o.getUri());
-	}
-	
-	/**
-	 * Clones the immediate fields of this object, for use in testing
-	 */
-	public Object clone()
-	{
-		return new Node(name,uri,readOnly);
-	}
 
 	public String getName() {
 		return name;
@@ -121,19 +147,33 @@ public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable<
 		this.name = name;
 	}
 
-	public PartitionDimension getPartitionDimension() {
-		return partitionDimension;
-	}
-
-	public void setPartitionDimension(PartitionDimension partitionDimension) {
-		this.partitionDimension = partitionDimension;
-	}
-
 	public int getPartitionDimensionId() {
 		return partitionDimensionId;
 	}
 
 	public void setPartitionDimensionId(int partitionDimensionId) {
 		this.partitionDimensionId = partitionDimensionId;
+	}
+	
+	public boolean equals(Object obj)
+	{
+		return obj.hashCode() == hashCode();
+	}
+	public int hashCode() {
+		return HiveUtils.makeHashCode(new Object[] {
+				id,partitionDimensionId,port,uri,name, host,databaseName, username, password, options,readOnly,capacity,dialect
+		});
+	}
+	public String toString()
+	{
+		return HiveUtils.toDeepFormatedString(this, 
+										"Id", 		getId(), 
+										"Name", 	getName(), 
+										"Uri", 		getUri(), 
+										"ReadOnly",	isReadOnly());									
+	}
+
+	public int compareTo(Node o) {
+		return getUri().compareTo(o.getUri());
 	}
 }

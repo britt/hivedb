@@ -26,8 +26,7 @@ import org.springframework.jdbc.support.KeyHolder;
 /**
  * @author Justin McCarthy (jmccarthy@cafepress.com)
  */
-public class ResourceDao extends JdbcDaoSupport implements
-		DataAccessObject<Resource, Integer> {
+public class ResourceDao extends JdbcDaoSupport {
 	private DataSource ds;
 
 	public ResourceDao(DataSource ds) {

@@ -24,7 +24,7 @@ public class TestHiveScenarioWithMySql extends HiveMySqlTestCase {
 	private Collection<Node> getDataNodes() {
 		return Transform.map(new Unary<String, Node>() {
 			public Node f(String dataNodeName) {
-				return new Node(dataNodeName, getConnectString(dataNodeName));
+				return new Node(0, dataNodeName, getConnectString(dataNodeName), cleanupAfterEachTest, 0);
 		}},
 		getDataNodeNames());
 	}

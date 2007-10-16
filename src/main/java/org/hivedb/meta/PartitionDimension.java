@@ -129,7 +129,7 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	// Modify the passed in instance by setting its PartitionInstance
 	private Collection<Node> insetNodes(Collection<Node> nodes) {
 		for(Node node: nodes)
-			node.setPartitionDimension(this);
+			node.setPartitionDimensionId(this.getId());
 		return nodes;
 	}
 

@@ -4,6 +4,11 @@ import org.hivedb.UnsupportedDialectException;
 
 public class DialectTools {
 	
+	public static final String MYSQL = "MySQL";
+	public static final String DERBY = "Derby";
+	public static final String H2 = "H2";
+
+
 	/**
 	 * Get the SQL fragment to create an auto-incrementing key sequence for a database dialect.
 	 * @param dialect
@@ -40,11 +45,22 @@ public class DialectTools {
 	
 	public static String dialectToString(HiveDbDialect dialect) {
 		if(dialect == HiveDbDialect.H2)
-			return "H2";
+			return H2;
 		else if(dialect == HiveDbDialect.Derby)
-			return "Derby";
+			return DERBY;
 		else if(dialect == HiveDbDialect.MySql)
-			return "MySQL";
+			return MYSQL;
+		else
+			throw new UnsupportedDialectException("Unkown database dialect.  HiveDB supports MySQL, H2 and Derby.");
+	}
+	
+	public static HiveDbDialect stringToDialect(String dialect) {
+		if(dialect.equals(H2))
+			return HiveDbDialect.H2;
+		else if(dialect.equals(DERBY))
+			return HiveDbDialect.Derby;
+		else if(dialect.equals(MYSQL))
+			return HiveDbDialect.MySql;
 		else
 			throw new UnsupportedDialectException("Unkown database dialect.  HiveDB supports MySQL, H2 and Derby.");
 	}

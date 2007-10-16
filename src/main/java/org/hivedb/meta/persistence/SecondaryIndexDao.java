@@ -25,8 +25,7 @@ import org.springframework.jdbc.support.KeyHolder;
 /**
  * @author Justin McCarthy (jmccarthy@cafepress.com)
  */
-public class SecondaryIndexDao extends JdbcDaoSupport implements
-		DataAccessObject<SecondaryIndex, Integer> {
+public class SecondaryIndexDao extends JdbcDaoSupport {
 	public SecondaryIndexDao(DataSource ds) {
 		this.setDataSource(ds);
 	}

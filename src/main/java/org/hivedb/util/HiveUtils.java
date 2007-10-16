@@ -79,4 +79,8 @@ public class HiveUtils {
 				return dimension.getNode(item.getId());
 			}}, semaphores);
 	}
+	
+	public static<T> T defaultTo(T obj, T value) {
+		return obj == null ? value : obj;
+	}
 }

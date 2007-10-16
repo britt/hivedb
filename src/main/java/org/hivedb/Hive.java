@@ -291,7 +291,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	public Node addNode(PartitionDimension partitionDimension, Node node)
 			throws HiveReadOnlyException {
 		
-		node.setPartitionDimension(partitionDimension);
+		node.setPartitionDimensionId(partitionDimension.getId());
 		
 		Preconditions.isWritable(this);
 		Preconditions.nameIsUnique(partitionDimension.getNodes(), node);
@@ -395,13 +395,13 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 
 	public Node deleteNode(Node node) throws HiveReadOnlyException {
 		Preconditions.isWritable(this);
-		Preconditions.idIsPresentInList(node.getPartitionDimension().getNodes(), node);
+		Preconditions.idIsPresentInList(getPartitionDimension(node.getPartitionDimensionId()).getNodes(), node);
 		
 		NodeDao nodeDao = new NodeDao(hiveDataSource);
 		nodeDao.delete(node);
 		incrementAndPersistHive(hiveDataSource);
 		//Synchronize the DataSourceCache
-		this.jdbcDaoSupportCaches.get(node.getPartitionDimension().getName()).sync();
+		this.jdbcDaoSupportCaches.get(getPartitionDimension(node.getPartitionDimensionId()).getName()).sync();
 		return node;
 	}
 

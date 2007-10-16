@@ -56,7 +56,7 @@ public class H2HiveTestCase extends H2TestCase {
 		return index;
 	}
 	protected Node createNode(String name) {
-		return new Node(name,getConnectString(name), false);
+		return new Node(0, name,getConnectString(name), false, 0);
 	}
 	protected PartitionDimension createPopulatedPartitionDimension() {
 		return new PartitionDimension(partitionDimensionName(), Types.INTEGER,
