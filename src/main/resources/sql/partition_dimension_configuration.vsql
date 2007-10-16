@@ -1,0 +1,6 @@
+CREATE TABLE partition_dimension_metadata (
+	id $sequenceModifier,
+	name varchar(64) not null,
+	index_uri varchar(255) not null,
+	db_type varchar(64) not null
+)

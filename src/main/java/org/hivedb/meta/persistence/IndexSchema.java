@@ -4,15 +4,15 @@
  */
 package org.hivedb.meta.persistence;
 
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.apache.velocity.context.Context;
 import org.hivedb.Schema;
-import org.hivedb.meta.HiveConfigurationSchema;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.util.Templater;
 import org.hivedb.util.database.JdbcTypeMapper;
 
 /**
@@ -29,6 +29,7 @@ import org.hivedb.util.database.JdbcTypeMapper;
  */
 public class IndexSchema extends Schema{
 	private PartitionDimension partitionDimension;
+	
 	/**
 	 * IndexSchema is constructed against a JDBC URI, which will be the destination
 	 * for the schema tables.
@@ -41,53 +42,27 @@ public class IndexSchema extends Schema{
 		this.partitionDimension = partitionDimension;
 	}
 	
-	/**
-	 * 
-	 * @return
-	 */
 	protected String getCreatePrimaryIndex() {
-		return 
-			"CREATE TABLE " + getPrimaryIndexTableName(partitionDimension)
-			+ " ( " 
-			+ " id " + addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(partitionDimension.getColumnType())) + " not null, "
-			+ " node SMALLINT not null, "
-			+ " secondary_index_count INTEGER not null, "
-			+ " last_updated "+ JdbcTypeMapper.jdbcTypeToString(Types.DATE) +" not null, "
-			+ " read_only " +  HiveConfigurationSchema.getBooleanTypeForDialect(dialect) + " default 0,"	
-			+ " PRIMARY KEY (id,node)"
-			+ ifMySql(", INDEX node_id (node),", dialect)
-			+ ifMySql(" INDEX last_updated (last_updated),", dialect)
-			+ ifMySql(" INDEX primary_index (id)", dialect)
-			+ " ) "
-			+ ifMySql("ENGINE=InnoDB", dialect);
+		Context context = getContext();
+		context.put("tableName", getPrimaryIndexTableName(partitionDimension));
+		context.put("indexType", addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(partitionDimension.getColumnType())));
+		return Templater.render("sql/primary_index.vsql", context);
 	}
 	
-	/**
-	 * 
-	 * @param secondaryIndex
-	 */
 	protected String getCreateSecondaryIndex(SecondaryIndex secondaryIndex) {
-		return 
-			"CREATE TABLE " + getSecondaryIndexTableName(secondaryIndex) 
-			+ " ( "
-			+ " id " +  addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(secondaryIndex.getColumnInfo().getColumnType())) + " not null, "
-			+ " pkey " + addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(secondaryIndex.getResource().getColumnType())) + " not null"
-			+ ifMySql(", INDEX secondary_index_value (id),", dialect)
-			+ ifMySql(" INDEX secondary_index_to_primary_index (pkey)", dialect)
-			+ " ) " 
-			+ ifMySql(" ENGINE=InnoDB", dialect);
+		Context context = getContext();
+		context.put("tableName", getSecondaryIndexTableName(secondaryIndex));
+		context.put("indexType", addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(secondaryIndex.getColumnInfo().getColumnType())));
+		context.put("resourceType", addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(secondaryIndex.getResource().getColumnType())));
+		return Templater.render("sql/secondary_index.vsql", context);
 	}
 	
 	protected String getCreateResourceIndex(Resource resource) {
-		return 
-		"CREATE TABLE " + getSecondaryIndexTableName(resource.getIdIndex()) 
-		+ " ( "
-		+ " id " +  addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(resource.getIdIndex().getColumnInfo().getColumnType())) + " not null, "
-		+ " pkey " + addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(resource.getPartitionDimension().getColumnType())) + " not null,"
-		+ " PRIMARY KEY (id) "
-		+ ifMySql(", INDEX resource_id_to_primary_index (pkey)", dialect)
-		+ " ) " 
-		+ ifMySql(" ENGINE=InnoDB", dialect);
+		Context context = getContext();
+		context.put("tableName", getSecondaryIndexTableName(resource.getIdIndex()));
+		context.put("indexType", addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(resource.getIdIndex().getColumnInfo().getColumnType())));
+		context.put("primaryIndexType", addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(resource.getPartitionDimension().getColumnType())));
+		return Templater.render("sql/resource_index.vsql", context);
 	}
 	
 	/**
@@ -103,6 +78,13 @@ public class IndexSchema extends Schema{
 	 */
 	public static String getSecondaryIndexTableName(SecondaryIndex secondaryIndex) {
 		return "hive_secondary_" + secondaryIndex.getResource().getName().toLowerCase() + "_" + secondaryIndex.getColumnInfo().getName();	
+	}
+	/**
+	 * Constructs the name of the table for the resource index.
+	 * @return
+	 */
+	public static String getResourceIndexTableName(Resource resource) {
+		return "hive_resource_" + resource.getName().toLowerCase();	
 	}
 	
 	@Override

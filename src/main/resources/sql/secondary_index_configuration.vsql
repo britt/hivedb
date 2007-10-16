@@ -1,0 +1,6 @@
+CREATE TABLE secondary_index_metadata (
+	id $sequenceModifier,
+	resource_id int not null,
+	column_name varchar(64) not null,
+	db_type varchar(64) not null
+)

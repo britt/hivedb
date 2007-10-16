@@ -8,8 +8,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.velocity.context.Context;
 import org.hivedb.Schema;
 import org.hivedb.meta.persistence.TableInfo;
+import org.hivedb.util.Templater;
+
+import static org.hivedb.util.database.DialectTools.*;
 
 /**
  * The Global Hive Configuration schema contains records of the Hive's internal
@@ -35,48 +39,23 @@ public class HiveConfigurationSchema extends Schema {
 	}
 	
 	private String getCreateNode() {
-		return "CREATE TABLE node_metadata ( "
-				+ "id " + getNumericPrimaryKeySequenceModifier(dialect) + ", " 
-				+ "partition_dimension_id int not null, "
-				+ "name varchar(255) not null, "
-				+ "uri varchar(255) not null, "
-				+ "read_only int " // Derby doesn't have BIT
-				+ " )";
+		return Templater.render("sql/node_configuration.vsql", getContext());
 	}
 
 	private String getCreateHive() {
-		return "CREATE TABLE semaphore_metadata ( " 
-				+ "read_only int not null," 
-				+ "revision int not null"
-				+ " )";
+		return Templater.render("sql/hive_semaphore.vsql", getContext());
 	}
 	
 	private String getCreatePartitionDimension() {
-		return "CREATE TABLE partition_dimension_metadata ( " 
-				+ "id " + getNumericPrimaryKeySequenceModifier(dialect) + ", " 
-				+ "name varchar(64) not null, " 
-				+ "index_uri varchar(255) not null, "
-				+ "db_type varchar(64) not null" 
-				+ " )";
+		return Templater.render("sql/partition_dimension_configuration.vsql", getContext());
 	}
 
 	private String getCreateSecondaryIndex() {
-		return "CREATE TABLE secondary_index_metadata ( " 
-				+ "id " + getNumericPrimaryKeySequenceModifier(dialect) + ", " 
-				+ "resource_id int not null, " 
-				+ "column_name varchar(64) not null, "
-				+ "db_type varchar(64) not null"
-				+ " )";
+		return Templater.render("sql/secondary_index_configuration.vsql", getContext());
 	}
 	
 	private String getCreateResource() {
-		return "CREATE TABLE resource_metadata ( " 
-				+ "id " + getNumericPrimaryKeySequenceModifier(dialect) + ", " 
-				+ "dimension_id int not null, "
-				+ "name varchar(128) not null, "
-				+ "db_type varchar(64) not null, "
-				+ "is_partitioning_resource bit not null default 1"
-				+ " )";
+		return Templater.render("sql/resource_configuration.vsql", getContext());
 	}
 	
 	public void install() {

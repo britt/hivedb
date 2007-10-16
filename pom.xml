@@ -127,6 +127,16 @@
       <artifactId>h2</artifactId>
       <version>1.0.20070617</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.velocity</groupId>
+      <artifactId>velocity</artifactId>
+      <version>1.5</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-collections</groupId>
+      <artifactId>commons-collections</artifactId>
+      <version>3.2</version>
+    </dependency>
 <!--  Test Dependencies -->
     <dependency>
       <groupId>commons-lang</groupId>

@@ -1,11 +1,16 @@
 package org.hivedb;
 
+import static org.hivedb.util.database.DialectTools.getNumericPrimaryKeySequenceModifier;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
 
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.context.Context;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.meta.persistence.TableInfo;
+import org.hivedb.util.database.DialectTools;
 import org.hivedb.util.database.DriverLoader;
 import org.hivedb.util.database.HiveDbDialect;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -31,6 +36,17 @@ public abstract class Schema extends JdbcDaoSupport {
 		this.dialect = DriverLoader.discernDialect(dbURI);
 	}
 	
+	protected Context getContext() {
+		Context context = new VelocityContext();
+		context.put("dialect", dialect);
+		context.put("mysql", HiveDbDialect.MySql);
+		context.put("derby", HiveDbDialect.Derby);
+		context.put("h2", HiveDbDialect.H2);
+		context.put("booleanType", DialectTools.getBooleanTypeForDialect(dialect));
+		context.put("sequenceModifier", getNumericPrimaryKeySequenceModifier(dialect));
+		return context;
+	}
+	
 	/**
 	 * Return the SQL statements necessary to create the schema.
 	 * 
@@ -46,42 +62,7 @@ public abstract class Schema extends JdbcDaoSupport {
 		for (TableInfo table : getTables())
 			createTable(table);
 	}
-	
 
-	
-	/**
-	 * Boolean types vary from database to database, this method returns the smallest
-	 * available type to be used as a boolean.
-	 * @param dialect A HiveDbDialect enum
-	 * @return
-	 */
-	public static String getBooleanTypeForDialect(HiveDbDialect dialect)
-	{
-		if (dialect.equals(HiveDbDialect.MySql) || dialect.equals(HiveDbDialect.H2))
-			return "BOOLEAN";
-		else if (dialect.equals(HiveDbDialect.Derby))
-			return "INT";			
-		throw new UnsupportedDialectException("No option boolean option configured for " + dialect.name());
-	}
-	
-	/**
-	 * Get the SQL fragment to create an auto-incrementing key sequence for a database dialect.
-	 * @param dialect
-	 * @return
-	 */
-	public String getNumericPrimaryKeySequenceModifier(HiveDbDialect dialect) {
-		String statement = "";
-		if (dialect == HiveDbDialect.MySql)
-			statement = "int not null auto_increment primary key";
-		else if (dialect == HiveDbDialect.H2)
-			statement = "int not null auto_increment primary key";
-		else if (dialect == HiveDbDialect.Derby)
-			statement = "int not null generated always as identity primary key";
-		else 
-			throw new UnsupportedDialectException("Unsupported dialect: " + dialect.toString());
-		return statement;
-	}
-	
 	public static String addLengthForVarchar(String type)
 	{
 		if (type.equals("VARCHAR"))

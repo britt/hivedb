@@ -1,0 +1,9 @@
+CREATE TABLE $tableName (
+	id $indexType not null,
+	pkey $resourceType not null#if ( $dialect == $mysql ),
+	INDEX secondary_index_value (id), 
+#end
+#if ( $dialect == $mysql ) 
+	INDEX secondary_index_to_resource_id (pkey)
+#end
+) #if ( $dialect == $mysql ) ENGINE=InnoDB #end

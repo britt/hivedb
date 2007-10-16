@@ -1,0 +1,7 @@
+CREATE TABLE node_metadata (
+	id $sequenceModifier,
+	partition_dimension_id int not null,
+	name varchar(64) not null,
+	uri varchar(255) not null,
+	read_only int
+)
