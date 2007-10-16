@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.hivedb.Hive;
 import org.hivedb.meta.Node;
@@ -176,16 +177,16 @@ public class TestMigration extends H2HiveTestCase {
 	}
 	
 	class PrimaryMover implements PartitionKeyMover<Integer> {
-		private List<Pair<Mover, KeyLocator>> movers;
+		private Collection<Entry<Mover, KeyLocator>> movers;
 		private String originUri;
 		
 		public PrimaryMover(String uri) {
 			this.originUri = uri;
-			movers =  new ArrayList<Pair<Mover,KeyLocator>>();
+			movers =  new ArrayList<Entry<Mover,KeyLocator>>();
 			movers.add(new Pair<Mover, KeyLocator>(new SecondaryMover(), new SecondaryKeyLocator(originUri)) );
 		}
 		
-		public List<Pair<Mover, KeyLocator>> getDependentMovers() {
+		public Collection<Entry<Mover, KeyLocator>> getDependentMovers() {
 			return movers;
 		}
 
