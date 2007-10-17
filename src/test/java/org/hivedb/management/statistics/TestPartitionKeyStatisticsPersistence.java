@@ -171,7 +171,7 @@ public class TestPartitionKeyStatisticsPersistence extends H2HiveTestCase {
 		for(Object key : keys)
 			try {
 				PartitionKeyStatistics stats = dao.findByPartitionKey(partitionDimension, key);
-				System.out.println(stats.getLastUpdated());
+//				System.out.println(stats.getLastUpdated());
 			} catch( Exception e) {
 				failures++;
 			}

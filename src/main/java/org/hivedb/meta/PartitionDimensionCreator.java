@@ -13,7 +13,7 @@ public class PartitionDimensionCreator {
 		EntityConfig entityConfig = hiveConfig.getEntityConfig();
 		String partitionDimensionName = entityConfig.getPartitionDimensionName();
 				
-		return new PartitionDimension(
+		PartitionDimension dimension = new PartitionDimension(
 			partitionDimensionName,
 			JdbcTypeMapper.primitiveTypeToJdbcType(
 					ReflectionTools.getPropertyType(
@@ -23,10 +23,12 @@ public class PartitionDimensionCreator {
 			hiveConfig.getHive().getUri(), // PartitionDimension uri always equals that of the hive
 			Collections.singletonList(createResource(hiveConfig))
 		);
+		dimension.updateId(1);
+		return dimension;
 	}
 	private static Resource createResource(final HiveConfig hiveConfig) {
 		EntityConfig<?> entityConfig = hiveConfig.getEntityConfig();
-		return new Resource(
+		Resource resource = new Resource(
 				entityConfig.getResourceName(), 
 				JdbcTypeMapper.primitiveTypeToJdbcType(
 						ReflectionTools.getPropertyType(
@@ -34,6 +36,8 @@ public class PartitionDimensionCreator {
 								entityConfig.getIdPropertyName())),
 				entityConfig.isPartitioningResource(),
 				constructSecondaryIndexesOfResource(entityConfig));
+		resource.updateId(1);
+		return resource;
 	}
 	
 	public static Collection<SecondaryIndex> constructSecondaryIndexesOfResource(final EntityConfig<?> entityConfig) {	

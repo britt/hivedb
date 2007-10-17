@@ -219,7 +219,7 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	}
 	public int hashCode() {
 		return HiveUtils.makeHashCode(new Object[] {
-				name, columnType, nodes, indexUri, resources
+				name, columnType, indexUri, resources
 		});
 	}
 	

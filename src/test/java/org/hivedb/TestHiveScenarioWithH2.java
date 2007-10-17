@@ -22,7 +22,7 @@ public class TestHiveScenarioWithH2 extends H2HiveTestCase {
 	private Collection<Node> getDataNodes() {
 		return Transform.map(new Unary<String, Node>() {
 			public Node f(String dataNodeName) {
-				return new Node(0, dataNodeName, getConnectString(dataNodeName), cleanupAfterEachTest, 0);
+				return new Node(0, dataNodeName, getConnectString(dataNodeName), false, 0);
 		}},
 		getDataNodeNames());
 	}

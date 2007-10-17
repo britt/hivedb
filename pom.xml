@@ -203,6 +203,7 @@
           </includes>
           <excludedGroups>mysql</excludedGroups>
           <testFailureIgnore>true</testFailureIgnore>
+          <parallel>false</parallel>
         </configuration>
       </plugin>
     </plugins>
