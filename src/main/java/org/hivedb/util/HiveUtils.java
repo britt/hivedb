@@ -83,4 +83,8 @@ public class HiveUtils {
 	public static<T> T defaultTo(T obj, T value) {
 		return obj == null ? value : obj;
 	}
+	
+	public static boolean empty(String s) {
+		return s == null || "".equals(s);
+	}
 }

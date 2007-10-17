@@ -10,6 +10,7 @@ import org.hivedb.Hive;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.persistence.NodeDao;
 import org.hivedb.util.database.HiveDbDialect;
+import org.hivedb.util.database.JdbcUriFormatter;
 import org.hivedb.util.database.test.H2HiveTestCase;
 import org.testng.annotations.Test;
 
@@ -108,7 +109,20 @@ public class TestNodePersistence extends H2HiveTestCase {
 		assertEquals(0,dao.loadAll().size());
 	}
 	
-	private Node createFullyPopulatedNode() {
+	@Test
+	public void testUriFormatting() {
+		Node full = createFullyPopulatedNode();
+		Node minimal = createMinimalNode();
+		
+		System.out.println(new JdbcUriFormatter(full).getUri());
+		System.out.println(new JdbcUriFormatter(minimal).getUri());
+		full.setPort(0);
+		full.setDialect(HiveDbDialect.H2);
+		full.setPassword("");
+		System.out.println(new JdbcUriFormatter(full).getUri());
+	}
+	
+	public Node createFullyPopulatedNode() {
 		Node node = createMinimalNode();
 		node.setName("full node");
 		node.setUri("jdbc:mysql://localhost/blahbase");
@@ -117,11 +131,11 @@ public class TestNodePersistence extends H2HiveTestCase {
 		node.setPassword("test");
 		node.setPort(3306);
 		node.setCapacity(101);
-		node.setOptions("works=true");
+		node.setOptions("&works=true");
 		return node;
 	}
 	
-	private Node createMinimalNode() {
+	public Node createMinimalNode() {
 		return new Node(
 				Hive.NEW_OBJECT_ID, 
 				"minimal node", 

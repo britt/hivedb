@@ -46,6 +46,15 @@ public class DriverLoader {
 			return HiveDbDialect.H2;
 		throw new UnsupportedDialectException("Could not discern the HiveDbDialect from the uri " + uri);
 	}
+	public static Object getDriverStringForDialect(HiveDbDialect dialect) {
+		if(dialect == HiveDbDialect.MySql)
+			return "mysql";
+		else if(dialect == HiveDbDialect.Derby)
+			return "derby";
+		else if(dialect == HiveDbDialect.H2)
+			return "h2:mem";
+		throw new UnsupportedDialectException("This dialect is not supported.");
+	}
 	public static String parseConnectionUrl(String uri)
 	{
 		HiveDbDialect discernDialect = discernDialect(uri);
