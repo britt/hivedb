@@ -37,13 +37,14 @@ public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable<
 		this.readOnly = readOnly;
 	}
 	
-//	public Node(String name, String uri) {
-//		this(name, uri, false);
-//	}
-//	
-//	public Node(String name, String uri, boolean readOnly) {
-//		this(Hive.NEW_OBJECT_ID, name, uri, readOnly,0);
-//	}
+	// TODO these two constructors were commented out without explanation. I'm using them again
+	public Node(String name, String uri) {
+		this(name, uri, false);
+	}
+	
+	public Node(String name, String uri, boolean readOnly) {
+		this(Hive.NEW_OBJECT_ID, name, uri, readOnly,0);
+	}
 	
 //	reinstate me
 //	public Node() {}

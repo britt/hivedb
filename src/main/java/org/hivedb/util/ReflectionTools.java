@@ -425,14 +425,18 @@ public class ReflectionTools {
 	}
 	
 	public static Collection<String> getPropertiesOfCollectionGetters(final Class<?> ofThisInterface) {
-		return getCollectionGetters(ofThisInterface);
-	}
-	public static Collection<String> getCollectionGetters(final Class<?> ofThisInterface) {
 		return Filter.grep(new Predicate<String>() {
 			public boolean f(String propertyName) {
 				return isCollectionProperty(ofThisInterface, propertyName);
 		}},
 		getPropertiesOfGetters(ofThisInterface));
+	}
+	public static Collection<Method> getCollectionGetters(final Class<?> ofThisInterface) {
+		return Filter.grep(new Predicate<Method>() {
+			public boolean f(Method getter) {
+				return isCollectionProperty(ofThisInterface, getter.getName());
+		}},
+		getGetters(ofThisInterface));
 	}
 	
 	public static Collection<String> getPropertiesOfPrimitiveGetters(final Class<?> ofThisInterface) {
@@ -455,5 +459,13 @@ public class ReflectionTools {
 				return !PrimitiveUtils.isPrimitiveClass(getPropertyType(ofThisInterface, propertyName));
 		}},
 		getPropertiesOfGetters(ofThisInterface));
+	}
+	
+	public static Collection<String> getPropertiesOfGivenType(final Class<?> representedInterface, final Class<?> propertyType) {
+		return Filter.grep(new Predicate<String>() {
+			public boolean f(String propertyName) {
+				return propertyType.equals(ReflectionTools.getPropertyType(representedInterface, propertyName));
+			}
+		},  ReflectionTools.getPropertiesOfGetters(representedInterface));
 	}
 }
