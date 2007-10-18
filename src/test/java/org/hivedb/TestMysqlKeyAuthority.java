@@ -15,7 +15,7 @@ import org.testng.annotations.Test;
 public class TestMysqlKeyAuthority extends HiveMySqlTestCase{
 	DataSource ds = null;
 
-	@Test(groups={"mysql"})
+	@Test
 	@SuppressWarnings("unchecked")
 	public void testAssign() throws Exception {
 		KeyAuthority authority = new MySqlKeyAuthority(

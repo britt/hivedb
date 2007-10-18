@@ -54,6 +54,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	public boolean sync() {
 		jdbcDaoSupports.clear();
 		for(Node node : hive.getPartitionDimension(partitionDimension).getNodes()) {
+			addDataSource(node.getId(), AccessType.Read);
 			jdbcDaoSupports.put(hash(node.getId(), AccessType.Read), new DataNodeJdbcDaoSupport(dataSourceProvider.getDataSource(node.getUri())));
 			if( !hive.isReadOnly() && !node.isReadOnly() )
 				addDataSource(node.getId(), AccessType.ReadWrite);
@@ -87,17 +88,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 			countSuccess(intention);
 			return jdbcDaoSupports.get(hash(semaphore.getId(), intention));
 		}
-		else {
-			try {
-			SimpleJdbcDaoSupport dao = addDataSource(semaphore.getId(), intention);
-			//success
-			countSuccess(intention);
-			return dao;
-			} catch(RuntimeException e) {
-				countFailure();
-				throw e;
-			}
-		}
+		throw new HiveKeyNotFoundException("Could not find dataSource for ", semaphore);
 	}
 	
 	private void countSuccess(AccessType intention) {
