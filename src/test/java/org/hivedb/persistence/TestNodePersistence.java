@@ -125,7 +125,6 @@ public class TestNodePersistence extends H2HiveTestCase {
 	public Node createFullyPopulatedNode() {
 		Node node = createMinimalNode();
 		node.setName("full node");
-		node.setUri("jdbc:mysql://localhost/blahbase");
 		node.setReadOnly(false);
 		node.setUsername("test");
 		node.setPassword("test");

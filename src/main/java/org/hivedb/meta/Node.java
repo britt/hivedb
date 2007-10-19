@@ -4,10 +4,10 @@
  */
 package org.hivedb.meta;
 
-import org.hivedb.Hive;
 import org.hivedb.Lockable;
 import org.hivedb.util.HiveUtils;
 import org.hivedb.util.database.HiveDbDialect;
+import org.hivedb.util.database.JdbcUriFormatter;
 
 /**
  * Node models a database instance suitable for storage of partitioned Data.
@@ -17,7 +17,7 @@ import org.hivedb.util.database.HiveDbDialect;
  */
 public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable<Integer>, Lockable {
 	private int id,partitionDimensionId,port;
-	private String uri,name, host,databaseName, username, password, options;
+	private String name, host,databaseName, username, password, options;
 	private boolean readOnly = false;
 	private double capacity;
 	private HiveDbDialect dialect;
@@ -31,23 +31,7 @@ public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable<
 		this.dialect = dialect;
 	}
 	
-	public Node(int id, String name, String uri, boolean readOnly, int partitionDimensionId) {
-		this(id, name, "", "", partitionDimensionId, HiveDbDialect.MySql);
-		this.uri = uri;
-		this.readOnly = readOnly;
-	}
-	
-	// TODO these two constructors were commented out without explanation. I'm using them again
-	public Node(String name, String uri) {
-		this(name, uri, false);
-	}
-	
-	public Node(String name, String uri, boolean readOnly) {
-		this(Hive.NEW_OBJECT_ID, name, uri, readOnly,0);
-	}
-	
-//	reinstate me
-//	public Node() {}
+	public Node() {}
 	
 	public int getPort() {
 		return port;
@@ -119,10 +103,7 @@ public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable<
 		this.readOnly = readOnly;
 	}
 	public String getUri() {
-		return uri;
-	}
-	public void setUri(String uri) {
-		this.uri = uri;
+		return new JdbcUriFormatter(this).getUri();
 	}
 	
 	public double getCapacity() {
@@ -162,7 +143,7 @@ public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable<
 	}
 	public int hashCode() {
 		return HiveUtils.makeHashCode(new Object[] {
-				id,partitionDimensionId,port,uri,name, host,databaseName, username, password, options,readOnly,capacity,dialect
+				id,partitionDimensionId,port,name, host,databaseName, username, password, options,readOnly,capacity,dialect
 		});
 	}
 	public String toString()

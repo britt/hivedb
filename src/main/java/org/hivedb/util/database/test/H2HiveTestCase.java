@@ -10,6 +10,7 @@ import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.util.database.HiveDbDialect;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
@@ -56,7 +57,7 @@ public class H2HiveTestCase extends H2TestCase {
 		return index;
 	}
 	protected Node createNode(String name) {
-		return new Node(0, name,getConnectString(name), false, 0);
+		return new Node(0, name, name, "", 0, HiveDbDialect.H2);
 	}
 	protected PartitionDimension createPopulatedPartitionDimension() {
 		return new PartitionDimension(partitionDimensionName(), Types.INTEGER,

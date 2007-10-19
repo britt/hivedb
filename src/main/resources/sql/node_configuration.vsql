@@ -6,7 +6,6 @@ CREATE TABLE node_metadata (
 	database_name varchar(255) not null,
 	host varchar(255) not null,
 	dialect varchar(64) not null,
-	uri varchar(255),
 	port int,
 	username varchar(255),
 	password varchar(255),

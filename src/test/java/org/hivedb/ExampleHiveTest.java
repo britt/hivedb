@@ -12,6 +12,7 @@ import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2TestCase;
 import org.hivedb.util.functional.Atom;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
@@ -60,7 +61,8 @@ public class ExampleHiveTest extends H2TestCase {
 		partitionDimension = hive.addPartitionDimension(partitionDimension);
 		
 		//Create a Data Node
-		Node dataNode = new Node(Hive.NEW_OBJECT_ID,"aNode",getConnectString(H2TestCase.TEST_DB), false, partitionDimension.getId());
+//		Node dataNode = new Node(Hive.NEW_OBJECT_ID,"aNode",getConnectString(H2TestCase.TEST_DB), false, partitionDimension.getId());
+		Node dataNode = new Node(Hive.NEW_OBJECT_ID,"aNode",H2TestCase.TEST_DB, "", partitionDimension.getId(), HiveDbDialect.H2);
 		
 		//Add it to the partition dimension
 		hive.addNode(partitionDimension, dataNode);

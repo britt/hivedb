@@ -123,7 +123,6 @@ public class NodeDao extends JdbcDaoSupport {
 							rs.getInt("partition_dimension_id"), 
 							rs.getString("dialect") == null ? HiveDbDialect.MySql : DialectTools.stringToDialect(rs.getString("dialect"))
 			);
-			node.setUri(rs.getString("uri"));
 			node.setReadOnly(readOnlyAsBoolean(rs.getInt("read_only")));
 			node.setUsername(rs.getString("username"));
 			node.setPassword(rs.getString("password"));
@@ -166,7 +165,6 @@ public class NodeDao extends JdbcDaoSupport {
 				"database_name",
 				"host",
 				"dialect",
-				"uri",
 				"read_only",
 				"username",
 				"password",
@@ -179,7 +177,6 @@ public class NodeDao extends JdbcDaoSupport {
 	private int[] getTypes() {
 		return new int[] {
 				Types.INTEGER,
-				Types.VARCHAR,
 				Types.VARCHAR,
 				Types.VARCHAR,
 				Types.VARCHAR,
@@ -200,7 +197,6 @@ public class NodeDao extends JdbcDaoSupport {
 				newObject.getDatabaseName(),
 				newObject.getHost(),
 				DialectTools.dialectToString(newObject.getDialect()),
-				newObject.getUri(), 
 				readOnlyAsInteger(newObject.isReadOnly()),
 				newObject.getUsername(),
 				newObject.getPassword(),

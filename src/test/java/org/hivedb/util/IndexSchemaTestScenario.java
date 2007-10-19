@@ -15,13 +15,17 @@ import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.meta.persistence.IndexSchema;
+import org.hivedb.util.database.DriverLoader;
+import org.hivedb.util.database.HiveDbDialect;
 
 public class IndexSchemaTestScenario {
 	public static final String DIMENSION = "aSignificantDimension";
 	private HiveBasicDataSource ds;
+	private String databaseName;
 	
-	public IndexSchemaTestScenario(HiveBasicDataSource ds) {
+	public IndexSchemaTestScenario(HiveBasicDataSource ds, String databaseName) {
 		this.ds = ds;
+		this.databaseName = databaseName;
 	}
 	
 	public void build() {
@@ -54,7 +58,8 @@ public class IndexSchemaTestScenario {
 	}
 
 	public Node node() {
-		return new Node(0, "aNode", ds.getUrl(), false,0);
+		HiveDbDialect dialect = DriverLoader.discernDialect(ds.getUrl());
+		return new Node(0, "aNode", databaseName, dialect == HiveDbDialect.H2 ? "" : "localhost",0, dialect);
 	}
 
 	public PartitionDimension partitionDimension() {

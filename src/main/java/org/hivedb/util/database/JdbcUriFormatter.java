@@ -19,15 +19,13 @@ public class JdbcUriFormatter {
 	private static final String DRIVER = "driver";
 	
 	private Properties p;
-	private String uri = null;
 	
 	public JdbcUriFormatter(Node node) {
 		this.p = getConnectionPropertiesFromNode(node);
 	}
 	
 	public String getUri() {
-		if(uri == null) {
-			uri = new UriBuilder(p).append("jdbc:")
+		return new UriBuilder(p).append("jdbc:")
 				.filter("get", DRIVER).append(":")
 				.filter("get", HOST, "//%s")
 				.filter("get", PORT, ":%s")
@@ -36,8 +34,6 @@ public class JdbcUriFormatter {
 				.filter("get", USERNAME, "?user=%s")
 				.filter("get", PASSWORD, p.containsKey(USERNAME) ? "&password=%s" : "?password=%s")
 				.filter("get", OPTIONS).toString();
-		}
-		return uri;
 	}
 	
 	private class UriBuilder extends FilteringStringBuilder {

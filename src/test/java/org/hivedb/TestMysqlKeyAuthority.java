@@ -27,11 +27,11 @@ public class TestMysqlKeyAuthority extends HiveMySqlTestCase{
 	
 	@Override
 	public Collection<String> getDatabaseNames() {
-		return Arrays.asList(new String[]{"test"});
+		return Arrays.asList(new String[]{getHiveDatabaseName()});
 	}
 
 	@Override
 	public String getHiveDatabaseName() {
-		return "storage";
+		return "storage_test";
 	}
 }

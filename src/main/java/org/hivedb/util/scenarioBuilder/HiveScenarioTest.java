@@ -34,6 +34,7 @@ import org.hivedb.meta.persistence.ColumnInfo;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.AssertUtils;
 import org.hivedb.util.Persister;
+import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.functional.Actor;
 import org.hivedb.util.functional.Atom;
@@ -288,9 +289,17 @@ public class HiveScenarioTest {
 				public void f() {
 					final Node node = Atom.getFirstOrThrow(partitionDimension.getNodes());
 					final boolean readOnly = node.isReadOnly();
-					final String uri = node.getUri();
+					final String host = node.getHost();
+					final String db = node.getDatabaseName();
+					final String user = node.getUsername();
+					final String pw = node.getPassword();
+					final HiveDbDialect dialect = node.getDialect();
 					node.setReadOnly(!readOnly);
-					node.setUri("jdbc:mysql://arb/it?user=ra&password=ry");
+					node.setHost("arb");
+					node.setDialect(HiveDbDialect.MySql);
+					node.setDatabaseName("it");
+					node.setUsername("ra");
+					node.setPassword("ry");
 					try {
 						hive.updateNode(node);			
 					} catch (Exception e) { throw new RuntimeException(e); }
@@ -298,7 +307,12 @@ public class HiveScenarioTest {
 					new Undo() {							
 						public void f() {
 							node.setReadOnly(readOnly);
-							node.setUri(uri);
+
+							node.setHost(host);
+							node.setDialect(dialect);
+							node.setDatabaseName(db);
+							node.setUsername(user);
+							node.setPassword(pw);
 							try {
 								hive.updateNode(node);
 							} catch (Exception e) { throw new RuntimeException(e); }

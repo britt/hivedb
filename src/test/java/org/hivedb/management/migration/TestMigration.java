@@ -15,6 +15,7 @@ import org.hivedb.meta.directory.Directory;
 import org.hivedb.meta.directory.NodeResolver;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.meta.persistence.IndexSchema;
+import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
@@ -34,7 +35,7 @@ public class TestMigration extends H2HiveTestCase {
 			hive.addPartitionDimension(createPopulatedPartitionDimension());
 			new IndexSchema(hive.getPartitionDimension(partitionDimensionName())).install();
 			for(String name : getDatabaseNames())
-				hive.addNode(hive.getPartitionDimension(partitionDimensionName()), new Node(0, name, getConnectString(name), false, 0));
+				hive.addNode(hive.getPartitionDimension(partitionDimensionName()), new Node(0, name, name, "", 0, HiveDbDialect.H2));
 			
 		} catch (Exception e) {
 			throw new RuntimeException(e.getMessage());

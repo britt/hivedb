@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 import org.hivedb.meta.Node;
+import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.HiveMySqlTestCase;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
@@ -24,7 +25,7 @@ public class TestHiveScenarioWithMySql extends HiveMySqlTestCase {
 	private Collection<Node> getDataNodes() {
 		return Transform.map(new Unary<String, Node>() {
 			public Node f(String dataNodeName) {
-				return new Node(0, dataNodeName, getConnectString(dataNodeName), false, 0);
+				return new Node(0, dataNodeName, dataNodeName, "localhost", 0, HiveDbDialect.MySql);
 		}},
 		getDataNodeNames());
 	}
