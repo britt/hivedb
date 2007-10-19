@@ -624,7 +624,9 @@ public class HiveScenarioTest {
 							partitionDimension.getName(),
 							secondaryIndexKey, 
 							resourceId);
-				} catch (Exception e) { throw new RuntimeException(e); }
+				} catch (Exception e) { 
+					throw new RuntimeException(String.format("Failed to insert into %s id: %s pkey: %s", secondaryIndex.getName(),secondaryIndexKey,resourceId),e); 
+				}
 			assertTrue(Filter.grepItemAgainstList(
 					resourceId,
 					hive.getResourceIdsOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey)));

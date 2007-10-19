@@ -12,7 +12,7 @@ import org.hivedb.util.functional.Unary;
 import org.testng.annotations.Test;
 
 public class TestHiveScenarioWithMySql extends HiveMySqlTestCase {
-
+	
 	@Test
 	public void testResourceOnlyEntity() {
 		new TestHiveScenario(getConnectString(getHiveDatabaseName()), getDataNodes()).testResourceEntity();

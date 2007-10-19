@@ -495,27 +495,6 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		directories.get(partitionDimension.getName()).updatePrimaryIndexKeyReadOnly(primaryIndexKey, isReadOnly);
 	}
 
-	private void updateResourceIdOfSecondaryIndexKey(
-			SecondaryIndex secondaryIndex, Object secondaryIndexKey,
-			Object originalResourceId, Object newResourceId) throws HiveReadOnlyException {
-		Directory directory = directories.get(secondaryIndex.getResource().getPartitionDimension().getName());
-		Preconditions.isWritable(directory.getNodeSemaphoresOfResourceId(secondaryIndex.getResource(), newResourceId),this);
-		
-		directory.updateResourceIdOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey, originalResourceId, newResourceId);
-		partitionStatistics.decrementChildRecordCount(secondaryIndex.getResource(), originalResourceId, 1);
-		partitionStatistics.incrementChildRecordCount(secondaryIndex.getResource(), newResourceId, 1);
-	}
-
-	public void updateResourceIdOfSecondaryIndexKey(
-			String secondaryIndexName, String resourceName,
-			String partitionDimensionName, Object secondaryIndexKey,
-			Object originalResourceId,  Object newResourceId) throws HiveReadOnlyException {
-		updateResourceIdOfSecondaryIndexKey(getPartitionDimension(
-				partitionDimensionName).getResource(resourceName)
-				.getSecondaryIndex(secondaryIndexName), secondaryIndexKey,
-				originalResourceId, newResourceId);
-	}
-
 	public void updatePrimaryIndexKeyOfResourceId(String partitionDimensionName,String resourceName, Object resourceId, Object originalPrimaryIndexKey, Object newPrimaryIndexKey) throws HiveReadOnlyException {
 		Preconditions.isWritable(directories.get(partitionDimensionName).getNodeSemamphoresOfPrimaryIndexKey(newPrimaryIndexKey), this);
 		final Resource resource = getPartitionDimension(partitionDimensionName).getResource(resourceName);
@@ -542,7 +521,9 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		for (Resource resource : partitionDimension.getResources()){
 			if (!resource.isPartitioningResource())
 				for(Object resourceId : directory.getResourceIdsOfPrimaryIndexKey(resource, primaryIndexKey))
-					directory.deleteResourceId(resource, resourceId);
+					deleteResourceId(resource, resourceId);
+			else
+				directory.batch().deleteAllSecondaryIndexKeysOfResourceId(resource, primaryIndexKey);
 		}
 		directory.deletePrimaryIndexKey(primaryIndexKey);
 	}

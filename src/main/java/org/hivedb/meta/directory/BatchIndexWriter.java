@@ -106,5 +106,4 @@ public class BatchIndexWriter extends SimpleJdbcDaoSupport {
 			}}
 		);
 	}
-
 }

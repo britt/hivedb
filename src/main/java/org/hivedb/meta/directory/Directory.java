@@ -377,25 +377,6 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 			: getNodeSemaphoresOfSecondaryIndexKey(resource.getIdIndex(), id);
 	}
 	
-	public void updateResourceIdOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey, 
-		Object originalResourceId, Object newResourceId) {
-		Object[] parameters = new Object[] {
-				newResourceId,
-				secondaryIndexKey,
-				originalResourceId
-			};
-			int[] types = new int[]{
-				secondaryIndex.getResource().getColumnType(),
-				secondaryIndex.getColumnInfo().getColumnType(),
-				secondaryIndex.getResource().getColumnType()
-			};
-			doUpdate(
-				sql.updateSecondaryIndexKey(secondaryIndex),
-				types,
-				parameters,
-				SECONDARY_INDEX_WRITE);
-	}
-	
 	public Unary<KeySemaphore,Integer> semaphoreToId() {
 		return new Unary<KeySemaphore, Integer>(){
 

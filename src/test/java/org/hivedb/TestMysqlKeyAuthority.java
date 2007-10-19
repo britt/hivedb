@@ -19,7 +19,7 @@ public class TestMysqlKeyAuthority extends HiveMySqlTestCase{
 	@SuppressWarnings("unchecked")
 	public void testAssign() throws Exception {
 		KeyAuthority authority = new MySqlKeyAuthority(
-				getDataSource("test"), this.getClass(), Integer.class);
+				getDataSource(getHiveDatabaseName()), this.getClass(), Integer.class);
 		int firstKey = (Integer) authority.nextAvailableKey();
 		int secondKey = (Integer) authority.nextAvailableKey();
 		assertTrue(secondKey > firstKey);

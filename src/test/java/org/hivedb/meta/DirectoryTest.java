@@ -203,6 +203,7 @@ public class DirectoryTest extends H2HiveTestCase {
 			assertTrue(d.getSecondaryIndexKeysOfPrimaryIndexKey(nameIndex, key).size() > 0);
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testDeleteSecondaryIndexKey() throws Exception {
 		insertKeys(getHive());
@@ -350,17 +351,6 @@ public class DirectoryTest extends H2HiveTestCase {
 			d.updatePrimaryIndexKeyOfResourceId(resource, key, key, firstKey);
 			assertEquals(firstKey,d.getPrimaryIndexKeyOfResourceId(resource, key));
 		}
-	}
-	
-	@Test
-	public void testUpdateResourceIdOfSecondaryIndexKey() throws Exception {
-		insertKeys(getHive());
-		Directory d = getDirectory();
-		Integer firstKey = Atom.getFirst(getPrimaryIndexKeys());
-		for(Integer key : getPrimaryIndexKeys())
-			d.updateResourceIdOfSecondaryIndexKey(numIndex, secondaryKeyNum, key, firstKey);
-		for(Object key : d.getResourceIdsOfSecondaryIndexKey(numIndex, secondaryKeyNum))
-			assertEquals(firstKey, ((Integer)key));
 	}
 	
 	@SuppressWarnings("unchecked")
