@@ -75,7 +75,7 @@ public interface NodeResolver {
 	 * @param secondaryIndexKey
 	 * @return
 	 */
-	public Collection<KeySemaphore> getNodeSemaphoresOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey);
+	public Collection<KeySemaphore> getKeySemaphoresOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey);
 
 	/***
 	 * Get the primary indexs that have records matching the secondary index key provided.

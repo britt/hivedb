@@ -134,14 +134,14 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 			if(Filter.getUnique(hive.getPrimaryIndexKeysOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey)).size() > 1)
 				throw new UnsupportedOperationException("Writes for non-unique secondary indexes must be performed using the primary index key.");
 		
-		Collection<KeySemaphore> nodeSemaphores = directory.getNodeSemaphoresOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
-		nodeSemaphores = Filter.getUnique(nodeSemaphores, new Unary<KeySemaphore, Integer>(){
+		Collection<KeySemaphore> keySemaphores = directory.getKeySemaphoresOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
+		keySemaphores = Filter.getUnique(keySemaphores, new Unary<KeySemaphore, Integer>(){
 			public Integer f(KeySemaphore item) {
 				return item.getId();
 		}});
 		
 		Collection<SimpleJdbcDaoSupport> supports = new ArrayList<SimpleJdbcDaoSupport>();
-		for(KeySemaphore semaphore : nodeSemaphores)
+		for(KeySemaphore semaphore : keySemaphores)
 			supports.add(get(semaphore, intention));
 		return supports;
 	}
@@ -189,7 +189,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	}
 
 	public Collection<SimpleJdbcDaoSupport> get(Resource resource, Object resourceId, AccessType intention) throws HiveReadOnlyException {
-		Collection<KeySemaphore> semaphores = directory.getNodeSemaphoresOfResourceId(resource, resourceId);
+		Collection<KeySemaphore> semaphores = directory.getKeySemaphoresOfResourceId(resource, resourceId);
 		Collection<SimpleJdbcDaoSupport> supports = new ArrayList<SimpleJdbcDaoSupport>();
 		for(KeySemaphore semaphore : semaphores)
 			supports.add(get(semaphore, intention));

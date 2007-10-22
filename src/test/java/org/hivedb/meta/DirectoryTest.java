@@ -108,22 +108,22 @@ public class DirectoryTest extends H2HiveTestCase {
 	}
 	
 	@Test
-	public void testGetNodeSemaphoresOfSecondaryIndexKey() throws Exception{
+	public void testGetKeySemaphoresOfSecondaryIndexKey() throws Exception{
 		insertKeys(getHive());
 		Directory d = getDirectory();
-		assertEquals(getPrimaryIndexKeys().size(), d.getNodeSemaphoresOfSecondaryIndexKey(nameIndex, secondaryKeyString).size());
+		assertEquals(getPrimaryIndexKeys().size(), d.getKeySemaphoresOfSecondaryIndexKey(nameIndex, secondaryKeyString).size());
 	}
 	
 	@Test
-	public void testGetNodeSemaphoresOfResourceIds() throws Exception{
+	public void testGetKeySemaphoresOfResourceIds() throws Exception{
 		insertKeys(getHive());
 		Directory d = getDirectory();
 		for(Integer key : getPrimaryIndexKeys())
-			assertEquals(1, d.getNodeSemaphoresOfResourceId(resource, key).size());
+			assertEquals(1, d.getKeySemaphoresOfResourceId(resource, key).size());
 	}
 	
 	@Test
-	public void testGetNodeSemaphoresOfPartitioningResourceIds() throws Exception{
+	public void testGetKeySemaphoresOfPartitioningResourceIds() throws Exception{
 		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		hive.deleteResource(resource);
 		resource = Atom.getFirstOrNull(dimension.getResources());
@@ -139,7 +139,7 @@ public class DirectoryTest extends H2HiveTestCase {
 		insertKeys(getHive());
 		Directory d = getDirectory();
 		for(Integer key : getPrimaryIndexKeys())
-			assertEquals(1, d.getNodeSemaphoresOfResourceId(resource, key).size());
+			assertEquals(1, d.getKeySemaphoresOfResourceId(resource, key).size());
 	}
 	
 	@Test
@@ -226,7 +226,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	}
 	
 	@Test
-	public void testGetNodeSemaphoresOfPrimaryIndexKey() throws Exception {
+	public void testGetKeySemaphoresOfPrimaryIndexKey() throws Exception {
 		insertKeys(getHive());
 		Directory d = getDirectory();
 		for(Integer pkey : getPrimaryIndexKeys())
@@ -234,7 +234,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	}
 	
 	@Test
-	public void testGetNodeSemaphoresOfPrimaryIndexKeyMultiNode() throws Exception {
+	public void testGetKeySemaphoresOfPrimaryIndexKeyMultiNode() throws Exception {
 		Directory d = getDirectory();
 		for(Integer pkey : getPrimaryIndexKeys()) {
 			for(Node node : dimension.getNodes())
@@ -282,7 +282,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	public void testGetNodeSemphoresOfSecondaryIndexKey() throws Exception {
 		insertKeys(getHive());
 		Directory d = getDirectory();
-		Collection<KeySemaphore> skeys = d.getNodeSemaphoresOfSecondaryIndexKey(nameIndex, secondaryKeyString);
+		Collection<KeySemaphore> skeys = d.getKeySemaphoresOfSecondaryIndexKey(nameIndex, secondaryKeyString);
 		assertEquals(getPrimaryIndexKeys().size(), skeys.size());
 	}
 	

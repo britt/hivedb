@@ -27,7 +27,7 @@ public class IndexSqlFormatter {
 		return String.format("select node from %s where id = ?", IndexSchema.getPrimaryIndexTableName(partitionDimension));
 	}
 	
-	public String selectNodeSemaphoreOfPrimaryIndexKey(PartitionDimension partitionDimension) {
+	public String selectKeySemaphoreOfPrimaryIndexKey(PartitionDimension partitionDimension) {
 		return String.format("select node,read_only from %s where id = ?", IndexSchema.getPrimaryIndexTableName(partitionDimension)); 
 	}
 	
@@ -100,7 +100,7 @@ public class IndexSqlFormatter {
 				IndexSchema.getSecondaryIndexTableName(secondaryIndex));
 	}
 	
-	public String selectNodeSemaphoresOfSecondaryIndexKey(SecondaryIndex secondaryIndex) {
+	public String selectKeySemaphoresOfSecondaryIndexKey(SecondaryIndex secondaryIndex) {
 		if (ResourceIndex.class.isInstance(secondaryIndex))		
 			// index of a resource
 			return String.format(
@@ -187,7 +187,7 @@ public class IndexSqlFormatter {
 				IndexSchema.getResourceIndexTableName(resource));		
 	}
 	
-	public String selectNodeSemaphoresOfResourceId(Resource resource) {
+	public String selectKeySemaphoresOfResourceId(Resource resource) {
 		return String.format(
 				"select p.node,p.read_only from %s p join %s r on r.pkey = p.id where r.id = ?", 
 				IndexSchema.getPrimaryIndexTableName(resource.getPartitionDimension()),

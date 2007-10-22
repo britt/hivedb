@@ -125,9 +125,9 @@ public class HiveScenarioTest {
 							assertTrue(String.format("directory.getSecondaryIndexKeysWithPrimaryKey(%s,%s,%s,%s)", secondaryIndex.getName(), resource.getName(), actualPartitionDimension.getName(), expectedSecondaryIndexKey),
 									secondaryIndexKeys.contains(expectedSecondaryIndexKey));
 					
-							Collection<KeySemaphore> nodeSemaphoreOfSecondaryIndexKeys = directory.getNodeSemaphoresOfSecondaryIndexKey(secondaryIndex, expectedSecondaryIndexKey);
-							assertTrue(String.format("directory.getNodeSemaphoresOfSecondaryIndexKey(%s,%s)", secondaryIndex.getName(), expectedSecondaryIndexKey),
-									   nodeSemaphoreOfSecondaryIndexKeys.size() > 0);
+							Collection<KeySemaphore> keySemaphoreOfSecondaryIndexKeys = directory.getKeySemaphoresOfSecondaryIndexKey(secondaryIndex, expectedSecondaryIndexKey);
+							assertTrue(String.format("directory.getKeySemaphoresOfSecondaryIndexKey(%s,%s)", secondaryIndex.getName(), expectedSecondaryIndexKey),
+									   keySemaphoreOfSecondaryIndexKeys.size() > 0);
 								
 							// Assert that querying for the primary key of the secondary index key yields what we expect
 							Object expectedPrimaryIndexKey = entityConfig.getPrimaryIndexKey(resourceInstance);
@@ -139,9 +139,9 @@ public class HiveScenarioTest {
 						
 							// Assert that one of the nodes of the secondary index key is the same as that of the primary index key
 							// There are multiple nodes returned when multiple primray index keys exist for a secondary index key
-							Collection<KeySemaphore> nodeSemaphoreOfPrimaryIndexKey = directory.getNodeSemamphoresOfPrimaryIndexKey(expectedPrimaryIndexKey);
-							for(KeySemaphore semaphore : nodeSemaphoreOfPrimaryIndexKey)
-								assertTrue(Filter.grepItemAgainstList(semaphore, nodeSemaphoreOfSecondaryIndexKeys));	
+							Collection<KeySemaphore> keySemaphoreOfPrimaryIndexKey = directory.getNodeSemamphoresOfPrimaryIndexKey(expectedPrimaryIndexKey);
+							for(KeySemaphore semaphore : keySemaphoreOfPrimaryIndexKey)
+								assertTrue(Filter.grepItemAgainstList(semaphore, keySemaphoreOfSecondaryIndexKeys));	
 					}	
 				}
 			}	

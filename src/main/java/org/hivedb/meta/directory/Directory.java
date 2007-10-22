@@ -171,9 +171,9 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	 * @see org.hivedb.meta.HiveDirectory#getNodeSemamphoresOfPrimaryIndexKey(java.lang.Object)
 	 */
 	public Collection<KeySemaphore> getNodeSemamphoresOfPrimaryIndexKey(Object primaryIndexKey) {
-		return doRead(sql.selectNodeSemaphoreOfPrimaryIndexKey(partitionDimension), 
+		return doRead(sql.selectKeySemaphoreOfPrimaryIndexKey(partitionDimension), 
 				new Object[] { primaryIndexKey }, 
-				new NodeSemaphoreRowMapper(),
+				new KeySemaphoreRowMapper(),
 				PRIMARY_INDEX_READ);
 	}
 	
@@ -224,33 +224,33 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	@SuppressWarnings("unchecked")
 	public Collection<Integer> getNodeIdsOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey)
 	{
-		return Transform.map(semaphoreToId(), getNodeSemaphoresOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey));
+		return Transform.map(semaphoreToId(), getKeySemaphoresOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey));
 	}
 	
 	/* (non-Javadoc)
-	 * @see org.hivedb.meta.HiveDirectory#getNodeSemaphoresOfSecondaryIndexKey(org.hivedb.meta.SecondaryIndex, java.lang.Object)
+	 * @see org.hivedb.meta.HiveDirectory#getKeySemaphoresOfSecondaryIndexKey(org.hivedb.meta.SecondaryIndex, java.lang.Object)
 	 */
-	public Collection<KeySemaphore> getNodeSemaphoresOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey)
+	public Collection<KeySemaphore> getKeySemaphoresOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey)
 	{
 		return doRead(
-			sql.selectNodeSemaphoresOfSecondaryIndexKey(secondaryIndex), 
+			sql.selectKeySemaphoresOfSecondaryIndexKey(secondaryIndex), 
 			new Object[] {secondaryIndexKey}, 
-			new NodeSemaphoreRowMapper(), 
+			new KeySemaphoreRowMapper(), 
 			SECONDARY_INDEX_READ);
 	}
 	
 	/* (non-Javadoc)
-	 * @see org.hivedb.meta.HiveDirectory#getNodeSemaphoresOfSecondaryIndexKey(org.hivedb.meta.SecondaryIndex, java.lang.Object)
+	 * @see org.hivedb.meta.HiveDirectory#getKeySemaphoresOfSecondaryIndexKey(org.hivedb.meta.SecondaryIndex, java.lang.Object)
 	 */
 	@SuppressWarnings("unchecked")
-	public Collection<KeySemaphore> getNodeSemaphoresOfResourceId(Resource resource, Object resourceId)
+	public Collection<KeySemaphore> getKeySemaphoresOfResourceId(Resource resource, Object resourceId)
 	{
 		return (Collection<KeySemaphore>) (resource.isPartitioningResource()
 		? getNodeSemamphoresOfPrimaryIndexKey(resourceId)
 		: doRead(
-			sql.selectNodeSemaphoresOfResourceId(resource), 
+			sql.selectKeySemaphoresOfResourceId(resource), 
 			new Object[] {resourceId}, 
-			new NodeSemaphoreRowMapper(), 
+			new KeySemaphoreRowMapper(), 
 			SECONDARY_INDEX_READ));
 	}
 	
@@ -317,7 +317,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 				SECONDARY_INDEX_READ);
 	}
 	
-	public class NodeSemaphoreRowMapper implements ParameterizedRowMapper {
+	public class KeySemaphoreRowMapper implements ParameterizedRowMapper {
 		public Object mapRow(ResultSet rs, int arg1) throws SQLException {
 			return new KeySemaphore(rs.getInt("node"), rs.getBoolean("read_only"));
 		}	
@@ -373,7 +373,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	}
 
 	public boolean getReadOnlyOfResourceId(Resource resource, Object id) {
-		Collection<KeySemaphore> semaphores = getNodeSemaphoresOfResourceId(resource, id);
+		Collection<KeySemaphore> semaphores = getKeySemaphoresOfResourceId(resource, id);
 		if( semaphores.size() == 0)
 			throw new HiveKeyNotFoundException(String.format("Unable to find resource %s with id %s", resource.getName(), id), id);
 		boolean readOnly = false;
@@ -383,7 +383,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	}
 	
 	public Collection<Integer> getNodeIdsOfResourceId(Resource resource, Object id) {
-		return Transform.map(semaphoreToId(), getNodeSemaphoresOfSecondaryIndexKey(resource.getIdIndex(), id));
+		return Transform.map(semaphoreToId(), getKeySemaphoresOfSecondaryIndexKey(resource.getIdIndex(), id));
 	}
 	
 	public Unary<KeySemaphore,Integer> semaphoreToId() {
