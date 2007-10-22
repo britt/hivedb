@@ -8,7 +8,6 @@ import java.util.Collection;
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
 import org.hivedb.meta.AccessType;
-import org.hivedb.meta.persistence.IndexSchema;
 import org.hivedb.util.database.test.H2HiveTestCase;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -30,7 +29,6 @@ public class TestRuntimeStatisticsCollection extends H2HiveTestCase{
 		
 		hive = (Hive) context.getBean("hive");
 		hive.addPartitionDimension(createPopulatedPartitionDimension());
-		new IndexSchema(hive.getPartitionDimension(partitionDimensionName())).install();
 		hive.addNode(hive.getPartitionDimension(partitionDimensionName()), createNode(getHiveDatabaseName()));
 		hive.insertPrimaryIndexKey(partitionDimensionName(), intKey());
 	}

@@ -25,14 +25,15 @@ public class JdbcUriFormatter {
 	}
 	
 	public String getUri() {
-		return new UriBuilder(p).append("jdbc:")
+		return new UriBuilder(p)
+				.append("jdbc:")
 				.filter("get", DRIVER).append(":")
-				.filter("get", HOST, "//%s")
-				.filter("get", PORT, ":%s")
-				.filter("get", HOST, "/")
+				.chain(HOST).add("get").add("format", "//%s").end()
+				.chain(PORT).add("get").add("format", ":%s").end()
+				.append(p.containsKey(HOST) ? "/" : "")
 				.filter("get", DATABASE)
-				.filter("get", USERNAME, "?user=%s")
-				.filter("get", PASSWORD, p.containsKey(USERNAME) ? "&password=%s" : "?password=%s")
+				.chain(USERNAME).add("get").add("format", "?user=%s").end()
+				.chain(PASSWORD).add("get").add("format", p.containsKey(USERNAME) ? "&password=%s" : "?password=%s").end()
 				.filter("get", OPTIONS).toString();
 	}
 	

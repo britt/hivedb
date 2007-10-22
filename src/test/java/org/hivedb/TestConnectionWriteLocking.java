@@ -6,7 +6,6 @@ import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.directory.Directory;
 import org.hivedb.meta.directory.NodeResolver;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
-import org.hivedb.meta.persistence.IndexSchema;
 import org.hivedb.util.AssertUtils;
 import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.functional.Atom;
@@ -21,7 +20,6 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		hive.addPartitionDimension(createPopulatedPartitionDimension());
 		hive.addNode(Atom.getFirst(hive.getPartitionDimensions()), createNode(getHiveDatabaseName()));
-		new IndexSchema(Atom.getFirst(hive.getPartitionDimensions())).install();
 	}
 	
 	@Test

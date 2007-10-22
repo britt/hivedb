@@ -59,7 +59,7 @@ public class IndexSchema extends Schema{
 	
 	protected String getCreateResourceIndex(Resource resource) {
 		Context context = getContext();
-		context.put("tableName", getSecondaryIndexTableName(resource.getIdIndex()));
+		context.put("tableName", getResourceIndexTableName(resource));
 		context.put("indexType", addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(resource.getIdIndex().getColumnInfo().getColumnType())));
 		context.put("primaryIndexType", addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(resource.getPartitionDimension().getColumnType())));
 		return Templater.render("sql/resource_index.vsql", context);
@@ -93,7 +93,7 @@ public class IndexSchema extends Schema{
 		TableInfos.add(new TableInfo(getPrimaryIndexTableName(partitionDimension), getCreatePrimaryIndex()));
 		for (Resource resource : partitionDimension.getResources()) {
 			if (!resource.isPartitioningResource())
-				TableInfos.add(new TableInfo(getSecondaryIndexTableName(resource.getIdIndex()), getCreateResourceIndex(resource)));
+				TableInfos.add(new TableInfo(getResourceIndexTableName(resource), getCreateResourceIndex(resource)));
 			for (SecondaryIndex secondaryIndex : resource.getSecondaryIndexes())
 				TableInfos.add(new TableInfo(
 						getSecondaryIndexTableName(secondaryIndex), 

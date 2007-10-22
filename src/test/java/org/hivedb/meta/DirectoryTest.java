@@ -119,7 +119,7 @@ public class DirectoryTest extends H2HiveTestCase {
 		insertKeys(getHive());
 		Directory d = getDirectory();
 		for(Integer key : getPrimaryIndexKeys())
-			assertEquals(1, d.getNodeSemaphoresOfSecondaryIndexKey(resource.getIdIndex(), key).size());
+			assertEquals(1, d.getNodeSemaphoresOfResourceId(resource, key).size());
 	}
 	
 	@Test
@@ -139,7 +139,7 @@ public class DirectoryTest extends H2HiveTestCase {
 		insertKeys(getHive());
 		Directory d = getDirectory();
 		for(Integer key : getPrimaryIndexKeys())
-			assertEquals(1, d.getNodeSemaphoresOfSecondaryIndexKey(resource.getIdIndex(), key).size());
+			assertEquals(1, d.getNodeSemaphoresOfResourceId(resource, key).size());
 	}
 	
 	@Test

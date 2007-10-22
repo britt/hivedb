@@ -6,7 +6,6 @@ import static org.testng.AssertJUnit.assertNotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map.Entry;
 
 import org.hivedb.Hive;
@@ -14,7 +13,6 @@ import org.hivedb.meta.Node;
 import org.hivedb.meta.directory.Directory;
 import org.hivedb.meta.directory.NodeResolver;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
-import org.hivedb.meta.persistence.IndexSchema;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.functional.Atom;
@@ -33,7 +31,6 @@ public class TestMigration extends H2HiveTestCase {
 		try {
 			hive = Hive.load(getConnectString(getHiveDatabaseName()));
 			hive.addPartitionDimension(createPopulatedPartitionDimension());
-			new IndexSchema(hive.getPartitionDimension(partitionDimensionName())).install();
 			for(String name : getDatabaseNames())
 				hive.addNode(hive.getPartitionDimension(partitionDimensionName()), new Node(0, name, name, "", 0, HiveDbDialect.H2));
 			

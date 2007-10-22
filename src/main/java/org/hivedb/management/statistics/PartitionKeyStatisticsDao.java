@@ -38,7 +38,7 @@ public class PartitionKeyStatisticsDao extends JdbcDaoSupport {
 				(PartitionKeyStatisticsBean) getJdbcTemplate().queryForObject(
 						selectByResourceIdSql(
 								IndexSchema.getPrimaryIndexTableName(resource.getPartitionDimension()),
-								IndexSchema.getSecondaryIndexTableName(resource.getIdIndex())),
+								IndexSchema.getResourceIndexTableName(resource)),
 						new Object[] {id}, 
 						new PartitionKeyStatisticsRowMapper(resource.getPartitionDimension()));
 		} catch( EmptyResultDataAccessException e) {

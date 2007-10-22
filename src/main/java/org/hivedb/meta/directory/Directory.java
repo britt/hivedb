@@ -117,7 +117,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 			JdbcTypeMapper.primitiveTypeToJdbcType(originalPrimaryIndexKey.getClass())
 		};
 		doUpdate(
-			sql.updateSecondaryIndexKey(resource.getIdIndex()),
+			sql.updateResourceId(resource),
 			types,
 			parameters,
 			SECONDARY_INDEX_WRITE);
@@ -240,6 +240,21 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	}
 	
 	/* (non-Javadoc)
+	 * @see org.hivedb.meta.HiveDirectory#getNodeSemaphoresOfSecondaryIndexKey(org.hivedb.meta.SecondaryIndex, java.lang.Object)
+	 */
+	@SuppressWarnings("unchecked")
+	public Collection<KeySemaphore> getNodeSemaphoresOfResourceId(Resource resource, Object resourceId)
+	{
+		return (Collection<KeySemaphore>) (resource.isPartitioningResource()
+		? getNodeSemamphoresOfPrimaryIndexKey(resourceId)
+		: doRead(
+			sql.selectNodeSemaphoresOfResourceId(resource), 
+			new Object[] {resourceId}, 
+			new NodeSemaphoreRowMapper(), 
+			SECONDARY_INDEX_READ));
+	}
+	
+	/* (non-Javadoc)
 	 * @see org.hivedb.meta.HiveDirectory#getPrimaryIndexKeysOfSecondaryIndexKey(org.hivedb.meta.SecondaryIndex, java.lang.Object)
 	 */
 	@SuppressWarnings("unchecked")
@@ -341,7 +356,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 
 	public void insertResourceId(Resource resource, Object id, Object primaryIndexKey) {
 		doUpdate(
-				sql.insertSecondaryIndexKey(resource.getIdIndex()), 
+				sql.insertResourceId(resource),
 				new int[] {resource.getColumnType(),resource.getPartitionDimension().getColumnType()}, 
 				new Object[]{id,primaryIndexKey}, 
 				SECONDARY_INDEX_WRITE);
@@ -358,7 +373,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	}
 
 	public boolean getReadOnlyOfResourceId(Resource resource, Object id) {
-		Collection<KeySemaphore> semaphores = getNodeSemaphoresOfSecondaryIndexKey(resource.getIdIndex(), id);
+		Collection<KeySemaphore> semaphores = getNodeSemaphoresOfResourceId(resource, id);
 		if( semaphores.size() == 0)
 			throw new HiveKeyNotFoundException(String.format("Unable to find resource %s with id %s", resource.getName(), id), id);
 		boolean readOnly = false;
@@ -369,12 +384,6 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	
 	public Collection<Integer> getNodeIdsOfResourceId(Resource resource, Object id) {
 		return Transform.map(semaphoreToId(), getNodeSemaphoresOfSecondaryIndexKey(resource.getIdIndex(), id));
-	}
-	
-	public Collection<KeySemaphore> getNodeSemaphoresOfResourceId(Resource resource, Object id) {
-		return resource.isPartitioningResource()
-			? getNodeSemamphoresOfPrimaryIndexKey(id)
-			: getNodeSemaphoresOfSecondaryIndexKey(resource.getIdIndex(), id);
 	}
 	
 	public Unary<KeySemaphore,Integer> semaphoreToId() {
