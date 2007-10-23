@@ -16,8 +16,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.sql.DataSource;
 
-import org.apache.log4j.Logger;
-import org.hivedb.management.statistics.Counter;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.Assigner;
 import org.hivedb.meta.HiveSemaphore;
@@ -49,8 +47,6 @@ import org.hivedb.util.functional.Unary;
  * @author Britt Crawford (bcrawford@cafepress.com)
  */
 public class Hive extends Observable implements Synchronizeable, Observer, Lockable {
-	//logger
-	private static Logger log = Logger.getLogger(Hive.class);
 	//constants
 	private static final int DEFAULT_JDBC_TIMEOUT = 500;
 	public static final int NEW_OBJECT_ID = 0;
@@ -88,24 +84,10 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	 * @return
 	 */
 	public static Hive load(String hiveDatabaseUri, DataSourceProvider dataSourceProvider) {
-		log.debug("Loading Hive from " + hiveDatabaseUri);
-		
-		//Tickle driver
-		try {
-			DriverLoader.load(hiveDatabaseUri);
-		} catch (ClassNotFoundException e) {
-			throw new HiveRuntimeException("Unable to load database driver: " + e.getMessage(), e);
-		} 
-		
-		Hive hive = new Hive(hiveDatabaseUri, 0, false, new ArrayList<PartitionDimension>(), dataSourceProvider);
-		
-		hive.sync();
-		log.debug("Successfully loaded Hive from " + hiveDatabaseUri);
-		return hive;
+		return load(hiveDatabaseUri, dataSourceProvider, null);
 	}
 
 	public static Hive load(String hiveDatabaseUri, DataSourceProvider dataSourceProvider, Assigner assigner) {
-		log.debug("Loading Hive from " + hiveDatabaseUri);
 		
 		//Tickle driver
 		try {
@@ -115,10 +97,10 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		} 
 		
 		Hive hive = new Hive(hiveDatabaseUri, 0, false, new ArrayList<PartitionDimension>(), dataSourceProvider);
-		hive.setDefaultNodeAssigner(assigner);
+		if(assigner != null)
+			hive.setDefaultNodeAssigner(assigner);
 		
 		hive.sync();
-		log.debug("Successfully loaded Hive from " + hiveDatabaseUri);
 		return hive;
 		
 	}
@@ -136,10 +118,6 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 			Map<String, DataSource> dataSourceMap = new ConcurrentHashMap<String, DataSource>();
 			Map<String, Directory> directoryMap = new ConcurrentHashMap<String, Directory>();
 			Map<String, JdbcDaoSupportCacheImpl> jdbcCacheMap = new ConcurrentHashMap<String, JdbcDaoSupportCacheImpl>();
-			
-			Counter directoryStats = null;
-			if(directories.size() > 0)
-				directoryStats = directories.values().iterator().next().getPerformanceStatistics();
 			
 			for (PartitionDimension p : new PartitionDimensionDao(hiveDataSource).loadAll()){
 				if(this.getDefaultNodeAssigner() != null)

@@ -10,7 +10,6 @@ import java.util.Observer;
 
 import javax.sql.DataSource;
 
-import org.apache.log4j.Logger;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
 
@@ -23,7 +22,6 @@ import org.hivedb.meta.persistence.HiveSemaphoreDao;
  *
  */
 public class HiveSyncDaemon extends Thread {
-	Logger log = Logger.getLogger(HiveSyncDaemon.class);
 	private Observable hiveStatus;
 	private long lastRun = 0;
 	private String hiveUri;
@@ -74,9 +72,7 @@ public class HiveSyncDaemon extends Thread {
 			try {
 				detectChanges();
 				lastRun = System.currentTimeMillis();
-			} catch (Exception e) {
-				log.warn("Error occurred while polling the HiveSemaphore", e);
-			}
+			} catch (Exception e) {}
 
 			try {
 				sleep(getConfiguredSleepPeriodMs());

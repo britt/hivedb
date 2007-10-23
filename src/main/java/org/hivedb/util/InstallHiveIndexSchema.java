@@ -1,21 +1,18 @@
 package org.hivedb.util;
 
-import org.apache.log4j.Logger;
 import org.hivedb.meta.HiveConfig;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.persistence.IndexSchema;
 
 
 public class InstallHiveIndexSchema {
-	private static Logger log = Logger.getLogger(InstallHiveIndexSchema.class);
 	
 	public static PartitionDimension install(final HiveConfig hiveConfig) {
 			
 		try {
 			// Create or update a partition dimension and its resources, secondaryIndexes and update
 			// the data nodes
-			HiveDiff hiveDiff = new HiveSyncer(hiveConfig.getHive()).syncHive(hiveConfig);
-			log.debug(hiveDiff.toString());
+			new HiveSyncer(hiveConfig.getHive()).syncHive(hiveConfig);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
