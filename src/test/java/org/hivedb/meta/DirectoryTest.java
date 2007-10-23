@@ -339,6 +339,8 @@ public class DirectoryTest extends H2HiveTestCase {
 			assertEquals(0,d.getSecondaryIndexKeysOfResourceId(numIndex, key).size());
 			d.deleteResourceId(resource, key);
 			assertFalse(d.doesResourceIdExist(resource, key));
+			assertEquals(0, d.getSecondaryIndexKeysOfResourceId(nameIndex, key).size());
+			assertEquals(0, d.getSecondaryIndexKeysOfResourceId(numIndex, key).size());
 		}
 	}
 	

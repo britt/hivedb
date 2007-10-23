@@ -8,11 +8,5 @@
 				<constructor-arg value="500" />
 			</bean>
 		</constructor-arg>
-		<constructor-arg>
-			<ref bean="hiveStatistics" />
-		</constructor-arg>
-		<constructor-arg>
-			<ref bean="directoryStatistics" />
-		</constructor-arg>
 	</bean>
 </beans>

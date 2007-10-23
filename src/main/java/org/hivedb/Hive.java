@@ -18,9 +18,6 @@ import javax.sql.DataSource;
 
 import org.apache.log4j.Logger;
 import org.hivedb.management.statistics.Counter;
-import org.hivedb.management.statistics.DirectoryPerformanceStatistics;
-import org.hivedb.management.statistics.HivePerformanceStatistics;
-import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.Assigner;
 import org.hivedb.meta.HiveSemaphore;
@@ -61,13 +58,10 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	private String hiveUri;
 	private int revision;
 	private boolean readOnly;
-	private boolean performanceMonitoringEnabled = true;
 	
 	private Map<String,PartitionDimension> partitionDimensions;
-	private PartitionKeyStatisticsDao partitionStatistics;
 	private Map<String,Directory> directories;
 	private Map<String, JdbcDaoSupportCacheImpl> jdbcDaoSupportCaches;
-	private HivePerformanceStatistics performanceStatistics;
 	private DataSource hiveDataSource;
 	private Map<String, DataSource> nodeDataSources;
 	private DataSourceProvider dataSourceProvider;
@@ -81,7 +75,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	 * @return Hive (existing or new) located at hiveDatabaseUri
 	 */
 	public static Hive load(String hiveDatabaseUri) {
-		return Hive.load(hiveDatabaseUri, new HiveBasicDataSourceProvider(DEFAULT_JDBC_TIMEOUT), null, null);
+		return Hive.load(hiveDatabaseUri, new HiveBasicDataSourceProvider(DEFAULT_JDBC_TIMEOUT));
 	}
 	
 	/***
@@ -93,7 +87,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	 * @param directoryStats
 	 * @return
 	 */
-	public static Hive load(String hiveDatabaseUri, DataSourceProvider dataSourceProvider, HivePerformanceStatistics hiveStats, DirectoryPerformanceStatistics directoryStats) {
+	public static Hive load(String hiveDatabaseUri, DataSourceProvider dataSourceProvider) {
 		log.debug("Loading Hive from " + hiveDatabaseUri);
 		
 		//Tickle driver
@@ -104,17 +98,13 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		} 
 		
 		Hive hive = new Hive(hiveDatabaseUri, 0, false, new ArrayList<PartitionDimension>(), dataSourceProvider);
-		//Inject the statistics monitoring beans
-		if( hiveStats != null) {
-			hive.setPerformanceStatistics(hiveStats);
-			hive.setPerformanceMonitoringEnabled(true);
-		} 
+		
 		hive.sync();
 		log.debug("Successfully loaded Hive from " + hiveDatabaseUri);
 		return hive;
 	}
 
-	public static Hive load(String hiveDatabaseUri, DataSourceProvider dataSourceProvider, HivePerformanceStatistics hiveStats, DirectoryPerformanceStatistics directoryStats, Assigner assigner) {
+	public static Hive load(String hiveDatabaseUri, DataSourceProvider dataSourceProvider, Assigner assigner) {
 		log.debug("Loading Hive from " + hiveDatabaseUri);
 		
 		//Tickle driver
@@ -126,11 +116,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		
 		Hive hive = new Hive(hiveDatabaseUri, 0, false, new ArrayList<PartitionDimension>(), dataSourceProvider);
 		hive.setDefaultNodeAssigner(assigner);
-		//Inject the statistics monitoring beans
-		if( hiveStats != null) {
-			hive.setPerformanceStatistics(hiveStats);
-			hive.setPerformanceMonitoringEnabled(true);
-		} 
+		
 		hive.sync();
 		log.debug("Successfully loaded Hive from " + hiveDatabaseUri);
 		return hive;
@@ -164,10 +150,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 					if(!dataSourceMap.containsKey(node.getUri()))
 						dataSourceMap.put(node.getUri(), dataSourceProvider.getDataSource(node));
 				
-				if(isPerformanceMonitoringEnabled() && directoryStats != null)
-					directoryMap.put(p.getName(), new Directory(p, dataSourceProvider.getDataSource(p.getIndexUri()), directoryStats));
-				else
-					directoryMap.put(p.getName(), new Directory(p, dataSourceProvider.getDataSource(p.getIndexUri())));
+				directoryMap.put(p.getName(), new Directory(p, dataSourceProvider.getDataSource(p.getIndexUri())));
 			}
 			
 			//Critical Section
@@ -175,12 +158,9 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 				this.partitionDimensions = dimensionMap;
 				this.directories = directoryMap;
 			
-				for(PartitionDimension p : this.getPartitionDimensions()) {
-					if(isPerformanceMonitoringEnabled())
-						jdbcCacheMap.put(p.getName(), new JdbcDaoSupportCacheImpl(p.getName(), this, directoryMap.get(p.getName()), dataSourceProvider, performanceStatistics));
-					else
-						jdbcCacheMap.put(p.getName(), new JdbcDaoSupportCacheImpl(p.getName(), this, directoryMap.get(p.getName()), dataSourceProvider));
-				}
+				for(PartitionDimension p : this.getPartitionDimensions())
+					jdbcCacheMap.put(p.getName(), new JdbcDaoSupportCacheImpl(p.getName(), this, directoryMap.get(p.getName()), dataSourceProvider));
+				
 				this.nodeDataSources = dataSourceMap;
 				this.jdbcDaoSupportCaches = jdbcCacheMap;
 			}
@@ -213,7 +193,6 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 					nodeDataSources.put(node.getUri(), dataSourceProvider.getDataSource(node));
 		}
 		this.partitionDimensions = dimensionNameMap;
-		this.partitionStatistics = new PartitionKeyStatisticsDao(hiveDataSource);
 		this.jdbcDaoSupportCaches = new ConcurrentHashMap<String, JdbcDaoSupportCacheImpl>();
 		this.directories = new ConcurrentHashMap<String, Directory>();
 	}
@@ -450,7 +429,6 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		Collection<KeySemaphore> semaphores = directories.get(partitionDimensionName).getNodeSemamphoresOfPrimaryIndexKey(primaryIndexKey);
 		Preconditions.isWritable(semaphores, this);
 		directories.get(dimension.getName()).insertResourceId(resource, id, primaryIndexKey);
-		partitionStatistics.incrementChildRecordCount(dimension, primaryIndexKey, 1);
 	}
 
 	private void insertSecondaryIndexKey(SecondaryIndex secondaryIndex,
@@ -462,7 +440,6 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		directories.get(partitionDimensionName)
 				.insertSecondaryIndexKey(secondaryIndex, secondaryIndexKey,
 						resourceId);
-		partitionStatistics.incrementChildRecordCount(secondaryIndex.getResource(), resourceId, 1);
 	}
 
 	public void insertSecondaryIndexKey(
@@ -480,11 +457,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	public void insertRelatedSecondaryIndexKeys(String partitionDimensionName, String resourceName, Map<SecondaryIndex, Collection<Object>> secondaryIndexValueMap, final Object resourceId) throws HiveReadOnlyException {
 		Collection<KeySemaphore> semaphores = directories.get(partitionDimensionName).getKeySemaphoresOfResourceId(getPartitionDimension(partitionDimensionName).getResource(resourceName), resourceId);
 		Preconditions.isWritable(semaphores,this);
-		Integer indexesUpdated = directories.get(partitionDimensionName).batch().insertSecondaryIndexKeys(secondaryIndexValueMap, resourceId);
-		partitionStatistics.incrementChildRecordCount(
-				getPartitionDimension(partitionDimensionName).getResource(resourceName), 
-				resourceId, 
-				indexesUpdated);
+		directories.get(partitionDimensionName).batch().insertSecondaryIndexKeys(secondaryIndexValueMap, resourceId);
 	}
 
 	public void updatePrimaryIndexReadOnly(String partitionDimensionName,
@@ -520,8 +493,9 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		Directory directory = directories.get(partitionDimension.getName());
 		for (Resource resource : partitionDimension.getResources()){
 			if (!resource.isPartitioningResource())
-				for(Object resourceId : directory.getResourceIdsOfPrimaryIndexKey(resource, primaryIndexKey))
+				for(Object resourceId : directory.getResourceIdsOfPrimaryIndexKey(resource, primaryIndexKey)) {
 					deleteResourceId(resource, resourceId);
+				}
 			else
 				directory.batch().deleteAllSecondaryIndexKeysOfResourceId(resource, primaryIndexKey);
 		}
@@ -545,10 +519,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		Directory directory = directories.get(resource.getPartitionDimension().getName());
 		Preconditions.isWritable(directory.getKeySemaphoresOfResourceId(resource, id), this);
 	
-		deleteAllSecondaryIndexKeysOfResourceId(resource.getPartitionDimension().getName(), resource.getName(), id);
-		partitionStatistics.decrementChildRecordCount(
-				resource.getPartitionDimension(), 
-				directories.get(resource.getPartitionDimension().getName()).getPrimaryIndexKeyOfResourceId(resource, id),1);
+		directory.batch().deleteAllSecondaryIndexKeysOfResourceId(resource, id);
 		directory.deleteResourceId(resource, id);
 	}
 	
@@ -558,9 +529,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		Directory directory = directories.get(partitionDimensionName);
 		
 		Preconditions.isWritable(directory.getKeySemaphoresOfResourceId(resource, id),this);
-		
-		Integer rowsAffected = directory.batch().deleteAllSecondaryIndexKeysOfResourceId(resource, id);
-		partitionStatistics.decrementChildRecordCount(resource, id, rowsAffected);
+		directory.batch().deleteAllSecondaryIndexKeysOfResourceId(resource, id);
 	}
 	
 	private void deleteSecondaryIndexKey(SecondaryIndex secondaryIndex,
@@ -575,7 +544,6 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 
 		directories.get(partitionDimensionName)
 				.deleteSecondaryIndexKey(secondaryIndex, secondaryIndexKey, resourceId);
-		partitionStatistics.decrementChildRecordCount(secondaryIndex.getResource(), resourceId, 1);
 	}
 
 	public void deleteSecondaryIndexKey(String secondaryIndexName, String resourceName, String partitionDimensionName,
@@ -665,35 +633,13 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	}
 	
 	private Connection getConnection(PartitionDimension partitionDimension, KeySemaphore semaphore, AccessType intention) throws HiveReadOnlyException,SQLException {
-		try{
-			if(intention == AccessType.ReadWrite)
-				Preconditions.isWritable(this, semaphore, partitionDimension.getNode(semaphore.getId()));
+		if(intention == AccessType.ReadWrite)
+			Preconditions.isWritable(this, semaphore, partitionDimension.getNode(semaphore.getId()));
 			
-			Connection conn = 
-				nodeDataSources.get(partitionDimension.getNode(semaphore.getId()).getUri()).getConnection();
+		Connection conn = 
+			nodeDataSources.get(partitionDimension.getNode(semaphore.getId()).getUri()).getConnection();
 			
-			if(intention == AccessType.Read) {
-				conn.setReadOnly(true);
-				if( isPerformanceMonitoringEnabled() )
-					performanceStatistics.incrementNewReadConnections();
-			} else if( intention == AccessType.ReadWrite){
-				if( isPerformanceMonitoringEnabled() )
-					performanceStatistics.incrementNewWriteConnections();
-			}
-			return conn;
-		} catch (SQLException e) {
-			if( isPerformanceMonitoringEnabled() )
-				performanceStatistics.incrementConnectionFailures();
-			throw e;
-		} catch( RuntimeException e) {
-			if( isPerformanceMonitoringEnabled() )
-				performanceStatistics.incrementConnectionFailures();
-			throw e;
-		} catch(HiveReadOnlyException e) {
-			if( isPerformanceMonitoringEnabled() )
-				performanceStatistics.incrementConnectionFailures();
-			throw e;
-		}
+		return conn;
 	}
 	
 	public Collection<Connection> getConnection(String partitionDimensionName,
@@ -742,26 +688,6 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 
 	public HiveDbDialect getDialect() {
 		return DriverLoader.discernDialect(hiveUri);
-	}
-
-	public PartitionKeyStatisticsDao getPartitionStatistics() {
-		return partitionStatistics;
-	}
-
-	public HivePerformanceStatistics getPerformanceStatistics() {
-		return performanceStatistics;
-	}
-
-	public void setPerformanceStatistics(HivePerformanceStatistics performanceStatistics) {
-		this.performanceStatistics = performanceStatistics;
-	}
-
-	public boolean isPerformanceMonitoringEnabled() {
-		return performanceStatistics != null && performanceMonitoringEnabled;
-	}
-
-	public void setPerformanceMonitoringEnabled(boolean performanceMonitoringEnabled) {
-		this.performanceMonitoringEnabled = performanceMonitoringEnabled;
 	}
 
 	/*

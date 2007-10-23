@@ -7,10 +7,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.sql.DataSource;
 
-import org.hivedb.management.statistics.HivePerformanceStatistics;
 import org.hivedb.meta.AccessType;
-import org.hivedb.meta.Node;
 import org.hivedb.meta.KeySemaphore;
+import org.hivedb.meta.Node;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.directory.Directory;
@@ -28,20 +27,14 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	private Hive hive;
 	private String partitionDimension;
 	private Map<Integer, SimpleJdbcDaoSupport> jdbcDaoSupports;
-	private HivePerformanceStatistics stats;
 	private Directory directory;
 	private DataSourceProvider dataSourceProvider;
 	
-	public JdbcDaoSupportCacheImpl(String partitionDimension, Hive hive, Directory directory, DataSourceProvider dataSourceProvider) {
-		this(partitionDimension, hive, directory, dataSourceProvider, null);
-	}
-	
-	public JdbcDaoSupportCacheImpl(String partitionDimension, Hive hive, Directory directory,  DataSourceProvider dataSourceProvider, HivePerformanceStatistics stats) {
+	public JdbcDaoSupportCacheImpl(String partitionDimension, Hive hive, Directory directory,  DataSourceProvider dataSourceProvider) {
 		this.partitionDimension = partitionDimension;
 		this.hive = hive;
 		this.jdbcDaoSupports = new ConcurrentHashMap<Integer, SimpleJdbcDaoSupport>();
 		this.directory = directory;
-		this.stats = stats;
 		this.dataSourceProvider = dataSourceProvider;
 		sync();
 	}
@@ -70,39 +63,14 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	
 	private SimpleJdbcDaoSupport get(KeySemaphore semaphore, AccessType intention) throws HiveReadOnlyException { 
 		Node node = null;
-		try {
-			node = hive.getPartitionDimension(partitionDimension).getNode(semaphore.getId());
-		} catch (HiveRuntimeException e) {
-			//failure
-			countFailure();
-			throw e;
-		}
+		node = hive.getPartitionDimension(partitionDimension).getNode(semaphore.getId());
 		
-		if(intention == AccessType.ReadWrite && (hive.isReadOnly() || node.isReadOnly() || semaphore.isReadOnly())){
-			//failure
-			countFailure();
+		if(intention == AccessType.ReadWrite && (hive.isReadOnly() || node.isReadOnly() || semaphore.isReadOnly()))
 			throw new HiveReadOnlyException("This partition key cannot be written to at this time.");
-		}
-		else if( jdbcDaoSupports.containsKey(hash(semaphore.getId(), intention))){
-			// success case
-			countSuccess(intention);
+		else if( jdbcDaoSupports.containsKey(hash(semaphore.getId(), intention)))
 			return jdbcDaoSupports.get(hash(semaphore.getId(), intention));
-		}
+		
 		throw new HiveKeyNotFoundException("Could not find dataSource for ", semaphore);
-	}
-	
-	private void countSuccess(AccessType intention) {
-		if(isPerformanceMonitoringEnabled()) {
-			if(intention == AccessType.ReadWrite)
-				stats.incrementNewWriteConnections();
-			else
-				stats.incrementNewReadConnections();
-		}
-	}
-
-	private void countFailure() {
-		if(isPerformanceMonitoringEnabled())
-			stats.incrementConnectionFailures();
 	}
 
 	/**
@@ -174,10 +142,6 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 		return partitionDimension;
 	}
 	
-	public boolean isPerformanceMonitoringEnabled() {
-		return this.stats != null;
-	}
-
 	public SimpleJdbcDaoSupport getUnsafe(String nodeName) {
 		try {
 			Node node = hive.getPartitionDimension(this.getPartitionDimension()).getNode(nodeName);

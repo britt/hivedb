@@ -1,12 +1,5 @@
 package org.hivedb.meta.directory;
 
-import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.PRIMARY_INDEX_DELETE;
-import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.PRIMARY_INDEX_READ;
-import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.PRIMARY_INDEX_WRITE;
-import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.SECONDARY_INDEX_DELETE;
-import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.SECONDARY_INDEX_READ;
-import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.SECONDARY_INDEX_WRITE;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -17,11 +10,10 @@ import javax.sql.DataSource;
 
 import org.hivedb.DirectoryCorruptionException;
 import org.hivedb.HiveKeyNotFoundException;
-import org.hivedb.StatisticsProxy;
 import org.hivedb.management.statistics.Counter;
 import org.hivedb.management.statistics.NoOpStatistics;
-import org.hivedb.meta.Node;
 import org.hivedb.meta.KeySemaphore;
+import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
@@ -34,7 +26,6 @@ import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Delay;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
-import org.hivedb.util.proxy.Proxies;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.RowMapper;
@@ -78,7 +69,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	public void insertPrimaryIndexKey(Node node, Object primaryIndexKey) {
 		int[] types = new int[]{JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass()), Types.INTEGER, Types.TIMESTAMP};
 		Object[] parameters = new Object[] {primaryIndexKey,node.getId(),new Date(System.currentTimeMillis()) };
-		doUpdate(sql.insertPrimaryIndexKey(partitionDimension), types, parameters, PRIMARY_INDEX_WRITE);
+		doUpdate(sql.insertPrimaryIndexKey(partitionDimension), types, parameters);
 	}
 
 	
@@ -88,7 +79,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	public void insertSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey, Object primaryindexKey) {
 		Object[] parameters = new Object[] {secondaryIndexKey, primaryindexKey};
 		int[] types = new int[]{secondaryIndex.getColumnInfo().getColumnType(), secondaryIndex.getResource().getColumnType()};
-		doUpdate(sql.insertSecondaryIndexKey(secondaryIndex), types, parameters, SECONDARY_INDEX_WRITE);
+		doUpdate(sql.insertSecondaryIndexKey(secondaryIndex), types, parameters);
 	}
 	
 	private static QuickCache cache = new QuickCache();
@@ -99,7 +90,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	public void updatePrimaryIndexKeyReadOnly(Object primaryIndexKey, boolean isReadOnly) {
 		Object[] parameters = new Object[] {isReadOnly,primaryIndexKey};
 		int[] types = new int[]{Types.BOOLEAN, JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass())};
-		doUpdate(sql.updateReadOnlyOfPrimaryIndexKey(partitionDimension), types, parameters, PRIMARY_INDEX_WRITE);
+		doUpdate(sql.updateReadOnlyOfPrimaryIndexKey(partitionDimension), types, parameters);
 	}
 	
 	/* (non-Javadoc)
@@ -119,8 +110,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 		doUpdate(
 			sql.updateResourceId(resource),
 			types,
-			parameters,
-			SECONDARY_INDEX_WRITE);
+			parameters);
 	}
 	
 	/* (non-Javadoc)
@@ -130,8 +120,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 		doUpdate(
 			sql.deletePrimaryIndexKey(partitionDimension), 
 			new int[]{JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass())}, 
-			new Object[] {primaryIndexKey}, 
-			PRIMARY_INDEX_DELETE);
+			new Object[] {primaryIndexKey});
 	}
 
 	/* (non-Javadoc)
@@ -146,17 +135,17 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 			secondaryIndex.getColumnInfo().getColumnType(),
 			JdbcTypeMapper.primitiveTypeToJdbcType(resourceId.getClass())	
 		};
-		doUpdate(sql.deleteSingleSecondaryIndexKey(secondaryIndex), types, parameters, SECONDARY_INDEX_DELETE);
+		doUpdate(sql.deleteSingleSecondaryIndexKey(secondaryIndex), types, parameters);
 	}
 	
 	/* (non-Javadoc)
 	 * @see org.hivedb.meta.HiveDirectory#doesPrimaryIndexKeyExist(java.lang.Object)
 	 */
+	@SuppressWarnings("unchecked")
 	public boolean doesPrimaryIndexKeyExist(Object primaryIndexKey) {
 		Collection count = doRead(sql.checkExistenceOfPrimaryKey(partitionDimension), 
 				new Object[] { primaryIndexKey }, 
-				RowMappers.newTrueRowMapper(),
-				PRIMARY_INDEX_READ);
+				RowMappers.newTrueRowMapper());
 		return count.size() > 0;
 	}
 	
@@ -173,8 +162,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	public Collection<KeySemaphore> getNodeSemamphoresOfPrimaryIndexKey(Object primaryIndexKey) {
 		return doRead(sql.selectKeySemaphoreOfPrimaryIndexKey(partitionDimension), 
 				new Object[] { primaryIndexKey }, 
-				new KeySemaphoreRowMapper(),
-				PRIMARY_INDEX_READ);
+				new KeySemaphoreRowMapper());
 	}
 	
 	/* (non-Javadoc)
@@ -198,8 +186,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 				doRead(
 					sql.checkExistenceOfResourceIndexSql(resource.getIdIndex()), 
 					new Object[] { resourceId }, 
-					RowMappers.newTrueRowMapper(),
-					SECONDARY_INDEX_READ);
+					RowMappers.newTrueRowMapper());
 		return count.size() > 0;
 	}
 	
@@ -213,8 +200,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 		Collection<Object> count = doRead(
 				sql.checkExistenceOfSecondaryIndexSql(secondaryIndex),
 				new Object[] { secondaryIndexKey, resourceId },
-				RowMappers.newTrueRowMapper(), 
-				SECONDARY_INDEX_READ);
+				RowMappers.newTrueRowMapper());
 		return count.size() > 0;
 	}
 	
@@ -235,8 +221,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 		return doRead(
 			sql.selectKeySemaphoresOfSecondaryIndexKey(secondaryIndex), 
 			new Object[] {secondaryIndexKey}, 
-			new KeySemaphoreRowMapper(), 
-			SECONDARY_INDEX_READ);
+			new KeySemaphoreRowMapper());
 	}
 	
 	/* (non-Javadoc)
@@ -250,8 +235,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 		: doRead(
 			sql.selectKeySemaphoresOfResourceId(resource), 
 			new Object[] {resourceId}, 
-			new KeySemaphoreRowMapper(), 
-			SECONDARY_INDEX_READ));
+			new KeySemaphoreRowMapper()));
 	}
 	
 	/* (non-Javadoc)
@@ -263,8 +247,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 		return doRead(
 			sql.selectPrimaryIndexKeysOfSecondaryIndexKey(secondaryIndex), 
 			new Object[] {secondaryIndexKey}, 
-			RowMappers.newObjectRowMapper(secondaryIndex.getResource().getPartitionDimension().getColumnType()),
-			SECONDARY_INDEX_READ);
+			RowMappers.newObjectRowMapper(secondaryIndex.getResource().getPartitionDimension().getColumnType()));
 	}
 	
 	/* (non-Javadoc)
@@ -276,8 +259,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 		return doRead(
 			sql.selectSecondaryIndexKeysOfPrimaryKey(secondaryIndex),
 			new Object[] { primaryIndexKey }, 
-			RowMappers.newObjectRowMapper(secondaryIndex.getColumnInfo().getColumnType()),
-			SECONDARY_INDEX_READ);
+			RowMappers.newObjectRowMapper(secondaryIndex.getColumnInfo().getColumnType()));
 	}
 	
 	public Counter getPerformanceStatistics() {
@@ -298,68 +280,60 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	}
 
 	public void deleteResourceId(Resource resource, Object id) {
-		doUpdate(sql.deleteResourceId(resource), new int[] {resource.getColumnType()}, new Object[] {id}, SECONDARY_INDEX_DELETE);
+		doUpdate(sql.deleteResourceId(resource), new int[] {resource.getColumnType()}, new Object[] {id});
 	}
 
+	@SuppressWarnings("unchecked")
 	public Collection getResourceIdsOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey) {
 		return doRead(
 				sql.selectResourceIdsOfSecondaryIndexKey(secondaryIndex),
 				new Object[] { secondaryIndexKey }, 
-				RowMappers.newObjectRowMapper(secondaryIndex.getResource().getColumnType()),
-				SECONDARY_INDEX_READ);
+				RowMappers.newObjectRowMapper(secondaryIndex.getResource().getColumnType()));
 	}
 	
+	@SuppressWarnings("unchecked")
 	public Collection getResourceIdsOfPrimaryIndexKey(Resource resource, Object primaryIndexKey) {
 		return doRead(
 				sql.selectResourceIdsOfPrimaryIndexKey(resource.getIdIndex()),
 				new Object[] { primaryIndexKey }, 
-				RowMappers.newObjectRowMapper(resource.getColumnType()),
-				SECONDARY_INDEX_READ);
+				RowMappers.newObjectRowMapper(resource.getColumnType()));
 	}
 	
+	@SuppressWarnings("unchecked")
 	public class KeySemaphoreRowMapper implements ParameterizedRowMapper {
 		public Object mapRow(ResultSet rs, int arg1) throws SQLException {
 			return new KeySemaphore(rs.getInt("node"), rs.getBoolean("read_only"));
 		}	
 	}
 
+	@SuppressWarnings("unchecked")
 	public Collection getSecondaryIndexKeysOfResourceId(SecondaryIndex secondaryIndex, Object id) {
 		return doRead(
 				sql.selectSecondaryIndexKeyOfResourceId(secondaryIndex), 
 				new Object[] { id }, 
-				RowMappers.newObjectRowMapper(secondaryIndex.getColumnInfo().getColumnType()), 
-				SECONDARY_INDEX_READ);
+				RowMappers.newObjectRowMapper(secondaryIndex.getColumnInfo().getColumnType()));
 	}
 	
 	@SuppressWarnings("unchecked")
-	private<T> Collection<T> doRead(String sql, Object[] parameters, RowMapper mapper, String statsKey) {
-		StatisticsProxy<Collection<Object>> proxy = 
-			Proxies.newJdbcSqlQueryProxy(performanceStatistics, 
-					statsKey,
-					sql, 
-					parameters, 
-					mapper,
-					getJdbcTemplate());
-		
+	private<T> Collection<T> doRead(String sql, Object[] parameters, RowMapper mapper) {
 		try{
-			return (Collection<T>) proxy.execute();
+			return (Collection<T>) getJdbcTemplate().query(sql,	parameters, mapper);
 		} catch(EmptyResultDataAccessException e) {
 			throw new HiveKeyNotFoundException(String.format("Unable to get secondary index keys of primary index key %s, key not found.", parameters[0]), parameters[0],e);
 		}
 	}
 	
-	private void doUpdate(String sql, int[] types, Object[] parameters, String statsKey){
+	private void doUpdate(String sql, int[] types, Object[] parameters){
 		PreparedStatementCreatorFactory factory = 
 			Statements.newStmtCreatorFactory(sql, types);
-		Proxies.newJdbcUpdateProxy(performanceStatistics, statsKey, parameters, factory, getJdbcTemplate()).execute();
+		getJdbcTemplate().update(factory.newPreparedStatementCreator(parameters));
 	}
 
 	public void insertResourceId(Resource resource, Object id, Object primaryIndexKey) {
 		doUpdate(
 				sql.insertResourceId(resource),
 				new int[] {resource.getColumnType(),resource.getPartitionDimension().getColumnType()}, 
-				new Object[]{id,primaryIndexKey}, 
-				SECONDARY_INDEX_WRITE);
+				new Object[]{id,primaryIndexKey});
 	}
 
 	@SuppressWarnings("unchecked")

@@ -1,7 +1,5 @@
 package org.hivedb.meta.directory;
 
-import static org.hivedb.management.statistics.DirectoryPerformanceStatisticsMBean.SECONDARY_INDEX_DELETE;
-
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -13,7 +11,6 @@ import org.hivedb.util.database.Statements;
 import org.hivedb.util.functional.Delay;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
-import org.hivedb.util.proxy.Proxies;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
@@ -100,7 +97,7 @@ public class BatchIndexWriter extends SimpleJdbcDaoSupport {
 				Integer rowsAffected = 0;
 				for(SecondaryIndex secondaryIndex : resource.getSecondaryIndexes()){
 					deleteFactory.setSqlToUse(sql.deleteAllSecondaryIndexKeysForResourceId(secondaryIndex));
-					rowsAffected += Proxies.newJdbcUpdateProxy(directory.getPerformanceStatistics(), SECONDARY_INDEX_DELETE, parameters, deleteFactory, getJdbcTemplate()).execute();
+					rowsAffected += getJdbcTemplate().update(deleteFactory.newPreparedStatementCreator(parameters));
 				}
 				return rowsAffected;
 			}}

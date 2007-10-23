@@ -5,8 +5,6 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Map;
 
-import org.hivedb.management.statistics.HivePerformanceStatistics;
-import org.hivedb.management.statistics.PartitionKeyStatisticsDao;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
@@ -21,12 +19,7 @@ public interface HiveFacade {
 	public int getRevision();
 	public boolean isReadOnly();
 	public HiveDbDialect getDialect();
-	public PartitionKeyStatisticsDao getPartitionStatistics();
-	public HivePerformanceStatistics getPerformanceStatistics();
-	public boolean isPerformanceMonitoringEnabled();
 	
-	public void setPerformanceStatistics( HivePerformanceStatistics performanceStatistics);
-	public void setPerformanceMonitoringEnabled(boolean performanceMonitoringEnabled);
 	public void setHiveReadOnly(Boolean readOnly);
 	
 	//Hive configuration
