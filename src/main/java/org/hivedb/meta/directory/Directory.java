@@ -34,26 +34,17 @@ import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 
 public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, IndexWriter {
 	private PartitionDimension partitionDimension;
-	private Counter performanceStatistics;
-	private boolean performanceMonitoringEnabled = false;
 	private IndexSqlFormatter sql = new IndexSqlFormatter();
-	
-	public Directory(PartitionDimension dimension, DataSource dataSource, Counter performanceStatistics) {
-		this(dimension, dataSource);
-		this.setPerformanceStatistics(performanceStatistics);
-		this.setPerformanceMonitoringEnabled(true);
-	}
+
 	
 	public Directory(PartitionDimension dimension, DataSource dataSource) {
 		this.partitionDimension = dimension;
 		this.setDataSource(dataSource);
-		this.performanceStatistics = new NoOpStatistics();
 	}
 	
 	public Directory(PartitionDimension dimension) {
 		this.partitionDimension = dimension;
 		this.setDataSource(new HiveBasicDataSource(dimension.getIndexUri()));
-		this.performanceStatistics = new NoOpStatistics();
 	}
 	
 	/* (non-Javadoc)
@@ -67,8 +58,8 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	 * @see org.hivedb.meta.HiveDirectory#insertPrimaryIndexKey(org.hivedb.meta.Node, java.lang.Object)
 	 */
 	public void insertPrimaryIndexKey(Node node, Object primaryIndexKey) {
-		int[] types = new int[]{JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass()), Types.INTEGER, Types.TIMESTAMP};
-		Object[] parameters = new Object[] {primaryIndexKey,node.getId(),new Date(System.currentTimeMillis()) };
+		int[] types = new int[]{JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass()), Types.INTEGER};
+		Object[] parameters = new Object[] {primaryIndexKey,node.getId() };
 		doUpdate(sql.insertPrimaryIndexKey(partitionDimension), types, parameters);
 	}
 
@@ -260,23 +251,6 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 			sql.selectSecondaryIndexKeysOfPrimaryKey(secondaryIndex),
 			new Object[] { primaryIndexKey }, 
 			RowMappers.newObjectRowMapper(secondaryIndex.getColumnInfo().getColumnType()));
-	}
-	
-	public Counter getPerformanceStatistics() {
-		return performanceStatistics;
-	}
-
-	public void setPerformanceStatistics(
-			Counter performanceStatistics) {
-		this.performanceStatistics = performanceStatistics;
-	}
-
-	public boolean isPerformanceMonitoringEnabled() {
-		return performanceStatistics.getClass() != NoOpStatistics.class && performanceMonitoringEnabled;
-	}
-
-	public void setPerformanceMonitoringEnabled(boolean performanceMonitoringEnabled) {
-		this.performanceMonitoringEnabled = performanceMonitoringEnabled;
 	}
 
 	public void deleteResourceId(Resource resource, Object id) {

@@ -1,16 +1,6 @@
 CREATE TABLE $tableName (
 	id $indexType not null,
 	node SMALLINT not null,
-	secondary_index_count INTEGER not null,
-	last_updated DATETIME not null,
 	read_only $booleanType default 0,
-	PRIMARY KEY (id,node)#if ( $dialect == $mysql ),
-	INDEX node_id (node), 
-#end
-#if ( $dialect == $mysql ) 
-	INDEX last_updated (last_updated), 
-#end
-#if ( $dialect == $mysql ) 
-	INDEX primary_index (id) 
-#end
+	PRIMARY KEY (id,node)
 ) #if ( $dialect == $mysql ) ENGINE=InnoDB #end

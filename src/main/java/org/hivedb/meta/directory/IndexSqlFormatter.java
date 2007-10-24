@@ -19,7 +19,7 @@ public class IndexSqlFormatter {
 	 */
 	public String insertPrimaryIndexKey(PartitionDimension partitionDimension) {
 		return String.format(
-				"insert into %s (id, node, read_only, secondary_index_count, last_updated) values(?, ?, 0, 0, ?)", 
+				"insert into %s (id, node, read_only) values(?, ?, 0)", 
 				IndexSchema.getPrimaryIndexTableName(partitionDimension));
 	}
 	

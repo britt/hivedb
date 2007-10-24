@@ -10,11 +10,12 @@ import javax.sql.DataSource;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.KeySemaphore;
 import org.hivedb.meta.Node;
+import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.directory.Directory;
 import org.hivedb.meta.persistence.DataSourceProvider;
-import org.hivedb.util.HiveUtils;
+import org.hivedb.util.Preconditions;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Unary;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
@@ -23,52 +24,46 @@ import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
  * @author Britt Crawford (bcrawford@cafepress.com)
  *
  */
-public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronizeable{
-	private Hive hive;
-	private String partitionDimension;
+public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache{
 	private Map<Integer, SimpleJdbcDaoSupport> jdbcDaoSupports;
 	private Directory directory;
 	private DataSourceProvider dataSourceProvider;
 	
-	public JdbcDaoSupportCacheImpl(String partitionDimension, Hive hive, Directory directory,  DataSourceProvider dataSourceProvider) {
-		this.partitionDimension = partitionDimension;
-		this.hive = hive;
-		this.jdbcDaoSupports = new ConcurrentHashMap<Integer, SimpleJdbcDaoSupport>();
+	public JdbcDaoSupportCacheImpl(Directory directory,  DataSourceProvider dataSourceProvider) {
 		this.directory = directory;
 		this.dataSourceProvider = dataSourceProvider;
-		sync();
+		this.jdbcDaoSupports = loadDataSourceMap(directory.getPartitionDimension());
+	}
+
+	private Map<Integer, SimpleJdbcDaoSupport> loadDataSourceMap(PartitionDimension dimension) {
+		Map<Integer, SimpleJdbcDaoSupport> jdbcDaoSupports = new ConcurrentHashMap<Integer, SimpleJdbcDaoSupport>();
+		for(Node node :  dimension.getNodes()) 
+			jdbcDaoSupports.put(node.getId(), makeDaoSupport(node));
+		return jdbcDaoSupports;
+	}
+
+	private SimpleJdbcDaoSupport makeDaoSupport(Node node) {
+		return new DataNodeJdbcDaoSupport(dataSourceProvider.getDataSource(node.getUri()));
 	}
 	
-	/**
-	 * Synchronize the cached SimpleJdbcDaoSupports with the state of the hive.  
-	 * This method destroys and recreates all SimpleJdbcDaoSupport in the cache.
-	 * @throws HiveException
-	 */
-	public boolean sync() {
-		jdbcDaoSupports.clear();
-		for(Node node : hive.getPartitionDimension(partitionDimension).getNodes()) {
-			addDataSource(node.getId(), AccessType.Read);
-			jdbcDaoSupports.put(hash(node.getId(), AccessType.Read), new DataNodeJdbcDaoSupport(dataSourceProvider.getDataSource(node.getUri())));
-			if( !hive.isReadOnly() && !node.isReadOnly() )
-				addDataSource(node.getId(), AccessType.ReadWrite);
-		}
-		return true;
+	public SimpleJdbcDaoSupport addDataSource(Node node) {
+		jdbcDaoSupports.put(node.getId(), makeDaoSupport(node));
+		return jdbcDaoSupports.get(node.getId());
 	}
 	
-	private SimpleJdbcDaoSupport addDataSource(Integer nodeId, AccessType intention) {
-		Node node = hive.getPartitionDimension(partitionDimension).getNode(nodeId);
-		jdbcDaoSupports.put(hash(nodeId, intention), new DataNodeJdbcDaoSupport(dataSourceProvider.getDataSource(node.getUri())));
-		return jdbcDaoSupports.get(hash(nodeId, intention));
+	public SimpleJdbcDaoSupport removeDataSource(Node node) {
+		return jdbcDaoSupports.remove(node.getId());
 	}
 	
 	private SimpleJdbcDaoSupport get(KeySemaphore semaphore, AccessType intention) throws HiveReadOnlyException { 
 		Node node = null;
-		node = hive.getPartitionDimension(partitionDimension).getNode(semaphore.getId());
+		node = directory.getPartitionDimension().getNode(semaphore.getId());
 		
-		if(intention == AccessType.ReadWrite && (hive.isReadOnly() || node.isReadOnly() || semaphore.isReadOnly()))
-			throw new HiveReadOnlyException("This partition key cannot be written to at this time.");
-		else if( jdbcDaoSupports.containsKey(hash(semaphore.getId(), intention)))
-			return jdbcDaoSupports.get(hash(semaphore.getId(), intention));
+		if(intention == AccessType.ReadWrite)
+			Preconditions.isWritable(node, semaphore);
+		
+		if( jdbcDaoSupports.containsKey(semaphore.getId()))
+			return jdbcDaoSupports.get(semaphore.getId());
 		
 		throw new HiveKeyNotFoundException("Could not find dataSource for ", semaphore);
 	}
@@ -99,7 +94,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 	 */
 	public Collection<SimpleJdbcDaoSupport> get(SecondaryIndex secondaryIndex, Object secondaryIndexKey, final AccessType intention) throws HiveReadOnlyException {
 		if(AccessType.ReadWrite == intention) 
-			if(Filter.getUnique(hive.getPrimaryIndexKeysOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey)).size() > 1)
+			if(Filter.getUnique(directory.getPrimaryIndexKeysOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey)).size() > 1)
 				throw new UnsupportedOperationException("Writes for non-unique secondary indexes must be performed using the primary index key.");
 		
 		Collection<KeySemaphore> keySemaphores = directory.getKeySemaphoresOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
@@ -112,9 +107,6 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 		for(KeySemaphore semaphore : keySemaphores)
 			supports.add(get(semaphore, intention));
 		return supports;
-	}
-	private static int hash(Object node, AccessType intention) {
-		return HiveUtils.makeHashCode(new Object[] {node, intention});
 	}
 	
 	private static class DataNodeJdbcDaoSupport extends SimpleJdbcDaoSupport
@@ -137,14 +129,10 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 			throw new RuntimeException(e);
 		}
 	}
-
-	public String getPartitionDimension() {
-		return partitionDimension;
-	}
 	
 	public SimpleJdbcDaoSupport getUnsafe(String nodeName) {
 		try {
-			Node node = hive.getPartitionDimension(this.getPartitionDimension()).getNode(nodeName);
+			Node node = directory.getPartitionDimension().getNode(nodeName);
 			KeySemaphore semaphore = new KeySemaphore(node.getId(), node.isReadOnly());
 			return get(semaphore, AccessType.ReadWrite);
 		} catch (HiveException e) {
@@ -162,8 +150,8 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache, Synchronize
 
 	public Collection<SimpleJdbcDaoSupport> getAllUnsafe() {
 		Collection<SimpleJdbcDaoSupport> daos = new ArrayList<SimpleJdbcDaoSupport>();
-		for(Node node : hive.getPartitionDimension(partitionDimension).getNodes())
-			daos.add(jdbcDaoSupports.get(hash(node.getId(), AccessType.ReadWrite)));
+		for(Node node : directory.getPartitionDimension().getNodes())
+			daos.add(jdbcDaoSupports.get(node.getId()));
 		return daos;
 	}
 }

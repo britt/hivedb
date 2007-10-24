@@ -137,7 +137,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 				this.directories = directoryMap;
 			
 				for(PartitionDimension p : this.getPartitionDimensions())
-					jdbcCacheMap.put(p.getName(), new JdbcDaoSupportCacheImpl(p.getName(), this, directoryMap.get(p.getName()), dataSourceProvider));
+					jdbcCacheMap.put(p.getName(), new JdbcDaoSupportCacheImpl(directoryMap.get(p.getName()), dataSourceProvider));
 				
 				this.nodeDataSources = dataSourceMap;
 				this.jdbcDaoSupportCaches = jdbcCacheMap;
@@ -358,7 +358,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		nodeDao.delete(node);
 		incrementAndPersistHive(hiveDataSource);
 		//Synchronize the DataSourceCache
-		this.jdbcDaoSupportCaches.get(getPartitionDimension(node.getPartitionDimensionId()).getName()).sync();
+		this.jdbcDaoSupportCaches.get(getPartitionDimension(node.getPartitionDimensionId()).getName()).removeDataSource(node);
 		return node;
 	}
 
