@@ -4,8 +4,6 @@
  */
 package org.hivedb;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -16,7 +14,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.sql.DataSource;
 
-import org.hivedb.meta.AccessType;
 import org.hivedb.meta.Assigner;
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.KeySemaphore;
@@ -39,7 +36,6 @@ import org.hivedb.util.database.DriverLoader;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Predicate;
-import org.hivedb.util.functional.Unary;
 
 /**
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
@@ -51,44 +47,26 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	private static final int DEFAULT_JDBC_TIMEOUT = 500;
 	public static final int NEW_OBJECT_ID = 0;
 	
+	private HiveSemaphore semaphore;
 	private String hiveUri;
-	private int revision;
-	private boolean readOnly;
 	
 	private Map<String,PartitionDimension> partitionDimensions;
+	private Map<String,ConnectionManager> connections;
 	private Map<String,Directory> directories;
-	private Map<String, JdbcDaoSupportCacheImpl> jdbcDaoSupportCaches;
 	private DataSource hiveDataSource;
-	private Map<String, DataSource> nodeDataSources;
 	private DataSourceProvider dataSourceProvider;
 	private Assigner defaultNodeAssigner = null;
 	
-	/**
-	 * System entry point. Factory method for all Hive interaction.
-	 *
-	 * @param hiveDatabaseUri
-	 *            Target hive
-	 * @return Hive (existing or new) located at hiveDatabaseUri
-	 */
+
 	public static Hive load(String hiveDatabaseUri) {
-		return Hive.load(hiveDatabaseUri, new HiveBasicDataSourceProvider(DEFAULT_JDBC_TIMEOUT));
+		return load(hiveDatabaseUri, new HiveBasicDataSourceProvider(DEFAULT_JDBC_TIMEOUT));
 	}
-	
-	/***
-	 * Alternate system entry point, using this load method enables runtime statistics tracking.
-	 * Factory method for all Hive interaction. 
-	 * 
-	 * @param hiveDatabaseUri
-	 * @param hiveStats
-	 * @param directoryStats
-	 * @return
-	 */
+
 	public static Hive load(String hiveDatabaseUri, DataSourceProvider dataSourceProvider) {
 		return load(hiveDatabaseUri, dataSourceProvider, null);
 	}
 
 	public static Hive load(String hiveDatabaseUri, DataSourceProvider dataSourceProvider, Assigner assigner) {
-		
 		//Tickle driver
 		try {
 			DriverLoader.load(hiveDatabaseUri);
@@ -96,9 +74,8 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 			throw new HiveRuntimeException("Unable to load database driver: " + e.getMessage(), e);
 		} 
 		
-		Hive hive = new Hive(hiveDatabaseUri, 0, false, new ArrayList<PartitionDimension>(), dataSourceProvider);
-		if(assigner != null)
-			hive.setDefaultNodeAssigner(assigner);
+		Hive hive = new Hive(hiveDatabaseUri, 0, false, dataSourceProvider);
+		hive.setDefaultNodeAssigner(assigner);
 		
 		hive.sync();
 		return hive;
@@ -109,70 +86,46 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		boolean updated = false;
 		HiveSemaphore hs = new HiveSemaphoreDao(hiveDataSource).get();
 		
-		if(this.revision != hs.getRevision()) {
-			this.revision = hs.getRevision();
-			this.readOnly = hs.isReadOnly();
-			
-			//Reload partition dimensions
-			Map<String, PartitionDimension> dimensionMap = new ConcurrentHashMap<String, PartitionDimension>();
-			Map<String, DataSource> dataSourceMap = new ConcurrentHashMap<String, DataSource>();
-			Map<String, Directory> directoryMap = new ConcurrentHashMap<String, Directory>();
-			Map<String, JdbcDaoSupportCacheImpl> jdbcCacheMap = new ConcurrentHashMap<String, JdbcDaoSupportCacheImpl>();
-			
-			for (PartitionDimension p : new PartitionDimensionDao(hiveDataSource).loadAll()){
-				if(this.getDefaultNodeAssigner() != null)
-					p.setAssigner(this.getDefaultNodeAssigner());
-				dimensionMap.put(p.getName(),p);
-				
-				for(Node node : p.getNodes())
-					if(!dataSourceMap.containsKey(node.getUri()))
-						dataSourceMap.put(node.getUri(), dataSourceProvider.getDataSource(node));
-				
-				directoryMap.put(p.getName(), new Directory(p, dataSourceProvider.getDataSource(p.getIndexUri())));
-			}
-			
-			//Critical Section
-			synchronized (this) {
-				this.partitionDimensions = dimensionMap;
-				this.directories = directoryMap;
-			
-				for(PartitionDimension p : this.getPartitionDimensions())
-					jdbcCacheMap.put(p.getName(), new JdbcDaoSupportCacheImpl(directoryMap.get(p.getName()), dataSourceProvider));
-				
-				this.nodeDataSources = dataSourceMap;
-				this.jdbcDaoSupportCaches = jdbcCacheMap;
-			}
+		if(this.getRevision() != hs.getRevision()) {
+			this.setSemaphore(hs);
+			initialize(new PartitionDimensionDao(hiveDataSource).loadAll());
 			updated = true;
 		}
 		return updated;
 	}
-
-	/**
-	 * INTERNAL USE ONLY- load the Hive from persistence.
-	 * If you instantiate a Hive this way it will be in an invalid state.
-	 * @param revision
-	 * @param readOnly
-	 */
-	protected Hive(String hiveUri, int revision, boolean readOnly, Collection<PartitionDimension> partitionDimensions, DataSourceProvider dataSourceProvider) {
-		this.hiveUri = hiveUri;
-		this.revision = revision;
-		this.readOnly = readOnly;
+	
+	public void initialize(Collection<PartitionDimension> dimensions) {
+		Map<String, PartitionDimension> dimensionMap = new ConcurrentHashMap<String, PartitionDimension>();
+		Map<String, Directory> directoryMap = new ConcurrentHashMap<String, Directory>();
+		Map<String, ConnectionManager> connectionMap = new ConcurrentHashMap<String, ConnectionManager>();
 		
+		for (PartitionDimension p : dimensions){
+			if(this.getDefaultNodeAssigner() != null)
+				p.setAssigner(this.getDefaultNodeAssigner());
+			dimensionMap.put(p.getName(), p);
+			directoryMap.put(p.getName(), new Directory(p, dataSourceProvider.getDataSource(p.getIndexUri())));
+			connectionMap.put(p.getName(), new ConnectionManager(directoryMap.get(p.getName()), dataSourceProvider, this.semaphore));
+		}
+		
+		synchronized (this) {
+			this.partitionDimensions = dimensionMap;
+			this.directories = directoryMap;
+			this.connections = connectionMap;
+		}
+	}
+
+	protected Hive() {
+		this.semaphore = new HiveSemaphore();
+		initialize(new ArrayList<PartitionDimension>());
+	}
+	
+	protected Hive(String hiveUri, int revision, boolean readOnly, DataSourceProvider dataSourceProvider) {
+		this();
+		this.hiveUri = hiveUri;
+		this.semaphore.setRevision(revision);
+		this.semaphore.setReadOnly(readOnly);
 		this.dataSourceProvider = dataSourceProvider;
 		this.hiveDataSource = dataSourceProvider.getDataSource(hiveUri);
-		
-		Map<String,PartitionDimension> dimensionNameMap = new ConcurrentHashMap<String, PartitionDimension>();
-		this.nodeDataSources = new ConcurrentHashMap<String, DataSource>();
-		
-		for(PartitionDimension d : partitionDimensions) {
-			dimensionNameMap.put(d.getName(), d);
-			for(Node node : d.getNodes())
-				if(!nodeDataSources.containsKey(node.getUri()))
-					nodeDataSources.put(node.getUri(), dataSourceProvider.getDataSource(node));
-		}
-		this.partitionDimensions = dimensionNameMap;
-		this.jdbcDaoSupportCaches = new ConcurrentHashMap<String, JdbcDaoSupportCacheImpl>();
-		this.directories = new ConcurrentHashMap<String, Directory>();
 	}
 
 	public String getUri() {
@@ -180,7 +133,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	}
 
 	public int hashCode() {
-		return HiveUtils.makeHashCode(new Object[] { hiveUri, revision, getPartitionDimensions(), readOnly });
+		return HiveUtils.makeHashCode(new Object[] { hiveUri, getRevision(), getPartitionDimensions(), isReadOnly() });
 	}
 
 	public boolean equals(Object obj) {
@@ -188,28 +141,26 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	}
 
 	public boolean isReadOnly() {
-		return readOnly;
+		return semaphore.isReadOnly();
 	}
 
 	public void updateHiveReadOnly(Boolean readOnly) {
-		this.readOnly = readOnly;
-		new HiveSemaphoreDao(hiveDataSource).update(new HiveSemaphore(
-				readOnly, this.getRevision()));
+		this.semaphore.setReadOnly(readOnly);
+		new HiveSemaphoreDao(hiveDataSource).update(this.semaphore);
 	}
 
-	public void updateNodeReadOnly(Node node, Boolean readOnly){
-		node.setReadOnly(readOnly);
-		try {
-			this.updateNode(node);
-		} catch (HiveReadOnlyException e) {
-			//quash since the hive is already read-only
-		}
+	public int getRevision() {
+		return semaphore.getRevision();
 	}
 	
-	public int getRevision() {
-		return revision;
+	public HiveSemaphore getSemaphore() {
+		return semaphore;
 	}
-
+	
+	public HiveSemaphore setSemaphore(HiveSemaphore semaphore) {
+		this.semaphore = semaphore;
+		return semaphore;
+	}
 	public Collection<PartitionDimension> getPartitionDimensions() {
 		return partitionDimensions.values();
 	}
@@ -226,6 +177,62 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 			public boolean f(PartitionDimension item) {
 				return item.getId() == id;
 			}}, partitionDimensions.values());
+	}
+
+	private void incrementAndPersistHive(DataSource datasource) {
+		new HiveSemaphoreDao(datasource).incrementAndPersist();
+		this.sync();
+	}
+	
+	public ConnectionManager connection(String dimensionName) {
+		return this.connections.get(dimensionName);
+	}
+	
+	public String toString() {
+		return HiveUtils.toDeepFormatedString(this, "HiveUri", getUri(),
+				"Revision", getRevision(), "PartitionDimensions",
+				getPartitionDimensions());
+	}
+
+	public HiveDbDialect getDialect() {
+		return DriverLoader.discernDialect(hiveUri);
+	}
+
+	public void update(Observable o, Object arg) {
+		if(sync())
+			notifyObservers();
+	}
+
+	public void notifyObservers() {
+		super.setChanged();
+		super.notifyObservers();
+	}
+
+	public Assigner getDefaultNodeAssigner() {
+		return defaultNodeAssigner;
+	}
+
+	public void setDefaultNodeAssigner(Assigner defaultNodeAssigner) {
+		this.defaultNodeAssigner = defaultNodeAssigner;
+	}
+	
+	public Directory directory(String dimensionName) {
+		return this.directories.get(dimensionName);
+	}
+
+	public Directory addDirectory(Directory dir) {
+		this.directories.put(dir.getPartitionDimension().getName(), dir);
+		return dir;
+	}
+	
+	//Configuration functions
+	public void updateNodeReadOnly(Node node, Boolean readOnly){
+		node.setReadOnly(readOnly);
+		try {
+			this.updateNode(node);
+		} catch (HiveReadOnlyException e) {
+			//quash since the hive is already read-only
+		}
 	}
 	
 	public PartitionDimension addPartitionDimension(
@@ -344,8 +351,8 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		partitionDimensionDao.delete(partitionDimension);
 		incrementAndPersistHive(hiveDataSource);
 		
-		//Destroy the corresponding DataSourceCache
-		this.jdbcDaoSupportCaches.remove(partitionDimension.getName());
+		//Destroy the corresponding ConnectionManager
+		this.connections.remove(partitionDimension.getName());
 		
 		return partitionDimension;
 	}
@@ -358,7 +365,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		nodeDao.delete(node);
 		incrementAndPersistHive(hiveDataSource);
 		//Synchronize the DataSourceCache
-		this.jdbcDaoSupportCaches.get(getPartitionDimension(node.getPartitionDimensionId()).getName()).removeDataSource(node);
+		connections.get(getPartitionDimension(node.getPartitionDimensionId()).getName()).removeNode(node);
 		return node;
 	}
 
@@ -384,11 +391,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		return secondaryIndex;
 	}
 
-	private void incrementAndPersistHive(DataSource datasource) {
-		new HiveSemaphoreDao(datasource).incrementAndPersist();
-		this.sync();
-	}
-
+	//Directory functions
 	public void insertPrimaryIndexKey(String partitionDimensionName,
 			Object primaryIndexKey) throws HiveReadOnlyException {
 		Node node = getPartitionDimension(partitionDimensionName).getAssigner().chooseNode(
@@ -404,7 +407,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		// insertResourceId is a noop if the resource is the same index as the partition dimension
 		if (resource.isPartitioningResource()) 
 			return; // TODO consider throwing a runtime exception here to disallow this condition
-		Collection<KeySemaphore> semaphores = directories.get(partitionDimensionName).getNodeSemamphoresOfPrimaryIndexKey(primaryIndexKey);
+		Collection<KeySemaphore> semaphores = directories.get(partitionDimensionName).getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey);
 		Preconditions.isWritable(semaphores, this);
 		directories.get(dimension.getName()).insertResourceId(resource, id, primaryIndexKey);
 	}
@@ -441,13 +444,13 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	public void updatePrimaryIndexReadOnly(String partitionDimensionName,
 			Object primaryIndexKey, boolean isReadOnly) throws HiveReadOnlyException {
 		PartitionDimension partitionDimension = getPartitionDimension(partitionDimensionName);
-		Collection<KeySemaphore> semaphores = directories.get(partitionDimensionName). getNodeSemamphoresOfPrimaryIndexKey(primaryIndexKey);
+		Collection<KeySemaphore> semaphores = directories.get(partitionDimensionName). getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey);
 		Preconditions.isWritable(HiveUtils.getNodesForSemaphores(semaphores, partitionDimension));
 		directories.get(partitionDimension.getName()).updatePrimaryIndexKeyReadOnly(primaryIndexKey, isReadOnly);
 	}
 
 	public void updatePrimaryIndexKeyOfResourceId(String partitionDimensionName,String resourceName, Object resourceId, Object originalPrimaryIndexKey, Object newPrimaryIndexKey) throws HiveReadOnlyException {
-		Preconditions.isWritable(directories.get(partitionDimensionName).getNodeSemamphoresOfPrimaryIndexKey(newPrimaryIndexKey), this);
+		Preconditions.isWritable(directories.get(partitionDimensionName).getKeySemamphoresOfPrimaryIndexKey(newPrimaryIndexKey), this);
 		final Resource resource = getPartitionDimension(partitionDimensionName).getResource(resourceName);
 		if (resource.isPartitioningResource()) 
 			throw new HiveRuntimeException(String.format("Resource %s is a partitioning dimension, you cannot update its primary index key because it is the resource id", resource.getName()));
@@ -466,7 +469,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 			throw new HiveKeyNotFoundException("The primary index key " + primaryIndexKey
 					+ " does not exist",primaryIndexKey);
 		
-		Preconditions.isWritable(directories.get(partitionDimension.getName()).getNodeSemamphoresOfPrimaryIndexKey(primaryIndexKey), this);
+		Preconditions.isWritable(directories.get(partitionDimension.getName()).getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey), this);
 		
 		Directory directory = directories.get(partitionDimension.getName());
 		for (Resource resource : partitionDimension.getResources()){
@@ -610,87 +613,4 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		return directories.get(partitionDimensionName).getResourceIdsOfPrimaryIndexKey(resource, primaryIndexKey);
 	}
 	
-	private Connection getConnection(PartitionDimension partitionDimension, KeySemaphore semaphore, AccessType intention) throws HiveReadOnlyException,SQLException {
-		if(intention == AccessType.ReadWrite)
-			Preconditions.isWritable(this, semaphore, partitionDimension.getNode(semaphore.getId()));
-			
-		Connection conn = 
-			nodeDataSources.get(partitionDimension.getNode(semaphore.getId()).getUri()).getConnection();
-			
-		return conn;
-	}
-	
-	public Collection<Connection> getConnection(String partitionDimensionName,
-			Object primaryIndexKey, AccessType intent) throws SQLException, HiveReadOnlyException {
-		Collection<Connection> connections = new ArrayList<Connection>();
-		for(KeySemaphore semaphore : directories.get(partitionDimensionName).getNodeSemamphoresOfPrimaryIndexKey(primaryIndexKey))
-			connections.add(getConnection(getPartitionDimension(partitionDimensionName), semaphore, intent));
-		return connections;
-	}
-
-	public Collection<Connection> getConnection(String secondaryIndexName, String resourceName, String dimensionName,
-			Object secondaryIndexKey, AccessType intent) throws HiveReadOnlyException, SQLException {
-		if(AccessType.ReadWrite == intent)
-			throw new UnsupportedOperationException("Writes must be performed using the primary index key.");
-		
-		SecondaryIndex secondaryIndex = getPartitionDimension(dimensionName).getResource(resourceName).getSecondaryIndex(secondaryIndexName);
-		Collection<Connection> connections = new ArrayList<Connection>();
-		Collection<KeySemaphore> keySemaphores = directories.get(dimensionName).getKeySemaphoresOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
-		keySemaphores = Filter.getUnique(keySemaphores, new Unary<KeySemaphore, Integer>(){
-			public Integer f(KeySemaphore item) {
-				return item.getId();
-			}});
-		for(KeySemaphore semaphore : keySemaphores)
-			connections.add(getConnection(secondaryIndex.getResource().getPartitionDimension(), semaphore, intent));
-		return connections;
-	}
-	
-	public Collection<Connection> getConnection(String resourceName, String dimensionName, Object resourceId, AccessType intent) throws HiveReadOnlyException, SQLException {
-		Collection<Connection> connections = new ArrayList<Connection>();
-		Directory directory = directories.get(dimensionName);
-		Resource resource = partitionDimensions.get(dimensionName).getResource(resourceName);
-		for(KeySemaphore semaphore : directory.getKeySemaphoresOfResourceId(resource, resourceId))
-			connections.add(getConnection(getPartitionDimension(dimensionName), semaphore, intent));
-		return connections;
-	}
-
-	public JdbcDaoSupportCache getJdbcDaoSupportCache(String partitionDimensionName) {
-		return this.jdbcDaoSupportCaches.get(partitionDimensionName);
-	}
-
-	public String toString() {
-		return HiveUtils.toDeepFormatedString(this, "HiveUri", getUri(),
-				"Revision", getRevision(), "PartitionDimensions",
-				getPartitionDimensions());
-	}
-
-	public HiveDbDialect getDialect() {
-		return DriverLoader.discernDialect(hiveUri);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see java.util.Observer#update(java.util.Observable, java.lang.Object)
-	 */
-	public void update(Observable o, Object arg) {
-		if(sync())
-			notifyObservers();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see java.util.Observable#notifyObservers()
-	 */
-	public void notifyObservers() {
-		super.setChanged();
-		super.notifyObservers();
-	}
-
-	public Assigner getDefaultNodeAssigner() {
-		return defaultNodeAssigner;
-	}
-
-	public void setDefaultNodeAssigner(Assigner defaultNodeAssigner) {
-		this.defaultNodeAssigner = defaultNodeAssigner;
-	}
 }

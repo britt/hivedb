@@ -43,7 +43,7 @@ public interface NodeResolver {
 	 * @param primaryIndexKey
 	 * @return
 	 */
-	public Collection<KeySemaphore> getNodeSemamphoresOfPrimaryIndexKey(Object primaryIndexKey);
+	public Collection<KeySemaphore> getKeySemamphoresOfPrimaryIndexKey(Object primaryIndexKey);
 
 	/***
 	 * Get the write-lock state of a primary index key

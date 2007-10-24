@@ -98,7 +98,7 @@ public class HiveScenarioTest {
 		Collection<Object> primaryIndexKeys = getGeneratedPrimaryIndexKeys(hiveConfig, resourceInstances);
 		Directory directory = new Directory(actualPartitionDimension,new HiveBasicDataSource(hive.getUri()));
 		for (Object primaryindexKey : primaryIndexKeys)
-			assertTrue(directory.getNodeSemamphoresOfPrimaryIndexKey(primaryindexKey).size() > 0);
+			assertTrue(directory.getKeySemamphoresOfPrimaryIndexKey(primaryindexKey).size() > 0);
 		
 		assertEquals(
 					new TreeSet<Resource>(expectedPartitionDimension.getResources()),
@@ -139,7 +139,7 @@ public class HiveScenarioTest {
 						
 							// Assert that one of the nodes of the secondary index key is the same as that of the primary index key
 							// There are multiple nodes returned when multiple primray index keys exist for a secondary index key
-							Collection<KeySemaphore> keySemaphoreOfPrimaryIndexKey = directory.getNodeSemamphoresOfPrimaryIndexKey(expectedPrimaryIndexKey);
+							Collection<KeySemaphore> keySemaphoreOfPrimaryIndexKey = directory.getKeySemamphoresOfPrimaryIndexKey(expectedPrimaryIndexKey);
 							for(KeySemaphore semaphore : keySemaphoreOfPrimaryIndexKey)
 								assertTrue(Filter.grepItemAgainstList(semaphore, keySemaphoreOfSecondaryIndexKeys));	
 					}	

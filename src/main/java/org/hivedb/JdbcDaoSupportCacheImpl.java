@@ -32,26 +32,26 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache{
 	public JdbcDaoSupportCacheImpl(Directory directory,  DataSourceProvider dataSourceProvider) {
 		this.directory = directory;
 		this.dataSourceProvider = dataSourceProvider;
-		this.jdbcDaoSupports = loadDataSourceMap(directory.getPartitionDimension());
+		this.jdbcDaoSupports = getDataSourceMap(directory.getPartitionDimension(), dataSourceProvider);
 	}
 
-	private Map<Integer, SimpleJdbcDaoSupport> loadDataSourceMap(PartitionDimension dimension) {
+	public static Map<Integer, SimpleJdbcDaoSupport> getDataSourceMap(PartitionDimension dimension, DataSourceProvider dataSourceProvider) {
 		Map<Integer, SimpleJdbcDaoSupport> jdbcDaoSupports = new ConcurrentHashMap<Integer, SimpleJdbcDaoSupport>();
 		for(Node node :  dimension.getNodes()) 
-			jdbcDaoSupports.put(node.getId(), makeDaoSupport(node));
+			jdbcDaoSupports.put(node.getId(), makeDaoSupport(node, dataSourceProvider));
 		return jdbcDaoSupports;
 	}
 
-	private SimpleJdbcDaoSupport makeDaoSupport(Node node) {
-		return new DataNodeJdbcDaoSupport(dataSourceProvider.getDataSource(node.getUri()));
+	public static SimpleJdbcDaoSupport makeDaoSupport(Node node, DataSourceProvider provider) {
+		return new DataNodeJdbcDaoSupport(provider.getDataSource(node.getUri()));
 	}
 	
-	public SimpleJdbcDaoSupport addDataSource(Node node) {
-		jdbcDaoSupports.put(node.getId(), makeDaoSupport(node));
+	public SimpleJdbcDaoSupport addNode(Node node) {
+		jdbcDaoSupports.put(node.getId(), makeDaoSupport(node, dataSourceProvider));
 		return jdbcDaoSupports.get(node.getId());
 	}
 	
-	public SimpleJdbcDaoSupport removeDataSource(Node node) {
+	public SimpleJdbcDaoSupport removeNode(Node node) {
 		return jdbcDaoSupports.remove(node.getId());
 	}
 	
@@ -77,7 +77,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache{
 	 * @throws HiveReadOnlyException
 	 */
 	public Collection<SimpleJdbcDaoSupport> get(Object primaryIndexKey, final AccessType intention) throws HiveReadOnlyException {
-		Collection<KeySemaphore> semaphores = directory.getNodeSemamphoresOfPrimaryIndexKey(primaryIndexKey);
+		Collection<KeySemaphore> semaphores = directory.getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey);
 		Collection<SimpleJdbcDaoSupport> supports = new ArrayList<SimpleJdbcDaoSupport>();
 		for(KeySemaphore semaphore : semaphores)
 			supports.add(get(semaphore, intention));

@@ -32,7 +32,7 @@ public class JdbcDaoSupportCacheTest extends H2HiveTestCase {
 	@Test
 	public void testDataSourceCacheCreation() throws HiveException, SQLException{
 		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
-		JdbcDaoSupportCacheImpl cache = (JdbcDaoSupportCacheImpl) hive.getJdbcDaoSupportCache(partitionDimensionName());
+		JdbcDaoSupportCacheImpl cache = (JdbcDaoSupportCacheImpl) hive.connection(partitionDimensionName()).daoSupport();
 		Collection<SimpleJdbcDaoSupport> read = cache.get(intKey(), AccessType.Read);
 		Collection<SimpleJdbcDaoSupport> readWrite = cache.get(intKey(), AccessType.ReadWrite);
 		
@@ -43,20 +43,9 @@ public class JdbcDaoSupportCacheTest extends H2HiveTestCase {
 	@Test
 	public void testGetAllUnsafe() {
 		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
-		JdbcDaoSupportCacheImpl cache = (JdbcDaoSupportCacheImpl) hive.getJdbcDaoSupportCache(partitionDimensionName());
+		JdbcDaoSupportCacheImpl cache = (JdbcDaoSupportCacheImpl) hive.connection(partitionDimensionName()).daoSupport();
 		assertEquals(1, cache.getAllUnsafe().size());
 	}
-	
-	public void testCacheSynchronization() throws Exception {
-		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
-		PartitionDimension dimension = hive.deletePartitionDimension(hive.getPartitionDimension(partitionDimensionName()));
-		try {
-			hive.getJdbcDaoSupportCache(dimension.getName());
-		} catch (Exception e) {
-			assertNotNull(e);
-		}
-	}
-	
 	private Integer intKey() {
 		return new Integer(23);
 	}

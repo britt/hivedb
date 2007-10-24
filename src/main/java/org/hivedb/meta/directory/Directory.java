@@ -4,14 +4,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Collection;
-import java.util.Date;
 
 import javax.sql.DataSource;
 
 import org.hivedb.DirectoryCorruptionException;
 import org.hivedb.HiveKeyNotFoundException;
-import org.hivedb.management.statistics.Counter;
-import org.hivedb.management.statistics.NoOpStatistics;
 import org.hivedb.meta.KeySemaphore;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
@@ -144,13 +141,13 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	 * @see org.hivedb.meta.HiveDirectory#getNodeIdsOfPrimaryIndexKey(java.lang.Object)
 	 */
 	public Collection<Integer> getNodeIdsOfPrimaryIndexKey(Object primaryIndexKey) {
-		return Transform.map(semaphoreToId(), getNodeSemamphoresOfPrimaryIndexKey(primaryIndexKey));
+		return Transform.map(semaphoreToId(), getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey));
 	}
 	
 	/* (non-Javadoc)
 	 * @see org.hivedb.meta.HiveDirectory#getNodeSemamphoresOfPrimaryIndexKey(java.lang.Object)
 	 */
-	public Collection<KeySemaphore> getNodeSemamphoresOfPrimaryIndexKey(Object primaryIndexKey) {
+	public Collection<KeySemaphore> getKeySemamphoresOfPrimaryIndexKey(Object primaryIndexKey) {
 		return doRead(sql.selectKeySemaphoreOfPrimaryIndexKey(partitionDimension), 
 				new Object[] { primaryIndexKey }, 
 				new KeySemaphoreRowMapper());
@@ -162,7 +159,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	@SuppressWarnings("unchecked")
 	public boolean getReadOnlyOfPrimaryIndexKey(Object primaryIndexKey) {
 		Boolean readOnly = false;
-		for(Boolean b : Transform.map(semaphoreToReadOnly(), getNodeSemamphoresOfPrimaryIndexKey(primaryIndexKey)))
+		for(Boolean b : Transform.map(semaphoreToReadOnly(), getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey)))
 			readOnly |= b;
 		return readOnly;
 	}
@@ -222,7 +219,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	public Collection<KeySemaphore> getKeySemaphoresOfResourceId(Resource resource, Object resourceId)
 	{
 		return (Collection<KeySemaphore>) (resource.isPartitioningResource()
-		? getNodeSemamphoresOfPrimaryIndexKey(resourceId)
+		? getKeySemamphoresOfPrimaryIndexKey(resourceId)
 		: doRead(
 			sql.selectKeySemaphoresOfResourceId(resource), 
 			new Object[] {resourceId}, 

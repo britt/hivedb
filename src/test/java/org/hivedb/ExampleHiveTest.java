@@ -92,7 +92,7 @@ public class ExampleHiveTest extends H2TestCase {
 			 * objects.  
 			 *
 			 */
-			JdbcDaoSupport daoSupport = hive.getJdbcDaoSupportCache(dimensionName).getUnsafe(node);
+			JdbcDaoSupport daoSupport = hive.connection(dimensionName).daoSupport().getUnsafe(node);
 			daoSupport.getJdbcTemplate().update(dataTableCreateSql);
 		}
 		
@@ -118,7 +118,7 @@ public class ExampleHiveTest extends H2TestCase {
 		//inserts a single copy.
 		hive.insertPrimaryIndexKey(dimensionName, spork.getType());
 		//Next we insert the record into the assigned data node
-		Collection<SimpleJdbcDaoSupport> sporkDaos = hive.getJdbcDaoSupportCache(dimensionName).get(spork.getType(), AccessType.ReadWrite);
+		Collection<SimpleJdbcDaoSupport> sporkDaos = hive.connection(dimensionName).daoSupport().get(spork.getType(), AccessType.ReadWrite);
 		PreparedStatementCreatorFactory stmtFactory = 
 			new PreparedStatementCreatorFactory(productInsertSql, new int[] {Types.INTEGER, Types.VARCHAR, Types.VARCHAR});
 		Object[] parameters = new Object[] {spork.getId(), spork.getName(), spork.getType()};
@@ -131,7 +131,7 @@ public class ExampleHiveTest extends H2TestCase {
 		hive.insertSecondaryIndexKey("name",resourceName,dimensionName, spork.getName(), spork.getId());
 		
 		//Retrieve spork by Primary Key
-		sporkDaos = hive.getJdbcDaoSupportCache(dimensionName).get(spork.getType(), AccessType.ReadWrite);
+		sporkDaos = hive.connection(dimensionName).daoSupport().get(spork.getType(), AccessType.ReadWrite);
 		parameters = new Object[] {spork.getId()};
 		
 		//Here I am taking advantage of the fact that I know there is only one copy.
@@ -140,7 +140,7 @@ public class ExampleHiveTest extends H2TestCase {
 		Assert.assertEquals(spork.getName(), productA.getName());
 		
 		//Retrieve the spork by Name
-		sporkDaos = (Collection<SimpleJdbcDaoSupport>) hive.getJdbcDaoSupportCache(dimensionName).get(nameIndex, spork.getName(), AccessType.Read);
+		sporkDaos = (Collection<SimpleJdbcDaoSupport>) hive.connection(dimensionName).daoSupport().get(nameIndex, spork.getName(), AccessType.Read);
 		parameters = new Object[] {spork.getName()};
 		Product productB = (Product) Atom.getFirst(sporkDaos).getJdbcTemplate().queryForObject(selectProductByName, parameters, new ProductRowMapper());
 		//Make sure its a spork
