@@ -18,11 +18,13 @@ public class TestSyncHive extends H2HiveTestCase {
 
 	@BeforeMethod
 	public void setUp() throws Exception {
-		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
-		hive.addPartitionDimension(createPopulatedPartitionDimension());
+		Hive hive = Hive.create(
+				getConnectString(getHiveDatabaseName()), 
+				createEmptyPartitionDimension().getName(), 
+				createEmptyPartitionDimension().getColumnType());
 		Node node = createNode("firstNode");
-		hive.addNode(Atom.getFirst(hive.getPartitionDimensions()), node);
-		new IndexSchema(Atom.getFirst(hive.getPartitionDimensions())).install();
+		hive.addNode(node);
+		new IndexSchema(hive.getPartitionDimension()).install();
 	}
 	
 	/**
@@ -38,22 +40,22 @@ public class TestSyncHive extends H2HiveTestCase {
 		HiveSyncDaemon daemon = new HiveSyncDaemon(getConnectString(getHiveDatabaseName()), observers);
 		daemon.detectChanges();
 		
-		hive.addNode(Atom.getFirstOrNull(hive.getPartitionDimensions()), createNode(getHiveDatabaseName()));
+		hive.addNode(createNode(getHiveDatabaseName()));
 		
 		daemon.detectChanges();
 		
 //		nodeReport(passiveSync, hive);
 		
-		Assert.assertNotNull(Atom.getFirstOrNull(passiveSync.getPartitionDimensions()).getNode(createNode(getHiveDatabaseName()).getName()));
+		Assert.assertNotNull(passiveSync.getPartitionDimension().getNode(createNode(getHiveDatabaseName()).getName()));
 	}
 	
 	@SuppressWarnings("unused")
 	private void nodeReport(Hive passiveSync, Hive hive) {
 		System.out.println("Passively synced Hive:" + passiveSync.getRevision());
-		for(Node node: passiveSync.getPartitionDimension(createPopulatedPartitionDimension().getName()).getNodes())
+		for(Node node: passiveSync.getPartitionDimension().getNodes())
 			System.out.println(node.getName());
 		System.out.println("In-memory Hive " + hive.getRevision());
-		for(Node node: hive.getPartitionDimension(createPopulatedPartitionDimension().getName()).getNodes())
+		for(Node node: hive.getPartitionDimension().getNodes())
 			System.out.println(node.getName());
 	}
 	

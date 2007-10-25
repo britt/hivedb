@@ -47,40 +47,34 @@ public class ExampleHiveTest extends H2TestCase {
 		// Install The Hive Metadata Schema
 		new HiveInstaller(getConnectString(H2TestCase.TEST_DB)).run();
 		
-		//Load a Hive
-		Hive hive = Hive.load(getConnectString(H2TestCase.TEST_DB));
-		
 		//Create a Partition Dimension
 		//We are going to partition our Product domain using the product type string.
 		String dimensionName = "ProductType";
 		
-		PartitionDimension partitionDimension = 
-			new PartitionDimension(dimensionName, Types.VARCHAR, new ArrayList<Node>(), getConnectString(H2TestCase.TEST_DB), new ArrayList<Resource>());
-		
-		//Add it to the Hive	
-		partitionDimension = hive.addPartitionDimension(partitionDimension);
+		//Create a Hive
+		Hive hive = Hive.create(getConnectString(H2TestCase.TEST_DB), dimensionName, Types.VARCHAR);
 		
 		//Create a Data Node
 //		Node dataNode = new Node(Hive.NEW_OBJECT_ID,"aNode",getConnectString(H2TestCase.TEST_DB), false, partitionDimension.getId());
-		Node dataNode = new Node(Hive.NEW_OBJECT_ID,"aNode",H2TestCase.TEST_DB, "", partitionDimension.getId(), HiveDbDialect.H2);
+		Node dataNode = new Node(Hive.NEW_OBJECT_ID,"aNode",H2TestCase.TEST_DB, "", hive.getPartitionDimension().getId(), HiveDbDialect.H2);
 		
 		//Add it to the partition dimension
-		hive.addNode(partitionDimension, dataNode);
+		hive.addNode(dataNode);
 		
 		//Make sure everything we just added actually got put into the hive meta data.
-		Assert.assertTrue(hive.getPartitionDimensions().size() > 0);
-		Assert.assertNotNull(hive.getPartitionDimension(dimensionName).getNodes());
-		Assert.assertTrue(hive.getPartitionDimension(dimensionName).getNodes().size() > 0);
+		Assert.assertNotNull(hive.getPartitionDimension());
+		Assert.assertNotNull(hive.getPartitionDimension().getNodes());
+		Assert.assertTrue(hive.getPartitionDimension().getNodes().size() > 0);
 
 		//Add a key, just to test.
 		String key = "knife";
-		hive.insertPrimaryIndexKey(dimensionName, key);
+		hive.insertPrimaryIndexKey(key);
 		//Just cleaning up the random key.
-		hive.deletePrimaryIndexKey(dimensionName, key);
+		hive.deletePrimaryIndexKey(key);
 		
 		//At this point there is no real data in the Hive just a directory of Primary key to node mappings.
 		//First we need to load our data schema on to each data node.
-		for(Node node : hive.getPartitionDimension(dimensionName).getNodes()){
+		for(Node node : hive.getPartitionDimension().getNodes()){
 			/*
 			 *  
 			 * Ordinarily to get a connection to node from the hive we would have to provide a key
@@ -92,7 +86,7 @@ public class ExampleHiveTest extends H2TestCase {
 			 * objects.  
 			 *
 			 */
-			JdbcDaoSupport daoSupport = hive.connection(dimensionName).daoSupport().getUnsafe(node);
+			JdbcDaoSupport daoSupport = hive.connection().daoSupport().getUnsafe(node);
 			daoSupport.getJdbcTemplate().update(dataTableCreateSql);
 		}
 		
@@ -103,7 +97,7 @@ public class ExampleHiveTest extends H2TestCase {
 		Resource product = new Resource(resourceName, Types.INTEGER, false, new ArrayList<SecondaryIndex>());
 		
 		// Add it to the Hive
-		product = hive.addResource(partitionDimension.getName(), product);
+		product = hive.addResource(product);
 		
 		//Now create a SecondaryIndex
 		SecondaryIndex nameIndex = new SecondaryIndex("name", Types.VARCHAR);
@@ -116,9 +110,9 @@ public class ExampleHiveTest extends H2TestCase {
 		//First we have to add a primary index entry in order to get allocated to a data node.
 		//While it is possible to write a record to multiple locations within the Hive, the default implementation
 		//inserts a single copy.
-		hive.insertPrimaryIndexKey(dimensionName, spork.getType());
+		hive.insertPrimaryIndexKey(spork.getType());
 		//Next we insert the record into the assigned data node
-		Collection<SimpleJdbcDaoSupport> sporkDaos = hive.connection(dimensionName).daoSupport().get(spork.getType(), AccessType.ReadWrite);
+		Collection<SimpleJdbcDaoSupport> sporkDaos = hive.connection().daoSupport().get(spork.getType(), AccessType.ReadWrite);
 		PreparedStatementCreatorFactory stmtFactory = 
 			new PreparedStatementCreatorFactory(productInsertSql, new int[] {Types.INTEGER, Types.VARCHAR, Types.VARCHAR});
 		Object[] parameters = new Object[] {spork.getId(), spork.getName(), spork.getType()};
@@ -126,12 +120,12 @@ public class ExampleHiveTest extends H2TestCase {
 			dao.getJdbcTemplate().update(stmtFactory.newPreparedStatementCreator(parameters));
 
 		//Update the resource id so that the hive can locate it
-		hive.insertResourceId(dimensionName, resourceName, spork.getId(), spork.getType());
+		hive.insertResourceId(resourceName, spork.getId(), spork.getType());
 		//Finally we update the SecondaryIndex
-		hive.insertSecondaryIndexKey("name",resourceName,dimensionName, spork.getName(), spork.getId());
+		hive.insertSecondaryIndexKey("name",resourceName,spork.getName(), spork.getId());
 		
 		//Retrieve spork by Primary Key
-		sporkDaos = hive.connection(dimensionName).daoSupport().get(spork.getType(), AccessType.ReadWrite);
+		sporkDaos = hive.connection().daoSupport().get(spork.getType(), AccessType.ReadWrite);
 		parameters = new Object[] {spork.getId()};
 		
 		//Here I am taking advantage of the fact that I know there is only one copy.
@@ -140,7 +134,7 @@ public class ExampleHiveTest extends H2TestCase {
 		Assert.assertEquals(spork.getName(), productA.getName());
 		
 		//Retrieve the spork by Name
-		sporkDaos = (Collection<SimpleJdbcDaoSupport>) hive.connection(dimensionName).daoSupport().get(nameIndex, spork.getName(), AccessType.Read);
+		sporkDaos = (Collection<SimpleJdbcDaoSupport>) hive.connection().daoSupport().get(nameIndex, spork.getName(), AccessType.Read);
 		parameters = new Object[] {spork.getName()};
 		Product productB = (Product) Atom.getFirst(sporkDaos).getJdbcTemplate().queryForObject(selectProductByName, parameters, new ProductRowMapper());
 		//Make sure its a spork

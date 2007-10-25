@@ -23,6 +23,6 @@ public class HiveConfigImpl implements HiveConfig {
 	}
 	
 	public Collection<Node> getDataNodes() {
-		return hive.getPartitionDimension(entityConfig.getPartitionDimensionName()).getNodes();
+		return hive.getPartitionDimension().getNodes();
 	}
 }

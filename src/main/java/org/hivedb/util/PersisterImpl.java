@@ -11,7 +11,7 @@ import org.hivedb.util.functional.Actor;
 public class PersisterImpl implements Persister {
 	public Object persistPrimaryIndexKey(HiveConfig hiveConfig, Object primaryIndexKey) {
 		try {
-			hiveConfig.getHive().insertPrimaryIndexKey(hiveConfig.getEntityConfig().getPartitionDimensionName(), primaryIndexKey);
+			hiveConfig.getHive().insertPrimaryIndexKey(primaryIndexKey);
 		} catch (HiveReadOnlyException e) {
 			throw new RuntimeException(e);
 		}
@@ -22,7 +22,6 @@ public class PersisterImpl implements Persister {
 		EntityConfig<?> entityConfig = hiveConfig.getEntityConfig();
 		try {
 			hiveConfig.getHive().insertResourceId(
-					entityConfig.getPartitionDimensionName(),
 					entityConfig.getResourceName(),
 					entityConfig.getId(instance),
 					entityConfig.getPrimaryIndexKey(instance));
@@ -45,7 +44,6 @@ public class PersisterImpl implements Persister {
 						hiveConfig.getHive().insertSecondaryIndexKey(
 							secondaryIndex.getName(), 
 							secondaryIndex.getResource().getName(),
-							secondaryIndex.getResource().getPartitionDimension().getName(),
 							secondaryIndexKey, 
 							entityConfig.getId(resourceInstance));
 					} catch (HiveReadOnlyException e) {
@@ -58,8 +56,7 @@ public class PersisterImpl implements Persister {
 	private SecondaryIndex getSecondaryIndex(Hive hive, EntityIndexConfig secondaryIndexIdentifable, EntityConfig<?> entityConfig)
 	{
 		String resourceName = entityConfig.getResourceName();
-		String partitionDimensionName = entityConfig.getPartitionDimensionName();
-		return hive.getPartitionDimension(partitionDimensionName).getResource(resourceName).getSecondaryIndex(secondaryIndexIdentifable.getIndexName());
+		return hive.getPartitionDimension().getResource(resourceName).getSecondaryIndex(secondaryIndexIdentifable.getIndexName());
 	}
 
 	

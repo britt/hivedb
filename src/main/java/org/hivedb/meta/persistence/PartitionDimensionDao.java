@@ -80,6 +80,21 @@ public class PartitionDimensionDao extends JdbcDaoSupport {
 		return results;
 	}
 	
+	@SuppressWarnings("unchecked")
+	public PartitionDimension get() {
+		JdbcTemplate t = getJdbcTemplate();
+		ArrayList<PartitionDimension> results = 
+			(ArrayList<PartitionDimension>) t.query("SELECT * FROM partition_dimension_metadata", new PartitionDimensionRowMapper());
+		
+		if(results.size() == 0)
+			throw new HiveRuntimeException("No PartitionDimension found.");
+		else if(results.size() > 1)
+			throw new HiveRuntimeException(String.format("Found %s PartitionDImensions, there can be only one.", results.size()));
+		PartitionDimension dimension = results.get(0);
+		dimension.setNodes(new NodeDao(ds).findByPartitionDimension(dimension.getId()));
+		return dimension;
+	}
+	
 
 	protected class PartitionDimensionRowMapper implements RowMapper {
 		public Object mapRow(ResultSet rs, int rowNumber) throws SQLException {

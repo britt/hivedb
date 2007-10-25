@@ -29,10 +29,12 @@ public class TestMigration extends H2HiveTestCase {
 	public void beforeMethod() {
 		super.beforeMethod();
 		try {
-			hive = Hive.load(getConnectString(getHiveDatabaseName()));
-			hive.addPartitionDimension(createPopulatedPartitionDimension());
+			hive = Hive.create(
+					getConnectString(getHiveDatabaseName()), 
+					createEmptyPartitionDimension().getName(), 
+					createEmptyPartitionDimension().getColumnType());
 			for(String name : getDatabaseNames())
-				hive.addNode(hive.getPartitionDimension(partitionDimensionName()), new Node(0, name, name, "", 0, HiveDbDialect.H2));
+				hive.addNode(new Node(0, name, name, "", 0, HiveDbDialect.H2));
 			
 		} catch (Exception e) {
 			throw new RuntimeException(e.getMessage());
@@ -58,12 +60,12 @@ public class TestMigration extends H2HiveTestCase {
 		Pair<Node, Node> nodes = initializeTestData(hive, primaryKey, secondaryKey);
 		Node origin = nodes.getKey();
 		Node destination = nodes.getValue();
-		NodeResolver dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), new HiveBasicDataSource(getConnectString(getHiveDatabaseName())));
+		NodeResolver dir = new Directory(hive.getPartitionDimension(), new HiveBasicDataSource(getConnectString(getHiveDatabaseName())));
 		PartitionKeyMover<Integer> pMover = new PrimaryMover(origin.getUri());
 		Mover<Integer> secMover = new SecondaryMover();
 		
 		//Do the actual migration
-		Migrator m = new HiveMigrator(hive, partitionDimensionName());
+		Migrator m = new HiveMigrator(hive);
 		assertNotNull(Filter.grepItemAgainstList(origin.getId(), dir.getNodeIdsOfPrimaryIndexKey(primaryKey)));
 		m.migrate(primaryKey, Arrays.asList(new String[]{destination.getName()}), pMover);
 		//Directory points to the destination node
@@ -82,7 +84,7 @@ public class TestMigration extends H2HiveTestCase {
 		Pair<Node, Node> nodes = initializeTestData(hive, primaryKey, secondaryKey);
 		Node origin = nodes.getKey();
 		Node destination = nodes.getValue();
-		NodeResolver dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), new HiveBasicDataSource(getConnectString(getHiveDatabaseName())));
+		NodeResolver dir = new Directory(hive.getPartitionDimension(), new HiveBasicDataSource(getConnectString(getHiveDatabaseName())));
 		PartitionKeyMover<Integer> pMover = new PrimaryMover(origin.getUri());
 		//This mover just craps out on copy
 		Mover<Integer> failingMover = new Mover<Integer>() {
@@ -93,7 +95,7 @@ public class TestMigration extends H2HiveTestCase {
 			public Integer get(Object id, Node node) {return null;}
 		};
 		
-		Migrator m = new HiveMigrator(hive, partitionDimensionName());
+		Migrator m = new HiveMigrator(hive);
 		pMover.getDependentMovers().clear();
 		pMover.getDependentMovers().add(new Pair<Mover, KeyLocator>(failingMover, new SecondaryKeyLocator(origin.getUri())));
 		try {
@@ -118,7 +120,7 @@ public class TestMigration extends H2HiveTestCase {
 		Node origin = nodes.getKey();
 		Node destination = nodes.getValue();
 		
-		NodeResolver dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), getDataSource(getHiveDatabaseName()));
+		NodeResolver dir = new Directory(hive.getPartitionDimension(), getDataSource(getHiveDatabaseName()));
 		PartitionKeyMover<Integer> pMover = new PrimaryMover(origin.getUri());
 //		This mover just craps out on delete
 		Mover<Integer> failingMover = new Mover<Integer>() {
@@ -135,7 +137,7 @@ public class TestMigration extends H2HiveTestCase {
 			}
 		};
 		
-		Migrator m = new HiveMigrator(hive, partitionDimensionName());
+		Migrator m = new HiveMigrator(hive);
 		pMover.getDependentMovers().clear();
 		pMover.getDependentMovers().add(new Pair<Mover, KeyLocator>(failingMover, new SecondaryKeyLocator(origin.getUri())));
 		try {
@@ -152,13 +154,13 @@ public class TestMigration extends H2HiveTestCase {
 	
 	
 	private Pair<Node, Node> initializeTestData(Hive hive, Integer primaryKey, Integer secondaryKey) throws Exception {
-		hive.insertPrimaryIndexKey(partitionDimensionName(), primaryKey);
+		hive.insertPrimaryIndexKey(primaryKey);
 		//Setup the test data on one node
-		NodeResolver dir = new Directory(hive.getPartitionDimension(partitionDimensionName()), getDataSource(getHiveDatabaseName()));
+		NodeResolver dir = new Directory(hive.getPartitionDimension(), getDataSource(getHiveDatabaseName()));
 		int originId = Atom.getFirst(dir.getNodeIdsOfPrimaryIndexKey(primaryKey));
-		Node origin = hive.getPartitionDimension(partitionDimensionName()).getNode(originId);
-		Node destination = origin.getName().equals("data1") ? hive.getPartitionDimension(partitionDimensionName()).getNode("data2") : 
-			hive.getPartitionDimension(partitionDimensionName()).getNode("data1");
+		Node origin = hive.getPartitionDimension().getNode(originId);
+		Node destination = origin.getName().equals("data1") ? hive.getPartitionDimension().getNode("data2") : 
+			hive.getPartitionDimension().getNode("data1");
 		PartitionKeyMover<Integer> pMover = new PrimaryMover(origin.getUri());
 		Mover<Integer> secMover = new SecondaryMover();
 		pMover.copy(primaryKey, origin);

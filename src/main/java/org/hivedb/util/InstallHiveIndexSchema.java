@@ -19,14 +19,12 @@ public class InstallHiveIndexSchema {
 		
 		try {
 			// Create any missing index tables
-			for (PartitionDimension pd : hiveConfig.getHive().getPartitionDimensions())
-				new IndexSchema(pd).install();
+			new IndexSchema(hiveConfig.getHive().getPartitionDimension()).install();
 		}
 		catch (Exception exception)
 		{
 			throw new RuntimeException(exception);
 		}
-		return hiveConfig.getHive().getPartitionDimension(
-					hiveConfig.getEntityConfig().getPartitionDimensionName());
+		return hiveConfig.getHive().getPartitionDimension();
 	}
 }

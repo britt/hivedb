@@ -30,19 +30,20 @@ public class DirectoryTest extends H2HiveTestCase {
 	
 	@BeforeMethod
 	public void setUp() throws Exception {
-		Hive hive = getHive();
-		hive.addPartitionDimension(createPopulatedPartitionDimension());
-		for(String name: getDatabaseNames())
-			hive.addNode(Atom.getFirst(hive.getPartitionDimensions()), createNode(name));
-		new IndexSchema(Atom.getFirst(hive.getPartitionDimensions())).install();
+		Hive hive = Hive.create(getConnectString(getHiveDatabaseName()), createEmptyPartitionDimension().getName(), createEmptyPartitionDimension().getColumnType());
 		
-		dimension = hive.getPartitionDimension(createPopulatedPartitionDimension().getName());
+		for(String name: getDatabaseNames())
+			hive.addNode(createNode(name));
+		new IndexSchema(hive.getPartitionDimension()).install();
+	
+		hive.addResource(createResource());
 		nameIndex = new SecondaryIndex("name", Types.VARCHAR);
 		numIndex = new SecondaryIndex("num", Types.INTEGER);
-		resource = Atom.getFirstOrNull(dimension.getResources());
+		resource = Atom.getFirstOrNull(hive.getPartitionDimension().getResources());
 		hive.addSecondaryIndex(resource, nameIndex);
 		hive.addSecondaryIndex(resource, numIndex);
-		resource = hive.getPartitionDimension(dimension.getName()).getResource(resource.getName());
+		resource = hive.getPartitionDimension().getResource(resource.getName());
+		dimension = hive.getPartitionDimension();
 	}
 
 	
@@ -128,13 +129,9 @@ public class DirectoryTest extends H2HiveTestCase {
 		hive.deleteResource(resource);
 		resource = Atom.getFirstOrNull(dimension.getResources());
 		resource.setIsPartitioningResource(true);
-		hive.addResource(dimension.getName(), resource);
+		hive.addResource(resource);
 		
-		nameIndex = new SecondaryIndex("name", Types.VARCHAR);
-		numIndex = new SecondaryIndex("num", Types.INTEGER);
-		hive.addSecondaryIndex(resource, nameIndex);
-		hive.addSecondaryIndex(resource, numIndex);
-		resource = hive.getPartitionDimension(dimension.getName()).getResource(resource.getName());
+		resource = hive.getPartitionDimension().getResource(resource.getName());
 		
 		insertKeys(getHive());
 		Directory d = getDirectory();
@@ -166,7 +163,7 @@ public class DirectoryTest extends H2HiveTestCase {
 		Hive hive = getHive();
 		Directory d = getDirectory();
 		for(Integer primaryIndexKey: getPrimaryIndexKeys()) {
-			hive.insertPrimaryIndexKey(dimension.getName(), primaryIndexKey);
+			hive.insertPrimaryIndexKey(primaryIndexKey);
 			d.insertResourceId(resource, primaryIndexKey, primaryIndexKey);
 			
 			Map<SecondaryIndex, Collection<Object>> secondaryIndexKeyMap = new Hashtable<SecondaryIndex, Collection<Object>>();
@@ -177,10 +174,10 @@ public class DirectoryTest extends H2HiveTestCase {
 					secondaryKeyNum
 			}));
 			d.batch().insertSecondaryIndexKeys(secondaryIndexKeyMap, primaryIndexKey);
-			assertEquals(1,hive.getSecondaryIndexKeysWithResourceId(nameIndex.getName(), nameIndex.getResource().getName(), dimension.getName(), primaryIndexKey).size());
-			assertEquals(secondaryKeyString, Atom.getFirst(hive.getSecondaryIndexKeysWithResourceId(nameIndex.getName(), nameIndex.getResource().getName(), dimension.getName(), primaryIndexKey)));
-			assertEquals(1,hive.getSecondaryIndexKeysWithResourceId(numIndex.getName(), nameIndex.getResource().getName(),dimension.getName(), primaryIndexKey).size());
-			assertEquals(secondaryKeyNum, Atom.getFirst(hive.getSecondaryIndexKeysWithResourceId(numIndex.getName(), numIndex.getResource().getName(), dimension.getName(), primaryIndexKey)));
+			assertEquals(1,hive.getSecondaryIndexKeysWithResourceId(nameIndex.getName(), nameIndex.getResource().getName(), primaryIndexKey).size());
+			assertEquals(secondaryKeyString, Atom.getFirst(hive.getSecondaryIndexKeysWithResourceId(nameIndex.getName(), nameIndex.getResource().getName(), primaryIndexKey)));
+			assertEquals(1,hive.getSecondaryIndexKeysWithResourceId(numIndex.getName(), nameIndex.getResource().getName(), primaryIndexKey).size());
+			assertEquals(secondaryKeyNum, Atom.getFirst(hive.getSecondaryIndexKeysWithResourceId(numIndex.getName(), numIndex.getResource().getName(), primaryIndexKey)));
 		}
 	}
 	
@@ -383,10 +380,10 @@ public class DirectoryTest extends H2HiveTestCase {
 		Directory d = getDirectory();
 		Resource resource = Atom.getFirstOrNull(dimension.getResources());
 		for(Integer key: getPrimaryIndexKeys()) {
-			hive.insertPrimaryIndexKey(dimension.getName(), key);
+			hive.insertPrimaryIndexKey(key);
 			d.insertResourceId(resource, key, key);
-			hive.insertSecondaryIndexKey(nameIndex.getName(),nameIndex.getResource().getName(), dimension.getName(), secondaryKeyString, key);
-			hive.insertSecondaryIndexKey(numIndex.getName(),numIndex.getResource().getName(), dimension.getName(), secondaryKeyNum, key);
+			hive.insertSecondaryIndexKey(nameIndex.getName(),nameIndex.getResource().getName(), secondaryKeyString, key);
+			hive.insertSecondaryIndexKey(numIndex.getName(),numIndex.getResource().getName(), secondaryKeyNum, key);
 		}
 	}
 	

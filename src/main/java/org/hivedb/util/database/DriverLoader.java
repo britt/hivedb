@@ -2,6 +2,7 @@ package org.hivedb.util.database;
 
 import java.util.HashMap;
 
+import org.hivedb.HiveRuntimeException;
 import org.hivedb.UnsupportedDialectException;
 
 /**
@@ -81,5 +82,14 @@ public class DriverLoader {
 		if (discernDialect == HiveDbDialect.Derby)
 			return uri;
 		throw new UnsupportedDialectException("Could not discern the HiveDbDialect from the uri " + uri);
+	}
+	
+	public static void initializeDriver(String uri) {
+		//Tickle driver
+		try {
+			load(uri);
+		} catch (ClassNotFoundException e) {
+			throw new HiveRuntimeException("Unable to load database driver: " + e.getMessage(), e);
+		} 
 	}
 }

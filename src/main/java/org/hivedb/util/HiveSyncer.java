@@ -73,7 +73,7 @@ public class HiveSyncer {
 			
 			public Void f(PartitionDimension partitionDimension, Resource resource) {
 				try {
-					hive.addResource(partitionDimension.getName(), resource);
+					hive.addResource(resource);
 				} catch (HiveException e) {
 					throw new HiveRuntimeException(String.format("Unable to add resource %s to partition dimesnion %s",
 							partitionDimension.getName(),
@@ -87,7 +87,7 @@ public class HiveSyncer {
 		Maps.digMapToCollection(new Binary<PartitionDimension, Node, Void>() {
 			public Void f(PartitionDimension partitionDimension, Node node) {
 				try {
-					hive.addNode(partitionDimension, node);
+					hive.addNode(node);
 				} catch (HiveException e) {
 					throw new HiveRuntimeException(String.format("Unable to add Node %s to partition dimesnion %s",
 							partitionDimension.getName(),
@@ -97,18 +97,18 @@ public class HiveSyncer {
 			}
 		}, hiveDiff.getMissingNodesOfExistingPartitionDimension());
 		
-		// Add missing partition dimensions
-		Transform.map(new Unary<PartitionDimension, Void>() {
-				public Void f(PartitionDimension partitionDimension) {
-					try {
-						hive.addPartitionDimension(partitionDimension);
-					} catch (HiveException e) {
-						throw new HiveRuntimeException(String.format("Unable to add partition dimension %s to the hive",
-								partitionDimension.getName()), e);
-					}
-					return null;
-				}
-		},	hiveDiff.getMissingPartitionDimensions());
+//		// Add missing partition dimensions
+//		Transform.map(new Unary<PartitionDimension, Void>() {
+//				public Void f(PartitionDimension partitionDimension) {
+//					try {
+//						hive.addPartitionDimension(partitionDimension);
+//					} catch (HiveException e) {
+//						throw new HiveRuntimeException(String.format("Unable to add partition dimension %s to the hive",
+//								partitionDimension.getName()), e);
+//					}
+//					return null;
+//				}
+//		},	hiveDiff.getMissingPartitionDimensions());
 		
 		return hiveDiff;
 	}

@@ -1,5 +1,6 @@
 package org.hivedb.util;
 
+import java.sql.Types;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -12,13 +13,17 @@ import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.hivedb.util.scenarioBuilder.HiveScenarioConfigForResourceEntity;
+import org.hivedb.util.scenarioBuilder.HiveScenarioMarauderClasses;
 import org.hivedb.util.scenarioBuilder.HiveScenarioTest;
 import org.testng.annotations.Test;
 
 public class TestHiveUpdater extends H2HiveTestCase {
 	@Test
 	public void testHiveUpdater() {
-		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
+		Hive hive = Hive.create(
+				getConnectString(getHiveDatabaseName()), 
+				HiveScenarioMarauderClasses.getTreasureConfiguration().getPartitionDimensionName(), 
+				Types.INTEGER);
 		HiveConfig hiveConfig = new HiveScenarioConfigForResourceEntity(
 			hive,
 			getDataNodes(hive));

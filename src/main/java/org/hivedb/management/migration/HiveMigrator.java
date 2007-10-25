@@ -17,9 +17,9 @@ public class HiveMigrator implements Migrator {
 	private Hive hive;
 	private PartitionDimension dimension;
 	
-	public HiveMigrator(Hive hive, String dimensionName) {
+	public HiveMigrator(Hive hive) {
 		this.hive = hive;
-		this.dimension = hive.getPartitionDimension(dimensionName);
+		this.dimension = hive.getPartitionDimension();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -113,7 +113,7 @@ public class HiveMigrator implements Migrator {
 	
 	private void lock(Object key) {
 		try {
-			hive.updatePrimaryIndexReadOnly(dimension.getName(), key, true);
+			hive.updatePrimaryIndexReadOnly(key, true);
 		} catch (HiveException e) {
 			throw new MigrationException("Failed to lock partition key "+ key +" for writing.", e);
 		}
@@ -121,7 +121,7 @@ public class HiveMigrator implements Migrator {
 	
 	private void unlock(Object key) {
 		try {
-			hive.updatePrimaryIndexReadOnly(dimension.getName(), key, false);
+			hive.updatePrimaryIndexReadOnly(key, false);
 		} catch (HiveException e) {
 			throw new MigrationException("Failed to unlock partition key " + key + " for writing.", e);
 		}

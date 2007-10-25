@@ -1,7 +1,6 @@
 package org.hivedb;
 
 import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertTrue;
 
 import java.sql.SQLException;
@@ -22,17 +21,17 @@ public class JdbcDaoSupportCacheTest extends H2HiveTestCase {
 	@BeforeMethod
 	public void setUp() throws Exception{
 		new HiveInstaller(getConnectString(getHiveDatabaseName())).run();
-		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
-		hive.addPartitionDimension(createPopulatedPartitionDimension());
-		new IndexSchema(hive.getPartitionDimension(partitionDimensionName())).install();
-		hive.addNode(hive.getPartitionDimension(partitionDimensionName()), createNode(getHiveDatabaseName()));
-		hive.insertPrimaryIndexKey(partitionDimensionName(), intKey());
+		PartitionDimension dimension = createEmptyPartitionDimension();
+		Hive hive = Hive.create(getConnectString(getHiveDatabaseName()), dimension.getName(), dimension.getColumnType());
+		new IndexSchema(hive.getPartitionDimension()).install();
+		hive.addNode(createNode(getHiveDatabaseName()));
+		hive.insertPrimaryIndexKey(intKey());
 	}
 	
 	@Test
 	public void testDataSourceCacheCreation() throws HiveException, SQLException{
 		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
-		JdbcDaoSupportCacheImpl cache = (JdbcDaoSupportCacheImpl) hive.connection(partitionDimensionName()).daoSupport();
+		JdbcDaoSupportCacheImpl cache = (JdbcDaoSupportCacheImpl) hive.connection().daoSupport();
 		Collection<SimpleJdbcDaoSupport> read = cache.get(intKey(), AccessType.Read);
 		Collection<SimpleJdbcDaoSupport> readWrite = cache.get(intKey(), AccessType.ReadWrite);
 		
@@ -43,7 +42,7 @@ public class JdbcDaoSupportCacheTest extends H2HiveTestCase {
 	@Test
 	public void testGetAllUnsafe() {
 		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
-		JdbcDaoSupportCacheImpl cache = (JdbcDaoSupportCacheImpl) hive.connection(partitionDimensionName()).daoSupport();
+		JdbcDaoSupportCacheImpl cache = (JdbcDaoSupportCacheImpl) hive.connection().daoSupport();
 		assertEquals(1, cache.getAllUnsafe().size());
 	}
 	private Integer intKey() {

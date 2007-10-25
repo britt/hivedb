@@ -8,7 +8,6 @@ import org.hivedb.meta.directory.NodeResolver;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.AssertUtils;
 import org.hivedb.util.database.test.H2HiveTestCase;
-import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Toss;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -17,9 +16,9 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 	
 	@BeforeMethod
 	public void setUp() throws Exception {
-		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
-		hive.addPartitionDimension(createPopulatedPartitionDimension());
-		hive.addNode(Atom.getFirst(hive.getPartitionDimensions()), createNode(getHiveDatabaseName()));
+		PartitionDimension dimension = createEmptyPartitionDimension();
+		Hive hive = Hive.create(getConnectString(getHiveDatabaseName()), dimension.getName(), dimension.getColumnType());
+		hive.addNode(createNode(getHiveDatabaseName()));
 	}
 	
 	@Test
@@ -27,13 +26,13 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 		final Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		final Integer key = new Integer(13);
 		
-		hive.insertPrimaryIndexKey(Atom.getFirst(hive.getPartitionDimensions()).getName(), key);
+		hive.insertPrimaryIndexKey(key);
 		hive.updateHiveReadOnly(true);
 		
 		AssertUtils.assertThrows(new Toss(){
 
 			public void f() throws Exception {
-				hive.connection(Atom.getFirst(hive.getPartitionDimensions()).getName()).getByPartitionKey(key, AccessType.ReadWrite);
+				hive.connection().getByPartitionKey(key, AccessType.ReadWrite);
 			}}, HiveReadOnlyException.class);
 	}
 	
@@ -42,7 +41,7 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		final Integer key = new Integer(13);
 		
-		hive.insertPrimaryIndexKey(Atom.getFirst(hive.getPartitionDimensions()).getName(), key);
+		hive.insertPrimaryIndexKey(key);
 		hive.updateHiveReadOnly(true);
 		hive = null;
 		
@@ -51,7 +50,7 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 		AssertUtils.assertThrows(new Toss(){
 
 			public void f() throws Exception {
-				fetchedHive.connection(Atom.getFirst(fetchedHive.getPartitionDimensions()).getName()).getByPartitionKey(key, AccessType.ReadWrite);
+				fetchedHive.connection().getByPartitionKey(key, AccessType.ReadWrite);
 			}}, HiveReadOnlyException.class);
 	}
 	
@@ -60,15 +59,15 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 		final Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		final Integer key = new Integer(13);
 		
-		final PartitionDimension partitionDimension = Atom.getFirst(hive.getPartitionDimensions());
-		hive.insertPrimaryIndexKey(partitionDimension.getName(), key);
+		final PartitionDimension partitionDimension = hive.getPartitionDimension();
+		hive.insertPrimaryIndexKey(key);
 		NodeResolver directory = new Directory(partitionDimension, new HiveBasicDataSource(hive.getUri()));
 		for(Integer id : directory.getNodeIdsOfPrimaryIndexKey(key))
 			getNode(partitionDimension,id).setReadOnly(true);
 		
 		AssertUtils.assertThrows(new Toss(){
 			public void f() throws Exception {
-				hive.connection(partitionDimension.getName()).getByPartitionKey(key, AccessType.ReadWrite);
+				hive.connection().getByPartitionKey(key, AccessType.ReadWrite);
 			}}, HiveReadOnlyException.class);
 	}
 	
@@ -77,8 +76,8 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		final Integer key = new Integer(13);
 		
-		PartitionDimension partitionDimension = Atom.getFirst(hive.getPartitionDimensions());
-		hive.insertPrimaryIndexKey(partitionDimension.getName(), key);
+		PartitionDimension partitionDimension = hive.getPartitionDimension();
+		hive.insertPrimaryIndexKey(key);
 		NodeResolver directory = new Directory(partitionDimension, new HiveBasicDataSource(hive.getUri()));
 		for(Integer id : directory.getNodeIdsOfPrimaryIndexKey(key))
 			hive.updateNodeReadOnly(getNode(partitionDimension, id), true);
@@ -89,7 +88,7 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 		AssertUtils.assertThrows(new Toss(){
 
 			public void f() throws Exception {
-				fetchedHive.connection(Atom.getFirst(fetchedHive.getPartitionDimensions()).getName()).getByPartitionKey(key, AccessType.ReadWrite);
+				fetchedHive.connection().getByPartitionKey(key, AccessType.ReadWrite);
 			}}, HiveReadOnlyException.class);
 		
 	}
@@ -99,13 +98,13 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 		final Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		final Integer key = new Integer(13);
 		
-		hive.insertPrimaryIndexKey(Atom.getFirst(hive.getPartitionDimensions()).getName(), key);
-		hive.updatePrimaryIndexReadOnly(Atom.getFirst(hive.getPartitionDimensions()).getName(), key, true);
+		hive.insertPrimaryIndexKey(key);
+		hive.updatePrimaryIndexReadOnly(key, true);
 		
 		AssertUtils.assertThrows(new Toss(){
 
 			public void f() throws Exception {
-				hive.connection(Atom.getFirst(hive.getPartitionDimensions()).getName()).getByPartitionKey(key, AccessType.ReadWrite);
+				hive.connection().getByPartitionKey(key, AccessType.ReadWrite);
 			}}, HiveReadOnlyException.class);
 	}
 	
@@ -114,8 +113,8 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		final Integer key = new Integer(13);
 		
-		hive.insertPrimaryIndexKey(Atom.getFirst(hive.getPartitionDimensions()).getName(), key);
-		hive.updatePrimaryIndexReadOnly(Atom.getFirst(hive.getPartitionDimensions()).getName(), key, true);
+		hive.insertPrimaryIndexKey(key);
+		hive.updatePrimaryIndexReadOnly(key, true);
 		hive = null;
 		
 		final Hive fetchedHive = Hive.load(getConnectString(getHiveDatabaseName()));
@@ -123,7 +122,7 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 		AssertUtils.assertThrows(new Toss(){
 
 			public void f() throws Exception {
-				fetchedHive.connection(Atom.getFirst(fetchedHive.getPartitionDimensions()).getName()).getByPartitionKey(key, AccessType.ReadWrite);
+				fetchedHive.connection().getByPartitionKey(key, AccessType.ReadWrite);
 			}}, HiveReadOnlyException.class);
 	}
 	

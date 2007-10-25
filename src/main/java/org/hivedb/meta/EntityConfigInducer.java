@@ -12,7 +12,7 @@ import org.hivedb.util.functional.Unary;
 public class EntityConfigInducer {
 
 	public static EntityConfig induce(Hive hive, String partitionDimensionName, String resourceName) {
-		PartitionDimension partitionDimension = hive.getPartitionDimension(partitionDimensionName);
+		PartitionDimension partitionDimension = hive.getPartitionDimension();
 		Resource resource = partitionDimension.getResource(resourceName);
 		
 		return resource.isPartitioningResource()
