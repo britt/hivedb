@@ -9,7 +9,6 @@ import java.util.Collection;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.database.HiveDbDialect;
@@ -68,9 +67,9 @@ public class ExampleHiveTest extends H2TestCase {
 
 		//Add a key, just to test.
 		String key = "knife";
-		hive.insertPrimaryIndexKey(key);
+		hive.directory().insertPrimaryIndexKey(key);
 		//Just cleaning up the random key.
-		hive.deletePrimaryIndexKey(key);
+		hive.directory().deletePrimaryIndexKey(key);
 		
 		//At this point there is no real data in the Hive just a directory of Primary key to node mappings.
 		//First we need to load our data schema on to each data node.
@@ -110,7 +109,7 @@ public class ExampleHiveTest extends H2TestCase {
 		//First we have to add a primary index entry in order to get allocated to a data node.
 		//While it is possible to write a record to multiple locations within the Hive, the default implementation
 		//inserts a single copy.
-		hive.insertPrimaryIndexKey(spork.getType());
+		hive.directory().insertPrimaryIndexKey(spork.getType());
 		//Next we insert the record into the assigned data node
 		Collection<SimpleJdbcDaoSupport> sporkDaos = hive.connection().daoSupport().get(spork.getType(), AccessType.ReadWrite);
 		PreparedStatementCreatorFactory stmtFactory = 
@@ -120,9 +119,9 @@ public class ExampleHiveTest extends H2TestCase {
 			dao.getJdbcTemplate().update(stmtFactory.newPreparedStatementCreator(parameters));
 
 		//Update the resource id so that the hive can locate it
-		hive.insertResourceId(resourceName, spork.getId(), spork.getType());
+		hive.directory().insertResourceId(resourceName, spork.getId(), spork.getType());
 		//Finally we update the SecondaryIndex
-		hive.insertSecondaryIndexKey("name",resourceName,spork.getName(), spork.getId());
+		hive.directory().insertSecondaryIndexKey(resourceName, "name",spork.getName(), spork.getId());
 		
 		//Retrieve spork by Primary Key
 		sporkDaos = hive.connection().daoSupport().get(spork.getType(), AccessType.ReadWrite);

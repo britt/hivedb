@@ -47,4 +47,18 @@ public class Lists {
 			target[i] = source[i];
 		return target;
 	}
+
+    public static boolean or(Iterable<Boolean> bools) {
+		boolean b = false;
+		for(Boolean v : bools)
+			b |= v;
+		return b;
+	}
+
+    public static boolean or(boolean... bools) {
+		boolean b = false;
+		for(Boolean v : bools)
+			b |= v;
+		return b;
+	}
 }

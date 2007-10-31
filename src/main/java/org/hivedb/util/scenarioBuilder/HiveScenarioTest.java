@@ -113,10 +113,12 @@ public class HiveScenarioTest {
 					final SecondaryIndex secondaryIndex = resource.getSecondaryIndex(secondaryIndexConfig.getIndexName());
 					
 					//  Assert that querying for all the secondary index keys of a primary index key returns the right collection
-					final List<Object> secondaryIndexKeys = new ArrayList<Object>(hive.getSecondaryIndexKeysWithResourceId(
-																secondaryIndex.getName(),
-																resource.getName(),
-																entityConfig.getId(resourceInstance)));
+					final List<Object> secondaryIndexKeys = 
+						new ArrayList<Object>(
+								hive.directory().getSecondaryIndexKeysWithResourceId(
+										resource.getName(),
+										secondaryIndex.getName(),
+										entityConfig.getId(resourceInstance)));
 					
 					Collection<Object> expectedSecondaryIndexKeys = secondaryIndexConfig.getIndexValues(resourceInstance);
 					for (Object expectedSecondaryIndexKey : expectedSecondaryIndexKeys) {
@@ -171,11 +173,11 @@ public class HiveScenarioTest {
 				public void f() {
 					//	Update the node of each primary key to another node, according to this map
 					for (final Object primaryIndexKey : iterateFilter.f(getGeneratedPrimaryIndexKeys(hiveConfig, resourceInstances))) {								
-						final boolean readOnly = hive.getReadOnlyOfPrimaryIndexKey(primaryIndexKey);						
+						final boolean readOnly = hive.directory().getReadOnlyOfPrimaryIndexKey(primaryIndexKey);
 						try {
 							updateReadOnly(primaryIndexKey, !readOnly);
 						} catch (Exception e) { throw new RuntimeException(e); }
-						new Undo() { public void f() {							
+						new Undo() { public void f() {
 							try {
 								updateReadOnly(primaryIndexKey, readOnly);
 							} catch (Exception e) { throw new RuntimeException(e); }
@@ -184,10 +186,8 @@ public class HiveScenarioTest {
 				}
 				
 				private void updateReadOnly(Object primaryIndexKey, boolean toBool) throws HiveException, SQLException {
-					hive.updatePrimaryIndexReadOnly(
-							primaryIndexKey,
-							toBool);
-					assertEquals(toBool, hive.getReadOnlyOfPrimaryIndexKey(primaryIndexKey));
+					hive.directory().updatePrimaryIndexKeyReadOnly(primaryIndexKey, toBool);
+					assertEquals(toBool, hive.directory().getReadOnlyOfPrimaryIndexKey(primaryIndexKey));
 				}
 			};
 			undoable.cycle();
@@ -223,13 +223,10 @@ public class HiveScenarioTest {
 				}	
 			}
 			private void updatePrimaryIndexKeyOfResourceId(final Hive hive, final PartitionDimension partitionDimension, final Resource resource, final Object resourceId, final Object newPrimaryIndexKey, final Object originalPrimaryIndexKey) throws HiveException, SQLException {
-				hive.updatePrimaryIndexKeyOfResourceId(
-						resource.getName(),
-						resourceId,
-						originalPrimaryIndexKey,
-						newPrimaryIndexKey);
-					
-				assertEquals(newPrimaryIndexKey, Atom.getFirstOrThrow(hive.getPrimaryIndexKeysOfSecondaryIndexKey(resource.getIdIndex(), resourceId)));								
+				hive.directory().updatePrimaryIndexKeyOfResourceId(resource.getName(), resourceId, newPrimaryIndexKey);
+				assertEquals(
+						newPrimaryIndexKey, 
+						hive.directory().getPrimaryIndexKeyOfResourceId(resource.getName(), resourceId));
 			}
 		}.cycle();
 		
@@ -245,10 +242,10 @@ public class HiveScenarioTest {
 			new Undoable() {
 				public void f() {						
 					final String name = partitionDimension.getName();			
-					final Assigner assigner = partitionDimension.getAssigner();
+					final Assigner assigner = hive.getAssigner();
 					final int columnType = partitionDimension.getColumnType();
 					final String indexUri = partitionDimension.getIndexUri();
-					partitionDimension.setAssigner(new Assigner() {
+					hive.setAssigner(new Assigner() {
 						public Node chooseNode(Collection<Node> nodes, Object value) {
 							return null;
 						}
@@ -269,7 +266,7 @@ public class HiveScenarioTest {
 						public void f() {
 							partitionDimension.setName(name);
 							partitionDimension.setColumnType(columnType);
-							partitionDimension.setAssigner(assigner);
+							hive.setAssigner(assigner);
 							partitionDimension.setIndexUri(indexUri);
 							try {
 								hive.updatePartitionDimension(partitionDimension);
@@ -417,9 +414,9 @@ public class HiveScenarioTest {
 					entityConfig .getEntitySecondaryIndexConfigs();
 				final Collection<Object> secondaryIndexKeys = Atom.getFirst(secondaryIndexConfigs).getIndexValues(newResourceInstance);
 				for (final Object secondaryIndexKey : secondaryIndexKeys)
-					hive.insertSecondaryIndexKey(
+					hive.directory().insertSecondaryIndexKey(
+						resource.getName(),
 						secondaryIndex.getName(), 
-						resource.getName(), 
 						secondaryIndexKey,
 						primaryIndexKey);
 			}}, HiveReadOnlyException.class);	
@@ -430,7 +427,7 @@ public class HiveScenarioTest {
 				new Undo() { public void f() throws Exception {
 					hive.updateHiveReadOnly(false);
 				}};
-				hive.insertPrimaryIndexKey(new PrimaryIndexKeyGenerator(entityConfig).generate());
+				hive.directory().insertPrimaryIndexKey(new PrimaryIndexKeyGenerator(entityConfig).generate());
 			}}, HiveReadOnlyException.class);	
 		} catch (Exception e) { throw new HiveException("Undoable exception", e); }
 	}	
@@ -452,9 +449,9 @@ public class HiveScenarioTest {
 		for (final Object primaryIndexKey : getGeneratedPrimaryIndexKeys(hiveConfig, resourceInstances)) {			
 			new Undoable() { public void f() {
 				try {
-					hive.deletePrimaryIndexKey(primaryIndexKey);
+					hive.directory().deletePrimaryIndexKey(primaryIndexKey);
 				} catch (Exception e) { throw new RuntimeException(e); }
-				assertFalse(hive.doesPrimaryIndexKeyExist(primaryIndexKey));
+				assertFalse(hive.directory().doesPrimaryIndexKeyExist(primaryIndexKey));
 			
 				for (final Object resourceInstance :
 						Filter.grep(new Predicate<Object>() {
@@ -463,7 +460,7 @@ public class HiveScenarioTest {
 							}},
 							resourceInstances)) {	
 					
-					assertFalse(hive.doesResourceIdExist(resource.getName(), entityConfig.getId(resourceInstance)));
+					assertFalse(hive.directory().doesResourceIdExist(resource.getName(), entityConfig.getId(resourceInstance)));
 				
 					Collection<? extends EntityIndexConfig> secondaryIndexConfigs = entityConfig.getEntitySecondaryIndexConfigs();
 					for (final EntityIndexConfig secondaryIndexConfig : secondaryIndexConfigs) {	
@@ -478,17 +475,17 @@ public class HiveScenarioTest {
 					
 					new Undo() { public void f() {
 						try {
-							hive.insertResourceId(resource.getName(), entityConfig.getId(resourceInstance), entityConfig.getPrimaryIndexKey(resourceInstance));
+							hive.directory().insertResourceId(resource.getName(), entityConfig.getId(resourceInstance), entityConfig.getPrimaryIndexKey(resourceInstance));
 						} catch (Exception e) { throw new RuntimeException(e); }
-						assertTrue(hive.doesResourceIdExist(resource.getName(), entityConfig.getId(resourceInstance)));
+						assertTrue(hive.directory().doesResourceIdExist(resource.getName(), entityConfig.getId(resourceInstance)));
 					}};
 				}
 				
 				new Undo() { public void f()  {				
 					try {
-						hive.insertPrimaryIndexKey(primaryIndexKey);
+						hive.directory().insertPrimaryIndexKey(primaryIndexKey);
 					} catch (Exception e) { throw new RuntimeException(e); }
-					assertTrue(hive.doesPrimaryIndexKeyExist(primaryIndexKey));
+					assertTrue(hive.directory().doesPrimaryIndexKeyExist(primaryIndexKey));
 				}};
 			}}.cycle();					
 		
@@ -508,9 +505,9 @@ public class HiveScenarioTest {
 				new Undoable() {
 					public void f() {
 						try {
-							hive.deleteResourceId(resource.getName(), entityConfig.getId(resourceInstance));
+							hive.directory().deleteResourceId(resource.getName(), entityConfig.getId(resourceInstance));
 						} catch (Exception e) { throw new RuntimeException(e); }
-						assertFalse(hive.doesResourceIdExist(resource.getName(), entityConfig.getId(resourceInstance)));
+						assertFalse(hive.directory().doesResourceIdExist(resource.getName(), entityConfig.getId(resourceInstance)));
 						
 						Collection<? extends EntityIndexConfig> secondaryIndexConfigs = entityConfig.getEntitySecondaryIndexConfigs();
 						for (final EntityIndexConfig secondaryIndexConfig : secondaryIndexConfigs) {	
@@ -519,7 +516,7 @@ public class HiveScenarioTest {
 							for (Object secondaryIndexKey : secondaryIndexKeys)
 									assertFalse(Filter.grepItemAgainstList(
 											entityConfig.getId(resourceInstance),
-											hive.getResourceIdsOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey)));
+											hive.directory().getResourceIdsOfSecondaryIndexKey(secondaryIndex.getResource().getName(), secondaryIndex.getName(), secondaryIndexKey)));
 												
 							new Undo() { public void f()  {
 								try {
@@ -530,9 +527,9 @@ public class HiveScenarioTest {
 						
 						new Undo() { public void f() {
 							try {
-								hive.insertResourceId(resource.getName(), entityConfig.getId(resourceInstance), entityConfig.getPrimaryIndexKey(resourceInstance));
+								hive.directory().insertResourceId(resource.getName(), entityConfig.getId(resourceInstance), entityConfig.getPrimaryIndexKey(resourceInstance));
 							} catch (Exception e) { throw new RuntimeException(e); }
-							assertTrue(hive.doesResourceIdExist(resource.getName(), entityConfig.getId(resourceInstance)));
+							assertTrue(hive.directory().doesResourceIdExist(resource.getName(), entityConfig.getId(resourceInstance)));
 						}};
 				}}.cycle();
 			} catch (Exception e) {
@@ -561,26 +558,26 @@ public class HiveScenarioTest {
 							public void f(final Object secondaryIndexKey) throws RuntimeException {
 								try {
 									
-									hive.deleteSecondaryIndexKey(
-										secondaryIndex.getName(),
+									hive.directory().deleteSecondaryIndexKey(
 										resource.getName(),
+										secondaryIndex.getName(),
 										secondaryIndexKey,
 										resourceId);
 									assertFalse(Filter.grepItemAgainstList(resourceId,
-												hive.getResourceIdsOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey)));
+												hive.directory().getResourceIdsOfSecondaryIndexKey(secondaryIndex.getResource().getName(), secondaryIndex.getName(), secondaryIndexKey)));
 								} catch (Exception e) { throw new RuntimeException(e); }
 								new Undo() { public void f() {
 									try {
-										hive.insertSecondaryIndexKey(
-												secondaryIndex.getName(),
+										hive.directory().insertSecondaryIndexKey(
 												resource.getName(),
+												secondaryIndex.getName(),
 												secondaryIndexKey,
 												resourceId
 										);
 									} catch (Exception e) { throw new RuntimeException(e); }
-									Collection<Object> resourceIdsOfSecondaryIndexKey = hive.getResourceIdsOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
+									Collection<Object> resourceIdsOfSecondaryIndexKey = hive.directory().getResourceIdsOfSecondaryIndexKey(secondaryIndex.getResource().getName(), secondaryIndex.getName(), secondaryIndexKey);
 									assertTrue(Filter.grepItemAgainstList(
-												resourceId, 
+												resourceId,
 												resourceIdsOfSecondaryIndexKey));
 								}};						
 						}}.perform();
@@ -603,9 +600,9 @@ public class HiveScenarioTest {
 		new Actor<Object>(secondaryIndexValue) {
 			public void f(Object secondaryIndexKey) {
 				try {	
-					hive.insertSecondaryIndexKey(
-							secondaryIndex.getName(),
+					hive.directory().insertSecondaryIndexKey(
 							resource.getName(), 
+							secondaryIndex.getName(),
 							secondaryIndexKey, 
 							resourceId);
 				} catch (Exception e) { 
@@ -613,7 +610,7 @@ public class HiveScenarioTest {
 				}
 			assertTrue(Filter.grepItemAgainstList(
 					resourceId,
-					hive.getResourceIdsOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey)));
+					hive.directory().getResourceIdsOfSecondaryIndexKey(secondaryIndex.getResource().getName(), secondaryIndex.getName(), secondaryIndexKey)));
 		}}.perform();
 	};	
 	

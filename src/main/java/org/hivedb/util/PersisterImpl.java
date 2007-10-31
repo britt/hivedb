@@ -11,7 +11,7 @@ import org.hivedb.util.functional.Actor;
 public class PersisterImpl implements Persister {
 	public Object persistPrimaryIndexKey(HiveConfig hiveConfig, Object primaryIndexKey) {
 		try {
-			hiveConfig.getHive().insertPrimaryIndexKey(primaryIndexKey);
+			hiveConfig.getHive().directory().insertPrimaryIndexKey(primaryIndexKey);
 		} catch (HiveReadOnlyException e) {
 			throw new RuntimeException(e);
 		}
@@ -21,7 +21,7 @@ public class PersisterImpl implements Persister {
 	public Object persistResourceInstance(HiveConfig hiveConfig, Object instance) {
 		EntityConfig<?> entityConfig = hiveConfig.getEntityConfig();
 		try {
-			hiveConfig.getHive().insertResourceId(
+			hiveConfig.getHive().directory().insertResourceId(
 					entityConfig.getResourceName(),
 					entityConfig.getId(instance),
 					entityConfig.getPrimaryIndexKey(instance));
@@ -41,9 +41,9 @@ public class PersisterImpl implements Persister {
 			new Actor<Object>(entitySecondaryIndexConfig.getIndexValues(resourceInstance)) {	
 				public void f(Object secondaryIndexKey) {
 					try {
-						hiveConfig.getHive().insertSecondaryIndexKey(
-							secondaryIndex.getName(), 
-							secondaryIndex.getResource().getName(),
+						hiveConfig.getHive().directory().insertSecondaryIndexKey(
+						    secondaryIndex.getResource().getName(),
+							secondaryIndex.getName(),
 							secondaryIndexKey, 
 							entityConfig.getId(resourceInstance));
 					} catch (HiveReadOnlyException e) {

@@ -11,6 +11,10 @@ public class HiveKeyNotFoundException extends HiveRuntimeException {
 		return key;
 	}
 
+	public HiveKeyNotFoundException(String message) {
+		super(message);
+	}
+	
 	public HiveKeyNotFoundException(String message, Object key) {
 		super(message);
 		this.key = key;

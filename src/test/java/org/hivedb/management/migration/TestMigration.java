@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import org.hivedb.Hive;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.directory.Directory;
+import org.hivedb.meta.directory.DirectoryWrapper;
 import org.hivedb.meta.directory.NodeResolver;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.database.HiveDbDialect;
@@ -18,6 +19,7 @@ import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Pair;
+import org.hivedb.util.functional.Transform;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -66,10 +68,10 @@ public class TestMigration extends H2HiveTestCase {
 		
 		//Do the actual migration
 		Migrator m = new HiveMigrator(hive);
-		assertNotNull(Filter.grepItemAgainstList(origin.getId(), dir.getNodeIdsOfPrimaryIndexKey(primaryKey)));
+		assertNotNull(Filter.grepItemAgainstList(origin.getId(), Transform.map(DirectoryWrapper.semaphoreToId(),dir.getKeySemamphoresOfPrimaryIndexKey(primaryKey))));
 		m.migrate(primaryKey, Arrays.asList(new String[]{destination.getName()}), pMover);
 		//Directory points to the destination node
-		assertNotNull(Filter.grepItemAgainstList(destination.getId(), dir.getNodeIdsOfPrimaryIndexKey(primaryKey)));
+		assertNotNull(Filter.grepItemAgainstList(destination.getId(), Transform.map(DirectoryWrapper.semaphoreToId(),dir.getKeySemamphoresOfPrimaryIndexKey(primaryKey))));
 		//Records exist and are identical on the destination node
 		assertEquals(primaryKey, pMover.get(primaryKey, destination));
 		assertEquals(secondaryKey, secMover.get(secondaryKey, destination));
@@ -104,7 +106,7 @@ public class TestMigration extends H2HiveTestCase {
 			//Quash
 		}
 		//Directory still points to the origin node
-		assertNotNull(Filter.grepItemAgainstList(origin.getId(), dir.getNodeIdsOfPrimaryIndexKey(primaryKey)));
+		assertNotNull(Filter.grepItemAgainstList(origin.getId(), Transform.map(DirectoryWrapper.semaphoreToId(), dir.getKeySemamphoresOfPrimaryIndexKey(primaryKey))));
 		//Records are intact on the origin node
 		assertEquals(primaryKey, pMover.get(primaryKey, origin));
 		assertEquals(secondaryKey, new SecondaryMover().get(secondaryKey, origin));
@@ -146,7 +148,7 @@ public class TestMigration extends H2HiveTestCase {
 			//Quash
 		}
 		//Directory still points destination
-		assertNotNull(Filter.grepItemAgainstList(destination.getId(), dir.getNodeIdsOfPrimaryIndexKey(primaryKey)));
+		assertNotNull(Filter.grepItemAgainstList(destination.getId(), Transform.map(DirectoryWrapper.semaphoreToId(), dir.getKeySemamphoresOfPrimaryIndexKey(primaryKey))));
 		//Records exist ondestination
 		assertEquals(primaryKey, pMover.get(primaryKey, destination));
 		assertEquals(secondaryKey, new SecondaryMover().get(secondaryKey, destination));
@@ -154,10 +156,10 @@ public class TestMigration extends H2HiveTestCase {
 	
 	
 	private Pair<Node, Node> initializeTestData(Hive hive, Integer primaryKey, Integer secondaryKey) throws Exception {
-		hive.insertPrimaryIndexKey(primaryKey);
+		hive.directory().insertPrimaryIndexKey(primaryKey);
 		//Setup the test data on one node
 		NodeResolver dir = new Directory(hive.getPartitionDimension(), getDataSource(getHiveDatabaseName()));
-		int originId = Atom.getFirst(dir.getNodeIdsOfPrimaryIndexKey(primaryKey));
+		int originId = Atom.getFirst(dir.getKeySemamphoresOfPrimaryIndexKey(primaryKey)).getId();
 		Node origin = hive.getPartitionDimension().getNode(originId);
 		Node destination = origin.getName().equals("data1") ? hive.getPartitionDimension().getNode("data2") : 
 			hive.getPartitionDimension().getNode("data1");

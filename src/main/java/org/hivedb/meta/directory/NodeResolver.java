@@ -32,25 +32,11 @@ public interface NodeResolver {
 	public boolean doesResourceIdExist(Resource resource, Object id);
 	
 	/***
-	 * Get the ids of the nodes on which a primary keys records are stored.
-	 * @param primaryIndexKey
-	 * @return
-	 */
-	public Collection<Integer> getNodeIdsOfPrimaryIndexKey(Object primaryIndexKey);
-
-	/***
 	 * Get (id,write-lock state) of a primary index key.
 	 * @param primaryIndexKey
 	 * @return
 	 */
 	public Collection<KeySemaphore> getKeySemamphoresOfPrimaryIndexKey(Object primaryIndexKey);
-
-	/***
-	 * Get the write-lock state of a primary index key
-	 * @param primaryIndexKey
-	 * @return
-	 */
-	public boolean getReadOnlyOfPrimaryIndexKey(Object primaryIndexKey);
 
 	/***
 	 * Test the existence of a secondary index key
@@ -60,14 +46,6 @@ public interface NodeResolver {
 	 * @return
 	 */
 	public boolean doesSecondaryIndexKeyExist(SecondaryIndex secondaryIndex, Object secondaryIndexKey, Object resourceId);
-
-	/***
-	 * Get the ids of the nodes on which a secondary keys records are stored.
-	 * @param secondaryIndex
-	 * @param secondaryIndexKey
-	 * @return
-	 */
-	public Collection<Integer> getNodeIdsOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey);
 
 	/***
 	 * Get the (id,read-lock state) of a secondary index key
@@ -83,6 +61,7 @@ public interface NodeResolver {
 	 * @param secondaryIndexKey
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public Collection getPrimaryIndexKeysOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey);
 
 	/***
@@ -90,6 +69,7 @@ public interface NodeResolver {
 	 * @param secondaryIndex
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public Collection getResourceIdsOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey);
 	
 	/***
@@ -98,6 +78,7 @@ public interface NodeResolver {
 	 * @param primaryIndexKey
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public Collection getSecondaryIndexKeysOfPrimaryIndexKey(SecondaryIndex secondaryIndex, Object primaryIndexKey);
 	
 	/***
@@ -106,6 +87,7 @@ public interface NodeResolver {
 	 * @param id
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public Collection getSecondaryIndexKeysOfResourceId(SecondaryIndex secondaryIndex, Object id);
 	
 	/***
@@ -115,7 +97,4 @@ public interface NodeResolver {
 	 * @return
 	 */
 	public Object getPrimaryIndexKeyOfResourceId(Resource resource, Object id);
-	
-	public boolean getReadOnlyOfResourceId(Resource resource, Object id);
-
 }

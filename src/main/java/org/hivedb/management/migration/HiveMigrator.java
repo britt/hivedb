@@ -5,10 +5,13 @@ import java.util.List;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
+import org.hivedb.HiveReadOnlyException;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.directory.Directory;
+import org.hivedb.meta.directory.DirectoryWrapper;
 import org.hivedb.util.functional.Pair;
+import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.hivedb.util.functional.Collect;
 import org.hivedb.util.Lists;
@@ -113,16 +116,16 @@ public class HiveMigrator implements Migrator {
 	
 	private void lock(Object key) {
 		try {
-			hive.updatePrimaryIndexReadOnly(key, true);
-		} catch (HiveException e) {
+			hive.directory().updatePrimaryIndexKeyReadOnly(key, true);
+		} catch (HiveReadOnlyException e) {
 			throw new MigrationException("Failed to lock partition key "+ key +" for writing.", e);
 		}
 	}
 	
 	private void unlock(Object key) {
 		try {
-			hive.updatePrimaryIndexReadOnly(key, false);
-		} catch (HiveException e) {
+			hive.directory().updatePrimaryIndexKeyReadOnly(key, false);
+		} catch (HiveReadOnlyException e) {
 			throw new MigrationException("Failed to unlock partition key " + key + " for writing.", e);
 		}
 	}
@@ -143,7 +146,7 @@ public class HiveMigrator implements Migrator {
 			Collection<Node> origins = Collect.amass(new Unary<Integer, Node>(){
 				public Node f(Integer item) {
 					return getNode(item);
-				}}, dir.getNodeIdsOfPrimaryIndexKey(key));
+				}}, Transform.map(DirectoryWrapper.semaphoreToId(), dir.getKeySemamphoresOfPrimaryIndexKey(key)));
 			
 			//Elect a random origin node as the authority
 			Node authority = Lists.random(origins);

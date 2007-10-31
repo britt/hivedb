@@ -21,7 +21,6 @@ import org.hivedb.util.database.RowMappers;
 import org.hivedb.util.database.Statements;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Delay;
-import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
@@ -44,26 +43,16 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 		this.setDataSource(new HiveBasicDataSource(dimension.getIndexUri()));
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.hivedb.meta.HiveDirectory#getPartitionDimension()
-	 */
 	public PartitionDimension getPartitionDimension() {
 		return this.partitionDimension;
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.hivedb.meta.HiveDirectory#insertPrimaryIndexKey(org.hivedb.meta.Node, java.lang.Object)
-	 */
 	public void insertPrimaryIndexKey(Node node, Object primaryIndexKey) {
 		int[] types = new int[]{JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass()), Types.INTEGER};
 		Object[] parameters = new Object[] {primaryIndexKey,node.getId() };
 		doUpdate(sql.insertPrimaryIndexKey(partitionDimension), types, parameters);
 	}
 
-	
-	/* (non-Javadoc)
-	 * @see org.hivedb.meta.HiveDirectory#insertSecondaryIndexKey(org.hivedb.meta.SecondaryIndex, java.lang.Object, java.lang.Object)
-	 */
 	public void insertSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey, Object primaryindexKey) {
 		Object[] parameters = new Object[] {secondaryIndexKey, primaryindexKey};
 		int[] types = new int[]{secondaryIndex.getColumnInfo().getColumnType(), secondaryIndex.getResource().getColumnType()};
@@ -72,38 +61,27 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	
 	private static QuickCache cache = new QuickCache();
 
-	/* (non-Javadoc)
-	 * @see org.hivedb.meta.HiveDirectory#updatePrimaryIndexKeyReadOnly(java.lang.Object, boolean)
-	 */
 	public void updatePrimaryIndexKeyReadOnly(Object primaryIndexKey, boolean isReadOnly) {
 		Object[] parameters = new Object[] {isReadOnly,primaryIndexKey};
 		int[] types = new int[]{Types.BOOLEAN, JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass())};
 		doUpdate(sql.updateReadOnlyOfPrimaryIndexKey(partitionDimension), types, parameters);
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.hivedb.meta.HiveDirectory#updatePrimaryIndexOfSecondaryKey(org.hivedb.meta.SecondaryIndex, java.lang.Object, java.lang.Object, java.lang.Object)
-	 */
-	public void updatePrimaryIndexKeyOfResourceId(Resource resource, Object resourceId, Object originalPrimaryIndexKey, Object newPrimaryIndexKey) {
+	public void updatePrimaryIndexKeyOfResourceId(Resource resource, Object resourceId, Object newPrimaryIndexKey) {
 		Object[] parameters = new Object[] {
 			newPrimaryIndexKey,
-			resourceId,
-			originalPrimaryIndexKey
-		};
+			resourceId
+        };
 		int[] types = new int[]{
 			JdbcTypeMapper.primitiveTypeToJdbcType(newPrimaryIndexKey.getClass()),
-			resource.getColumnType(),
-			JdbcTypeMapper.primitiveTypeToJdbcType(originalPrimaryIndexKey.getClass())
-		};
+			resource.getColumnType()
+        };
 		doUpdate(
 			sql.updateResourceId(resource),
 			types,
 			parameters);
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.hivedb.meta.HiveDirectory#deletePrimaryIndexKey(java.lang.Object)
-	 */
 	public void deletePrimaryIndexKey(Object primaryIndexKey) {
 		doUpdate(
 			sql.deletePrimaryIndexKey(partitionDimension), 
@@ -111,9 +89,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 			new Object[] {primaryIndexKey});
 	}
 
-	/* (non-Javadoc)
-	 * @see org.hivedb.meta.HiveDirectory#deleteSecondaryIndexKey(org.hivedb.meta.SecondaryIndex, java.lang.Object)
-	 */
+	
 	public void deleteSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey, Object resourceId) {
 		Object[] parameters = new Object[] {
 			secondaryIndexKey,
@@ -125,10 +101,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 		};
 		doUpdate(sql.deleteSingleSecondaryIndexKey(secondaryIndex), types, parameters);
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.hivedb.meta.HiveDirectory#doesPrimaryIndexKeyExist(java.lang.Object)
-	 */
+
 	@SuppressWarnings("unchecked")
 	public boolean doesPrimaryIndexKeyExist(Object primaryIndexKey) {
 		Collection count = doRead(sql.checkExistenceOfPrimaryKey(partitionDimension), 
@@ -137,36 +110,12 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 		return count.size() > 0;
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.hivedb.meta.HiveDirectory#getNodeIdsOfPrimaryIndexKey(java.lang.Object)
-	 */
-	public Collection<Integer> getNodeIdsOfPrimaryIndexKey(Object primaryIndexKey) {
-		return Transform.map(semaphoreToId(), getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey));
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.hivedb.meta.HiveDirectory#getNodeSemamphoresOfPrimaryIndexKey(java.lang.Object)
-	 */
 	public Collection<KeySemaphore> getKeySemamphoresOfPrimaryIndexKey(Object primaryIndexKey) {
 		return doRead(sql.selectKeySemaphoreOfPrimaryIndexKey(partitionDimension), 
 				new Object[] { primaryIndexKey }, 
 				new KeySemaphoreRowMapper());
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.hivedb.meta.HiveDirectory#getReadOnlyOfPrimaryIndexKey(java.lang.Object)
-	 */
-	@SuppressWarnings("unchecked")
-	public boolean getReadOnlyOfPrimaryIndexKey(Object primaryIndexKey) {
-		Boolean readOnly = false;
-		for(Boolean b : Transform.map(semaphoreToReadOnly(), getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey)))
-			readOnly |= b;
-		return readOnly;
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.hivedb.meta.HiveDirectory#doesSecondaryIndexKeyExist(org.hivedb.meta.SecondaryIndex, java.lang.Object)
-	 */
 	public boolean doesResourceIdExist(Resource resource, Object resourceId) {
 		if (resource.isPartitioningResource())
 			return doesPrimaryIndexKeyExist(resourceId);
@@ -178,12 +127,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 		return count.size() > 0;
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.hivedb.meta.HiveDirectory#doesSecondaryIndexKeyExist(org.hivedb.meta.SecondaryIndex,
-	 *      java.lang.Object, java.lang.Object)
-	 */
+
 	public boolean doesSecondaryIndexKeyExist(SecondaryIndex secondaryIndex, Object secondaryIndexKey, Object resourceId) {
 		Collection<Object> count = doRead(
 				sql.checkExistenceOfSecondaryIndexSql(secondaryIndex),
@@ -191,19 +135,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 				RowMappers.newTrueRowMapper());
 		return count.size() > 0;
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.hivedb.meta.HiveDirectory#getNodeIdsOfSecondaryIndexKey(org.hivedb.meta.SecondaryIndex, java.lang.Object)
-	 */
-	@SuppressWarnings("unchecked")
-	public Collection<Integer> getNodeIdsOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey)
-	{
-		return Transform.map(semaphoreToId(), getKeySemaphoresOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey));
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.hivedb.meta.HiveDirectory#getKeySemaphoresOfSecondaryIndexKey(org.hivedb.meta.SecondaryIndex, java.lang.Object)
-	 */
+
 	public Collection<KeySemaphore> getKeySemaphoresOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey)
 	{
 		return doRead(
@@ -212,9 +144,6 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 			new KeySemaphoreRowMapper());
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.hivedb.meta.HiveDirectory#getKeySemaphoresOfSecondaryIndexKey(org.hivedb.meta.SecondaryIndex, java.lang.Object)
-	 */
 	@SuppressWarnings("unchecked")
 	public Collection<KeySemaphore> getKeySemaphoresOfResourceId(Resource resource, Object resourceId)
 	{
@@ -225,10 +154,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 			new Object[] {resourceId}, 
 			new KeySemaphoreRowMapper()));
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.hivedb.meta.HiveDirectory#getPrimaryIndexKeysOfSecondaryIndexKey(org.hivedb.meta.SecondaryIndex, java.lang.Object)
-	 */
+
 	@SuppressWarnings("unchecked")
 	public Collection<Object> getPrimaryIndexKeysOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey)
 	{
@@ -237,10 +163,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 			new Object[] {secondaryIndexKey}, 
 			RowMappers.newObjectRowMapper(secondaryIndex.getResource().getPartitionDimension().getColumnType()));
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.hivedb.meta.HiveDirectory#getSecondaryIndexKeysOfPrimaryIndexKey(org.hivedb.meta.SecondaryIndex, java.lang.Object)
-	 */
+
 	@SuppressWarnings("unchecked")
 	public Collection<Object> getSecondaryIndexKeysOfPrimaryIndexKey(SecondaryIndex secondaryIndex, Object primaryIndexKey)
 	{
@@ -261,7 +184,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 				new Object[] { secondaryIndexKey }, 
 				RowMappers.newObjectRowMapper(secondaryIndex.getResource().getColumnType()));
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public Collection getResourceIdsOfPrimaryIndexKey(Resource resource, Object primaryIndexKey) {
 		return doRead(
@@ -316,20 +239,6 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 			throw new DirectoryCorruptionException(String.format("Directory corruption: Resource %s with id %s is owned more than one primary key.", resource.getName(), id));
 		return Atom.getFirstOrNull(keys);
 	}
-
-	public boolean getReadOnlyOfResourceId(Resource resource, Object id) {
-		Collection<KeySemaphore> semaphores = getKeySemaphoresOfResourceId(resource, id);
-		if( semaphores.size() == 0)
-			throw new HiveKeyNotFoundException(String.format("Unable to find resource %s with id %s", resource.getName(), id), id);
-		boolean readOnly = false;
-		for(KeySemaphore s : semaphores)
-			readOnly |= s.isReadOnly();
-		return readOnly;
-	}
-	
-	public Collection<Integer> getNodeIdsOfResourceId(Resource resource, Object id) {
-		return Transform.map(semaphoreToId(), getKeySemaphoresOfSecondaryIndexKey(resource.getIdIndex(), id));
-	}
 	
 	public Unary<KeySemaphore,Integer> semaphoreToId() {
 		return new Unary<KeySemaphore, Integer>(){
@@ -346,7 +255,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 				return item.isReadOnly();
 			}};
 	}
-	
+
 	public BatchIndexWriter batch() {
 		final Directory d = this;
 		return cache.get(BatchIndexWriter.class, new Delay<BatchIndexWriter>() {

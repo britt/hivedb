@@ -10,8 +10,6 @@ import org.hivedb.meta.IdAndNameIdentifiable;
 import org.hivedb.meta.Identifiable;
 
 public class Preconditions {
-	
-
 	@SuppressWarnings("unchecked")
 	public static<T extends IdAndNameIdentifiable> void nameIsUnique(Collection<T> collection, T item) {
 		if(!IdentifiableUtils.isNameUnique((Collection<IdAndNameIdentifiable>) collection, item))
@@ -41,5 +39,10 @@ public class Preconditions {
 		if(lockable.isReadOnly())
 			throw new HiveReadOnlyException(
 					String.format("This operation is invalid because the %s is currently read-only.", lockable.getClass().getSimpleName()));
+	}
+	
+	public static void isNotEmpty(Collection c, String message) throws HiveKeyNotFoundException {
+		if(c == null || c.size() == 0)
+			throw new HiveKeyNotFoundException(message);
 	}
 }

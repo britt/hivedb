@@ -25,7 +25,7 @@ public class JdbcDaoSupportCacheTest extends H2HiveTestCase {
 		Hive hive = Hive.create(getConnectString(getHiveDatabaseName()), dimension.getName(), dimension.getColumnType());
 		new IndexSchema(hive.getPartitionDimension()).install();
 		hive.addNode(createNode(getHiveDatabaseName()));
-		hive.insertPrimaryIndexKey(intKey());
+		hive.directory().insertPrimaryIndexKey(intKey());
 	}
 	
 	@Test

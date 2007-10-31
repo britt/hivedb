@@ -5,14 +5,10 @@
 package org.hivedb.meta;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
-import java.util.Random;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveKeyNotFoundException;
-import org.hivedb.HiveRuntimeException;
 import org.hivedb.util.HiveUtils;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.functional.Filter;
@@ -32,17 +28,6 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	private Collection<Node> nodes;
 	private String indexUri;
 	private Collection<Resource> resources;
-
-	private Assigner assigner = new Assigner() {
-		private Random random = new Random(new Date().getTime());	
-		public Node chooseNode(Collection<Node> nodes, Object value) {
-			if (nodes.size()==0) throw new HiveRuntimeException("The Hive has no Nodes; the Assigner cannot make a choice.");
-			return new ArrayList<Node>(nodes).get(random.nextInt(nodes.size()));
-		}
-		public Collection<Node> chooseNodes(Collection<Node> nodes, Object value) {
-			return Arrays.asList(new Node[]{chooseNode(nodes, value)});
-		}		
-	};
 
 	/**
 	 * Create constructor
@@ -194,14 +179,6 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 			if (resource.getName().equalsIgnoreCase(resourceName))
 				return resource;
 		throw new HiveKeyNotFoundException("Resource with name " + resourceName + " not found.", resourceName);
-	}
-
-	public Assigner getAssigner() {
-		return assigner;
-	}
-
-	public void setAssigner(Assigner assigner) {
-		this.assigner = assigner;
 	}
 
 	/**

@@ -93,10 +93,6 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache{
 	 * @throws HiveReadOnlyException
 	 */
 	public Collection<SimpleJdbcDaoSupport> get(SecondaryIndex secondaryIndex, Object secondaryIndexKey, final AccessType intention) throws HiveReadOnlyException {
-		if(AccessType.ReadWrite == intention) 
-			if(Filter.getUnique(directory.getPrimaryIndexKeysOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey)).size() > 1)
-				throw new UnsupportedOperationException("Writes for non-unique secondary indexes must be performed using the primary index key.");
-		
 		Collection<KeySemaphore> keySemaphores = directory.getKeySemaphoresOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
 		keySemaphores = Filter.getUnique(keySemaphores, new Unary<KeySemaphore, Integer>(){
 			public Integer f(KeySemaphore item) {
