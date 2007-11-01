@@ -15,6 +15,7 @@ import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
+import org.hivedb.meta.persistence.IndexSchema;
 import org.hivedb.util.QuickCache;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.database.RowMappers;
@@ -27,8 +28,14 @@ import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.ParameterizedRowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
+import org.springframework.jdbc.core.support.JdbcDaoSupport;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallback;
+import org.springframework.transaction.support.TransactionTemplate;
 
 public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, IndexWriter {
+	private static QuickCache cache = new QuickCache();
 	private PartitionDimension partitionDimension;
 	private IndexSqlFormatter sql = new IndexSqlFormatter();
 
@@ -47,59 +54,86 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 		return this.partitionDimension;
 	}
 	
-	public void insertPrimaryIndexKey(Node node, Object primaryIndexKey) {
-		int[] types = new int[]{JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass()), Types.INTEGER};
-		Object[] parameters = new Object[] {primaryIndexKey,node.getId() };
-		doUpdate(sql.insertPrimaryIndexKey(partitionDimension), types, parameters);
+	public void insertPrimaryIndexKey(final Node node, final Object primaryIndexKey) {
+		newTransaction().execute(new TransactionCallback(){
+			public Object doInTransaction(TransactionStatus arg0) {
+				int[] types = new int[]{JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass()), Types.INTEGER};
+				Object[] parameters = new Object[] {primaryIndexKey,node.getId() };
+				
+				if(lockPrimaryKeyForInsert(partitionDimension, primaryIndexKey, node))
+					doUpdate(sql.insertPrimaryIndexKey(partitionDimension), types, parameters);
+				return primaryIndexKey;
+			}
+		});
 	}
 
-	public void insertSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey, Object primaryindexKey) {
-		Object[] parameters = new Object[] {secondaryIndexKey, primaryindexKey};
-		int[] types = new int[]{secondaryIndex.getColumnInfo().getColumnType(), secondaryIndex.getResource().getColumnType()};
-		doUpdate(sql.insertSecondaryIndexKey(secondaryIndex), types, parameters);
-	}
-	
-	private static QuickCache cache = new QuickCache();
-
-	public void updatePrimaryIndexKeyReadOnly(Object primaryIndexKey, boolean isReadOnly) {
-		Object[] parameters = new Object[] {isReadOnly,primaryIndexKey};
-		int[] types = new int[]{Types.BOOLEAN, JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass())};
-		doUpdate(sql.updateReadOnlyOfPrimaryIndexKey(partitionDimension), types, parameters);
-	}
-	
-	public void updatePrimaryIndexKeyOfResourceId(Resource resource, Object resourceId, Object newPrimaryIndexKey) {
-		Object[] parameters = new Object[] {
-			newPrimaryIndexKey,
-			resourceId
-        };
-		int[] types = new int[]{
-			JdbcTypeMapper.primitiveTypeToJdbcType(newPrimaryIndexKey.getClass()),
-			resource.getColumnType()
-        };
-		doUpdate(
-			sql.updateResourceId(resource),
-			types,
-			parameters);
-	}
-	
-	public void deletePrimaryIndexKey(Object primaryIndexKey) {
-		doUpdate(
-			sql.deletePrimaryIndexKey(partitionDimension), 
-			new int[]{JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass())}, 
-			new Object[] {primaryIndexKey});
+	public void insertSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey, final Object resourceId) {
+		newTransaction().execute(new TransactionCallback(){
+			public Object doInTransaction(TransactionStatus arg0) {
+				Object[] parameters = new Object[] {secondaryIndexKey, resourceId};
+				int[] types = new int[]{secondaryIndex.getColumnInfo().getColumnType(), secondaryIndex.getResource().getColumnType()};
+				
+				if(lockSecondaryIndexKey(secondaryIndex, secondaryIndexKey, resourceId))
+					doUpdate(sql.insertSecondaryIndexKey(secondaryIndex), types, parameters);
+				return secondaryIndexKey;
+			}
+		});
 	}
 
+	public void updatePrimaryIndexKeyReadOnly(final Object primaryIndexKey, final boolean isReadOnly) {
+		newTransaction().execute(new TransactionCallback(){
+			public Object doInTransaction(TransactionStatus arg0) {
+				Object[] parameters = new Object[] {isReadOnly,primaryIndexKey};
+				int[] types = new int[]{Types.BOOLEAN, JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass())};
+				lockPrimaryKeyForUpdate(partitionDimension, primaryIndexKey);
+				doUpdate(sql.updateReadOnlyOfPrimaryIndexKey(partitionDimension), types, parameters);
+				return primaryIndexKey;
+			}
+		});
+	}
 	
-	public void deleteSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey, Object resourceId) {
-		Object[] parameters = new Object[] {
-			secondaryIndexKey,
-			resourceId
-		};
-		int[] types = new int[] {
-			secondaryIndex.getColumnInfo().getColumnType(),
-			JdbcTypeMapper.primitiveTypeToJdbcType(resourceId.getClass())	
-		};
-		doUpdate(sql.deleteSingleSecondaryIndexKey(secondaryIndex), types, parameters);
+	public void updatePrimaryIndexKeyOfResourceId(final Resource resource, final Object resourceId, final Object newPrimaryIndexKey) {
+		newTransaction().execute(new TransactionCallback(){
+			public Object doInTransaction(TransactionStatus arg0) {
+				Object[] parameters = new Object[] {newPrimaryIndexKey, resourceId };
+				int[] types = new int[]{
+						JdbcTypeMapper.primitiveTypeToJdbcType(newPrimaryIndexKey.getClass()),
+						resource.getColumnType()
+			        };
+				lockResourceId(resource, resourceId);
+				doUpdate(sql.updateResourceId(resource),types,parameters);
+				return resourceId;
+			}
+		});
+	}
+	
+	public void deletePrimaryIndexKey(final Object primaryIndexKey) {
+		newTransaction().execute(new TransactionCallback(){
+			public Object doInTransaction(TransactionStatus arg0) {
+				lockPrimaryKeyForUpdate(partitionDimension, primaryIndexKey);
+				doUpdate(
+						sql.deletePrimaryIndexKey(partitionDimension), 
+						new int[]{JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass())}, 
+						new Object[] {primaryIndexKey});
+				return primaryIndexKey;
+			}
+		});
+	}
+
+	
+	public void deleteSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey, final Object resourceId) {
+		newTransaction().execute(new TransactionCallback(){
+			public Object doInTransaction(TransactionStatus arg0) {
+				Object[] parameters = new Object[] {secondaryIndexKey, resourceId };
+				int[] types = new int[] {
+					secondaryIndex.getColumnInfo().getColumnType(),
+					JdbcTypeMapper.primitiveTypeToJdbcType(resourceId.getClass())	
+				};
+				lockSecondaryIndexKey(secondaryIndex, secondaryIndexKey, resourceId);
+				doUpdate(sql.deleteSingleSecondaryIndexKey(secondaryIndex), types, parameters);
+				return secondaryIndexKey;
+			}
+		});
 	}
 
 	@SuppressWarnings("unchecked")
@@ -173,8 +207,14 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 			RowMappers.newObjectRowMapper(secondaryIndex.getColumnInfo().getColumnType()));
 	}
 
-	public void deleteResourceId(Resource resource, Object id) {
-		doUpdate(sql.deleteResourceId(resource), new int[] {resource.getColumnType()}, new Object[] {id});
+	public void deleteResourceId(final Resource resource, final Object id) {
+		newTransaction().execute(new TransactionCallback(){
+			public Object doInTransaction(TransactionStatus arg0) {
+				lockResourceId(resource, id);
+				doUpdate(sql.deleteResourceId(resource), new int[] {resource.getColumnType()}, new Object[] {id});
+				return id;
+			}
+		});
 	}
 
 	@SuppressWarnings("unchecked")
@@ -223,11 +263,16 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 		getJdbcTemplate().update(factory.newPreparedStatementCreator(parameters));
 	}
 
-	public void insertResourceId(Resource resource, Object id, Object primaryIndexKey) {
-		doUpdate(
-				sql.insertResourceId(resource),
-				new int[] {resource.getColumnType(),resource.getPartitionDimension().getColumnType()}, 
-				new Object[]{id,primaryIndexKey});
+	public void insertResourceId(final Resource resource, final Object id, final Object primaryIndexKey) {
+		newTransaction().execute(new TransactionCallback(){
+			public Object doInTransaction(TransactionStatus arg0) {
+				if(lockResourceId(resource, id))
+					doUpdate(sql.insertResourceId(resource),
+						new int[] {resource.getColumnType(),resource.getPartitionDimension().getColumnType()}, 
+						new Object[]{id,primaryIndexKey});
+				return id;
+			}
+		});
 	}
 
 	@SuppressWarnings("unchecked")
@@ -263,5 +308,43 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 				return new BatchIndexWriter(d);
 			}	
 		});
+	}
+	
+	private void setTransactionManager(TransactionTemplate transactionTemplate, final JdbcDaoSupport jdbcDaoSupport) {
+		transactionTemplate.setTransactionManager( (DataSourceTransactionManager) cache.get(jdbcDaoSupport.getDataSource(), new Delay<DataSourceTransactionManager>() {
+			public DataSourceTransactionManager f() {
+				return new DataSourceTransactionManager(jdbcDaoSupport.getDataSource());
+			}	
+		}));
+	}
+	
+	private boolean lockPrimaryKeyForInsert(PartitionDimension dimension, Object primaryIndexKey, Node node) {
+		return doRead(sql.selectCompositeKeyForUpdateLock(IndexSchema.getPrimaryIndexTableName(partitionDimension), "id", "node"), 
+				new Object[]{primaryIndexKey, node.getId()},
+				RowMappers.newTrueRowMapper()).size() == 0;
+	}
+	
+	private boolean lockPrimaryKeyForUpdate(PartitionDimension dimension, Object primaryIndexKey) {
+		return doRead(sql.selectForUpdateLock(IndexSchema.getPrimaryIndexTableName(partitionDimension), "id"), 
+				new Object[]{primaryIndexKey},
+				RowMappers.newTrueRowMapper()).size() == 0;
+	}
+	
+	private boolean lockSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey, Object resourceId){
+		return doRead(sql.selectCompositeKeyForUpdateLock(IndexSchema.getSecondaryIndexTableName(secondaryIndex), "id", "pkey"), 
+				new Object[]{secondaryIndexKey, resourceId},
+				RowMappers.newTrueRowMapper()).size() == 0;
+	}
+	
+	private boolean lockResourceId(Resource resource, Object resourceId) {
+		return doRead(sql.selectForUpdateLock(IndexSchema.getResourceIndexTableName(resource), "id"),
+				new Object[]{resourceId},
+				RowMappers.newTrueRowMapper()).size() == 0;
+	}
+
+	private TransactionTemplate newTransaction() {
+		TransactionTemplate t = new TransactionTemplate();
+		setTransactionManager(t, this);
+		return t;
 	}
 }

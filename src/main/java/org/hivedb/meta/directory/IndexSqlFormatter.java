@@ -179,5 +179,12 @@ public class IndexSqlFormatter {
 	public String deleteResourceId(Resource resource) {
 		return String.format("delete from %s where id = ?", IndexSchema.getResourceIndexTableName(resource));
 	}
-
+	
+	public String selectForUpdateLock(String table, String column) {
+		return String.format("select * from %s where %s = ? for update", table, column);
+	}
+	
+	public String selectCompositeKeyForUpdateLock(String table, String column1, String column2) {
+		return String.format("select * from %s where %s = ? and %s = ? for update", table, column1, column2);
+	}
 }
