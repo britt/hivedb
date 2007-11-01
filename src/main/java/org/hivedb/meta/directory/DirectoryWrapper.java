@@ -8,11 +8,14 @@ import org.hivedb.meta.*;
 import org.hivedb.util.HiveUtils;
 import org.hivedb.util.Lists;
 import org.hivedb.util.Preconditions;
+import org.hivedb.util.functional.Pair;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 
 import javax.sql.DataSource;
 import java.util.Collection;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class DirectoryWrapper implements DirectoryFacade {
 	private Directory directory;
@@ -200,5 +203,32 @@ public class DirectoryWrapper implements DirectoryFacade {
 
 	public Collection getSecondaryIndexKeysWithResourceId(String resource, String secondaryIndex, Object id) {
 		return directory.getSecondaryIndexKeysOfResourceId(getSecondaryIndex(resource, secondaryIndex), id);
+	}
+
+	public void deleteAllSecondaryIndexKeysOfResourceId(String resource,Object id) throws HiveReadOnlyException{
+		Preconditions.isWritable(directory.getKeySemaphoresOfResourceId(getResource(resource), id), semaphore);
+		directory.batch().deleteAllSecondaryIndexKeysOfResourceId(getResource(resource), id);
+	}
+
+	public void deleteSecondaryIndexKeys(final String resource, Map<String, Collection<Object>> secondaryIndexValueMap, Object resourceId) throws HiveReadOnlyException {
+		Preconditions.isWritable(directory.getKeySemaphoresOfResourceId(getResource(resource), resourceId), semaphore);
+		directory.batch().deleteSecondaryIndexKeys(stringMapToIndexValueMap(resource, secondaryIndexValueMap), resourceId);
+	}
+
+	public void insertSecondaryIndexKeys(String resource, Map<String, Collection<Object>> secondaryIndexValueMap, Object resourceId) throws HiveReadOnlyException {
+		Preconditions.isWritable(directory.getKeySemaphoresOfResourceId(getResource(resource), resourceId), semaphore);
+		directory.batch().insertSecondaryIndexKeys(stringMapToIndexValueMap(resource, secondaryIndexValueMap), resourceId);
+	}
+	
+	private Map<SecondaryIndex, Collection<Object>> stringMapToIndexValueMap(final String resource, final Map<String, Collection<Object>> map) {
+		return Transform.toMap(
+				Transform.map(
+						new Unary<Entry<String, Collection<Object>>, Entry<SecondaryIndex, Collection<Object>>>(){
+							public Entry<SecondaryIndex, Collection<Object>> f(Entry<String, Collection<Object>> item) {
+								return new Pair<SecondaryIndex, Collection<Object>>(
+										getSecondaryIndex(resource, item.getKey()), 
+										item.getValue());
+							}
+						}, map.entrySet()));
 	}
 }

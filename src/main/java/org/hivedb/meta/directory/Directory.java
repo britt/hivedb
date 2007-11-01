@@ -342,7 +342,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 				RowMappers.newTrueRowMapper()).size() == 0;
 	}
 
-	private TransactionTemplate newTransaction() {
+	public TransactionTemplate newTransaction() {
 		TransactionTemplate t = new TransactionTemplate();
 		setTransactionManager(t, this);
 		return t;

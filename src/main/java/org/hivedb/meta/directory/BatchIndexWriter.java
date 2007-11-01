@@ -25,7 +25,6 @@ import org.springframework.transaction.support.TransactionTemplate;
  *
  */
 public class BatchIndexWriter extends SimpleJdbcDaoSupport {
-	private static QuickCache cache = new QuickCache();
 	private Directory directory;
 	private IndexSqlFormatter sql;
 	
@@ -34,20 +33,9 @@ public class BatchIndexWriter extends SimpleJdbcDaoSupport {
 		this.sql = new IndexSqlFormatter();
 		this.setDataSource(directory.getDataSource());
 	}
-	
-	private void setTransactionManager(TransactionTemplate transactionTemplate, final JdbcDaoSupport jdbcDaoSupport) {
-		transactionTemplate.setTransactionManager( (DataSourceTransactionManager) cache.get(jdbcDaoSupport.getDataSource(), new Delay<DataSourceTransactionManager>() {
-			public DataSourceTransactionManager f() {
-				return new DataSourceTransactionManager(jdbcDaoSupport.getDataSource());
-			}	
-		}));
-	}
-	
-	public Integer insertSecondaryIndexKeys(final Map<SecondaryIndex, Collection<Object>> secondaryIndexValueMap, final Object resourceId) {
-		TransactionTemplate transactionTemplate = new TransactionTemplate();
-		setTransactionManager(transactionTemplate, this);
 		
-		return (Integer) transactionTemplate.execute(new TransactionCallback() {
+	public Integer insertSecondaryIndexKeys(final Map<SecondaryIndex, Collection<Object>> secondaryIndexValueMap, final Object resourceId) {
+		return (Integer) directory.newTransaction().execute(new TransactionCallback() {
 			public Integer doInTransaction(TransactionStatus status) {	
 				return Transform.flatMap(new Unary<Map.Entry<SecondaryIndex, Collection<Object>>, Collection<Object>>() {
 					public Collection<Object> f(final Entry<SecondaryIndex, Collection<Object>> secondaryIndexKeysEntry) {
@@ -66,10 +54,7 @@ public class BatchIndexWriter extends SimpleJdbcDaoSupport {
 	}
 	
 	public Integer deleteSecondaryIndexKeys(final Map<SecondaryIndex, Collection<Object>> secondaryIndexValueMap, final Object resourceId) {
-		TransactionTemplate transactionTemplate = new TransactionTemplate();
-		setTransactionManager(transactionTemplate, this);
-		
-		return (Integer) transactionTemplate.execute(new TransactionCallback() {
+		return (Integer) directory.newTransaction().execute(new TransactionCallback() {
 			public Integer doInTransaction(TransactionStatus status) {	
 				return Transform.flatMap(new Unary<Map.Entry<SecondaryIndex, Collection<Object>>, Collection<Object>>() {
 					public Collection<Object> f(final Entry<SecondaryIndex, Collection<Object>> secondaryIndexKeysEntry) {
@@ -89,10 +74,7 @@ public class BatchIndexWriter extends SimpleJdbcDaoSupport {
 		final PreparedStatementCreatorFactory deleteFactory = 
 			Statements.newStmtCreatorFactory(sql.deleteAllSecondaryIndexKeysForResourceId(resource.getIdIndex()), resource.getColumnType());
 		
-		TransactionTemplate transactionTemplate = new TransactionTemplate();
-		setTransactionManager(transactionTemplate, this);
-		
-		return (Integer) transactionTemplate.execute(new TransactionCallback(){
+		return (Integer) directory.newTransaction().execute(new TransactionCallback(){
 			public Object doInTransaction(TransactionStatus arg0) {
 				Integer rowsAffected = 0;
 				for(SecondaryIndex secondaryIndex : resource.getSecondaryIndexes()){
@@ -100,7 +82,6 @@ public class BatchIndexWriter extends SimpleJdbcDaoSupport {
 					rowsAffected += getJdbcTemplate().update(deleteFactory.newPreparedStatementCreator(parameters));
 				}
 				return rowsAffected;
-			}}
-		);
+			}});
 	}
 }

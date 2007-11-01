@@ -1,6 +1,7 @@
 package org.hivedb.meta.directory;
 
 import java.util.Collection;
+import java.util.Map;
 
 import org.hivedb.HiveReadOnlyException;
 import org.hivedb.meta.KeySemaphore;
@@ -34,5 +35,9 @@ public interface DirectoryFacade {
 	public Collection getPrimaryIndexKeysOfSecondaryIndexKey(String resource, String secondaryIndex, Object secondaryIndexKey);
 	public Collection getResourceIdsOfSecondaryIndexKey(String resource, String secondaryIndex, Object secondaryIndexKey);
 	public Object getPrimaryIndexKeyOfResourceId(String name, Object resourceId);
-
+	
+	public void deleteAllSecondaryIndexKeysOfResourceId(String resource, Object id) throws HiveReadOnlyException;
+	public void deleteSecondaryIndexKeys(String resource, Map<String, Collection<Object>> secondaryIndexValueMap, final Object resourceId) throws HiveReadOnlyException;
+	public void insertSecondaryIndexKeys(String resource, Map<String, Collection<Object>> secondaryIndexValueMap, final Object resourceId) throws HiveReadOnlyException;
+	
 }
