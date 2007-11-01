@@ -92,8 +92,8 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache{
 	 * @return
 	 * @throws HiveReadOnlyException
 	 */
-	public Collection<SimpleJdbcDaoSupport> get(SecondaryIndex secondaryIndex, Object secondaryIndexKey, final AccessType intention) throws HiveReadOnlyException {
-		Collection<KeySemaphore> keySemaphores = directory.getKeySemaphoresOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
+	public Collection<SimpleJdbcDaoSupport> get(String resource, String secondaryIndex, Object secondaryIndexKey, final AccessType intention) throws HiveReadOnlyException {
+		Collection<KeySemaphore> keySemaphores = directory.getKeySemaphoresOfSecondaryIndexKey(getSecondaryIndex(resource, secondaryIndex), secondaryIndexKey);
 		keySemaphores = Filter.getUnique(keySemaphores, new Unary<KeySemaphore, Integer>(){
 			public Integer f(KeySemaphore item) {
 				return item.getId();
@@ -113,19 +113,6 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache{
 		}
 	}
 
-	/**
-	 * IMPORTANT -- This bypasses the locking mechanism.  You should only use this
-	 * to install schema before data nodes have been populated.
-	 */
-	public SimpleJdbcDaoSupport getUnsafe(Node node) {
-		try {
-			KeySemaphore semaphore = new KeySemaphore(node.getId(), node.isReadOnly());
-			return get(semaphore, AccessType.ReadWrite);
-		} catch (HiveException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
 	public SimpleJdbcDaoSupport getUnsafe(String nodeName) {
 		try {
 			Node node = directory.getPartitionDimension().getNode(nodeName);
@@ -136,8 +123,8 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache{
 		}
 	}
 
-	public Collection<SimpleJdbcDaoSupport> get(Resource resource, Object resourceId, AccessType intention) throws HiveReadOnlyException {
-		Collection<KeySemaphore> semaphores = directory.getKeySemaphoresOfResourceId(resource, resourceId);
+	public Collection<SimpleJdbcDaoSupport> get(String resource, Object resourceId, AccessType intention) throws HiveReadOnlyException {
+		Collection<KeySemaphore> semaphores = directory.getKeySemaphoresOfResourceId(getResource(resource), resourceId);
 		Collection<SimpleJdbcDaoSupport> supports = new ArrayList<SimpleJdbcDaoSupport>();
 		for(KeySemaphore semaphore : semaphores)
 			supports.add(get(semaphore, intention));
@@ -149,5 +136,13 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache{
 		for(Node node : directory.getPartitionDimension().getNodes())
 			daos.add(jdbcDaoSupports.get(node.getId()));
 		return daos;
+	}
+	
+	private Resource getResource(String name) {
+		return directory.getPartitionDimension().getResource(name);
+	}
+	
+	private SecondaryIndex getSecondaryIndex(String resource, String name) {
+		return directory.getPartitionDimension().getResource(resource).getSecondaryIndex(name);
 	}
 }

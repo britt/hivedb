@@ -85,7 +85,7 @@ public class ExampleHiveTest extends H2TestCase {
 			 * objects.  
 			 *
 			 */
-			JdbcDaoSupport daoSupport = hive.connection().daoSupport().getUnsafe(node);
+			JdbcDaoSupport daoSupport = hive.connection().daoSupport().getUnsafe(node.getName());
 			daoSupport.getJdbcTemplate().update(dataTableCreateSql);
 		}
 		
@@ -133,7 +133,7 @@ public class ExampleHiveTest extends H2TestCase {
 		Assert.assertEquals(spork.getName(), productA.getName());
 		
 		//Retrieve the spork by Name
-		sporkDaos = (Collection<SimpleJdbcDaoSupport>) hive.connection().daoSupport().get(nameIndex, spork.getName(), AccessType.Read);
+		sporkDaos = (Collection<SimpleJdbcDaoSupport>) hive.connection().daoSupport().get(resourceName, nameIndex.getName(), spork.getName(), AccessType.Read);
 		parameters = new Object[] {spork.getName()};
 		Product productB = (Product) Atom.getFirst(sporkDaos).getJdbcTemplate().queryForObject(selectProductByName, parameters, new ProductRowMapper());
 		//Make sure its a spork
