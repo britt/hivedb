@@ -13,11 +13,11 @@ import org.testng.annotations.Test;
 
 public class TestHiveScenarioWithMySql extends HiveMySqlTestCase {
 	
-	@Test
+	@Test(groups={"mysql"})
 	public void testResourceOnlyEntity() {
 		new TestHiveScenario(getConnectString(getHiveDatabaseName()), getDataNodes()).testResourceEntity();
 	}
-	@Test
+	@Test(groups={"mysql"})
 	public void testResourceAndPartitionDimensionEntity() {
 		new TestHiveScenario(getConnectString(getHiveDatabaseName()), getDataNodes()).testResourceAndPartitionDimensionEntity();
 	}

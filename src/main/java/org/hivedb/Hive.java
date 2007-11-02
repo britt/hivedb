@@ -101,6 +101,11 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		return updated;
 	}
 	
+	public boolean forceSync() {
+		initialize(new PartitionDimensionDao(hiveDataSource).get());
+		return true;
+	}
+	
 	public void initialize(PartitionDimension dimension) {
         DataSource dataSource = dataSourceProvider.getDataSource(dimension.getIndexUri());
         DirectoryFacade directory = new DirectoryWrapper(dimension, dataSource, getAssigner(), getSemaphore());
