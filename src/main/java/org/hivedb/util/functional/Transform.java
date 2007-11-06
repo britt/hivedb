@@ -50,7 +50,7 @@ public class Transform {
 		return toMap(Arrays.asList(entries));
 	}
 	
-	public static<K,V> Map<K,V> toMap(Collection<Entry<K,V>> entries)
+	public static<K,V> Map<K,V> toMap(Collection<? extends Entry<K,V>> entries)
 	{
 		Map<K,V> map = new DebugMap<K,V>();
 		for (Entry<K,V> entry : entries)

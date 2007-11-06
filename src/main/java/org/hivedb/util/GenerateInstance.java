@@ -7,12 +7,14 @@ import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Map;
 
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
 import org.hivedb.util.functional.Amass;
+import org.hivedb.util.functional.DebugMap;
 import org.hivedb.util.functional.Generator;
 
 public class GenerateInstance<T> implements Generator<T> {
@@ -86,7 +88,7 @@ public class GenerateInstance<T> implements Generator<T> {
 				 throw new Error(e.getMessage());
 			}
 		}
-		Dictionary<Object,Object> dictionary = new Hashtable<Object,Object>();
+		Map<Object,Object> dictionary = new Hashtable<Object,Object>();
 		public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
 			Object retValFromSuper = null;
 			try {
@@ -126,6 +128,9 @@ public class GenerateInstance<T> implements Generator<T> {
 			}
 			else if ( name.equals("equals")) {
 				return obj.hashCode() == args[1].hashCode();
+			}
+			else if ( name.equals("toString")) {
+				return new DebugMap<Object, Object>(dictionary).toString();
 			}
 				
 			return retValFromSuper;

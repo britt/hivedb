@@ -14,7 +14,8 @@ import java.util.Collection;
  */
 public interface EntityIndexConfig
 {
-	Collection<Object> getIndexValues(Object entityInstance);	
+	Collection<Object> getIndexValues(Object entityInstance);
 	String getIndexName();
+	String getPropertyName();
 	Class<?> getIndexClass();
 }

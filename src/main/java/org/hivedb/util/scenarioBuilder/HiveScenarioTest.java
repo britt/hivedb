@@ -255,7 +255,6 @@ public class HiveScenarioTest {
 						}				
 					});
 					partitionDimension.setColumnType(JdbcTypeMapper.parseJdbcType(JdbcTypeMapper.FLOAT));
-					partitionDimension.setIndexUri("jdbc:mysql://arb/it?user=ra&password=ry");
 					try {
 						hive.updatePartitionDimension(partitionDimension);
 					} catch (Exception e) { throw new RuntimeException(e); }
@@ -287,10 +286,8 @@ public class HiveScenarioTest {
 					final String db = node.getDatabaseName();
 					final String user = node.getUsername();
 					final String pw = node.getPassword();
-					final HiveDbDialect dialect = node.getDialect();
 					node.setReadOnly(!readOnly);
 					node.setHost("arb");
-					node.setDialect(HiveDbDialect.MySql);
 					node.setDatabaseName("it");
 					node.setUsername("ra");
 					node.setPassword("ry");
@@ -303,7 +300,6 @@ public class HiveScenarioTest {
 							node.setReadOnly(readOnly);
 
 							node.setHost(host);
-							node.setDialect(dialect);
 							node.setDatabaseName(db);
 							node.setUsername(user);
 							node.setPassword(pw);

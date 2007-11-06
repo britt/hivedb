@@ -43,7 +43,8 @@ public class PrimitiveUtils {
 	 * @param clazz
 	 */
 	public static boolean isPrimitiveClass(Class clazz) {
-		return isInteger(clazz) || isLong(clazz) || isShort(clazz) || isDouble(clazz) || isFloat(clazz) || isString(clazz) || isDate(clazz);
+		return isInteger(clazz) || isLong(clazz) || isShort(clazz) || isDouble(clazz) || isFloat(clazz) || isString(clazz) || isDate(clazz)
+			|| isBoolean(clazz) || isClass(clazz) || isObject(clazz);
 	}
 	
 	public static boolean isString(Class clazz) {
@@ -71,7 +72,16 @@ public class PrimitiveUtils {
 		|| clazz.equals(Float.class);
 	}
 	
-	private static boolean isDate(Class clazz) {
+	public static boolean isDate(Class clazz) {
 		return clazz.equals(Date.class);
+	}
+	public static boolean isBoolean(Class clazz) {
+		return clazz.equals(boolean.class) || clazz.equals(Boolean.class);
+	}
+	public static boolean isClass(Class clazz) {
+		return clazz.equals(Class.class);
+	}
+	public static boolean isObject(Class clazz) {
+		return clazz.equals(Object.class);
 	}
 }

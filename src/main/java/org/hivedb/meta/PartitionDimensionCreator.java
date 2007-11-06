@@ -2,6 +2,7 @@ package org.hivedb.meta;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.JdbcTypeMapper;
@@ -19,13 +20,31 @@ public class PartitionDimensionCreator {
 					ReflectionTools.getPropertyType(
 							hiveConfig.getEntityConfig().getRepresentedInterface(), 
 							entityConfig.getPrimaryIndexKeyPropertyName())),
-			hiveConfig.getDataNodes(),
+			cloneDataNodes(hiveConfig.getDataNodes()), // clone because nodes are are given the new partion dimension id
 			hiveConfig.getHive().getUri(), // PartitionDimension uri always equals that of the hive
-			Collections.singletonList(createResource(hiveConfig))
+			cloneResources(Collections.singletonList(createResource(hiveConfig))) // clone because resources are given the new partition dimension id
 		);
-		dimension.updateId(1);
+		dimension.updateId(hiveConfig.getHive().getPartitionDimension().getId());
 		return dimension;
 	}
+	
+	private static Collection<Resource> cloneResources(List<Resource> resources) {
+		return Transform.map(new Unary<Resource,Resource>() {
+			public Resource f(Resource resource) {
+				return new Resource(resource.getId(), resource.getName(), resource.getColumnType(), resource.isPartitioningResource(), resource.getSecondaryIndexes());
+			}
+		}, resources);
+	}
+
+	private static Collection<Node> cloneDataNodes(Collection<Node> dataNodes) {
+		return Transform.map(new Unary<Node,Node>() {
+			public Node f(Node node) {
+				return new Node(node.getId(), node.getName(), node.getDatabaseName(), node.getHost(), node.getPartitionDimensionId(), node.getDialect());
+			}
+		}, dataNodes);
+	}
+
+
 	private static Resource createResource(final HiveConfig hiveConfig) {
 		EntityConfig<?> entityConfig = hiveConfig.getEntityConfig();
 		Resource resource = new Resource(

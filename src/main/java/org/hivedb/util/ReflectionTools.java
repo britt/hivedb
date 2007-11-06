@@ -7,6 +7,7 @@ import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 
 import org.hivedb.util.functional.Amass;
@@ -390,12 +391,19 @@ public class ReflectionTools {
 	
 		if (type instanceof ParameterizedType) {
 			Type typeArgument = Atom.getFirstOrThrow(((ParameterizedType)type).getActualTypeArguments());
-			return (Class)(typeArgument instanceof WildcardType
+			try {
+				return (Class)(typeArgument instanceof WildcardType
 						? Atom.getFirstOrThrow(((WildcardType)typeArgument).getUpperBounds())
-						: typeArgument);
+						: (typeArgument instanceof ParameterizedType)
+							? ((ParameterizedType)typeArgument).getRawType()
+							: typeArgument);
+			}
+			catch (ClassCastException e) {
+				throw new RuntimeException(String.format("For Interface: %s, Property Name %s, expected ParameterizedType or WildcardType but got %s", ofThisInterface, propertyName, typeArgument), e);
+			}
 		}
 		else
-			throw new RuntimeException(String.format("Expected ParameterizedType or WildcardType: %s", type));	
+			throw new RuntimeException(String.format("For Interface: %s, Property Name %s, expected ParameterizedType or WildcardType but got %s", ofThisInterface, propertyName, type));	
 	}
 	/**
 	 *  Returns the given property's return type or the type of item in the collection if its return type 
@@ -451,14 +459,19 @@ public class ReflectionTools {
 	}
 	
 	public static Collection<String> getPropertiesOfComplexGetters(final Class<?> ofThisInterface) {
-		return getComplexGetters(ofThisInterface);
-	}
-	public static Collection<String> getComplexGetters(final Class<?> ofThisInterface) {
-		return Filter.grep(new Predicate<String>() {
-			public boolean f(String propertyName) {
-				return !PrimitiveUtils.isPrimitiveClass(getPropertyType(ofThisInterface, propertyName));
+		return Transform.map(new Unary<Method,String>() { 
+			public String f(Method method) {
+				return ReflectionTools.getPropertyNameOfAccessor(method);
 		}},
-		getPropertiesOfGetters(ofThisInterface));
+		getComplexGetters(ofThisInterface));
+	}
+	
+	public static Collection<Method> getComplexGetters(final Class<?> ofThisInterface) {
+		return Filter.grep(new Predicate<Method>() {
+			public boolean f(Method getter) {
+				return !PrimitiveUtils.isPrimitiveClass(getPropertyType(ofThisInterface, ReflectionTools.getPropertyNameOfAccessor(getter)));
+		}},
+		getGetters(ofThisInterface));
 	}
 	
 	public static Collection<String> getPropertiesOfGivenType(final Class<?> representedInterface, final Class<?> propertyType) {
@@ -467,5 +480,44 @@ public class ReflectionTools {
 				return propertyType.equals(ReflectionTools.getPropertyType(representedInterface, propertyName));
 			}
 		},  ReflectionTools.getPropertiesOfGetters(representedInterface));
+	}
+	
+	/**
+	 * Gets all non-primitive classes nested in the given classes.
+	 * @param representedInterfaces
+	 * @return The given classes and nested classes.
+	 */
+	@SuppressWarnings("unchecked")
+	public static Collection<Class<?>> getUniqueComplexPropertyTypes(final Collection representedInterfaces) {
+		if (representedInterfaces.size() == 0)
+			return Collections.emptyList();
+		
+		final Collection<Class<?>> uniqueComplexPropertyTypes = getUniqueComplexPropertyTypes(
+					Filter.getUnique(
+						Transform.flatten(Transform.map(new Unary<Class<?>, Collection<Class<?>>>() {
+							public Collection<Class<?>> f(Class<?> representedInterface) {
+								return getInterfacesOfComplexGetters(representedInterface);
+						}}, representedInterfaces))));
+		// Return a unique collection of the given representedInterfaces merged with the 
+		// flattened deep collection of all their contained complex property types
+		return Filter.getUnique(Transform.flatten((Collection<Class<?>>[])new Collection[] {
+			representedInterfaces,
+			uniqueComplexPropertyTypes}));
+	}
+
+	// Get the return types of getters or the underlying type of a collection getter for types that are not primitive
+	private static Collection<Class<?>> getInterfacesOfComplexGetters(final Class representedInterface) {
+		return Filter.getUnique(
+			Transform.map(new Unary<String,Class<?>>() {
+				public Class<?> f(String propertyName) {
+					return ReflectionTools.getPropertyTypeOrPropertyCollectionItemType(representedInterface, propertyName);
+				}},		
+				Filter.grep(new Predicate<String>() {
+					public boolean f(String property) {
+						return !(ReflectionTools.isCollectionProperty(representedInterface, property)) ||
+							 !PrimitiveUtils.isPrimitiveClass(ReflectionTools.getCollectionItemType(representedInterface, property));
+					}
+				},
+				ReflectionTools.getPropertiesOfComplexGetters(representedInterface))));
 	}
 }

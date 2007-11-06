@@ -69,7 +69,7 @@ public class HiveSyncer {
 		}, hiveDiff.getMissingSecondaryIndexesOfExistingResources());
 		
 		// Add missing resources
-		Maps.digMapToCollection(new Binary<PartitionDimension, Resource, Void>() {
+		Maps.digMapToCollection(new Binary<PartitionDimension, Resource, Object>() {
 			
 			public Void f(PartitionDimension partitionDimension, Resource resource) {
 				try {
