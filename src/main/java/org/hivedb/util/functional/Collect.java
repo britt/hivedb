@@ -24,4 +24,19 @@ public class Collect {
 			list.add(function.f(iterator.next()));    				
 		return list;
 	}
+	
+	public static<T> Pair<Collection<T>,Collection<T>> diff(Collection<T> left, Collection<T> right) {
+		Collection<T> leftOnly = new ArrayList<T>();
+		Collection<T> rightOnly = new ArrayList<T>();
+		
+		for(T item : left)
+			if(!right.contains(item))
+				leftOnly.add(item);
+		
+		for(T item : right)
+			if(!left.contains(item))
+				rightOnly.add(item);
+		
+		return new Pair<Collection<T>, Collection<T>>(leftOnly,rightOnly);
+	}
 }

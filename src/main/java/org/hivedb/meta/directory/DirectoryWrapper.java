@@ -135,9 +135,10 @@ public class DirectoryWrapper implements DirectoryFacade {
 	}
 
 	public void insertResourceId(String resource, Object id, Object primaryIndexKey) throws HiveReadOnlyException {
-		// insertResourceId is a noop if the resource is the same index as the partition dimension
-		if (getResource(resource).isPartitioningResource()) 
-			return; // TODO consider throwing a runtime exception here to disallow this condition
+		if (getResource(resource).isPartitioningResource()) {
+			insertPrimaryIndexKey(primaryIndexKey);
+			return;
+		}
 		Collection<KeySemaphore> semaphores = directory.getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey);
 		Preconditions.isWritable(semaphores, semaphore);
 		directory.insertResourceId(getResource(resource), id, primaryIndexKey);
@@ -155,7 +156,7 @@ public class DirectoryWrapper implements DirectoryFacade {
 		final Resource r = getResource(resource);
 		if (r.isPartitioningResource()) 
 			throw new HiveRuntimeException(String.format("Resource %s is a partitioning dimension, you cannot update its primary index key because it is the resource id", r.getName()));
-			
+		
 		directory.updatePrimaryIndexKeyOfResourceId(r, resourceId, newPrimaryIndexKey);
 	}
 

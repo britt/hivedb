@@ -8,6 +8,10 @@ import java.util.List;
 import java.util.Random;
 
 public class Lists {
+	public static<T> List<T> newArrayList() {
+		return new ArrayList<T>();
+	}
+	
 	public static<T> List<T> newList(T... items) {
 		return Arrays.asList(items);
 	}

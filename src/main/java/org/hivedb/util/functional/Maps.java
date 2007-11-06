@@ -1,7 +1,7 @@
 package org.hivedb.util.functional;
 
 import java.util.Collection;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -12,6 +12,10 @@ import java.util.Map.Entry;
  *
  */
 public class Maps {
+	
+	public static<K,V> Map<K,V> newHashMap() {
+		return new HashMap<K, V>();
+	}
 	
 	public static<I1,I2,V,R> Map<I1, Map<I2, Entry<V,R>>> dig(
 			final Ternary<I1,I2,V,R> mapper, 
