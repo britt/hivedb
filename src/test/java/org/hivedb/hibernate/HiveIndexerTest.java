@@ -97,6 +97,10 @@ public class HiveIndexerTest extends H2HiveTestCase {
 
 			public Collection<Object> getIndexValues(Object entityInstance) {
 				return Arrays.asList(value);
+			}
+
+			public String getPropertyName() {
+				return name;
 			}};
 	}
 	

@@ -4,6 +4,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.hivedb.Hive;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.Node;
@@ -11,6 +12,8 @@ import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.database.HiveDbDialect;
+import org.hivedb.util.functional.Delay;
+import org.hivedb.util.functional.QuickCache;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
@@ -75,5 +78,16 @@ public class H2HiveTestCase extends H2TestCase {
 	}
 	protected String getHiveDatabaseName() {
 		return H2TestCase.TEST_DB;
+	}
+	QuickCache quickCache = new QuickCache();
+	protected Hive getOrCreateHive(final String dimensionName) {
+		return quickCache.get(dimensionName, new Delay<Hive>() {
+			public Hive f() {
+				return  Hive.create(
+						getConnectString(getHiveDatabaseName()),
+						dimensionName,
+						Types.INTEGER);
+			}
+		});
 	}
 }

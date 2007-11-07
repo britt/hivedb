@@ -46,6 +46,25 @@ public abstract class Filter {
 				return item;
 		return null;
 	}
+	/**
+	 *  Return elements that are unique according to the results of a Unary function. The element returned among
+	 *  matching elements is arbitrary.
+	 * @param <T>
+	 * @param filterer
+	 * @param iterable
+	 * @return
+	 * @throws NoSuchElementException
+	 */
+	public static<T,R> Collection<T> grepUnique(Unary<T,R> unary, Iterable<? extends T> iterable) 
+	{
+		Map<R,T> results = new Hashtable<R, T>();
+		for (T item : iterable) {
+			R result = unary.f(item);
+			if (results.containsKey(result))
+				results.put(result, item);
+		}
+		return results.values();
+	}
 
 	
 	public static<T> T getFirst(Iterable<? extends T> iterable) throws NoSuchElementException

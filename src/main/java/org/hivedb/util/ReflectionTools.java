@@ -76,6 +76,15 @@ public class ReflectionTools {
 			throw new RuntimeException(e);
 		}
 	}
+	
+	public static Method getGetterOfProperty(Class ofInterface, String property) {
+		try {
+			return ofInterface.getMethod("get" + capitalize(property), new Class[] {});
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
 	public static Collection<Method> getDeclaredPublicMethods(Class subject) {
 		return Filter.grepAgainstList( // get declared in the class and public
 			   Arrays.asList(subject.getMethods()),						   
