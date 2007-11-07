@@ -56,7 +56,7 @@ public class EntityConfigImpl<F> implements EntityConfig<F> {
 		
 	}
 	
-	private EntityConfigImpl(
+	public EntityConfigImpl(
 			Class<?> representedInterface,
 			String partitionDimensionName,
 			String resourceName,

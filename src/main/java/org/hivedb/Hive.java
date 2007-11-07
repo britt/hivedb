@@ -75,10 +75,14 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		PartitionDimension dimension = new PartitionDimension(dimensionName, indexType);
 		dimension.setIndexUri(hiveUri);
 		DataSource ds = provider.getDataSource(hiveUri);
-		new PartitionDimensionDao(ds).create(dimension);
-		new IndexSchema(dimension).install();
-		hive.incrementAndPersistHive(ds);
-		return hive;
+		PartitionDimensionDao dao = new PartitionDimensionDao(ds);
+		if(dao.loadAll().size() == 0) {
+			dao.create(dimension);
+			new IndexSchema(dimension).install();
+			hive.incrementAndPersistHive(ds);
+			return hive;
+		} else
+			throw new HiveRuntimeException("There is already a Hive with a partition dimension intalled at this uri: " + hiveUri);
 	}
 	
 	private static Hive prepareHive(String hiveUri, DataSourceProvider provider, Assigner assigner) {

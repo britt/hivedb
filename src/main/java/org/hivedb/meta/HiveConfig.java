@@ -10,7 +10,6 @@ import org.hivedb.Hive;
  *
  */
 public interface HiveConfig {
-	
 	EntityConfig<?> getEntityConfig();
 	Collection<Node> getDataNodes();
 	Hive getHive();

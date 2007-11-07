@@ -13,11 +13,12 @@ import org.hivedb.util.functional.Maps;
 
 public class AnnotationHelper {
 	public static<T extends Annotation> T getFirstInstanceOfAnnotation(Class entityClass, Class<T> annotationClass) {
-		return getFirstMethodWithAnnotation(entityClass, annotationClass).getAnnotation(annotationClass);
+		Method m = getFirstMethodWithAnnotation(entityClass, annotationClass);
+		return m == null ? null : m.getAnnotation(annotationClass);
 	}
 	
 	public static<T extends Annotation> Method getFirstMethodWithAnnotation(Class entityClass, Class<T> annotationClass) {
-		return Atom.getFirstOrThrow(getAllMethodsWithAnnotation(entityClass, annotationClass));
+		return Atom.getFirstOrNull(getAllMethodsWithAnnotation(entityClass, annotationClass));
 	}
 	
 	public static<T extends Annotation> List<Method> getAllMethodsWithAnnotation(Class entityClass, Class<T> annotationClass) {

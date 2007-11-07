@@ -1,0 +1,94 @@
+package org.hivedb.hibernate;
+
+import java.sql.Types;
+import java.util.Collection;
+
+import org.hivedb.Hive;
+import org.hivedb.meta.EntityConfig;
+import org.hivedb.meta.EntityIndexConfig;
+import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.functional.Atom;
+import org.testng.annotations.Test;
+
+import static org.testng.AssertJUnit.*;
+
+public class ConfigurationReaderTest extends H2HiveTestCase {
+	
+	@Test
+	public void testGetResourceName() throws Exception {
+		assertEquals("WeatherReport", new ConfigurationReader().getResourceName(WeatherReport.class));
+	}
+	@SuppressWarnings("unchecked")
+	@Test
+	public void configureResourceTest() throws Exception {
+		EntityConfig config = new ConfigurationReader().configure(WeatherReport.class);
+		WeatherReport report = WeatherReport.generate();
+		assertEquals(WeatherReport.CONTINENT, config.getPrimaryIndexKeyPropertyName());
+		assertEquals(WeatherReport.CONTINENT, config.getPartitionDimensionName());
+		assertEquals(report.getContinent(), config.getPrimaryIndexKey(report));
+		assertEquals(report.getReportId(), config.getId(report));
+		assertEquals("WeatherReport", config.getResourceName());
+		assertFalse(config.isPartitioningResource());
+		assertEquals(WeatherReport.class, config.getRepresentedInterface());
+		assertEquals(Integer.class, config.getIdClass());
+		
+		Collection<EntityIndexConfig> indexes = config.getEntitySecondaryIndexConfigs();
+		assertEquals(1, indexes.size());
+		assertEquals("temperature", Atom.getFirst(indexes).getIndexName());
+		assertEquals(int.class, Atom.getFirst(indexes).getIndexClass());
+		assertEquals(report.getTemperature(), Atom.getFirst(Atom.getFirst(indexes).getIndexValues(report)));
+	}
+	@SuppressWarnings("unchecked")
+	@Test
+	public void configurePartitioningResourceTest() throws Exception {
+		EntityConfig config = new ConfigurationReader().configure(Continent.class);
+		Continent asia = new AsiaticContinent();
+		assertEquals("name", config.getPrimaryIndexKeyPropertyName());
+		assertEquals(WeatherReport.CONTINENT, config.getPartitionDimensionName());
+		assertEquals("Asia", config.getPrimaryIndexKey(asia));
+		assertEquals("Asia", config.getId(asia));
+		assertEquals(WeatherReport.CONTINENT, config.getResourceName());
+		assertTrue(config.isPartitioningResource());
+		assertEquals(Continent.class, config.getRepresentedInterface());
+		assertEquals(String.class, config.getIdClass());
+		
+		Collection<EntityIndexConfig> indexes = config.getEntitySecondaryIndexConfigs();
+		assertEquals(1, indexes.size());
+		assertEquals("population", Atom.getFirst(indexes).getIndexName());
+		assertEquals(Integer.class, Atom.getFirst(indexes).getIndexClass());
+		assertEquals(asia.getPopulation(), Atom.getFirst(Atom.getFirst(indexes).getIndexValues(asia)));
+	}
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testInstall() throws Exception {
+		Hive hive = Hive.create(getConnectString(getHiveDatabaseName()), WeatherReport.CONTINENT, Types.VARCHAR);
+		ConfigurationReader reader = new ConfigurationReader();
+		EntityConfig config = reader.configure(WeatherReport.class);
+		reader.install(hive);
+		assertNotNull(hive.getPartitionDimension().getResource(config.getResourceName()));
+		assertEquals(1,hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes().size());
+		assertEquals(Types.INTEGER,Atom.getFirst(hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes()).getColumnInfo().getColumnType());
+		assertEquals("temperature", Atom.getFirst(hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes()).getName());
+	}
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testInstallPartitioningResource() throws Exception {
+		Hive hive = Hive.create(getConnectString(getHiveDatabaseName()), WeatherReport.CONTINENT, Types.VARCHAR);
+		ConfigurationReader reader = new ConfigurationReader();
+		EntityConfig config = reader.configure(Continent.class);
+		reader.install(hive);
+		assertNotNull(hive.getPartitionDimension().getResource(config.getResourceName()));
+		assertEquals(1,hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes().size());
+		assertEquals(Types.INTEGER,Atom.getFirst(hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes()).getColumnInfo().getColumnType());
+		assertEquals("population", Atom.getFirst(hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes()).getName());
+	}
+	
+	public class AsiaticContinent implements Continent {
+		public String getName() {
+			return "Asia";
+		}
+		public Integer getPopulation() {
+			return new Integer(5);
+		}
+	}
+}

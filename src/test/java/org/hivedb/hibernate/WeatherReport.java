@@ -43,7 +43,6 @@ public class WeatherReport {
 		this.longitude = longitude;
 	}
 	
-	@Index
 	@EntityId
 	public Integer getReportId() {
 		return reportId;
