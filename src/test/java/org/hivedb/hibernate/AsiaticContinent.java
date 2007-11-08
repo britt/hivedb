@@ -4,10 +4,11 @@
 package org.hivedb.hibernate;
 
 public class AsiaticContinent implements Continent {
-	public String getName() {
-		return "Asia";
-	}
-	public Integer getPopulation() {
-		return new Integer(5);
-	}
+	private String name = "Asia";
+	private Integer population = 5;
+	
+	public String getName() {return name;}
+	public Integer getPopulation() {return population;}
+	public void setName(String name) {this.name = name;}
+	public void setPopulation(Integer population) {this.population = population;}
 }

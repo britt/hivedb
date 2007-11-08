@@ -10,6 +10,8 @@ public interface Continent {
 	@EntityId
 	@PartitionIndex(name=WeatherReport.CONTINENT)
 	public String getName();
+	public void setName(String name);
 	@Index
 	public Integer getPopulation();
+	public void setPopulation(Integer population);
 }
