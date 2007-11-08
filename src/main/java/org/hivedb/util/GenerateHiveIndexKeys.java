@@ -2,11 +2,11 @@ package org.hivedb.util;
 
 import java.util.Collection;
 
-import org.hivedb.meta.HiveConfig;
+import org.hivedb.configuration.EntityIndexConfig;
+import org.hivedb.configuration.SingularHiveConfig;
 import org.hivedb.meta.PrimaryIndexKeyGenerator;
 import org.hivedb.meta.EntityGenerator;
 import org.hivedb.meta.EntityGeneratorImpl;
-import org.hivedb.meta.EntityIndexConfig;
 import org.hivedb.util.functional.Generate;
 import org.hivedb.util.functional.Generator;
 import org.hivedb.util.functional.NumberIterator;
@@ -27,7 +27,7 @@ public class GenerateHiveIndexKeys {
 	}
 	
 	public Collection<Object> createResourceInstances(
-		final HiveConfig hiveConfig)
+		final SingularHiveConfig hiveConfig)
 	{
 		final Collection<Object> primaryIndexIdentifiables = createPrimaryIndexKeys(hiveConfig);
 		final EntityGenerator<Object> entityConfigGenerator =
@@ -61,7 +61,7 @@ public class GenerateHiveIndexKeys {
 	 * @param hiveConfig
 	 * @return
 	 */
-	private Collection<Object> createPrimaryIndexKeys(final HiveConfig hiveConfig)
+	private Collection<Object> createPrimaryIndexKeys(final SingularHiveConfig hiveConfig)
 	{	
 		final Generator primaryIndexIdentifiableGenerator = 
 			new PrimaryIndexKeyGenerator(hiveConfig.getEntityConfig());

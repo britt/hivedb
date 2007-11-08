@@ -1,22 +1,21 @@
-package org.hivedb.meta;
+package org.hivedb.configuration;
 
 import java.util.Collection;
 
-public interface EntityConfig<F extends Object> {
+
+public interface EntityConfig {
 	
 	String getPrimaryIndexKeyPropertyName();
-	//TODO Remove this method
 	String getPartitionDimensionName();
 	Object getPrimaryIndexKey(Object instance);
 	
 	public String getIdPropertyName();
-	//TODO consider removing this generic
-	public F getId(Object instance);
+	public Object getId(Object instance);
 
 	Collection<? extends EntityIndexConfig> getEntitySecondaryIndexConfigs();
 	String getResourceName();
 	
 	boolean isPartitioningResource();
-	Class getRepresentedInterface();
-	Class getIdClass();
+	Class<?> getRepresentedInterface();
+	Class<?> getIdClass();
 }

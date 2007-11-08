@@ -7,8 +7,8 @@ import java.util.Map.Entry;
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
 import org.hivedb.HiveRuntimeException;
+import org.hivedb.configuration.SingularHiveConfig;
 import org.hivedb.meta.Finder;
-import org.hivedb.meta.HiveConfig;
 import org.hivedb.meta.Nameable;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
@@ -48,7 +48,7 @@ public class HiveSyncer {
 	 * @param hiveConfig
 	 * @return
 	 */
-	public HiveDiff syncHive(HiveConfig hiveConfig)
+	public HiveDiff syncHive(SingularHiveConfig hiveConfig)
 	{
 		HiveDiff hiveDiff = diffHive(
 			new HiveConfigFinder(hiveConfig));

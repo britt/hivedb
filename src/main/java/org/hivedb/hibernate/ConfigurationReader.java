@@ -1,6 +1,7 @@
 package org.hivedb.hibernate;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -9,18 +10,23 @@ import java.util.Map;
 import org.hivedb.Hive;
 import org.hivedb.HiveReadOnlyException;
 import org.hivedb.HiveRuntimeException;
+import org.hivedb.configuration.EntityConfig;
+import org.hivedb.configuration.EntityConfigImpl;
+import org.hivedb.configuration.EntityHiveConfig;
+import org.hivedb.configuration.EntityIndexConfig;
+import org.hivedb.configuration.EntityIndexConfigImpl;
+import org.hivedb.configuration.PluralHiveConfig;
 import org.hivedb.hibernate.annotations.AnnotationHelper;
 import org.hivedb.hibernate.annotations.EntityId;
 import org.hivedb.hibernate.annotations.Index;
 import org.hivedb.hibernate.annotations.PartitionIndex;
 import org.hivedb.hibernate.annotations.Resource;
-import org.hivedb.meta.EntityConfig;
-import org.hivedb.meta.EntityConfigImpl;
-import org.hivedb.meta.EntityIndexConfig;
-import org.hivedb.meta.EntityIndexConfigImpl;
+import org.hivedb.meta.Node;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.Lists;
 import org.hivedb.util.database.JdbcTypeMapper;
+import org.hivedb.util.functional.Transform;
+import org.hivedb.util.functional.Unary;
 import org.springframework.beans.BeanUtils;
 
 public class ConfigurationReader {
@@ -29,8 +35,13 @@ public class ConfigurationReader {
 	
 	public ConfigurationReader() {}
 	
-	public ConfigurationReader(Collection<Class<?>> clazzes) {
-		for(Class<?> clazz : clazzes)
+	public ConfigurationReader(Class<?>... classes) {
+		for(Class<?> clazz : classes)
+			configure(clazz);
+	}
+	
+	public ConfigurationReader(Collection<Class<?>> classes) {
+		for(Class<?> clazz : classes)
 			configure(clazz);
 	}
 	
@@ -48,13 +59,8 @@ public class ConfigurationReader {
 		
 		List<EntityIndexConfig> indexes = Lists.newArrayList();
 		
-		for(Method indexMethod : indexMethods) {
-			// TODO Properly handle collections
-			if(indexMethod.getReturnType().isInstance(Collection.class) || indexMethod.getReturnType().isArray())
-				indexes.add(new EntityIndexConfigImpl(clazz, getIndexNameForMethod(indexMethod), getIndexNameForMethod(indexMethod)));
-			else
-				indexes.add(new EntityIndexConfigImpl(clazz, getIndexNameForMethod(indexMethod)));
-		}
+		for(Method indexMethod : indexMethods)
+			indexes.add(new EntityIndexConfigImpl(clazz, getIndexNameForMethod(indexMethod)));
 		
 		EntityConfig config = new EntityConfigImpl(
 				clazz,
@@ -75,6 +81,10 @@ public class ConfigurationReader {
 		 return configs.values();
 	}
 
+	public EntityHiveConfig getHiveConfiguration(Hive hive) {
+		return new PluralHiveConfig(configs, hive);
+	}
+	
 	@SuppressWarnings("unchecked")
 	public void install(Hive hive) {
 		for(EntityConfig config : configs.values())

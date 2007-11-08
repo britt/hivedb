@@ -3,6 +3,10 @@ package org.hivedb.meta;
 import java.util.Collection;
 
 import org.hivedb.Hive;
+import org.hivedb.configuration.EntityConfig;
+import org.hivedb.configuration.EntityConfigImpl;
+import org.hivedb.configuration.EntityIndexConfig;
+import org.hivedb.configuration.EntityIndexConfigImpl;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;

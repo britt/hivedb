@@ -4,8 +4,8 @@ import java.sql.Types;
 import java.util.Collection;
 
 import org.hivedb.Hive;
-import org.hivedb.meta.EntityConfig;
-import org.hivedb.meta.EntityIndexConfig;
+import org.hivedb.configuration.EntityConfig;
+import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.functional.Atom;
 import org.testng.annotations.Test;
@@ -32,11 +32,28 @@ public class ConfigurationReaderTest extends H2HiveTestCase {
 		assertEquals(WeatherReport.class, config.getRepresentedInterface());
 		assertEquals(Integer.class, config.getIdClass());
 		
-		Collection<EntityIndexConfig> indexes = config.getEntitySecondaryIndexConfigs();
-		assertEquals(1, indexes.size());
-		assertEquals("temperature", Atom.getFirst(indexes).getIndexName());
-		assertEquals(int.class, Atom.getFirst(indexes).getIndexClass());
-		assertEquals(report.getTemperature(), Atom.getFirst(Atom.getFirst(indexes).getIndexValues(report)));
+		Collection<EntityIndexConfig> indexes = (Collection<EntityIndexConfig>) config.getEntitySecondaryIndexConfigs();
+		assertEquals(2, indexes.size());
+		
+		EntityIndexConfig temperature = null;
+		for(EntityIndexConfig icfg : indexes)
+			if("temperature".equals(icfg.getIndexName())){
+				temperature = icfg;
+				break;
+			}
+		assertNotNull(temperature);
+		assertEquals(int.class, temperature.getIndexClass());
+		assertEquals(report.getTemperature(), Atom.getFirst(temperature.getIndexValues(report)));
+		
+		EntityIndexConfig collection = null;
+		for(EntityIndexConfig icfg : indexes) {
+			if("collectionIndex".equals(icfg.getIndexName())){
+				collection = icfg;
+				break;
+			}
+		}
+		assertNotNull(collection);
+		assertEquals(report.getCollectionIndex(), collection.getIndexValues(report));
 	}
 	@SuppressWarnings("unchecked")
 	@Test
@@ -52,7 +69,7 @@ public class ConfigurationReaderTest extends H2HiveTestCase {
 		assertEquals(Continent.class, config.getRepresentedInterface());
 		assertEquals(String.class, config.getIdClass());
 		
-		Collection<EntityIndexConfig> indexes = config.getEntitySecondaryIndexConfigs();
+		Collection<EntityIndexConfig> indexes = (Collection<EntityIndexConfig>) config.getEntitySecondaryIndexConfigs();
 		assertEquals(1, indexes.size());
 		assertEquals("population", Atom.getFirst(indexes).getIndexName());
 		assertEquals(Integer.class, Atom.getFirst(indexes).getIndexClass());
@@ -66,7 +83,7 @@ public class ConfigurationReaderTest extends H2HiveTestCase {
 		EntityConfig config = reader.configure(WeatherReport.class);
 		reader.install(hive);
 		assertNotNull(hive.getPartitionDimension().getResource(config.getResourceName()));
-		assertEquals(1,hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes().size());
+		assertEquals(2,hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes().size());
 		assertEquals(Types.INTEGER,Atom.getFirst(hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes()).getColumnInfo().getColumnType());
 		assertEquals("temperature", Atom.getFirst(hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes()).getName());
 	}
@@ -81,14 +98,5 @@ public class ConfigurationReaderTest extends H2HiveTestCase {
 		assertEquals(1,hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes().size());
 		assertEquals(Types.INTEGER,Atom.getFirst(hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes()).getColumnInfo().getColumnType());
 		assertEquals("population", Atom.getFirst(hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes()).getName());
-	}
-	
-	public class AsiaticContinent implements Continent {
-		public String getName() {
-			return "Asia";
-		}
-		public Integer getPopulation() {
-			return new Integer(5);
-		}
 	}
 }

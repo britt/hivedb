@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.hivedb.Hive;
+import org.hivedb.configuration.BucketAssigner;
 import org.hivedb.util.database.HiveDbDialect;
 import org.testng.annotations.Test;
 

@@ -2,7 +2,7 @@ package org.hivedb;
 
 import java.util.Arrays;
 
-import org.hivedb.meta.HiveConfigurationSchema;
+import org.hivedb.configuration.HiveConfigurationSchema;
 import org.hivedb.util.database.test.H2TestCase;
 import org.testng.annotations.Test;
 

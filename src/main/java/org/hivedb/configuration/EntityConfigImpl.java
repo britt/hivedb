@@ -1,10 +1,10 @@
-package org.hivedb.meta;
+package org.hivedb.configuration;
 
 import java.util.Collection;
 
 import org.hivedb.util.ReflectionTools;
 
-public class EntityConfigImpl<F> implements EntityConfig<F> {
+public class EntityConfigImpl implements EntityConfig {
 
 	private Class<?> representedInterface;
 	private String partitionDimensionName;
@@ -14,14 +14,14 @@ public class EntityConfigImpl<F> implements EntityConfig<F> {
 	private Collection<? extends EntityIndexConfig> secondaryIndexIdentifiables;
 	private boolean isPartitioningResource;
 	
-	public static EntityConfig<Object> createEntity(
+	public static EntityConfig createEntity(
 			Class<?> representedInterface, 
 			String partitionDimensionName,
 			String resourceName,
 			String primaryIndexPropertyName,
 			String idPropertyName,
 			Collection<? extends EntityIndexConfig> secondaryIndexIdentifiables) {
-		return new EntityConfigImpl<Object>(
+		return new EntityConfigImpl(
 				representedInterface, 
 				partitionDimensionName,
 				resourceName,
@@ -40,12 +40,12 @@ public class EntityConfigImpl<F> implements EntityConfig<F> {
 	 * @param idPropertyName
 	 * @return
 	 */
-	public static EntityConfig<Object> createPartitioningResourceEntity(
+	public static EntityConfig createPartitioningResourceEntity(
 			Class<?> representedInterface, 
 			String partitionDimensionName,
 			String idPropertyName,
 			Collection<? extends EntityIndexConfig> secondaryIndexIdentifiables) {
-		return new EntityConfigImpl<Object>(
+		return new EntityConfigImpl(
 				representedInterface, 
 				partitionDimensionName,
 				partitionDimensionName,
@@ -85,15 +85,15 @@ public class EntityConfigImpl<F> implements EntityConfig<F> {
 		return this.idPropertyName;
 	}
 	@SuppressWarnings("unchecked")
-	public F getId(Object instance) {
-		return (F)ReflectionTools.invokeGetter(instance, idPropertyName);
+	public Object getId(Object instance) {
+		return ReflectionTools.invokeGetter(instance, idPropertyName);
 	}
 
 	public boolean isPartitioningResource() {
 		return isPartitioningResource;
 	}
 
-	public Class getRepresentedInterface() {
+	public Class<?> getRepresentedInterface() {
 		return representedInterface;
 	}
 
@@ -108,7 +108,7 @@ public class EntityConfigImpl<F> implements EntityConfig<F> {
 	public Object getPrimaryIndexKey(Object resourceInstance) {
 		return ReflectionTools.invokeGetter(resourceInstance, primaryIndexKeyPropertyName);
 	}
-	public Class getIdClass() {
+	public Class<?> getIdClass() {
 		return ReflectionTools.getPropertyType(getRepresentedInterface(), getIdPropertyName());
 	}
 }

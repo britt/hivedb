@@ -3,7 +3,8 @@ package org.hivedb.util.scenarioBuilder;
 import java.util.Collection;
 
 import org.hivedb.HiveException;
-import org.hivedb.meta.HiveConfig;
+import org.hivedb.configuration.HiveConfig;
+import org.hivedb.configuration.SingularHiveConfig;
 import org.hivedb.util.GenerateHiveIndexKeys;
 import org.hivedb.util.InstallHiveIndexSchema;
 import org.hivedb.util.Persister;
@@ -34,7 +35,7 @@ public class HiveScenario {
 	 * that represent each row inserted in the Hive indexes.
 	 * @throws HiveException
 	 */
-	public static HiveScenario run(HiveConfig hiveConfig, int primaryIndexInstanceCount, int resourceInstanceCount, Persister persister) {
+	public static HiveScenario run(SingularHiveConfig hiveConfig, int primaryIndexInstanceCount, int resourceInstanceCount, Persister persister) {
 		InstallHiveIndexSchema.install(hiveConfig);
 		HiveScenario hiveScenario = new HiveScenario(hiveConfig, primaryIndexInstanceCount, resourceInstanceCount, persister);
 		return hiveScenario;
@@ -43,7 +44,7 @@ public class HiveScenario {
 	private final  HiveConfig hiveConfig;
 	Collection<Object> primaryIndexKeys;
 	Collection<Object> resourceinstances;
-	protected HiveScenario(final HiveConfig hiveConfig, int primaryIndexInstanceCount, int resourceInstanceCount, final Persister persister)
+	protected HiveScenario(final SingularHiveConfig hiveConfig, int primaryIndexInstanceCount, int resourceInstanceCount, final Persister persister)
 	{
 		this.hiveConfig = hiveConfig; 
 		GenerateHiveIndexKeys generateHiveIndexKeys = new GenerateHiveIndexKeys(

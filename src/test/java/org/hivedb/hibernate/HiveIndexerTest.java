@@ -5,8 +5,9 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.hivedb.Hive;
-import org.hivedb.meta.EntityConfig;
-import org.hivedb.meta.EntityIndexConfig;
+import org.hivedb.configuration.EntityConfig;
+import org.hivedb.configuration.EntityIndexConfig;
+import org.hivedb.configuration.EntityIndexConfigImpl;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
@@ -22,12 +23,12 @@ public class HiveIndexerTest extends H2HiveTestCase {
 		Resource resource = new Resource("WeatherReport",Types.INTEGER,false);
 		hive.addResource(resource);
 		hive.addSecondaryIndex(resource, new SecondaryIndex("temperature", Types.INTEGER));
+		hive.addSecondaryIndex(resource, new SecondaryIndex("collectionIndex", Types.INTEGER));
 		hive.addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", hive.getPartitionDimension().getId(), HiveDbDialect.H2));
 	}
 
 	
 	// Test for HiveIndexer.insert(final EntityIndexConfiguration config, final Object entity)
-	//TODO What do we do about primary index key?
 	@Test
 	public void insertTest() throws Exception {
 		Hive hive = getHive();
@@ -36,6 +37,8 @@ public class HiveIndexerTest extends H2HiveTestCase {
 		indexer.insert(getWeatherReportConfig(report), report);
 		assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
 		assertTrue(hive.directory().doesSecondaryIndexKeyExist("WeatherReport", "temperature", report.getTemperature(), report.getReportId()));
+		for(Integer i : report.getCollectionIndex()) 
+			assertTrue(hive.directory().doesSecondaryIndexKeyExist("WeatherReport", "collectionIndex", i, report.getReportId()));
 	}
 	
 	// Test for HiveIndexer.update(EntityIndexConfiguration config, Object entity)
@@ -84,37 +87,19 @@ public class HiveIndexerTest extends H2HiveTestCase {
 		return Hive.load(getConnectString(getHiveDatabaseName()));
 	}
 	
-	private EntityIndexConfig dummyIndexConfig(final String name, final Class clazz, final Object value) {
-		return new EntityIndexConfig(){
-
-			public Class<?> getIndexClass() {
-				return clazz;
-			}
-
-			public String getIndexName() {
-				return name;
-			}
-
-			public Collection<Object> getIndexValues(Object entityInstance) {
-				return Arrays.asList(value);
-			}
-
-			public String getPropertyName() {
-				return name;
-			}};
-	}
-	
-	private EntityConfig<Integer> getWeatherReportConfig(final WeatherReport report) {
-		return new EntityConfig<Integer>() {
+	private EntityConfig getWeatherReportConfig(final WeatherReport report) {
+		return new EntityConfig() {
 			public Collection<? extends EntityIndexConfig> getEntitySecondaryIndexConfigs() {
-				return Arrays.asList(dummyIndexConfig("temperature", Integer.class, report.getTemperature()));
+				return Arrays.asList(
+						new EntityIndexConfigImpl(WeatherReport.class, "temperature"),
+						new EntityIndexConfigImpl(WeatherReport.class, "collectionIndex"));
 			}
 
 			public Integer getId(Object instance) {
 				return ((WeatherReport) instance).getReportId();
 			}
 
-			public Class getIdClass() {
+			public Class<?> getIdClass() {
 				return Integer.class;
 			}
 
@@ -145,6 +130,27 @@ public class HiveIndexerTest extends H2HiveTestCase {
 			public boolean isPartitioningResource() {
 				return false;
 			}};
-	}
+		}
+
+
+	private EntityIndexConfig dummyIndexConfig(final String name, final Class clazz, final Object value) {
+		return new EntityIndexConfig(){
+
+			public Class<?> getIndexClass() {
+				return clazz;
+			}
+
+			public String getIndexName() {
+				return name;
+			}
+
+			public Collection<Object> getIndexValues(Object entityInstance) {
+				return Arrays.asList(value);
+			}
+
+			public String getPropertyName() {
+				return name;
+			}};
+	}	
 	
 }

@@ -2,10 +2,11 @@ package org.hivedb.util;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveReadOnlyException;
-import org.hivedb.meta.EntityConfig;
-import org.hivedb.meta.HiveConfig;
+import org.hivedb.configuration.EntityConfig;
+import org.hivedb.configuration.EntityIndexConfig;
+import org.hivedb.configuration.HiveConfig;
+import org.hivedb.configuration.SingularHiveConfig;
 import org.hivedb.meta.SecondaryIndex;
-import org.hivedb.meta.EntityIndexConfig;
 import org.hivedb.util.functional.Actor;
 
 public class PersisterImpl implements Persister {
@@ -18,8 +19,8 @@ public class PersisterImpl implements Persister {
 		return primaryIndexKey;
 	}
 	
-	public Object persistResourceInstance(HiveConfig hiveConfig, Object instance) {
-		EntityConfig<?> entityConfig = hiveConfig.getEntityConfig();
+	public Object persistResourceInstance(SingularHiveConfig hiveConfig, Object instance) {
+		EntityConfig entityConfig = hiveConfig.getEntityConfig();
 		try {
 			hiveConfig.getHive().directory().insertResourceId(
 					entityConfig.getResourceName(),
@@ -32,10 +33,10 @@ public class PersisterImpl implements Persister {
 	}
 	
 	public Object persistSecondaryIndexKey(
-			final HiveConfig hiveConfig, 
+			final SingularHiveConfig hiveConfig, 
 			final EntityIndexConfig entitySecondaryIndexConfig, 
 			final Object resourceInstance) {
-		final EntityConfig<?> entityConfig = hiveConfig.getEntityConfig();
+		final EntityConfig entityConfig = hiveConfig.getEntityConfig();
 		final SecondaryIndex secondaryIndex = getSecondaryIndex(hiveConfig.getHive(), entitySecondaryIndexConfig, entityConfig);
 		
 			new Actor<Object>(entitySecondaryIndexConfig.getIndexValues(resourceInstance)) {	
@@ -53,7 +54,7 @@ public class PersisterImpl implements Persister {
 		return entitySecondaryIndexConfig;
 	}
 	
-	private SecondaryIndex getSecondaryIndex(Hive hive, EntityIndexConfig secondaryIndexIdentifable, EntityConfig<?> entityConfig)
+	private SecondaryIndex getSecondaryIndex(Hive hive, EntityIndexConfig secondaryIndexIdentifable, EntityConfig entityConfig)
 	{
 		String resourceName = entityConfig.getResourceName();
 		return hive.getPartitionDimension().getResource(resourceName).getSecondaryIndex(secondaryIndexIdentifable.getIndexName());

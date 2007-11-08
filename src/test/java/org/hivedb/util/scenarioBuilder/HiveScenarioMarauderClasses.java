@@ -4,14 +4,14 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.hivedb.meta.EntityConfig;
-import org.hivedb.meta.EntityConfigImpl;
-import org.hivedb.meta.EntityIndexConfig;
-import org.hivedb.meta.EntityIndexConfigImpl;
+import org.hivedb.configuration.EntityConfig;
+import org.hivedb.configuration.EntityConfigImpl;
+import org.hivedb.configuration.EntityIndexConfig;
+import org.hivedb.configuration.EntityIndexConfigImpl;
 
 public class HiveScenarioMarauderClasses {
 	
-	public static EntityConfig<Object> getPirateConfiguration()
+	public static EntityConfig getPirateConfiguration()
 	{
 		return EntityConfigImpl.createPartitioningResourceEntity(
 				Pirate.class,
@@ -22,7 +22,7 @@ public class HiveScenarioMarauderClasses {
 				);
 						
 	}
-	public static EntityConfig<Object> getTreasureConfiguration()
+	public static EntityConfig getTreasureConfiguration()
 	{
 		return EntityConfigImpl.createEntity(
 	 			Treasure.class,

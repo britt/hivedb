@@ -1,13 +1,13 @@
 package org.hivedb.util;
 
-import org.hivedb.meta.HiveConfig;
+import org.hivedb.configuration.SingularHiveConfig;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.persistence.IndexSchema;
 
 
 public class InstallHiveIndexSchema {
 	
-	public static PartitionDimension install(final HiveConfig hiveConfig) {
+	public static PartitionDimension install(final SingularHiveConfig hiveConfig) {
 			
 		try {
 			// Create or update a partition dimension and its resources, secondaryIndexes and update

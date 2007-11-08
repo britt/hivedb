@@ -1,10 +1,12 @@
 package org.hivedb.meta;
 
+import org.hivedb.configuration.EntityConfig;
+
 
 public class EntityGeneratorImpl<F extends Object> implements EntityGenerator<F> {
 
-	private EntityConfig<?> entityConfig;
-	public EntityGeneratorImpl(EntityConfig<?> entityConfig) {
+	private EntityConfig entityConfig;
+	public EntityGeneratorImpl(EntityConfig entityConfig) {
 		this.entityConfig = entityConfig;
 	}
 	

@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 import org.hivedb.Hive;
-import org.hivedb.meta.HiveConfig;
+import org.hivedb.configuration.SingularHiveConfig;
 import org.hivedb.meta.Node;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2HiveTestCase;
@@ -24,7 +24,7 @@ public class TestHiveUpdater extends H2HiveTestCase {
 				getConnectString(getHiveDatabaseName()), 
 				HiveScenarioMarauderClasses.getTreasureConfiguration().getPartitionDimensionName(), 
 				Types.INTEGER);
-		HiveConfig hiveConfig = new HiveScenarioConfigForResourceEntity(
+		SingularHiveConfig hiveConfig = new HiveScenarioConfigForResourceEntity(
 			hive,
 			getDataNodes(hive));
 		new HiveScenarioTest(hiveConfig)

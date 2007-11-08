@@ -1,7 +1,9 @@
-package org.hivedb.meta;
+package org.hivedb.configuration;
 
 import java.util.Collection;
 
+import org.hivedb.meta.Assigner;
+import org.hivedb.meta.Node;
 import org.hivedb.util.Lists;
 
 /***

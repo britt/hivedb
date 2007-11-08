@@ -7,8 +7,8 @@ import java.util.Map.Entry;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveReadOnlyException;
-import org.hivedb.meta.EntityConfig;
-import org.hivedb.meta.EntityIndexConfig;
+import org.hivedb.configuration.EntityConfig;
+import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.util.functional.Collect;
 import org.hivedb.util.functional.Maps;
 import org.hivedb.util.functional.Pair;

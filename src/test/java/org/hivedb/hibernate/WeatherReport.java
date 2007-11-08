@@ -1,6 +1,8 @@
 package org.hivedb.hibernate;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Random;
 
@@ -65,7 +67,14 @@ public class WeatherReport {
 		this.temperature = temperature;
 	}
 	
+	public Integer[] getArrayIndex() {
+		return new Integer[]{1,2,3,4,5};
+	}
 	
+	@Index
+	public Collection<Integer> getCollectionIndex() {
+		return Arrays.asList(getArrayIndex());
+	}
 	
 	@Override
 	public boolean equals(Object obj) {

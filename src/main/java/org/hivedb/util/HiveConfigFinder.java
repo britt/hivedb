@@ -3,8 +3,9 @@ package org.hivedb.util;
 import java.util.Arrays;
 import java.util.Collection;
 
+import org.hivedb.configuration.HiveConfig;
+import org.hivedb.configuration.SingularHiveConfig;
 import org.hivedb.meta.Finder;
-import org.hivedb.meta.HiveConfig;
 import org.hivedb.meta.Nameable;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.PartitionDimensionCreator;
@@ -15,7 +16,7 @@ public class HiveConfigFinder implements Finder {
 	@SuppressWarnings("unused")
 	private HiveConfig hiveConfig;
 	private PartitionDimension partitionDimension;
-	public HiveConfigFinder(HiveConfig hiveConfig) {
+	public HiveConfigFinder(SingularHiveConfig hiveConfig) {
 		this.hiveConfig = hiveConfig;
 		this.partitionDimension = PartitionDimensionCreator.create(hiveConfig);
 	}

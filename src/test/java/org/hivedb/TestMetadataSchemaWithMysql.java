@@ -1,6 +1,6 @@
 package org.hivedb;
 
-import org.hivedb.meta.HiveConfigurationSchema;
+import org.hivedb.configuration.HiveConfigurationSchema;
 import org.testng.annotations.Test;
 
 public class TestMetadataSchemaWithMysql {

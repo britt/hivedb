@@ -5,7 +5,7 @@ import java.sql.DriverManager;
 import java.util.Map;
 
 import org.hivedb.HiveRuntimeException;
-import org.hivedb.meta.HiveConfigurationSchema;
+import org.hivedb.configuration.HiveConfigurationSchema;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
 import org.hivedb.util.GetOpt;
