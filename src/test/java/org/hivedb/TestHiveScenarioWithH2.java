@@ -4,22 +4,21 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
+import org.hivedb.configuration.SingularHiveConfig;
 import org.hivedb.meta.Node;
 import org.hivedb.util.database.HiveDbDialect;
-import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.H2HiveScenarioTestCase;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.testng.annotations.Test;
 
-public class TestHiveScenarioWithH2 extends H2HiveTestCase {
+public class TestHiveScenarioWithH2 extends H2HiveScenarioTestCase {
 	@Test
-	public void testResourceOnlyEntity() {
-		new TestHiveScenario(getConnectString(getHiveDatabaseName()), getDataNodes()).testResourceEntity();
+	public void test() {
+		for (SingularHiveConfig singularHiveConfig : getHiveConfigs())
+			new TestHiveScenario(singularHiveConfig).test();
 	}
-	@Test
-	public void testResourceAndPartitionDimensionEntity() {
-		new TestHiveScenario(getConnectString(getHiveDatabaseName()), getDataNodes()).testResourceAndPartitionDimensionEntity();
-	}
+	
 	private Collection<Node> getDataNodes() {
 		return Transform.map(new Unary<String, Node>() {
 			public Node f(String dataNodeName) {

@@ -2,11 +2,15 @@ package org.hivedb.util.database.test;
 
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 
 import org.hivedb.Hive;
+import org.hivedb.configuration.SingularHiveConfig;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.HiveSemaphore;
+import org.hivedb.meta.InstallHiveService;
+import org.hivedb.meta.InstallHiveServiceImpl;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
@@ -42,6 +46,21 @@ public class H2HiveTestCase extends H2TestCase {
 	public void beforeMethod() {
 		super.beforeMethod();
 		new HiveInstaller(getConnectString(getHiveDatabaseName())).run();
+		boolean once = false;
+		for (SingularHiveConfig singularHiveConfig : getHiveConfigs()) {
+			InstallHiveService installer = new InstallHiveServiceImpl(singularHiveConfig);
+			if (!once) {
+				for(String nodeName : this.getDatabaseNames()) 
+					if (nodeName != getHiveDatabaseName())
+						installer.registerNode(nodeName,getConnectString(nodeName));
+				once=true;
+			}
+		}
+	}
+	
+	protected Collection<? extends SingularHiveConfig> getHiveConfigs()
+	{
+		return Arrays.asList(new SingularHiveConfig[] {	});
 	}
 
 	protected Collection<Resource> createResources() {

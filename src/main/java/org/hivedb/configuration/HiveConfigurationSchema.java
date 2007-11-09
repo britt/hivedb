@@ -8,12 +8,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.commons.dbcp.BasicDataSource;
-import org.apache.velocity.context.Context;
 import org.hivedb.Schema;
 import org.hivedb.meta.persistence.TableInfo;
 import org.hivedb.util.Templater;
-
-import static org.hivedb.util.database.DialectTools.*;
 
 /**
  * The Global Hive Configuration schema contains records of the Hive's internal

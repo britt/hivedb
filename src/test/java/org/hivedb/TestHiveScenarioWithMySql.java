@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
+import org.hivedb.configuration.SingularHiveConfig;
 import org.hivedb.meta.Node;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.HiveMySqlTestCase;
@@ -14,12 +15,9 @@ import org.testng.annotations.Test;
 public class TestHiveScenarioWithMySql extends HiveMySqlTestCase {
 	
 	@Test(groups={"mysql"})
-	public void testResourceOnlyEntity() {
-		new TestHiveScenario(getConnectString(getHiveDatabaseName()), getDataNodes()).testResourceEntity();
-	}
-	@Test(groups={"mysql"})
-	public void testResourceAndPartitionDimensionEntity() {
-		new TestHiveScenario(getConnectString(getHiveDatabaseName()), getDataNodes()).testResourceAndPartitionDimensionEntity();
+	public void test() {
+		for (SingularHiveConfig singularHiveConfig : getHiveConfigs())
+			new TestHiveScenario(singularHiveConfig).test();
 	}
 	
 	private Collection<Node> getDataNodes() {

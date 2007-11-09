@@ -3,6 +3,7 @@ package org.hivedb.persistence;
 import static org.testng.AssertJUnit.assertEquals;
 
 import org.hivedb.management.HiveInstaller;
+import org.hivedb.meta.Resource;
 import org.hivedb.meta.persistence.ResourceDao;
 import org.hivedb.util.database.test.H2HiveTestCase;
 import org.testng.annotations.BeforeMethod;
@@ -16,9 +17,9 @@ public class TestResourcePersistence extends H2HiveTestCase {
 	
 	@Test
 	public void testCreate() throws Exception {
-		new HiveInstaller(getConnectString(getHiveDatabaseName())).run();
 		ResourceDao d = new ResourceDao(getDataSource(getHiveDatabaseName()));
-		d.create(createResource());
+		final Resource createResource = createResource();
+		d.create(createResource);
 		assertEquals(1,d.loadAll().size());
 	}
 }
