@@ -2,14 +2,12 @@ package org.hivedb.configuration;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import org.hivedb.Hive;
 import org.hivedb.meta.Node;
 import org.hivedb.util.Lists;
-import org.hivedb.util.functional.Collect;
 import org.hivedb.util.functional.Maps;
 
 public class PluralHiveConfig implements EntityHiveConfig {

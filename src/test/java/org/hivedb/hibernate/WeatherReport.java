@@ -85,7 +85,7 @@ public class WeatherReport {
 		return HiveUtils.makeHashCode(new Object[]{getContinent(),getLatitude(), getLongitude(), getReportId(), getReportTime()});
 	}
 	public static WeatherReport generate() {
-		Random r = new Random();
+		Random r = new Random(System.currentTimeMillis());
 		WeatherReport weatherReport = new WeatherReport();
 		weatherReport.setContinent(continents[r.nextInt(continents.length)]);
 		weatherReport.setLatitude(new BigDecimal(360*r.nextDouble()));

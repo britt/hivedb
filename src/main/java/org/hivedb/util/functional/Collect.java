@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.shards.util.Lists;
+
 public class Collect {
 	public static abstract class Function<R> {public abstract R f();}
 	
@@ -38,5 +40,13 @@ public class Collect {
 				rightOnly.add(item);
 		
 		return new Pair<Collection<T>, Collection<T>>(leftOnly,rightOnly);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static<T> Collection<T> recastCollection(Collection<?> c) {
+		Collection<T> recast = Lists.newArrayList();
+		for(Object o : c)
+			recast.add((T) o);
+		return recast;
 	}
 }
