@@ -77,76 +77,69 @@ public class HiveScenarioTest {
 	{
 		Hive hive = hiveConfig.getHive();
 		String partitionDimensionName = hiveConfig.getEntityConfig().getPartitionDimensionName();
-		PartitionDimension expectedPartitionDimension = PartitionDimensionCreator.create(hiveConfig);
-		PartitionDimension actualPartitionDimension = hive.getPartitionDimension();
+		final String resourceName = hiveConfig.getEntityConfig().getResourceName();
+		Resource expectedResource = PartitionDimensionCreator.create(hiveConfig).getResource(resourceName);
+		Resource actualResource = hive.getPartitionDimension().getResource(hiveConfig.getEntityConfig().getResourceName());
 		
 		// Validate our PartitionDimension in memory against those that are in the persistence
 		// This tests all the hive metadata.
-		assertEquals(String.format("Expected %s but got %s", hive.getPartitionDimension(), hive.getPartitionDimension()),			
-			actualPartitionDimension,
-			expectedPartitionDimension);
+		assertEquals(String.format("Expected %s but got %s", actualResource, hive.getPartitionDimension().getResource(resourceName)),			
+			actualResource,
+			expectedResource);
 	}
 	
 	@SuppressWarnings("unchecked")
 	private static void validateReadsFromPersistence(final SingularHiveConfig hiveConfig, Collection<Object> resourceInstances) throws HiveException, SQLException
 	{
 		Hive hive = hiveConfig.getHive();
-		String partitionDimensionName = hiveConfig.getEntityConfig().getPartitionDimensionName();
-		PartitionDimension expectedPartitionDimension = PartitionDimensionCreator.create(hiveConfig);
-		final PartitionDimension actualPartitionDimension = hive.getPartitionDimension();
-		
+		final PartitionDimension partitionDimension = hive.getPartitionDimension();
+		final Resource resource = hive.getPartitionDimension().getResource(hiveConfig.getEntityConfig().getResourceName());
 		Collection<Object> primaryIndexKeys = getGeneratedPrimaryIndexKeys(hiveConfig, resourceInstances);
-		Directory directory = new Directory(actualPartitionDimension,new HiveBasicDataSource(hive.getUri()));
+		Directory directory = new Directory(partitionDimension,new HiveBasicDataSource(hive.getUri()));
 		for (Object primaryindexKey : primaryIndexKeys)
 			assertTrue(directory.getKeySemamphoresOfPrimaryIndexKey(primaryindexKey).size() > 0);
 		
-		assertEquals(
-					new TreeSet<Resource>(expectedPartitionDimension.getResources()),
-					new TreeSet<Resource>(actualPartitionDimension.getResources()));
-		
-		// Validate that the secondary index keys are in the database with the right primary index key
-		for (final Resource resource : actualPartitionDimension.getResources()) {
-			for (final Object resourceInstance : resourceInstances) {
-				final EntityConfig entityConfig = hiveConfig.getEntityConfig();					
-				Collection<? extends EntityIndexConfig> secondaryIndexConfigs = entityConfig.getEntitySecondaryIndexConfigs();
-				for (EntityIndexConfig secondaryIndexConfig : secondaryIndexConfigs) {	
-					final SecondaryIndex secondaryIndex = resource.getSecondaryIndex(secondaryIndexConfig.getIndexName());
+		// Validate that the secondary index keys are in the database with the right primary index key	
+		for (final Object resourceInstance : resourceInstances) {
+			final EntityConfig entityConfig = hiveConfig.getEntityConfig();					
+			Collection<? extends EntityIndexConfig> secondaryIndexConfigs = entityConfig.getEntitySecondaryIndexConfigs();
+			for (EntityIndexConfig secondaryIndexConfig : secondaryIndexConfigs) {	
+				final SecondaryIndex secondaryIndex = resource.getSecondaryIndex(secondaryIndexConfig.getIndexName());
+				
+				//  Assert that querying for all the secondary index keys of a primary index key returns the right collection
+				final List<Object> secondaryIndexKeys = 
+					new ArrayList<Object>(
+							hive.directory().getSecondaryIndexKeysWithResourceId(
+									resource.getName(),
+									secondaryIndex.getName(),
+									entityConfig.getId(resourceInstance)));
+				
+				Collection<Object> expectedSecondaryIndexKeys = secondaryIndexConfig.getIndexValues(resourceInstance);
+				for (Object expectedSecondaryIndexKey : expectedSecondaryIndexKeys) {
 					
-					//  Assert that querying for all the secondary index keys of a primary index key returns the right collection
-					final List<Object> secondaryIndexKeys = 
-						new ArrayList<Object>(
-								hive.directory().getSecondaryIndexKeysWithResourceId(
-										resource.getName(),
-										secondaryIndex.getName(),
-										entityConfig.getId(resourceInstance)));
+						assertTrue(String.format("directory.getSecondaryIndexKeysWithPrimaryKey(%s,%s,%s,%s)", secondaryIndex.getName(), resource.getName(), partitionDimension.getName(), expectedSecondaryIndexKey),
+								secondaryIndexKeys.contains(expectedSecondaryIndexKey));
+				
+						Collection<KeySemaphore> keySemaphoreOfSecondaryIndexKeys = directory.getKeySemaphoresOfSecondaryIndexKey(secondaryIndex, expectedSecondaryIndexKey);
+						assertTrue(String.format("directory.getKeySemaphoresOfSecondaryIndexKey(%s,%s)", secondaryIndex.getName(), expectedSecondaryIndexKey),
+								   keySemaphoreOfSecondaryIndexKeys.size() > 0);
+							
+						// Assert that querying for the primary key of the secondary index key yields what we expect
+						Object expectedPrimaryIndexKey = entityConfig.getPrimaryIndexKey(resourceInstance);
+						Collection<Object> actualPrimaryIndexKeys = directory.getPrimaryIndexKeysOfSecondaryIndexKey(
+								secondaryIndex,
+								expectedSecondaryIndexKey);
+						assertTrue(String.format("directory.getPrimaryIndexKeysOfSecondaryIndexKey(%s,%s)", secondaryIndex.getName(), expectedSecondaryIndexKey),
+								Filter.grepItemAgainstList(expectedPrimaryIndexKey, actualPrimaryIndexKeys));
 					
-					Collection<Object> expectedSecondaryIndexKeys = secondaryIndexConfig.getIndexValues(resourceInstance);
-					for (Object expectedSecondaryIndexKey : expectedSecondaryIndexKeys) {
-						
-							assertTrue(String.format("directory.getSecondaryIndexKeysWithPrimaryKey(%s,%s,%s,%s)", secondaryIndex.getName(), resource.getName(), actualPartitionDimension.getName(), expectedSecondaryIndexKey),
-									secondaryIndexKeys.contains(expectedSecondaryIndexKey));
-					
-							Collection<KeySemaphore> keySemaphoreOfSecondaryIndexKeys = directory.getKeySemaphoresOfSecondaryIndexKey(secondaryIndex, expectedSecondaryIndexKey);
-							assertTrue(String.format("directory.getKeySemaphoresOfSecondaryIndexKey(%s,%s)", secondaryIndex.getName(), expectedSecondaryIndexKey),
-									   keySemaphoreOfSecondaryIndexKeys.size() > 0);
-								
-							// Assert that querying for the primary key of the secondary index key yields what we expect
-							Object expectedPrimaryIndexKey = entityConfig.getPrimaryIndexKey(resourceInstance);
-							Collection<Object> actualPrimaryIndexKeys = directory.getPrimaryIndexKeysOfSecondaryIndexKey(
-									secondaryIndex,
-									expectedSecondaryIndexKey);
-							assertTrue(String.format("directory.getPrimaryIndexKeysOfSecondaryIndexKey(%s,%s)", secondaryIndex.getName(), expectedSecondaryIndexKey),
-									Filter.grepItemAgainstList(expectedPrimaryIndexKey, actualPrimaryIndexKeys));
-						
-							// Assert that one of the nodes of the secondary index key is the same as that of the primary index key
-							// There are multiple nodes returned when multiple primray index keys exist for a secondary index key
-							Collection<KeySemaphore> keySemaphoreOfPrimaryIndexKey = directory.getKeySemamphoresOfPrimaryIndexKey(expectedPrimaryIndexKey);
-							for(KeySemaphore semaphore : keySemaphoreOfPrimaryIndexKey)
-								assertTrue(Filter.grepItemAgainstList(semaphore, keySemaphoreOfSecondaryIndexKeys));	
-					}	
-				}
-			}	
-		}
+						// Assert that one of the nodes of the secondary index key is the same as that of the primary index key
+						// There are multiple nodes returned when multiple primray index keys exist for a secondary index key
+						Collection<KeySemaphore> keySemaphoreOfPrimaryIndexKey = directory.getKeySemamphoresOfPrimaryIndexKey(expectedPrimaryIndexKey);
+						for(KeySemaphore semaphore : keySemaphoreOfPrimaryIndexKey)
+							assertTrue(Filter.grepItemAgainstList(semaphore, keySemaphoreOfSecondaryIndexKeys));	
+				}	
+			}
+		}	
 	}
 	private static Collection<Object> getGeneratedPrimaryIndexKeys(final SingularHiveConfig hiveConfig, Collection<Object> resourceInstances) {
 		return Transform.map(new Unary<Object,Object>() {
@@ -271,6 +264,7 @@ public class HiveScenarioTest {
 								hive.updatePartitionDimension(partitionDimension);
 							} catch (Exception e) { throw new RuntimeException(e); }
 							assertEquality(hive, partitionDimension);
+						System.err.println(hive.getPartitionDimension());
 						}
 					};
 				}
@@ -321,7 +315,7 @@ public class HiveScenarioTest {
 					try {
 						hive.updateResource(resource);
 					} catch (Exception e) { throw new RuntimeException(e); }
-					assertEquality(hive, partitionDimension, resource);
+					assertEquality(hive, resource);
 					
 					new Undo() {							
 						public void f() {
@@ -329,7 +323,7 @@ public class HiveScenarioTest {
 							try {
 								hive.updateResource(resource);
 							} catch (Exception e) { throw new RuntimeException(e); }
-							assertEquality(hive, partitionDimension, resource);
+							assertEquality(hive, resource);
 						}
 					};
 				}
@@ -347,7 +341,7 @@ public class HiveScenarioTest {
 						hive.updateSecondaryIndex(secondaryIndex);
 					} catch (Exception e) { throw new RuntimeException(e); }
 					
-					assertEquality(hive, partitionDimension, resource, secondaryIndex);
+					assertEquality(hive, resource, secondaryIndex);
 					
 					new Undo() {							
 						public void f() {
@@ -355,7 +349,7 @@ public class HiveScenarioTest {
 							try {
 								hive.updateSecondaryIndex(secondaryIndex);
 							} catch (Exception e) { throw new RuntimeException(e); }
-							assertEquality(hive, partitionDimension, resource, secondaryIndex);
+							assertEquality(hive, resource, secondaryIndex);
 						}
 					};
 				}
@@ -371,12 +365,13 @@ public class HiveScenarioTest {
 			partitionDimension,
 			hive.getPartitionDimension());
 	}
-	private static void assertEquality(final Hive hive, final PartitionDimension partitionDimension, final Resource resource) {
+	private static void assertEquality(final Hive hive, final Resource resource) {
+		final Resource actual = hive.getPartitionDimension().getResource(resource.getName());
 		assertEquals(
 			resource,
-			hive.getPartitionDimension().getResource(resource.getName()));
+			actual);
 	}
-	private static void assertEquality(final Hive hive, final PartitionDimension partitionDimension, final Resource resource, final SecondaryIndex secondaryIndex)  {
+	private static void assertEquality(final Hive hive, final Resource resource, final SecondaryIndex secondaryIndex)  {
 		assertEquals(
 			secondaryIndex,
 			hive.getPartitionDimension().getResource(resource.getName()).getSecondaryIndex(secondaryIndex.getName()));

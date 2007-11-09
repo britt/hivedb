@@ -228,8 +228,14 @@ public class ReflectionTools {
     		}
 	    	catch (Exception e)
 	    	{
-	    		throw new RuntimeException("Exception calling method set" + propertyName 
-	    								+ " with a value of type " + value.getClass(), e);
+	    		// handle our CGLib classes that don't have a setter interface
+	    		// TODO poor solution
+	    		try {
+					getMethod(instance, "set").invoke(instance, new Object[] {propertyName, value});
+				} catch (Exception ex) {
+					throw new RuntimeException("Exception calling method " + setterName 
+							+ " with a value of type " + value.getClass(), e);
+				}
 	    	}
     	}
     }

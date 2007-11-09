@@ -30,7 +30,7 @@ public class GenerateInstance<T> implements Generator<T> {
 		T instance = generate();
 		for (String propertyName : ReflectionTools.getPropertiesOfGetters(interfaceToImplement))
 			ReflectionTools.invokeSetter(
-					instance, 
+				instance, 
 				propertyName, 
 				ReflectionTools.invokeGetter(templateInstance, propertyName));
 		return instance;
@@ -123,17 +123,21 @@ public class GenerateInstance<T> implements Generator<T> {
 					return propertyValue;
 			}
 			else if ( name.equals("hashCode")) {
-				Class implementsInterface = (Class) dictionary.get(IMPLEMENTS_INTERFACE_PROPERTY);
-				Amass.makeHashCode(ReflectionTools.invokeGetters(obj, implementsInterface));
+				return hashCode(obj);
 			}
 			else if ( name.equals("equals")) {
-				return obj.hashCode() == args[1].hashCode();
+				return obj.hashCode() == args[0].hashCode();
 			}
 			else if ( name.equals("toString")) {
-				return new DebugMap<Object, Object>(dictionary).toString();
+				return new DebugMap<Object, Object>(dictionary).toString() + "###("+hashCode()+")";
 			}
 				
 			return retValFromSuper;
+		}
+
+		private Object hashCode(Object obj) {
+			Class implementsInterface = (Class) dictionary.get(IMPLEMENTS_INTERFACE_PROPERTY);
+			return Amass.makeHashCode(ReflectionTools.invokeGetters(obj, implementsInterface));
 		}
 	}
 }

@@ -1,7 +1,6 @@
 package org.hivedb.util;
 
 import org.hivedb.configuration.EntityIndexConfig;
-import org.hivedb.configuration.HiveConfig;
 import org.hivedb.configuration.SingularHiveConfig;
 
 /**
@@ -11,7 +10,7 @@ import org.hivedb.configuration.SingularHiveConfig;
  *
  */
 public interface Persister {
-	Object persistPrimaryIndexKey(final HiveConfig hiveConfig, final Object primaryIndexKey);
+	Object persistPrimaryIndexKey(final SingularHiveConfig hiveConfig, final Object primaryIndexKey);
 	Object persistResourceInstance(SingularHiveConfig hiveConfig, Object resourceInstance);
 	Object persistSecondaryIndexKey(final SingularHiveConfig hiveConfig, EntityIndexConfig secondaryIndexIdentifiable, Object resourceInstance);
 }

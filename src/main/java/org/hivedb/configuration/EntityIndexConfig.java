@@ -16,5 +16,6 @@ public interface EntityIndexConfig
 {
 	Collection<Object> getIndexValues(Object entityInstance);	
 	String getIndexName();
+	String getPropertyName();
 	Class<?> getIndexClass();
 }

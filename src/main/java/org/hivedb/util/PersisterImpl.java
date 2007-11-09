@@ -4,13 +4,12 @@ import org.hivedb.Hive;
 import org.hivedb.HiveReadOnlyException;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityIndexConfig;
-import org.hivedb.configuration.HiveConfig;
 import org.hivedb.configuration.SingularHiveConfig;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.functional.Actor;
 
 public class PersisterImpl implements Persister {
-	public Object persistPrimaryIndexKey(HiveConfig hiveConfig, Object primaryIndexKey) {
+	public Object persistPrimaryIndexKey(SingularHiveConfig hiveConfig, Object primaryIndexKey) {
 		try {
 			hiveConfig.getHive().directory().insertPrimaryIndexKey(primaryIndexKey);
 		} catch (HiveReadOnlyException e) {

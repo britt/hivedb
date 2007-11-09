@@ -18,6 +18,11 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 public class H2HiveTestCase extends H2TestCase {
+	
+	public H2HiveTestCase() {
+		cleanupAfterEachTest = true;
+	}
+	
 	@Override
 	@BeforeClass
 	protected void beforeClass() {

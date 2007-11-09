@@ -29,6 +29,9 @@ public class GenerateHiveIndexKeys {
 	public Collection<Object> createResourceInstances(
 		final SingularHiveConfig hiveConfig)
 	{
+		if (hiveConfig.getEntityConfig().isPartitioningResource()
+			&& primaryInstanceCount != resourceInstanceCount)
+			throw new RuntimeException("For partitioning resources, configure the primaryInstanceCount and resourceInstanceCount equally");
 		final Collection<Object> primaryIndexIdentifiables = createPrimaryIndexKeys(hiveConfig);
 		final EntityGenerator<Object> entityConfigGenerator =
 				new EntityGeneratorImpl<Object>(hiveConfig.getEntityConfig());
