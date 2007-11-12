@@ -107,11 +107,11 @@ public class HiveMigrator implements Migrator {
 	}
 	
 	private Node getNode(int id) {
-		return dimension.getNode(id);
+		return hive.getNode(id);
 	}
 	
 	private Node getNode(String id) {
-		return dimension.getNode(id);
+		return hive.getNode(id);
 	}
 	
 	private void lock(Object key) {

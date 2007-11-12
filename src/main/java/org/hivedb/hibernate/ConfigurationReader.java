@@ -1,7 +1,6 @@
 package org.hivedb.hibernate;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -21,12 +20,9 @@ import org.hivedb.hibernate.annotations.EntityId;
 import org.hivedb.hibernate.annotations.Index;
 import org.hivedb.hibernate.annotations.PartitionIndex;
 import org.hivedb.hibernate.annotations.Resource;
-import org.hivedb.meta.Node;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.Lists;
 import org.hivedb.util.database.JdbcTypeMapper;
-import org.hivedb.util.functional.Transform;
-import org.hivedb.util.functional.Unary;
 import org.springframework.beans.BeanUtils;
 
 public class ConfigurationReader {

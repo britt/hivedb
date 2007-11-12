@@ -84,13 +84,12 @@ public class HiveSyncer {
 		}, hiveDiff.getMissingResourcesOfExistingPartitionDimension());
 		
 		// Add missing nodes
-		Maps.digMapToCollection(new Binary<PartitionDimension, Node, Void>() {
-			public Void f(PartitionDimension partitionDimension, Node node) {
+		Maps.digMapToCollection(new Binary<Hive, Node, Void>() {
+			public Void f(Hive hive, Node node) {
 				try {
 					hive.addNode(node);
 				} catch (HiveException e) {
-					throw new HiveRuntimeException(String.format("Unable to add Node %s to partition dimesnion %s",
-							partitionDimension.getName(),
+					throw new HiveRuntimeException(String.format("Unable to add Node %s to Hive",
 							node.getName()), e);
 				}
 				return null;
@@ -124,8 +123,9 @@ public class HiveSyncer {
 		Collection<PartitionDimension> missingPartitionDimensions = getMissingItems(PartitionDimension.class, hiveFinder, updater);
 		
 		Collection<Entry<PartitionDimension, PartitionDimension>> partitionDimensionPairs =	getLikeNamedInstances(PartitionDimension.class, hiveFinder, updater);
-		// Add missing nodes of each existing partion dimension
-		Map<PartitionDimension, Collection<Node>> missingNodesOfExistingPartitionDimension = getMissingItems(Node.class, partitionDimensionPairs);
+		// Add missing nodes of each existing partion dimension 
+		Collection<Entry<Hive, Hive>> hivePairs = getLikeNamedInstances(Hive.class, hiveFinder, updater);
+		Map<Hive, Collection<Node>> missingNodesOfExistingPartitionDimension = getMissingItems(Node.class, hivePairs);
 		// Add missing resources of each existing partion dimension
 		Map<PartitionDimension, Collection<Resource>> missingResourcesOfExistingPartitionDimension = getMissingItems(Resource.class, partitionDimensionPairs);
 		Collection<PartitionDimension> partitionDimensionsWithoutMissingResources

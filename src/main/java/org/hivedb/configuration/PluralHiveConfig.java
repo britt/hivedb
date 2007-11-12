@@ -17,7 +17,7 @@ public class PluralHiveConfig implements EntityHiveConfig {
 	
 	public PluralHiveConfig(Map<String, EntityConfig> map, Hive hive) {
 		this.indexConfigurations = map;
-		this.dataNodes = hive.getPartitionDimension().getNodes();
+		this.dataNodes = hive.getNodes();
 		this.hive = hive;
 	}
 	

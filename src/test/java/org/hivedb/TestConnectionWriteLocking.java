@@ -1,7 +1,6 @@
 package org.hivedb;
 
 import org.hivedb.meta.AccessType;
-import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.directory.Directory;
 import org.hivedb.meta.directory.DirectoryWrapper;
@@ -65,7 +64,7 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 		hive.directory().insertPrimaryIndexKey(key);
 		NodeResolver directory = new Directory(partitionDimension, new HiveBasicDataSource(hive.getUri()));
 		for(Integer id : Transform.map(DirectoryWrapper.semaphoreToId(), directory.getKeySemamphoresOfPrimaryIndexKey(key)))
-			getNode(partitionDimension,id).setReadOnly(true);
+			hive.getNode(id).setReadOnly(true);
 
 		AssertUtils.assertThrows(new Toss(){
 			public void f() throws Exception {
@@ -82,7 +81,7 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 		hive.directory().insertPrimaryIndexKey(key);
 		NodeResolver directory = new Directory(partitionDimension, new HiveBasicDataSource(hive.getUri()));
 		for(Integer id : Transform.map(DirectoryWrapper.semaphoreToId(), directory.getKeySemamphoresOfPrimaryIndexKey(key)))
-			hive.updateNodeReadOnly(getNode(partitionDimension, id), true);
+			hive.updateNodeReadOnly(hive.getNode(id), true);
 		hive = null;
 
 		final Hive fetchedHive = Hive.load(getConnectString(getHiveDatabaseName()));
@@ -126,9 +125,5 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 			public void f() throws Exception {
 				fetchedHive.connection().getByPartitionKey(key, AccessType.ReadWrite);
 			}}, HiveReadOnlyException.class);
-	}
-
-	private Node getNode(PartitionDimension dim, int id) throws HiveException {
-		return dim.getNode(id);
 	}
 }

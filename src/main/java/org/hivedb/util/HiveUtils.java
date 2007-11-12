@@ -7,9 +7,9 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.hivedb.meta.Node;
+import org.hivedb.Hive;
 import org.hivedb.meta.KeySemaphore;
-import org.hivedb.meta.PartitionDimension;
+import org.hivedb.meta.Node;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 
@@ -73,10 +73,10 @@ public class HiveUtils {
 		return tabs;
 	}
 	
-	public static Collection<Node> getNodesForSemaphores(Collection<KeySemaphore> semaphores, final PartitionDimension dimension) {
+	public static Collection<Node> getNodesForSemaphores(Collection<KeySemaphore> semaphores, final Hive hive) {
 		return Transform.map(new Unary<KeySemaphore, Node>(){
 			public Node f(KeySemaphore item) {
-				return dimension.getNode(item.getId());
+				return hive.getNode(item.getId());
 			}}, semaphores);
 	}
 	

@@ -3,6 +3,7 @@ package org.hivedb.util;
 import java.util.Arrays;
 import java.util.Collection;
 
+import org.hivedb.Hive;
 import org.hivedb.configuration.HiveConfig;
 import org.hivedb.configuration.SingularHiveConfig;
 import org.hivedb.meta.Finder;
@@ -22,12 +23,17 @@ public class HiveConfigFinder implements Finder {
 	}
 	@SuppressWarnings("unchecked")
 	public <T extends Nameable> T findByName(Class<T> forClass, final String name) {
-		
-		return (T)partitionDimension;
+		if(forClass.equals(Hive.class))
+			return (T) hiveConfig.getHive();
+		else
+			return (T)partitionDimension;
 	}
 		
 	@SuppressWarnings("unchecked")
 	public <T extends Nameable> Collection<T> findCollection(Class<T> forClass) {
-		return (Collection<T>) Arrays.asList(partitionDimension);
+		if(forClass.equals(Hive.class))
+			return (Collection<T>) Arrays.asList(hiveConfig.getHive());
+		else
+			return (Collection<T>) Arrays.asList(partitionDimension);
 	}
 }

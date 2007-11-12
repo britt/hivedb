@@ -26,7 +26,6 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 
 	@BeforeMethod
 	public void setup() throws Exception {
-		cleanupAfterEachTest = true;
 		Hive hive = Hive.create(getConnectString(getHiveDatabaseName()), WeatherReport.CONTINENT, Types.VARCHAR);
 		ConfigurationReader reader = new ConfigurationReader(Continent.class, WeatherReport.class);
 		reader.install(hive);
@@ -66,7 +65,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	public Integer testInsert() throws Exception {
 		DataAccessObject<WeatherReport, Integer> dao = getDao();
 		WeatherReport report = WeatherReport.generate();
-		dao.save(report).getReportId();
+		dao.save(report);
 		WeatherReport savedReport = dao.get(report.getReportId());
 		assertEquals(report, savedReport);
 		return report.getReportId();

@@ -54,7 +54,6 @@ public class ExampleHiveTest extends H2TestCase {
 		Hive hive = Hive.create(getConnectString(H2TestCase.TEST_DB), dimensionName, Types.VARCHAR);
 		
 		//Create a Data Node
-//		Node dataNode = new Node(Hive.NEW_OBJECT_ID,"aNode",getConnectString(H2TestCase.TEST_DB), false, partitionDimension.getId());
 		Node dataNode = new Node(Hive.NEW_OBJECT_ID,"aNode",H2TestCase.TEST_DB, "", hive.getPartitionDimension().getId(), HiveDbDialect.H2);
 		
 		//Add it to the partition dimension
@@ -62,8 +61,8 @@ public class ExampleHiveTest extends H2TestCase {
 		
 		//Make sure everything we just added actually got put into the hive meta data.
 		Assert.assertNotNull(hive.getPartitionDimension());
-		Assert.assertNotNull(hive.getPartitionDimension().getNodes());
-		Assert.assertTrue(hive.getPartitionDimension().getNodes().size() > 0);
+		Assert.assertNotNull(hive.getNodes());
+		Assert.assertTrue(hive.getNodes().size() > 0);
 
 		//Add a key, just to test.
 		String key = "knife";
@@ -73,7 +72,7 @@ public class ExampleHiveTest extends H2TestCase {
 		
 		//At this point there is no real data in the Hive just a directory of Primary key to node mappings.
 		//First we need to load our data schema on to each data node.
-		for(Node node : hive.getPartitionDimension().getNodes()){
+		for(Node node : hive.getNodes()){
 			/*
 			 *  
 			 * Ordinarily to get a connection to node from the hive we would have to provide a key

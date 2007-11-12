@@ -1,7 +1,7 @@
 package org.hivedb.util;
 
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
 import org.hivedb.Hive;
 import org.hivedb.meta.Finder;
@@ -16,12 +16,17 @@ public class HiveFinder implements Finder {
 	
 	@SuppressWarnings("unchecked")
 	public <T extends Nameable> T findByName(Class<T> forClass, String name) {
+		if(forClass.equals(Hive.class))
+			return (T) hive;
+		else
 			return (T) hive.getPartitionDimension();
 	}
 
 	@SuppressWarnings("unchecked")
 	public <T extends Nameable> Collection<T> findCollection(Class<T> forClass) {
-		 return (Collection<T>) Collections.singletonList(hive.getPartitionDimension());
+		if(forClass.equals(Hive.class))
+			return (Collection<T>) Arrays.asList(hive);
+		else
+			return (Collection<T>) Arrays.asList(hive.getPartitionDimension());
 	}
-
 }

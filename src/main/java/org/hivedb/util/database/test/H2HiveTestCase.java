@@ -87,12 +87,12 @@ public class H2HiveTestCase extends H2TestCase {
 		return new Node(0, name, name, "", 0, HiveDbDialect.H2);
 	}
 	protected PartitionDimension createPopulatedPartitionDimension() {
-		return new PartitionDimension(partitionDimensionName(), Types.INTEGER,
-				new ArrayList<Node>(), getConnectString(getHiveDatabaseName()), createResources());
+		return new PartitionDimension(Hive.NEW_OBJECT_ID, partitionDimensionName(), Types.INTEGER,
+				getConnectString(getHiveDatabaseName()), createResources());
 	}
 	protected PartitionDimension createEmptyPartitionDimension() {
-		return new PartitionDimension(partitionDimensionName(), Types.INTEGER,
-				new ArrayList<Node>(), getConnectString(getHiveDatabaseName()), new ArrayList<Resource>());
+		return new PartitionDimension(Hive.NEW_OBJECT_ID, partitionDimensionName(), Types.INTEGER,
+				getConnectString(getHiveDatabaseName()), new ArrayList<Resource>());
 	}
 	protected String partitionDimensionName() {
 		return "member";

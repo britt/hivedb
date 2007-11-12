@@ -12,7 +12,6 @@ import javax.sql.DataSource;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.KeySemaphore;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.directory.Directory;
@@ -26,26 +25,26 @@ public class ConnectionManager {
 	private DataSourceProvider dataSourceProvider;
 	private Map<Integer, DataSource> nodeDataSources;
 	private JdbcDaoSupportCacheImpl cache;
-	private Lockable hiveSemaphore;
+	private Hive hive;
 	
-	public ConnectionManager(Directory directory, DataSourceProvider provider, Lockable hiveSemaphore) {
-		this.hiveSemaphore = hiveSemaphore;
+	public ConnectionManager(Directory directory, Hive hive, DataSourceProvider provider) {
+		this.hive = hive;
 		this.directory = directory;
 		this.dataSourceProvider = provider;
-		this.cache = new JdbcDaoSupportCacheImpl(directory, provider);
-		this.nodeDataSources = getDataSourceMap(directory.getPartitionDimension(), provider);
+		this.cache = new JdbcDaoSupportCacheImpl(directory, hive, provider);
+		this.nodeDataSources = getDataSourceMap(hive.getNodes(), provider);
 	}
 	
-	public static Map<Integer, DataSource> getDataSourceMap(PartitionDimension dimension, DataSourceProvider dataSourceProvider) {
+	public static Map<Integer, DataSource> getDataSourceMap(Collection<Node> nodes, DataSourceProvider dataSourceProvider) {
 		Map<Integer, DataSource> dataSources = new ConcurrentHashMap<Integer, DataSource>();
-		for(Node node :  dimension.getNodes()) 
+		for(Node node :  nodes) 
 			dataSources.put(node.getId(), dataSourceProvider.getDataSource(node.getUri()));
 		return dataSources;
 	}
 	
 	private Connection getConnection(KeySemaphore semaphore, AccessType intention) throws HiveReadOnlyException,SQLException {
 		if(intention == AccessType.ReadWrite)
-			Preconditions.isWritable(hiveSemaphore, semaphore, directory.getPartitionDimension().getNode(semaphore.getId()));
+			Preconditions.isWritable(hive, semaphore, hive.getNode(semaphore.getId()));
 		return nodeDataSources.get(semaphore.getId()).getConnection();
 	}
 	

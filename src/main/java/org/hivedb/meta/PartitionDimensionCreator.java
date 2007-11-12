@@ -23,8 +23,6 @@ public class PartitionDimensionCreator {
 					ReflectionTools.getPropertyType(
 							hiveConfig.getEntityConfig().getRepresentedInterface(), 
 							entityConfig.getPrimaryIndexKeyPropertyName())),
-			cloneDataNodes(hiveConfig.getHive().getPartitionDimension().getNodes()), // clone because nodes are are given the new partion dimension id
-			hiveConfig.getHive().getUri(), // PartitionDimension uri always equals that of the hive
 			cloneResources(Collections.singletonList(createResource(hiveConfig))) // clone because resources are given the new partition dimension id
 		);
 		dimension.updateId(hiveConfig.getHive().getPartitionDimension().getId());

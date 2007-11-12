@@ -9,7 +9,6 @@ import org.hivedb.HiveSyncDaemon;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.persistence.IndexSchema;
 import org.hivedb.util.database.test.H2HiveTestCase;
-import org.hivedb.util.functional.Atom;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -46,16 +45,16 @@ public class TestSyncHive extends H2HiveTestCase {
 		
 //		nodeReport(passiveSync, hive);
 		
-		Assert.assertNotNull(passiveSync.getPartitionDimension().getNode(createNode(getHiveDatabaseName()).getName()));
+		Assert.assertNotNull(passiveSync.getNode(createNode(getHiveDatabaseName()).getName()));
 	}
 	
 	@SuppressWarnings("unused")
 	private void nodeReport(Hive passiveSync, Hive hive) {
 		System.out.println("Passively synced Hive:" + passiveSync.getRevision());
-		for(Node node: passiveSync.getPartitionDimension().getNodes())
+		for(Node node: passiveSync.getNodes())
 			System.out.println(node.getName());
 		System.out.println("In-memory Hive " + hive.getRevision());
-		for(Node node: hive.getPartitionDimension().getNodes())
+		for(Node node: hive.getNodes())
 			System.out.println(node.getName());
 	}
 	

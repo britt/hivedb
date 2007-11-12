@@ -60,11 +60,6 @@ public class PartitionDimensionDao extends JdbcDaoSupport {
 		for (Resource r : newObject.getResources())
 			new ResourceDao(ds).create(r);
 
-		NodeDao nodeDao = new NodeDao(ds);
-		for (Node node: newObject.getNodes()) {
-			node.setPartitionDimensionId(newObject.getId());
-			nodeDao.create(node);
-		}
 		return new Integer(newObject.getId());	
 	}
 
@@ -74,7 +69,6 @@ public class PartitionDimensionDao extends JdbcDaoSupport {
 		for (Object result : t.query("SELECT * FROM partition_dimension_metadata",
 				new PartitionDimensionRowMapper())) {
 			PartitionDimension dimension = (PartitionDimension) result;
-			dimension.setNodes(new NodeDao(ds).findByPartitionDimension(dimension.getId()));
 			results.add(dimension);
 		}
 		return results;
@@ -91,7 +85,6 @@ public class PartitionDimensionDao extends JdbcDaoSupport {
 		else if(results.size() > 1)
 			throw new HiveRuntimeException(String.format("Found %s PartitionDImensions, there can be only one.", results.size()));
 		PartitionDimension dimension = results.get(0);
-		dimension.setNodes(new NodeDao(ds).findByPartitionDimension(dimension.getId()));
 		return dimension;
 	}
 	
@@ -105,7 +98,6 @@ public class PartitionDimensionDao extends JdbcDaoSupport {
 						rs.getInt("id"),
 						rs.getString("name"),
 						JdbcTypeMapper.parseJdbcType(rs.getString("db_type")),
-						new ArrayList<Node>(), 
 						rs.getString("index_uri"),
 						resources);
 			

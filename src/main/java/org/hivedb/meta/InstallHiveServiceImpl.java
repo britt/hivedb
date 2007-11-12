@@ -31,14 +31,14 @@ public class InstallHiveServiceImpl implements InstallHiveService {
 		final Hive hive = hiveConfig.getHive();
 		final PartitionDimension partitionDimension = hive.getPartitionDimension();
 		
-		for (Node node : partitionDimension.getNodes()) {
+		for (Node node : hive.getNodes()) {
 			if (name.equals(node.getName()))
 				return node;
 		}
 		
 		try {
 			int maxId = 0;
-			for (Node node : partitionDimension.getNodes())
+			for (Node node : hive.getNodes())
 				maxId = Math.max(maxId, node.getId());
 			final Node node = new Node(maxId+1,name, name, dataNodeUri, partitionDimension.getId(), hive.getDialect());
 			hive.addNode(node); 

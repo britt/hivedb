@@ -13,6 +13,8 @@ import org.hivedb.util.HiveUtils;
 import org.hivedb.util.Preconditions;
 import org.hivedb.util.database.DriverLoader;
 import org.hivedb.util.database.HiveDbDialect;
+import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Predicate;
 
 import javax.sql.DataSource;
 import java.util.*;
@@ -22,7 +24,7 @@ import java.util.*;
  * @author Andy Likuski (alikuski@cafepress.com)
  * @author Britt Crawford (bcrawford@cafepress.com)
  */
-public class Hive extends Observable implements Synchronizeable, Observer, Lockable {
+public class Hive extends Observable implements Synchronizeable, Observer, Lockable, Finder, Nameable {
 	//constants
 	private static final int DEFAULT_JDBC_TIMEOUT = 500;
 	public static final int NEW_OBJECT_ID = 0;
@@ -33,6 +35,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	private ConnectionManager connection;
 	private PartitionDimension dimension;
 	private DirectoryFacade directory;
+	private Collection<Node> nodes = new ArrayList<Node>();
 	
 	private DataSource hiveDataSource;
 	private DataSourceProvider dataSourceProvider;
@@ -112,10 +115,11 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	
 	public void initialize(PartitionDimension dimension) {
         DataSource dataSource = dataSourceProvider.getDataSource(dimension.getIndexUri());
-        DirectoryFacade directory = new DirectoryWrapper(dimension, dataSource, getAssigner(), getSemaphore());
-		ConnectionManager connection = new ConnectionManager(new Directory(dimension, dataSource), dataSourceProvider, this.semaphore);
-		
+        DirectoryFacade directory = new DirectoryWrapper(dimension, dataSource, getAssigner(), this);
+        Collection<Node> nodes = new NodeDao(hiveDataSource).loadAll();
 		synchronized (this) {
+			this.nodes = nodes;
+			ConnectionManager connection = new ConnectionManager(new Directory(dimension, dataSource), this, dataSourceProvider);
 			this.dimension = dimension;
 			this.directory = directory;
 			this.connection = connection;
@@ -246,13 +250,26 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		node.setPartitionDimensionId(dimension.getId());
 		
 		Preconditions.isWritable(this);
-		Preconditions.nameIsUnique(dimension.getNodes(), node);
+		Preconditions.nameIsUnique(getNodes(), node);
 		
 		NodeDao nodeDao = new NodeDao(hiveDataSource);
 		nodeDao.create(node);
 
 		incrementAndPersistHive(hiveDataSource);
 		return node;
+	}
+	
+	public Collection<Node> addNodes(Collection<Node> nodes) throws HiveReadOnlyException {
+		Preconditions.isWritable(this);
+
+		for(Node node : nodes) {
+			Preconditions.nameIsUnique(getNodes(), node);
+			NodeDao nodeDao = new NodeDao(hiveDataSource);
+			nodeDao.create(node);
+		}
+		
+		incrementAndPersistHive(hiveDataSource);
+		return nodes;
 	}
 
 	public Resource addResource(Resource resource) throws HiveReadOnlyException{
@@ -292,7 +309,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 
 	public Node updateNode(Node node) throws HiveReadOnlyException {
 		Preconditions.isWritable(this);
-		Preconditions.idIsPresentInList(dimension.getNodes(), node);
+		Preconditions.idIsPresentInList(getNodes(), node);
 
 		new NodeDao(hiveDataSource).update(node);
 		incrementAndPersistHive(hiveDataSource);
@@ -325,7 +342,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 
 	public Node deleteNode(Node node) throws HiveReadOnlyException {
 		Preconditions.isWritable(this);
-		Preconditions.idIsPresentInList(dimension.getNodes(), node);
+		Preconditions.idIsPresentInList(getNodes(), node);
 		
 		NodeDao nodeDao = new NodeDao(hiveDataSource);
 		nodeDao.delete(node);
@@ -356,4 +373,38 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		
 		return secondaryIndex;
 	}	
+	
+	public Collection<Node> getNodes() {
+		return nodes;
+	}
+	public Node getNode(final String name) {
+		return Filter.grepSingle(new Predicate<Node>(){
+			public boolean f(Node item) {
+				return item.getName().equalsIgnoreCase(name);
+			}}, getNodes());
+	}
+	public Node getNode(final int id) {
+		return Filter.grepSingle(new Predicate<Node>(){
+			public boolean f(Node item) {
+				return item.getId() == id;
+			}}, getNodes());
+	}
+
+	@SuppressWarnings("unchecked")
+	public<T extends Nameable> T findByName(Class<T> forClass, final String name){
+		if (forClass.equals(Node.class))
+			return (T)getNode(name);
+		
+		throw new RuntimeException("Invalid type " + forClass.getName());
+	}
+	@SuppressWarnings("unchecked")
+	public<T extends Nameable> Collection<T> findCollection(Class<T> forClass) {
+		if (forClass.equals(Node.class))
+			return (Collection<T>)getNodes();
+		throw new RuntimeException("Invalid type " + forClass.getName());
+	}
+
+	public String getName() {
+		return "hive";
+	}
 }

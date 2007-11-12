@@ -11,8 +11,6 @@ import org.hivedb.Hive;
 import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.util.HiveUtils;
 import org.hivedb.util.database.JdbcTypeMapper;
-import org.hivedb.util.functional.Filter;
-import org.hivedb.util.functional.Predicate;
 
 /**
  * PartitionDimension is the value we use to distribute records to data nodes.  It is
@@ -25,42 +23,9 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	private int id;
 	private String name;
 	private int columnType;
-	private Collection<Node> nodes;
 	private String indexUri;
 	private Collection<Resource> resources;
 
-	/**
-	 * Create constructor
-	 * 
-	 * @param name
-	 * @param columnType
-	 * @param nodes
-	 * @param indexUri The URI for the PartitionDimension's index tables.
-	 *  Specify this if it is different then that of the hive.
-	 * @param resources
-	 * @param assigner
-	 */
-	public PartitionDimension(String name, int columnType, Collection<Node> nodes,
-			String indexUri, Collection<Resource> resources) {
-		this(Hive.NEW_OBJECT_ID, name, columnType, nodes, indexUri,
-				resources);
-	}
-	/**
-	 * 
-	 * Create constructor. This version does not require an index URI. The index
-	 * URI will be inherited from the hive so that the indexes are stored at the same
-	 * URI as the hive metadata. This should be the typical configuration.
-	 * 
-	 * @param name
-	 * @param columnType
-	 * @param nodes
-	 * @param resources
-	 */
-	public PartitionDimension(String name, int columnType, Collection<Node> nodes, Collection<Resource> resources) {
-		this(Hive.NEW_OBJECT_ID, name, columnType, nodes, null,
-				resources);
-	}
-	
 	/**
 	 * 
 	 * Create constructor. This version does not require an index URI. The index
@@ -73,9 +38,10 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	 * @param resources
 	 */
 	public PartitionDimension(String name, int columnType, Collection<Resource> resources) {
-		this(name, columnType, new ArrayList<Node>(), resources);
+		this(Hive.NEW_OBJECT_ID, name, columnType, null,
+				resources);
 	}
-	
+
 	/**
 	 * 
 	 * Create constructor. Primarily used for interactively constructing a new Partition Dimension.
@@ -86,7 +52,7 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	 * @param columnType
 	 */
 	public PartitionDimension(String name, int columnType) {
-		this(name, columnType, new ArrayList<Node>(), new ArrayList<Resource>());
+		this(name, columnType, new ArrayList<Resource>());
 	}
 
 	/**
@@ -99,23 +65,14 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	 * @param indexUri
 	 * @param resources
 	 */
-	public PartitionDimension(int id, String name, int columnType,
-			Collection<Node> nodes, String indexUri,
+	public PartitionDimension(int id, String name, int columnType, String indexUri,
 			Collection<Resource> resources) {
 		super();
 		this.id = id;
 		this.name = name;
 		this.columnType = columnType;
-		this.nodes = insetNodes(nodes);
 		this.indexUri = indexUri;
 		this.resources = insetResources(resources);
-	}
-
-	// Modify the passed in instance by setting its PartitionInstance
-	private Collection<Node> insetNodes(Collection<Node> nodes) {
-		for(Node node: nodes)
-			node.setPartitionDimensionId(this.getId());
-		return nodes;
 	}
 
 	private Collection<Resource> insetResources(
@@ -149,8 +106,6 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	public<T extends Nameable> T findByName(Class<T> forClass, final String name){
 		if (forClass.equals(Resource.class))
 			return (T)getResource(name);
-		if (forClass.equals(Node.class))
-			return (T)getNode(name);
 		
 		throw new RuntimeException("Invalid type " + forClass.getName());
 	}
@@ -158,8 +113,6 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	public<T extends Nameable> Collection<T> findCollection(Class<T> forClass) {
 		if (forClass.equals(Resource.class))
 			return (Collection<T>)getResources();
-		if (forClass.equals(Node.class))
-			return (Collection<T>)getNodes();
 		throw new RuntimeException("Invalid type " + forClass.getName());
 	}
 
@@ -228,23 +181,5 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	}
 	public void setId(Integer id) {
 		this.id = id;
-	}
-	public Collection<Node> getNodes() {
-		return nodes;
-	}
-	public Node getNode(final String name) {
-		return Filter.grepSingle(new Predicate<Node>(){
-			public boolean f(Node item) {
-				return item.getName().equalsIgnoreCase(name);
-			}}, getNodes());
-	}
-	public Node getNode(final int id) {
-		return Filter.grepSingle(new Predicate<Node>(){
-			public boolean f(Node item) {
-				return item.getId() == id;
-			}}, getNodes());
-	}
-	public void setNodes(Collection<Node> nodes) {
-		this.nodes = nodes;
 	}
 }

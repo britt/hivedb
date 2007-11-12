@@ -5,15 +5,12 @@ import static org.testng.AssertJUnit.assertTrue;
 
 import java.sql.Types;
 import java.util.Collection;
-import java.util.Random;
 
 import org.hibernate.shards.ShardId;
 import org.hivedb.Hive;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.PartitionDimension;
-import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.HiveDbDialect;
-import org.hivedb.util.functional.Atom;
+import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
@@ -46,7 +43,7 @@ public class HiveShardSelectorTest extends H2HiveTestCase {
 		Collection<Integer> nodeIds = Transform.map(new Unary<Node, Integer>(){
 			public Integer f(Node n) {
 				return n.getId();
-			}}, hive.getPartitionDimension().getNodes()); 
+			}}, hive.getNodes()); 
 		
 		assertTrue(Filter.grepItemAgainstList(new Integer(id.getId()), nodeIds));
 	}

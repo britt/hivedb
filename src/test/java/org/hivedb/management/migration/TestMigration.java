@@ -160,9 +160,9 @@ public class TestMigration extends H2HiveTestCase {
 		//Setup the test data on one node
 		NodeResolver dir = new Directory(hive.getPartitionDimension(), getDataSource(getHiveDatabaseName()));
 		int originId = Atom.getFirst(dir.getKeySemamphoresOfPrimaryIndexKey(primaryKey)).getId();
-		Node origin = hive.getPartitionDimension().getNode(originId);
-		Node destination = origin.getName().equals("data1") ? hive.getPartitionDimension().getNode("data2") : 
-			hive.getPartitionDimension().getNode("data1");
+		Node origin = hive.getNode(originId);
+		Node destination = origin.getName().equals("data1") ? hive.getNode("data2") : 
+			hive.getNode("data1");
 		PartitionKeyMover<Integer> pMover = new PrimaryMover(origin.getUri());
 		Mover<Integer> secMover = new SecondaryMover();
 		pMover.copy(primaryKey, origin);

@@ -274,7 +274,7 @@ public class HiveScenarioTest {
 	
 			new Undoable() { 
 				public void f() {
-					final Node node = Atom.getFirstOrThrow(partitionDimension.getNodes());
+					final Node node = Atom.getFirstOrThrow(hive.getNodes());
 					final boolean readOnly = node.isReadOnly();
 					final String host = node.getHost();
 					final String db = node.getDatabaseName();
@@ -382,7 +382,7 @@ public class HiveScenarioTest {
 	private static void assertEquality(final Hive hive, final Node node)  {
 		assertEquals(
 			node,
-			hive.getPartitionDimension().getNode(node.getId()));
+			hive.getNode(node.getId()));
 	}
 	
 	private static void commitReadonlyViolations(final SingularHiveConfig hiveConfig, Collection<Object> resourceInstances) throws HiveException 
