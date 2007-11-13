@@ -56,7 +56,7 @@ public class ConfigurationReader {
 		List<EntityIndexConfig> indexes = Lists.newArrayList();
 		
 		for(Method indexMethod : indexMethods)
-			indexes.add(new EntityIndexConfigImpl(clazz, getIndexNameForMethod(indexMethod)));
+			indexes.add(new EntityIndexConfigImpl(clazz, getSecondaryIndexName(indexMethod)));
 		
 		EntityConfig config = new EntityConfigImpl(
 				clazz,
@@ -121,7 +121,17 @@ public class ConfigurationReader {
 	}
 
 	private String getPartitionDimensionName(Class<?> clazz) {
-		return AnnotationHelper.getFirstInstanceOfAnnotation(clazz, PartitionIndex.class).name();
+		String name = AnnotationHelper.getFirstInstanceOfAnnotation(clazz, PartitionIndex.class).name();
+		Method m = AnnotationHelper.getFirstMethodWithAnnotation(clazz, PartitionIndex.class);
+		return "".equals(name) ? getIndexNameForMethod(m) : name;
+	}
+	
+	private String getSecondaryIndexName(Method method) {
+		Index annotation = method.getAnnotation(Index.class);
+		if(annotation != null && !"".equals(annotation.name()))
+			return annotation.name();
+		else
+			return getIndexNameForMethod(method);
 	}
 	
 	public static String getIndexNameForMethod(Method method) {

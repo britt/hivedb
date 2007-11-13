@@ -25,7 +25,7 @@ public class WeatherReport {
 	public static final String TEMPERATURE = "temperature";
 	public static final String CONTINENT = "continent";
     
-    @PartitionIndex(name=WeatherReport.CONTINENT)
+	@PartitionIndex
 	public String getContinent() {
 		return continent;
 	}

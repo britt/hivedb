@@ -9,6 +9,7 @@ import org.hivedb.hibernate.annotations.Resource;
 public interface Continent {
 	@EntityId
 	@PartitionIndex(name=WeatherReport.CONTINENT)
+//	@PartitionIndex
 	public String getName();
 	public void setName(String name);
 	@Index

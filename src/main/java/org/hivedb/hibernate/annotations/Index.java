@@ -7,4 +7,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface Index {}
+public @interface Index {
+	IndexType type() default IndexType.Both;
+	String name() default "";
+}
