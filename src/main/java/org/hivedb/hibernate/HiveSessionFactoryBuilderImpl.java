@@ -6,7 +6,9 @@ import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 
+import org.hibernate.Interceptor;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLInnoDBDialect;
@@ -19,7 +21,6 @@ import org.hibernate.shards.strategy.ShardStrategy;
 import org.hibernate.shards.strategy.ShardStrategyFactory;
 import org.hibernate.shards.strategy.ShardStrategyImpl;
 import org.hibernate.shards.strategy.access.ShardAccessStrategy;
-import org.hibernate.shards.util.InterceptorDecorator;
 import org.hibernate.shards.util.Lists;
 import org.hibernate.shards.util.Maps;
 import org.hivedb.Hive;
@@ -33,9 +34,9 @@ import org.hivedb.util.functional.Atom;
 
 public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder, HiveSessionFactory, Observer, Synchronizeable {	
 	private static Map<HiveDbDialect, Class<?>> dialectMap = buildDialectMap();
+	private Map<Integer, SessionFactory> nodeSessionFactories;
 	private EntityHiveConfig config;
 	private ShardAccessStrategy accessStrategy;
-	private List<InterceptorDecorator> interceptors = Lists.newArrayList();
 	
 	private ShardedSessionFactoryImplementor factory = null;
 	
@@ -50,6 +51,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	private void initialize(EntityHiveConfig config, ShardAccessStrategy strategy) {
 		this.accessStrategy = strategy;
 		this.config = config;
+		this.nodeSessionFactories = Maps.newHashMap();
 		this.factory = buildBaseSessionFactory();
 		config.getHive().addObserver(this);
 	}
@@ -59,16 +61,28 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	}
 	
 	private ShardedSessionFactoryImplementor buildBaseSessionFactory() {
-		List<ShardConfiguration> shardConfigs = getNodeConfigurations(config.getHive());
+		Map<Integer, Configuration> hibernateConfigs = getConfigurationsFromNodes(config.getHive());
+		
+		for(Map.Entry<Integer,Configuration> entry : hibernateConfigs.entrySet())
+			this.nodeSessionFactories.put(entry.getKey(), entry.getValue().buildSessionFactory());
+		
+		List<ShardConfiguration> shardConfigs = getNodeConfigurations(hibernateConfigs);
 		Configuration prototypeConfig = buildPrototypeConfiguration();
 		ShardedConfiguration shardedConfig = new ShardedConfiguration(prototypeConfig, shardConfigs, buildShardStrategyFactory());
 		return (ShardedSessionFactoryImplementor) shardedConfig.buildShardedSessionFactory();
 	}
 	
-	private List<ShardConfiguration> getNodeConfigurations(Hive hive) {
-		List<ShardConfiguration> configs = Lists.newArrayList();
+	private Map<Integer, Configuration> getConfigurationsFromNodes(Hive hive) {
+		Map<Integer, Configuration> configMap = Maps.newHashMap();
 		for(Node node : hive.getNodes())
-			configs.add(new ConfigurationToShardConfigurationAdapter(createConfigurationFromNode(node)));
+			configMap.put(node.getId(), createConfigurationFromNode(node));
+		return configMap;
+	}
+	
+	private List<ShardConfiguration> getNodeConfigurations(Map<Integer, Configuration> configMap) {
+		List<ShardConfiguration> configs = Lists.newArrayList();
+		for(Configuration config : configMap.values())
+			configs.add(new ConfigurationToShardConfigurationAdapter(config));
 		return configs;
 	}
 
@@ -104,7 +118,6 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 		
 		config.setProperty("hibernate.dialect", dialectMap.get(node.getDialect()).getName());
 		config.setProperty("hibernate.connection.driver_class", DriverLoader.getDriverClass(node.getDialect()));
-		//TODO: This might not work
 		config.setProperty("hibernate.connection.url", node.getUri());
 		
 //		String user = node.getUsername() == null ? node.getUsername() : "";
@@ -137,62 +150,58 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 		return map;
 	}
 
-	public void appendInterceptor(InterceptorDecorator interceptor) {
-		interceptors.add(interceptor);
-	}
-
-	public List<InterceptorDecorator> getInterceptors() {
-		return interceptors;
-	}
-
-	public void insertInterceptor(InterceptorDecorator interceptor, int index) {
-		interceptors.add(index, interceptor);
-	}
-
 	public Session openSession() {
-		return factory.openSession();
+		return factory.openSession(getHiveInterceptor());
 	}
 
-	public Session openSession(InterceptorDecorator interceptor) {
-		// TODO Auto-generated method stub
-		return null;
+	public Session openSession(Interceptor interceptor) {
+		return factory.openSession(interceptor);
 	}
 
 	public Session openSession(Object primaryIndexKey) {
-		// TODO Auto-generated method stub
-		return null;
+		return openSession(
+				config.getHive().directory().getNodeIdsOfPrimaryIndexKey(primaryIndexKey), 
+				getHiveInterceptor());
 	}
 
-	public Session openSession(Object primaryIndexKey,
-			InterceptorDecorator interceptor) {
-		// TODO Auto-generated method stub
-		return null;
+	public Session openSession(Object primaryIndexKey, Interceptor interceptor) {
+		return openSession(
+				config.getHive().directory().getNodeIdsOfPrimaryIndexKey(primaryIndexKey), 
+				interceptor);
 	}
 
 	public Session openSession(String resource, Object resourceId) {
-		// TODO Auto-generated method stub
-		return null;
+		return openSession(
+				config.getHive().directory().getNodeIdsOfResourceId(resource, resourceId),
+				getHiveInterceptor());
 	}
 
-	public Session openSession(String resource, Object resourceId,
-			InterceptorDecorator interceptor) {
-		// TODO Auto-generated method stub
-		return null;
+	public Session openSession(String resource, Object resourceId, Interceptor interceptor) {
+		return openSession(
+				config.getHive().directory().getNodeIdsOfResourceId(resource, resourceId),
+				interceptor);
 	}
 
-	public Session openSession(String resource, String indexName,
-			Object secondaryIndexKey) {
-		// TODO Auto-generated method stub
-		return null;
+	public Session openSession(String resource, String indexName, Object secondaryIndexKey) {
+		return openSession(
+				config.getHive().directory().getNodeIdsOfSecondaryIndexKey(resource, indexName, secondaryIndexKey),
+				getHiveInterceptor());
 	}
 
-	public Session openSession(String resource, String indexName,
-			Object secondaryIndexKey, InterceptorDecorator interceptor) {
-		// TODO Auto-generated method stub
-		return null;
+	public Session openSession(String resource, String indexName, Object secondaryIndexKey, Interceptor interceptor) {
+		return openSession(
+				config.getHive().directory().getNodeIdsOfSecondaryIndexKey(resource, indexName, secondaryIndexKey),
+				interceptor);
 	}
-
-	public void prependInterceptor(InterceptorDecorator interceptor) {
-		interceptors.add(0, interceptor);
+	
+	private Session openSession(Collection<Integer> nodeIds, Interceptor interceptor) {
+		if(nodeIds.size() == 1)
+			return nodeSessionFactories.get(Atom.getFirstOrThrow(nodeIds)).openSession(interceptor);
+		else
+			throw new UnsupportedOperationException("This operation is not yet implemneted " + nodeIds.size());
+	}
+	
+	private HiveInterceptorDecorator getHiveInterceptor() {
+		return new HiveInterceptorDecorator(config);
 	}
 }

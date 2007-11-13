@@ -45,26 +45,76 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testGetSessionFactory() throws Exception {
-		HiveSessionFactoryBuilder factoryBuilder = 
+		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
+		assertNotNull(factoryBuilder.getSessionFactory());
+		factoryBuilder.openSession();
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testOpenSessionByPrimaryKey() throws Exception {
+		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
+		
+		final WeatherReport report = WeatherReport.generate();
+		Session session = factoryBuilder.getSessionFactory().openSession();
+		SessionCallback callback = new SessionCallback(){
+			public void execute(Session session) {
+				session.saveOrUpdate(report);
+			}};
+		doInTransaction(callback, session);
+		
+		assertNotNull(factoryBuilder.getSessionFactory());
+		factoryBuilder.openSession(config.getEntityConfig(WeatherReport.class).getPrimaryIndexKey(report));
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testOpenSessionByResourceId() throws Exception {
+		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
+		assertNotNull(factoryBuilder.getSessionFactory());
+		
+		final WeatherReport report = WeatherReport.generate();
+		Session session = factoryBuilder.openSession();
+		SessionCallback callback = new SessionCallback(){
+			public void execute(Session session) {
+				session.saveOrUpdate(report);
+			}};
+		doInTransaction(callback, session);
+		
+		factoryBuilder.openSession("WeatherReport", config.getEntityConfig(WeatherReport.class).getId(report));
+	}
+
+	private HiveSessionFactoryBuilderImpl getHiveSessionFactoryBuilder() {
+		HiveSessionFactoryBuilderImpl factoryBuilder = 
 			new HiveSessionFactoryBuilderImpl(
 					getConnectString(getHiveDatabaseName()), 
 					Lists.newList(Continent.class, WeatherReport.class),
 					new SequentialShardAccessStrategy());
-		assertNotNull(factoryBuilder.getSessionFactory());
-		factoryBuilder.getSessionFactory().openSession();
+		return factoryBuilder;
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testOpenSessionBySecondaryIndex() throws Exception {
+		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
+
+		final WeatherReport report = WeatherReport.generate();
+		Session session = factoryBuilder.openSession();
+		SessionCallback callback = new SessionCallback(){
+			public void execute(Session session) {
+				session.saveOrUpdate(report);
+			}};
+		doInTransaction(callback, session);
+		
+		factoryBuilder.openSession("WeatherReport", "temperature", report.getTemperature());
 	}
 	
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testInsert() throws Exception {
-		HiveSessionFactoryBuilder factoryBuilder = 
-			new HiveSessionFactoryBuilderImpl(
-					getConnectString(getHiveDatabaseName()), 
-					Lists.newList(Continent.class, WeatherReport.class),
-					new SequentialShardAccessStrategy());
-		HiveInterceptorDecorator hiveInterceptor = new HiveInterceptorDecorator(config);
+		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
 		final WeatherReport report = WeatherReport.generate();
-		Session session = factoryBuilder.getSessionFactory().openSession(hiveInterceptor);
+		Session session = factoryBuilder.openSession();
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
 				session.saveOrUpdate(report);
@@ -76,34 +126,24 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testInsertAndRetrieve() throws Exception {
-		HiveSessionFactoryBuilder factoryBuilder = 
-			new HiveSessionFactoryBuilderImpl(
-					getConnectString(getHiveDatabaseName()), 
-					Lists.newList(Continent.class, WeatherReport.class),
-					new SequentialShardAccessStrategy());
-		HiveInterceptorDecorator hiveInterceptor = new HiveInterceptorDecorator(config);
+		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
 		final WeatherReport report = WeatherReport.generate();
-		Session session = factoryBuilder.getSessionFactory().openSession(hiveInterceptor);
+		Session session = factoryBuilder.openSession();
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
 				session.saveOrUpdate(report);
 			}};
 		doInTransaction(callback, session);
-		WeatherReport fetched = (WeatherReport) factoryBuilder.getSessionFactory().openSession(hiveInterceptor).get(WeatherReport.class, report.getReportId());
+		WeatherReport fetched = (WeatherReport) factoryBuilder.openSession().get(WeatherReport.class, report.getReportId());
 		assertEquals(report, fetched);
 	}
 	
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testDelete() throws Exception {
-		HiveSessionFactoryBuilder factoryBuilder = 
-			new HiveSessionFactoryBuilderImpl(
-					getConnectString(getHiveDatabaseName()), 
-					Lists.newList(Continent.class, WeatherReport.class),
-					new SequentialShardAccessStrategy());
-		HiveInterceptorDecorator hiveInterceptor = new HiveInterceptorDecorator(config);
+		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
 		final WeatherReport report = WeatherReport.generate();
-		Session session = factoryBuilder.getSessionFactory().openSession(hiveInterceptor);
+		Session session = factoryBuilder.openSession();
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
 				session.saveOrUpdate(report);
@@ -113,26 +153,21 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 			public void execute(Session session) {
 				session.delete(report);
 			}};
-		doInTransaction(deleteCallback, factoryBuilder.getSessionFactory().openSession(hiveInterceptor));
-		WeatherReport fetched = (WeatherReport) factoryBuilder.getSessionFactory().openSession(hiveInterceptor).get(WeatherReport.class, report.getReportId());
+		doInTransaction(deleteCallback, factoryBuilder.openSession());
+		WeatherReport fetched = (WeatherReport) factoryBuilder.openSession().get(WeatherReport.class, report.getReportId());
 		assertEquals(fetched, null);
 	}
 	
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testUpdate() throws Exception {
-		HiveSessionFactoryBuilder factoryBuilder = 
-			new HiveSessionFactoryBuilderImpl(
-					getConnectString(getHiveDatabaseName()), 
-					Lists.newList(Continent.class, WeatherReport.class),
-					new SequentialShardAccessStrategy());
-		HiveInterceptorDecorator hiveInterceptor = new HiveInterceptorDecorator(config);
+		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
 		final WeatherReport report = WeatherReport.generate();
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
 				session.saveOrUpdate(report);
 			}};
-		doInTransaction(callback, factoryBuilder.getSessionFactory().openSession(hiveInterceptor));
+		doInTransaction(callback, factoryBuilder.openSession());
 		
 		final WeatherReport mutated = WeatherReport.generate();
 		mutated.setReportId(report.getReportId());
@@ -143,8 +178,8 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 				session.saveOrUpdate(mutated);
 			}};
 		
-		doInTransaction(updateCallback, factoryBuilder.getSessionFactory().openSession(hiveInterceptor));
-		WeatherReport fetched = (WeatherReport) factoryBuilder.getSessionFactory().openSession(hiveInterceptor).get(WeatherReport.class, report.getReportId());
+		doInTransaction(updateCallback, factoryBuilder.openSession());
+		WeatherReport fetched = (WeatherReport) factoryBuilder.openSession().get(WeatherReport.class, report.getReportId());
 
 		assertFalse(report.equals(fetched));
 		assertEquals(mutated, fetched);
