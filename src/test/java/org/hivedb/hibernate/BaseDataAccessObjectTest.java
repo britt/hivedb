@@ -73,7 +73,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 
 	private BaseDataAccessObject<WeatherReport, Integer> getDao() {
 		return new BaseDataAccessObject<WeatherReport,Integer>(
-				WeatherReport.class, config, getFactory().getSessionFactory());
+				WeatherReport.class, config, getFactory());
 	}
 	
 	@Test
@@ -133,7 +133,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		assertTrue(getDao().exists(id));
 	}
 	
-	private HiveSessionFactoryBuilder getFactory() {
+	private HiveSessionFactoryBuilderImpl getFactory() {
 		return new HiveSessionFactoryBuilderImpl(
 				config, new SequentialShardAccessStrategy());
 	}

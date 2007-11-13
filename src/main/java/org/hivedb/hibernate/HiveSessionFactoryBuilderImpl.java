@@ -63,8 +63,13 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	private ShardedSessionFactoryImplementor buildBaseSessionFactory() {
 		Map<Integer, Configuration> hibernateConfigs = getConfigurationsFromNodes(config.getHive());
 		
-		for(Map.Entry<Integer,Configuration> entry : hibernateConfigs.entrySet())
-			this.nodeSessionFactories.put(entry.getKey(), entry.getValue().buildSessionFactory());
+		for(Map.Entry<Integer,Configuration> entry : hibernateConfigs.entrySet()) {
+			Configuration cfg = entry.getValue();
+			for(EntityConfig entityConfig : config.getEntityConfigs())
+				cfg.addClass(entityConfig.getRepresentedInterface());
+			
+			this.nodeSessionFactories.put(entry.getKey(), cfg.buildSessionFactory());
+		}
 		
 		List<ShardConfiguration> shardConfigs = getNodeConfigurations(hibernateConfigs);
 		Configuration prototypeConfig = buildPrototypeConfiguration();

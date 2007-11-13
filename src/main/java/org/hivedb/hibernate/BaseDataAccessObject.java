@@ -3,11 +3,13 @@ package org.hivedb.hibernate;
 import java.io.Serializable;
 import java.util.Collection;
 
+import org.hibernate.Criteria;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.criterion.Restrictions;
 import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
@@ -16,19 +18,19 @@ import org.hivedb.util.Lists;
 import org.hivedb.util.functional.Collect;
 
 public class BaseDataAccessObject<T, ID extends Serializable> implements DataAccessObject<T,ID> {
-	private SessionFactory factory;
+	private HiveSessionFactory factory;
 	private EntityHiveConfig config;
 	private Class<T> clazz;
 	private Interceptor defaultInterceptor = EmptyInterceptor.INSTANCE;
 	
 
-	public BaseDataAccessObject(Class<T> clazz, EntityHiveConfig config, SessionFactory factory) {
+	public BaseDataAccessObject(Class<T> clazz, EntityHiveConfig config, HiveSessionFactory factory) {
 		this.clazz = clazz;
 		this.config = config;
 		this.factory = factory;
 	}
 	
-	public BaseDataAccessObject(Class<T> clazz, EntityHiveConfig config, SessionFactory factory, Interceptor interceptor) {
+	public BaseDataAccessObject(Class<T> clazz, EntityHiveConfig config, HiveSessionFactory factory, Interceptor interceptor) {
 		this(clazz,config,factory);
 		this.defaultInterceptor = interceptor;
 	}
@@ -68,21 +70,18 @@ public class BaseDataAccessObject<T, ID extends Serializable> implements DataAcc
 		return fetched;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public Collection<T> findByProperty(String propertyName, Object value) {
 		EntityConfig entityConfig = config.getEntityConfig(getRespresentedClass());
-		Session session = getSession();
 		EntityIndexConfig indexConfig = getIndexConfig(propertyName, entityConfig.getEntitySecondaryIndexConfigs());
-		Collection<ID> ids = 
-			Collect.recastCollection(
-				config.getHive().directory().getResourceIdsOfSecondaryIndexKey(
-						entityConfig.getResourceName(), 
-						indexConfig.getIndexName(),
-						value)
-		);
-		Collection<T> entities = Lists.newArrayList();
-		for(ID id : ids)
-			entities.add(get(id,session));
-		return entities;
+		Session session = 
+			factory.openSession(
+				entityConfig.getResourceName(), 
+				indexConfig.getIndexName(), 
+				value);
+		Criteria c = session.createCriteria(entityConfig.getRepresentedInterface());
+		c.add( Restrictions.eq(indexConfig.getPropertyName(), value));
+		return c.list();
 	}
 
 	public T save(final T entity) {
