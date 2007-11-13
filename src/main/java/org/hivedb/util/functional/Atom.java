@@ -6,26 +6,26 @@ import java.util.Iterator;
 import java.util.List;
 
 public class Atom {
-	public static<T> T getFirst(Iterable<T> iterable) throws Exception
+	public static<T> T getFirst(Iterable<? extends T> iterable) throws Exception
 	{
 		for (T item : iterable)
 			return item;
 		throw new Exception("Iterable has no items");
 	}
-	public static<T> T getFirstOrThrow(Iterable<T> iterable)
+	public static<T> T getFirstOrThrow(Iterable<? extends T> iterable)
 	{
 		for (T item : iterable)
 			return item;
 		throw new RuntimeException("Iterable has no items");
 	}
-	public static<T> T getFirstOrNull(Iterable<T> iterable)
+	public static<T> T getFirstOrNull(Iterable<? extends T> iterable)
 	{
 		for (T item : iterable)
 			return item;
 		return null;
 	}
 	
-	public static<T> Collection<T> getRest(Iterable<T> iterable) throws Exception
+	public static<T> Collection<T> getRest(Iterable<? extends T> iterable) throws Exception
 	{
 		List<T> results = new ArrayList<T>();
 		for (T item: iterable)
@@ -35,7 +35,7 @@ public class Atom {
 		results.remove(0);
 		return results;
 	}
-	public static<T> Collection<T> getRestOrThrow(Iterable<T> iterable) {
+	public static<T> Collection<T> getRestOrThrow(Iterable<? extends T> iterable) {
 		try {
 			return getRest(iterable);
 		}
@@ -64,9 +64,9 @@ public class Atom {
 			return array[0];
 	}
 	
-	public static<T> T getLast(Iterable<T> iterable) throws Exception
+	public static<T> T getLast(Iterable<? extends T> iterable) throws Exception
 	{
-		Iterator<T> i = iterable.iterator();
+		Iterator<? extends T> i = iterable.iterator();
 		T item = null;
 		while( i.hasNext())
 			item = i.next();
@@ -76,9 +76,9 @@ public class Atom {
 		else
 			throw new Exception("Iterable has no items");
 	}
-	public static<T> T getLastOrThrow(Iterable<T> iterable)
+	public static<T> T getLastOrThrow(Iterable<? extends T> iterable)
 	{
-		Iterator<T> i = iterable.iterator();
+		Iterator<? extends T> i = iterable.iterator();
 		T item = null;
 		while( i.hasNext())
 			item = i.next();
@@ -88,9 +88,9 @@ public class Atom {
 		else
 			throw new RuntimeException("Iterable has no items");
 	}
-	public static<T> T getLastOrNull(Iterable<T> iterable)
+	public static<T> T getLastOrNull(Iterable<? extends T> iterable)
 	{
-		Iterator<T> i = iterable.iterator();
+		Iterator<? extends T> i = iterable.iterator();
 		T item = null;
 		while( i.hasNext())
 			item = i.next();

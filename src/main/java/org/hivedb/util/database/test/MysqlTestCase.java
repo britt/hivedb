@@ -3,17 +3,25 @@ package org.hivedb.util.database.test;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.Types;
 
 import javax.sql.DataSource;
 
-import org.hivedb.Hive;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
-import org.hivedb.util.functional.Delay;
-import org.hivedb.util.functional.QuickCache;
+import org.testng.annotations.BeforeClass;
 
 public class MysqlTestCase extends DatabaseTestCase {
+	
+	@BeforeClass
+	protected void beforeClass() {
+		try {
+			Class.forName("com.mysql.jdbc.Driver");
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+		super.beforeClass();
+	}
+	
 	@Override
 	protected void createDatabase(String name) {
 		Connection connection = getControlConnection();
@@ -98,20 +106,5 @@ public class MysqlTestCase extends DatabaseTestCase {
 	
 	private Connection getControlConnection() {
 		return getMysqlConnection(getDatabaseAgnosticConnectString());
-	}
-	
-	protected String getHiveDatabaseName() {
-		return "hive";
-	}
-	QuickCache quickCache = new QuickCache();
-	protected Hive getOrCreateHive(final String dimensionName) {
-		return quickCache.get(dimensionName, new Delay<Hive>() {
-			public Hive f() {
-				return  Hive.create(
-						getConnectString(getHiveDatabaseName()),
-						dimensionName,
-						Types.INTEGER);
-			}
-		});
 	}
 }

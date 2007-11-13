@@ -4,19 +4,19 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.hivedb.configuration.SingularHiveConfig;
 import org.hivedb.meta.Node;
 import org.hivedb.util.database.HiveDbDialect;
-import org.hivedb.util.database.test.H2HiveScenarioTestCase;
+import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.testng.annotations.Test;
 
-public class TestHiveScenarioWithH2 extends H2HiveScenarioTestCase {
+public class TestHiveScenarioWithH2 extends H2HiveTestCase {
 	@Test
-	public void test() {
-		for (SingularHiveConfig singularHiveConfig : getHiveConfigs())
-			new TestHiveScenario(singularHiveConfig).test();
+	public void test() throws Exception {
+		for (String nodeName : getDataNodeNames())
+			getHive().addNode(new Node(Hive.NEW_OBJECT_ID, nodeName, getHiveDatabaseName(), "", Hive.NEW_OBJECT_ID, HiveDbDialect.H2));
+		new TestHiveScenario(getEntityHiveConfig()).test();
 	}
 	
 	private Collection<Node> getDataNodes() {

@@ -24,10 +24,7 @@ import org.testng.annotations.Test;
 public class HiveShardSelectorTest extends H2HiveTestCase {
 	@BeforeMethod
 	public void setUp() throws Exception {
-		Hive hive = Hive.create(getConnectString(getHiveDatabaseName()), WeatherReport.CONTINENT, Types.VARCHAR);
-		ConfigurationReader config = new ConfigurationReader(Continent.class, WeatherReport.class);
-		config.install(hive);
-		hive.addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", Hive.NEW_OBJECT_ID, HiveDbDialect.H2));
+		getHive().addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", Hive.NEW_OBJECT_ID, HiveDbDialect.H2));
 	}
 
 	@Test
@@ -35,7 +32,7 @@ public class HiveShardSelectorTest extends H2HiveTestCase {
 		ConfigurationReader reader = new ConfigurationReader(Continent.class, WeatherReport.class);
 		Hive hive = getHive();
 		HiveShardSelector selector = new HiveShardSelector(reader.getHiveConfiguration(hive));
-		WeatherReport report = WeatherReport.generate();
+		WeatherReport report = WeatherReportImpl.generate();
 		
 		ShardId id = selector.selectShardIdForNewObject(report);
 		assertNotNull(id);
@@ -46,10 +43,5 @@ public class HiveShardSelectorTest extends H2HiveTestCase {
 			}}, hive.getNodes()); 
 		
 		assertTrue(Filter.grepItemAgainstList(new Integer(id.getId()), nodeIds));
-	}
-
-	private Hive getHive() {
-		return Hive.load(getConnectString(getHiveDatabaseName()));
-	}
-	
+	}	
 }

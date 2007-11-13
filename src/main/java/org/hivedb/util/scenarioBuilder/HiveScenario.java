@@ -6,7 +6,6 @@ import org.hivedb.HiveException;
 import org.hivedb.configuration.HiveConfig;
 import org.hivedb.configuration.SingularHiveConfig;
 import org.hivedb.util.GenerateHiveIndexKeys;
-import org.hivedb.util.InstallHiveIndexSchema;
 import org.hivedb.util.Persister;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Transform;
@@ -36,7 +35,6 @@ public class HiveScenario {
 	 * @throws HiveException
 	 */
 	public static HiveScenario run(SingularHiveConfig hiveConfig, int primaryIndexInstanceCount, int resourceInstanceCount, Persister persister) {
-		InstallHiveIndexSchema.install(hiveConfig);
 		HiveScenario hiveScenario = new HiveScenario(hiveConfig, primaryIndexInstanceCount, resourceInstanceCount, persister);
 		return hiveScenario;
 	}

@@ -1,29 +1,27 @@
 package org.hivedb.hibernate;
 
-import java.sql.Types;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertTrue;
+
 import java.util.Arrays;
 import java.util.Collection;
 
 import org.hivedb.Hive;
 import org.hivedb.configuration.EntityConfig;
+import org.hivedb.configuration.EntityConfigImpl;
 import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.configuration.EntityIndexConfigImpl;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.Resource;
-import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2HiveTestCase;
-import org.testng.annotations.*;
-import static org.testng.AssertJUnit.*;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 public class HiveIndexerTest extends H2HiveTestCase {
 	@BeforeMethod
 	public void setup() throws Exception {
-		Hive hive = Hive.create(getConnectString(getHiveDatabaseName()), WeatherReport.CONTINENT, Types.VARCHAR);
-		Resource resource = new Resource("WeatherReport",Types.INTEGER,false);
-		hive.addResource(resource);
-		hive.addSecondaryIndex(resource, new SecondaryIndex("temperature", Types.INTEGER));
-		hive.addSecondaryIndex(resource, new SecondaryIndex("collectionIndex", Types.INTEGER));
+		Hive hive = getHive();
 		hive.addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", hive.getPartitionDimension().getId(), HiveDbDialect.H2));
 	}
 
@@ -33,7 +31,7 @@ public class HiveIndexerTest extends H2HiveTestCase {
 	public void insertTest() throws Exception {
 		Hive hive = getHive();
 		HiveIndexer indexer = new HiveIndexer(hive);
-		WeatherReport report = WeatherReport.generate();
+		WeatherReport report = WeatherReportImpl.generate();
 		indexer.insert(getWeatherReportConfig(report), report);
 		assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
 		assertTrue(hive.directory().doesSecondaryIndexKeyExist("WeatherReport", "temperature", report.getTemperature(), report.getReportId()));
@@ -46,7 +44,7 @@ public class HiveIndexerTest extends H2HiveTestCase {
 	public void updateTest() throws Exception {
 		Hive hive = getHive();
 		HiveIndexer indexer = new HiveIndexer(hive);
-		WeatherReport report = WeatherReport.generate();
+		WeatherReport report = WeatherReportImpl.generate();
 		Integer oldTemp = report.getTemperature();
 		indexer.insert(getWeatherReportConfig(report), report);
 		assertEquals(1, hive.directory().getResourceIdsOfPrimaryIndexKey("WeatherReport", report.getContinent()).size());
@@ -62,7 +60,7 @@ public class HiveIndexerTest extends H2HiveTestCase {
 	public void deleteTest() throws Exception {
 		Hive hive = getHive();
 		HiveIndexer indexer = new HiveIndexer(hive);
-		WeatherReport report = WeatherReport.generate();
+		WeatherReport report = WeatherReportImpl.generate();
 		indexer.insert(getWeatherReportConfig(report), report);
 		assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
 		assertTrue(hive.directory().doesSecondaryIndexKeyExist("WeatherReport", "temperature", report.getTemperature(), report.getReportId()));
@@ -77,60 +75,24 @@ public class HiveIndexerTest extends H2HiveTestCase {
 	public void existsTest() throws Exception {
 		Hive hive = getHive();
 		HiveIndexer indexer = new HiveIndexer(hive);
-		WeatherReport report = WeatherReport.generate();
+		WeatherReport report = WeatherReportImpl.generate();
 		assertFalse(indexer.exists(getWeatherReportConfig(report), report));
 		indexer.insert(getWeatherReportConfig(report), report);
 		assertTrue(indexer.exists(getWeatherReportConfig(report), report));
 	}
 	
-	private Hive getHive() {
-		return Hive.load(getConnectString(getHiveDatabaseName()));
-	}
-	
 	private EntityConfig getWeatherReportConfig(final WeatherReport report) {
-		return new EntityConfig() {
-			public Collection<? extends EntityIndexConfig> getEntitySecondaryIndexConfigs() {
-				return Arrays.asList(
+		return new EntityConfigImpl(
+				WeatherReport.class,
+				WeatherReport.CONTINENT,
+				"WeatherReport",
+				"continent",
+				"reportId",
+				Arrays.asList(
 						new EntityIndexConfigImpl(WeatherReport.class, "temperature"),
-						new EntityIndexConfigImpl(WeatherReport.class, "collectionIndex"));
-			}
-
-			public Integer getId(Object instance) {
-				return ((WeatherReport) instance).getReportId();
-			}
-
-			public Class<?> getIdClass() {
-				return Integer.class;
-			}
-
-			public String getIdPropertyName() {
-				return "reportId";
-			}
-
-			public String getPartitionDimensionName() {
-				return WeatherReport.CONTINENT;
-			}
-
-			public Object getPrimaryIndexKey(Object instance) {
-				return ((WeatherReport) instance).getContinent();
-			}
-
-			public String getPrimaryIndexKeyPropertyName() {
-				return "continent";
-			}
-
-			public Class getRepresentedInterface() {
-				return WeatherReport.class;
-			}
-
-			public String getResourceName() {
-				return "WeatherReport";
-			}
-
-			public boolean isPartitioningResource() {
-				return false;
-			}};
-		}
+						new EntityIndexConfigImpl(WeatherReport.class, "collectionIndex")),
+				false);	
+	}
 
 
 	private EntityIndexConfig dummyIndexConfig(final String name, final Class clazz, final Object value) {

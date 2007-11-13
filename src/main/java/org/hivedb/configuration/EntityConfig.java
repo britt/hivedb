@@ -9,13 +9,15 @@ public interface EntityConfig {
 	String getPartitionDimensionName();
 	Object getPrimaryIndexKey(Object instance);
 	
-	public String getIdPropertyName();
-	public Object getId(Object instance);
+	String getIdPropertyName();
+	Object getId(Object instance);
 
 	Collection<? extends EntityIndexConfig> getEntitySecondaryIndexConfigs();
 	String getResourceName();
 	
 	boolean isPartitioningResource();
 	Class<?> getRepresentedInterface();
+	
+	Class<?> getPrimaryKeyClass();
 	Class<?> getIdClass();
 }

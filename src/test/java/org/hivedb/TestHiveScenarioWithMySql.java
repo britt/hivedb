@@ -4,20 +4,20 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.hivedb.configuration.SingularHiveConfig;
 import org.hivedb.meta.Node;
 import org.hivedb.util.database.HiveDbDialect;
-import org.hivedb.util.database.test.HiveMySqlTestCase;
+import org.hivedb.util.database.test.MySqlHiveTestCase;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.testng.annotations.Test;
 
-public class TestHiveScenarioWithMySql extends HiveMySqlTestCase {
+public class TestHiveScenarioWithMySql extends MySqlHiveTestCase {
 	
 	@Test(groups={"mysql"})
-	public void test() {
-		for (SingularHiveConfig singularHiveConfig : getHiveConfigs())
-			new TestHiveScenario(singularHiveConfig).test();
+	public void test()  throws Exception {
+		for (String nodeName : getDataNodeNames())
+			getHive().addNode(new Node(Hive.NEW_OBJECT_ID, nodeName, getHiveDatabaseName(), "", Hive.NEW_OBJECT_ID, HiveDbDialect.H2));
+		new TestHiveScenario(getEntityHiveConfig()).test();
 	}
 	
 	private Collection<Node> getDataNodes() {
@@ -35,10 +35,4 @@ public class TestHiveScenarioWithMySql extends HiveMySqlTestCase {
 	public Collection<String> getDatabaseNames() {
 		return Transform.flatten(Collections.singletonList(getHiveDatabaseName()),getDataNodeNames());
 	}
-	
-	@Override
-	public String getHiveDatabaseName() {
-		return "storage_test";
-	}
-
 }

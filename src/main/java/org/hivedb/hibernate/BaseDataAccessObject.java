@@ -7,15 +7,12 @@ import org.hibernate.Criteria;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
 import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.EntityIndexConfig;
-import org.hivedb.util.Lists;
-import org.hivedb.util.functional.Collect;
 
 public class BaseDataAccessObject<T, ID extends Serializable> implements DataAccessObject<T,ID> {
 	private HiveSessionFactory factory;

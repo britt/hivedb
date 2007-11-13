@@ -1,6 +1,7 @@
 package org.hivedb.configuration;
 
 import org.hivedb.Hive;
+import org.hivedb.util.database.JdbcTypeMapper;
 
 public class SingularHiveConfigImpl implements SingularHiveConfig {
 
@@ -18,5 +19,13 @@ public class SingularHiveConfigImpl implements SingularHiveConfig {
 
 	public Hive getHive() {
 		return hive;
+	}
+
+	public String getPartitionDimensionName() {
+		return entityConfig.getPartitionDimensionName();
+	}
+
+	public Class<?> getPartitionDimensionType() {
+		return JdbcTypeMapper.jdbcTypeToPrimitiveClass(hive.getPartitionDimension().getColumnType());
 	}
 }

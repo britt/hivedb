@@ -12,10 +12,10 @@ public class TestPartitionDimensionPersistence extends H2HiveTestCase {
 	@Test
 	public void testCreate() throws Exception {
 		PartitionDimensionDao dao = new PartitionDimensionDao(getDataSource(getHiveDatabaseName()));
-		assertEquals(0, dao.loadAll().size());
+		int initialSize = dao.loadAll().size();
 		final PartitionDimension d = createEmptyPartitionDimension();
 		dao.create(d);
 		assertTrue(d.getId()>0);
-		assertEquals(1, dao.loadAll().size());
+		assertEquals(initialSize+1, dao.loadAll().size());
 	}
 }

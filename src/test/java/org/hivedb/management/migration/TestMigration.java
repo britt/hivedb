@@ -25,21 +25,16 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class TestMigration extends H2HiveTestCase {
-	private Hive hive;
 
 	@BeforeMethod
 	public void beforeMethod() {
 		super.beforeMethod();
 		try {
-			hive = Hive.create(
-					getConnectString(getHiveDatabaseName()), 
-					createEmptyPartitionDimension().getName(), 
-					createEmptyPartitionDimension().getColumnType());
 			for(String name : getDatabaseNames())
-				hive.addNode(new Node(0, name, name, "", 0, HiveDbDialect.H2));
+				getHive().addNode(new Node(0, name, name, "", 0, HiveDbDialect.H2));
 			
 		} catch (Exception e) {
-			throw new RuntimeException(e.getMessage());
+			throw new RuntimeException(e);
 		}
 		
 		for(String name: getDatabaseNames()) {
@@ -56,14 +51,14 @@ public class TestMigration extends H2HiveTestCase {
 	@Test
 	public void testMigration() throws Exception {
 		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
-		Integer primaryKey = new Integer(2);
+		String primaryKey = new String("Asia");
 		Integer secondaryKey = new Integer(7);
 		
 		Pair<Node, Node> nodes = initializeTestData(hive, primaryKey, secondaryKey);
 		Node origin = nodes.getKey();
 		Node destination = nodes.getValue();
 		NodeResolver dir = new Directory(hive.getPartitionDimension(), new HiveBasicDataSource(getConnectString(getHiveDatabaseName())));
-		PartitionKeyMover<Integer> pMover = new PrimaryMover(origin.getUri());
+		PartitionKeyMover<String> pMover = new PrimaryMover(origin.getUri());
 		Mover<Integer> secMover = new SecondaryMover();
 		
 		//Do the actual migration
@@ -80,14 +75,14 @@ public class TestMigration extends H2HiveTestCase {
 	@Test
 	public void testFailDuringCopy() throws Exception {
 		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
-		Integer primaryKey = new Integer(2);
+		String primaryKey = new String("Oceana");
 		Integer secondaryKey = new Integer(7);
 		
 		Pair<Node, Node> nodes = initializeTestData(hive, primaryKey, secondaryKey);
 		Node origin = nodes.getKey();
 		Node destination = nodes.getValue();
 		NodeResolver dir = new Directory(hive.getPartitionDimension(), new HiveBasicDataSource(getConnectString(getHiveDatabaseName())));
-		PartitionKeyMover<Integer> pMover = new PrimaryMover(origin.getUri());
+		PartitionKeyMover<String> pMover = new PrimaryMover(origin.getUri());
 		//This mover just craps out on copy
 		Mover<Integer> failingMover = new Mover<Integer>() {
 			public void copy(Integer item, Node node) {
@@ -115,7 +110,7 @@ public class TestMigration extends H2HiveTestCase {
 	@Test
 	public void testFailDuringDelete() throws Exception {
 		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
-		Integer primaryKey = new Integer(2);
+		String primaryKey = new String("Asia");
 		Integer secondaryKey = new Integer(7);
 		
 		Pair<Node, Node> nodes = initializeTestData(hive, primaryKey, secondaryKey);
@@ -123,7 +118,7 @@ public class TestMigration extends H2HiveTestCase {
 		Node destination = nodes.getValue();
 		
 		NodeResolver dir = new Directory(hive.getPartitionDimension(), getDataSource(getHiveDatabaseName()));
-		PartitionKeyMover<Integer> pMover = new PrimaryMover(origin.getUri());
+		PartitionKeyMover<String> pMover = new PrimaryMover(origin.getUri());
 //		This mover just craps out on delete
 		Mover<Integer> failingMover = new Mover<Integer>() {
 			public void copy(Integer item, Node node) {
@@ -155,7 +150,7 @@ public class TestMigration extends H2HiveTestCase {
 	}
 	
 	
-	private Pair<Node, Node> initializeTestData(Hive hive, Integer primaryKey, Integer secondaryKey) throws Exception {
+	private Pair<Node, Node> initializeTestData(Hive hive, String primaryKey, Integer secondaryKey) throws Exception {
 		hive.directory().insertPrimaryIndexKey(primaryKey);
 		//Setup the test data on one node
 		NodeResolver dir = new Directory(hive.getPartitionDimension(), getDataSource(getHiveDatabaseName()));
@@ -163,7 +158,7 @@ public class TestMigration extends H2HiveTestCase {
 		Node origin = hive.getNode(originId);
 		Node destination = origin.getName().equals("data1") ? hive.getNode("data2") : 
 			hive.getNode("data1");
-		PartitionKeyMover<Integer> pMover = new PrimaryMover(origin.getUri());
+		PartitionKeyMover<String> pMover = new PrimaryMover(origin.getUri());
 		Mover<Integer> secMover = new SecondaryMover();
 		pMover.copy(primaryKey, origin);
 		secMover.copy(secondaryKey, origin);
@@ -171,14 +166,14 @@ public class TestMigration extends H2HiveTestCase {
 	}
 	
 	private String createPrimaryTableSql() {
-		return "create table primary_table (id integer)";
+		return "create table primary_table (id varchar(50))";
 	}
 	
 	private String createSecondaryTableSql() {
 		return "create table secondary_table  (id integer)";
 	}
 	
-	class PrimaryMover implements PartitionKeyMover<Integer> {
+	class PrimaryMover implements PartitionKeyMover<String> {
 		private Collection<Entry<Mover, KeyLocator>> movers;
 		private String originUri;
 		
@@ -192,27 +187,27 @@ public class TestMigration extends H2HiveTestCase {
 			return movers;
 		}
 
-		public void copy(Integer item, Node node) {
+		public void copy(String item, Node node) {
 			SimpleJdbcDaoSupport dao = new SimpleJdbcDaoSupport();
 			dao.setDataSource(new HiveBasicDataSource(node.getUri()));
 			dao.getJdbcTemplate().update("insert into primary_table values (?)", new Object[]{item});
 		}
 
-		public void delete(Integer item, Node node) {
+		public void delete(String item, Node node) {
 			SimpleJdbcDaoSupport dao = new SimpleJdbcDaoSupport();
 			dao.setDataSource(new HiveBasicDataSource(node.getUri()));
 			dao.getJdbcTemplate().update("delete from primary_table where id = ?", new Object[]{item});
 		}
 
-		public Integer get(Object id, Node node) {
+		public String get(Object id, Node node) {
 			SimpleJdbcDaoSupport dao = new SimpleJdbcDaoSupport();
 			dao.setDataSource(new HiveBasicDataSource(node.getUri()));
-			return dao.getJdbcTemplate().queryForInt("select id from primary_table where id = ?", new Object[]{id});
+			return (String) dao.getJdbcTemplate().queryForObject("select id from primary_table where id = ?", new Object[]{id}, String.class);
 		}
 		
 	}
 	
-	class SecondaryKeyLocator implements KeyLocator<Integer, Integer> {
+	class SecondaryKeyLocator implements KeyLocator<String, Integer> {
 		private String uri;
 		
 		public SecondaryKeyLocator(String uri) {
@@ -220,7 +215,7 @@ public class TestMigration extends H2HiveTestCase {
 		}
 		
 		@SuppressWarnings("unchecked")
-		public Collection<Integer> findAll(Integer parent) {
+		public Collection<Integer> findAll(String parent) {
 			SimpleJdbcDaoSupport dao = new SimpleJdbcDaoSupport();
 			dao.setDataSource(new HiveBasicDataSource(uri));
 			return dao.getJdbcTemplate().queryForList("select id from secondary_table", Integer.class);
@@ -256,7 +251,7 @@ public class TestMigration extends H2HiveTestCase {
 	}
 	
 	@Override
-	protected String getHiveDatabaseName() {
+	public String getHiveDatabaseName() {
 		return "hive";
 	}
 }

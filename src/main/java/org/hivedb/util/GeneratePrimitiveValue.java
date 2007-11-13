@@ -1,5 +1,6 @@
 package org.hivedb.util;
 
+import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -31,7 +32,9 @@ public class GeneratePrimitiveValue<F> implements Generator<F> {
 		else if (PrimitiveUtils.isDouble(clazz))
 			return (F)new Double(Math.floor(Math.abs(random.nextDouble()))+.1);
 		else if (PrimitiveUtils.isFloat(clazz))
-			return (F)new Float(Math.floor(Math.abs(random.nextFloat()))+.1);		
+			return (F)new Float(Math.floor(Math.abs(random.nextFloat()))+.1);
+		else if (PrimitiveUtils.isBigDecimal(clazz))
+			return (F)new BigDecimal(Math.floor(Math.abs(random.nextFloat()))+.1);	
 		else if (PrimitiveUtils.isString(clazz))
 			return (F)new String("String"+Math.abs(random.nextInt()));
 		else if (PrimitiveUtils.isDate(clazz))

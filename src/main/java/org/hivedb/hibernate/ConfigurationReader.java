@@ -76,10 +76,14 @@ public class ConfigurationReader {
 	public Collection<EntityConfig> getConfigurations() {
 		 return configs.values();
 	}
+	public EntityConfig getEntityConfig(String className) {
+		return configs.get(className);
+	}
 
 	public EntityHiveConfig getHiveConfiguration(Hive hive) {
 		return new PluralHiveConfig(configs, hive);
 	}
+	
 	
 	@SuppressWarnings("unchecked")
 	public void install(Hive hive) {

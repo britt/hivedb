@@ -3,5 +3,7 @@ package org.hivedb.configuration;
 import org.hivedb.Hive;
 
 public interface HiveConfig {
-	public abstract Hive getHive();
+	Hive getHive();
+	String getPartitionDimensionName();
+	Class<?> getPartitionDimensionType();
 }

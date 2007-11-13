@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
 import org.hivedb.HiveRuntimeException;
+import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.SingularHiveConfig;
 import org.hivedb.meta.Finder;
 import org.hivedb.meta.Nameable;
@@ -45,13 +46,13 @@ public class HiveSyncer {
 	 *  Sync a Hive to the configuration of the given HiveScenarioConfig. This is an additive process only:
 	 *  If the Hive contains Partition Dimensions, Resources, Secondary Indexes, or Data Nodes not
 	 *  specified by the HiveScenarioConfig they will be left alone, not deleted.
-	 * @param hiveConfig
+	 * @param entityHiveConfig
 	 * @return
 	 */
-	public HiveDiff syncHive(SingularHiveConfig hiveConfig)
+	public HiveDiff syncHive(EntityHiveConfig entityHiveConfig)
 	{
 		HiveDiff hiveDiff = diffHive(
-			new HiveConfigFinder(hiveConfig));
+			new HiveConfigFinder(entityHiveConfig));
 		
 		// Add missing secondary indexes
 		Maps.digMapToCollection(new Ternary<PartitionDimension, Resource, SecondaryIndex, Void>() {

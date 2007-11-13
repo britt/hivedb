@@ -8,6 +8,8 @@ import java.util.Map;
 import org.hivedb.Hive;
 import org.hivedb.meta.Node;
 import org.hivedb.util.Lists;
+import org.hivedb.util.database.JdbcTypeMapper;
+import org.hivedb.util.functional.DebugMap;
 import org.hivedb.util.functional.Maps;
 
 public class PluralHiveConfig implements EntityHiveConfig {
@@ -39,6 +41,8 @@ public class PluralHiveConfig implements EntityHiveConfig {
 	}
 
 	public EntityConfig getEntityConfig(String className) {
+		if (!indexConfigurations.containsKey(className))
+			throw new RuntimeException(String.format("EntityConfig for class named %s not found among %s", className, new DebugMap(indexConfigurations).toString()));
 		return indexConfigurations.get(className);
 	}
 	
@@ -58,4 +62,11 @@ public class PluralHiveConfig implements EntityHiveConfig {
 		return hive;
 	}
 
+	public String getPartitionDimensionName() {
+		return hive.getPartitionDimension().getName();
+	}
+
+	public Class<?> getPartitionDimensionType() {
+		return JdbcTypeMapper.jdbcTypeToPrimitiveClass(hive.getPartitionDimension().getColumnType());
+	}
 }

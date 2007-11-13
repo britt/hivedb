@@ -31,12 +31,10 @@ public class DirectoryTest extends H2HiveTestCase {
 	
 	@BeforeMethod
 	public void setUp() throws Exception {
-		Hive hive = Hive.create(getConnectString(getHiveDatabaseName()), createEmptyPartitionDimension().getName(), createEmptyPartitionDimension().getColumnType());
-		
+		Hive hive = getHive();
 		for(String name: getDatabaseNames())
 			hive.addNode(createNode(name));
-		new IndexSchema(hive.getPartitionDimension()).install();
-	
+		
 		hive.addResource(createResource());
 		nameIndex = new SecondaryIndex("name", Types.VARCHAR);
 		numIndex = new SecondaryIndex("num", Types.INTEGER);
@@ -75,7 +73,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	public void testDeletePrimaryIndexKey() throws Exception {
 		insertKeys(getHive());
 		Directory d = getDirectory();
-		for(Integer key : getPrimaryIndexKeys()){
+		for(String key : getPrimaryIndexKeys()){
 			d.deletePrimaryIndexKey(key);
 			assertEquals(0,d.getKeySemamphoresOfPrimaryIndexKey(key).size());
 		}
@@ -85,10 +83,10 @@ public class DirectoryTest extends H2HiveTestCase {
 	public void testDeletePrimaryIndexKeyMultipleNodes() throws Exception {
 		Directory d = getDirectory();
 		Hive hive = getHive();
-		for(Integer key: getPrimaryIndexKeys())
+		for(String key: getPrimaryIndexKeys())
 			for(Node node : hive.getNodes())
 			d.insertPrimaryIndexKey(node, key);
-		for(Integer key : getPrimaryIndexKeys()){
+		for(String key : getPrimaryIndexKeys()){
 			d.deletePrimaryIndexKey(key);
 			assertEquals(0,d.getKeySemamphoresOfPrimaryIndexKey(key).size());
 		}
@@ -98,7 +96,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	public void testGetNodeIdsOfPrimaryIndexKey() throws Exception {
 		insertKeys(getHive());
 		Directory d = getDirectory();
-		for(Integer key : getPrimaryIndexKeys())
+		for(String key : getPrimaryIndexKeys())
 			assertEquals(1, d.getKeySemamphoresOfPrimaryIndexKey(key).size());
 	}
 
@@ -123,7 +121,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	public void testGetKeySemaphoresOfResourceIds() throws Exception{
 		insertKeys(getHive());
 		Directory d = getDirectory();
-		for(Integer key : getPrimaryIndexKeys())
+		for(String key : getPrimaryIndexKeys())
 			assertEquals(1, d.getKeySemaphoresOfResourceId(resource, key).size());
 	}
 	
@@ -139,7 +137,7 @@ public class DirectoryTest extends H2HiveTestCase {
 		
 		insertKeys(getHive());
 		Directory d = getDirectory();
-		for(Integer key : getPrimaryIndexKeys())
+		for(String key : getPrimaryIndexKeys())
 			assertEquals(1, d.getKeySemaphoresOfResourceId(resource, key).size());
 	}
 	
@@ -155,7 +153,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	public void testGetPrimaryIndexKeysOfResourceId() throws Exception {
 		Directory d = getDirectory();
 		Hive hive = getHive();
-		for(Integer key :  getPrimaryIndexKeys()) {
+		for(String key :  getPrimaryIndexKeys()) {
 			d.insertPrimaryIndexKey(Atom.getFirstOrThrow(hive.getNodes()), key);
 			d.insertResourceId(resource, key+1, key);
 			assertEquals(key, Atom.getFirstOrThrow(d.getPrimaryIndexKeysOfSecondaryIndexKey(resource.getIdIndex(), key+1)));
@@ -167,7 +165,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	public void testInsertRelatedSecondaryIndexKeys() throws Exception {
 		Hive hive = getHive();
 		Directory d = getDirectory();
-		for(Integer primaryIndexKey: getPrimaryIndexKeys()) {
+		for(String primaryIndexKey: getPrimaryIndexKeys()) {
 			hive.directory().insertPrimaryIndexKey(primaryIndexKey);
 			d.insertResourceId(resource, primaryIndexKey, primaryIndexKey);
 			
@@ -192,7 +190,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	public void testUpdatePrimaryIndexKeyReadOnly() throws Exception {
 		insertKeys(getHive());
 		Directory d = getDirectory();
-		for(Integer key : getPrimaryIndexKeys()){
+		for(String key : getPrimaryIndexKeys()){
 			d.updatePrimaryIndexKeyReadOnly(key, true);
 			for(KeySemaphore s : d.getKeySemamphoresOfPrimaryIndexKey(key))
 				assertTrue(s.isReadOnly());
@@ -203,7 +201,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	public void testGetAllSecondaryIndexKeysOdPrimaryIndexKey() throws Exception {
 		insertKeys(getHive());
 		Directory d = getDirectory();
-		for(Integer key: getPrimaryIndexKeys())
+		for(String key: getPrimaryIndexKeys())
 			assertTrue(d.getSecondaryIndexKeysOfPrimaryIndexKey(nameIndex, key).size() > 0);
 	}
 	
@@ -212,7 +210,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	public void testDeleteSecondaryIndexKey() throws Exception {
 		insertKeys(getHive());
 		Directory d = getDirectory();
-		for(Integer pkey: getPrimaryIndexKeys()){
+		for(String pkey: getPrimaryIndexKeys()){
 			Collection secondaryKeys = d.getSecondaryIndexKeysOfPrimaryIndexKey(nameIndex, pkey);
 			assertTrue(secondaryKeys.size() > 0);
 			for(Object skey : secondaryKeys)
@@ -233,7 +231,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	public void testGetKeySemaphoresOfPrimaryIndexKey() throws Exception {
 		insertKeys(getHive());
 		Directory d = getDirectory();
-		for(Integer pkey : getPrimaryIndexKeys())
+		for(String pkey : getPrimaryIndexKeys())
 			assertEquals(1, d.getKeySemamphoresOfPrimaryIndexKey(pkey).size());
 	}
 	
@@ -241,7 +239,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	public void testGetKeySemaphoresOfPrimaryIndexKeyMultiNode() throws Exception {
 		Directory d = getDirectory();
 		Hive hive = getHive();
-		for(Integer pkey : getPrimaryIndexKeys()) {
+		for(String pkey : getPrimaryIndexKeys()) {
 			for(Node node : hive.getNodes())
 				d.insertPrimaryIndexKey(node, pkey);
 			assertEquals(hive.getNodes().size(), d.getKeySemamphoresOfPrimaryIndexKey(pkey).size());
@@ -252,7 +250,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	public void testGetReadOnlyOfPrimaryIndexKey() throws Exception{
 		insertKeys(getHive());
 		Directory d = getDirectory();
-		for(Integer pkey : getPrimaryIndexKeys()){
+		for(String pkey : getPrimaryIndexKeys()){
 			assertEquals(false, Lists.or(Transform.map(DirectoryWrapper.semaphoreToReadOnly(), d.getKeySemamphoresOfPrimaryIndexKey(pkey))));
 			d.updatePrimaryIndexKeyReadOnly(pkey, true);
 			assertTrue(Lists.or(Transform.map(DirectoryWrapper.semaphoreToReadOnly(), d.getKeySemamphoresOfPrimaryIndexKey(pkey))));
@@ -263,7 +261,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	public void testGetReadOnlyOfResourceId() throws Exception{
 		insertKeys(getHive());
 		Directory d = getDirectory();
-		for(Integer pkey : getPrimaryIndexKeys()){
+		for(String pkey : getPrimaryIndexKeys()){
 			assertEquals(false, Lists.or(Transform.map(DirectoryWrapper.semaphoreToReadOnly(), d.getKeySemaphoresOfResourceId(resource, pkey))));
 			d.updatePrimaryIndexKeyReadOnly(pkey, true);
 			assertTrue(Lists.or(Transform.map(DirectoryWrapper.semaphoreToReadOnly(), d.getKeySemaphoresOfResourceId(resource, pkey))));
@@ -275,7 +273,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	public void testGetNodeIdsOfSecondaryIndexKey() throws Exception {
 		insertKeys(getHive());
 		Directory d = getDirectory();
-		for(Integer pkey: getPrimaryIndexKeys()) {
+		for(String pkey: getPrimaryIndexKeys()) {
 			Collection skeys = d.getSecondaryIndexKeysOfPrimaryIndexKey(nameIndex, pkey);
 			for(Object skey : skeys){
 				assertTrue(d.getKeySemaphoresOfSecondaryIndexKey(nameIndex, skey).size() > 0);
@@ -296,7 +294,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	public void testGetSecondaryIndexKeysOfPrimaryIndexKey() throws Exception {
 		insertKeys(getHive());
 		Directory d = getDirectory();
-		for(Integer pkey : getPrimaryIndexKeys()) {
+		for(String pkey : getPrimaryIndexKeys()) {
 			Collection skeys = d.getSecondaryIndexKeysOfPrimaryIndexKey(nameIndex, pkey);
 			assertTrue(skeys.size() > 0);
 			assertEquals(secondaryKeyString, Atom.getFirst(skeys));
@@ -308,7 +306,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	public void testDeleteAllSecondaryKeyForResourceId() throws Exception {
 		insertKeys(getHive());
 		Directory d = getDirectory();
-		for(Integer key : getPrimaryIndexKeys()) {
+		for(String key : getPrimaryIndexKeys()) {
 			assertTrue(d.getSecondaryIndexKeysOfResourceId(numIndex, key).size() > 0);
 			d.batch().deleteAllSecondaryIndexKeysOfResourceId(resource, key);
 			assertEquals(0,d.getSecondaryIndexKeysOfResourceId(numIndex, key).size());
@@ -319,7 +317,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	public void testGetSecondaryKeyForResourceId() throws Exception {
 		insertKeys(getHive());
 		Directory d = getDirectory();
-		for(Integer key : getPrimaryIndexKeys())
+		for(String key : getPrimaryIndexKeys())
 			assertEquals(1,d.getSecondaryIndexKeysOfResourceId(nameIndex, key).size());
 	}
 	
@@ -332,14 +330,14 @@ public class DirectoryTest extends H2HiveTestCase {
 		Collection<Integer> keys = d.getResourceIdsOfSecondaryIndexKey(nameIndex, secondaryKeyString);
 		assertEquals(getPrimaryIndexKeys().size(),keys.size());
 		for(Integer key : keys)
-			assertTrue(getPrimaryIndexKeys().contains(key));
+			assertTrue(getPrimaryIndexKeys().contains(key.toString()));
 	}
 	
 	@Test
 	public void testDeleteResourceId() throws Exception {
 		insertKeys(getHive());
 		Directory d = getDirectory();
-		for(Integer key : getPrimaryIndexKeys()) {
+		for(String key : getPrimaryIndexKeys()) {
 			d.batch().deleteAllSecondaryIndexKeysOfResourceId(resource, key);
 			assertEquals(0,d.getSecondaryIndexKeysOfResourceId(numIndex, key).size());
 			d.deleteResourceId(resource, key);
@@ -353,8 +351,8 @@ public class DirectoryTest extends H2HiveTestCase {
 	public void testUpdatePrimaryIndexKeyOfResourceId() throws Exception {
 		insertKeys(getHive());
 		Directory d = getDirectory();
-		Integer firstKey = Atom.getFirst(getPrimaryIndexKeys());
-		for(Integer key : getPrimaryIndexKeys()) {
+		String firstKey = Atom.getFirst(getPrimaryIndexKeys());
+		for(String key : getPrimaryIndexKeys()) {
 			d.updatePrimaryIndexKeyOfResourceId(resource, key, firstKey);
 			assertEquals(firstKey,d.getPrimaryIndexKeyOfResourceId(resource, key));
 		}
@@ -365,9 +363,9 @@ public class DirectoryTest extends H2HiveTestCase {
 	public void testGetResourceIdsOfPrimaryIndexKey() throws Exception {
 		insertKeys(getHive());
 		Directory d = getDirectory();
-		for(Integer key : getPrimaryIndexKeys()) {
+		for(String key : getPrimaryIndexKeys()) {
 			assertEquals(1, d.getResourceIdsOfPrimaryIndexKey(resource, key).size());
-			assertEquals(key, Atom.getFirst(d.getResourceIdsOfPrimaryIndexKey(resource, key)));
+			assertEquals(key, Atom.getFirst(d.getResourceIdsOfPrimaryIndexKey(resource, key)).toString());
 		}
 	}
 	
@@ -380,22 +378,18 @@ public class DirectoryTest extends H2HiveTestCase {
 		return Arrays.asList(new String[] {getHiveDatabaseName(), "data1", "data2"});
 	}
 	
-	private Collection<Integer> getPrimaryIndexKeys() {
-		return Arrays.asList(new Integer[] {1,2,3,4});
+	private Collection<String> getPrimaryIndexKeys() {
+		return Arrays.asList(new String[] {"1","2","3","4"});
 	}
 	
 	private void insertKeys(Hive hive) throws HiveReadOnlyException {
 		Directory d = getDirectory();
 		Resource resource = Atom.getFirstOrNull(dimension.getResources());
-		for(Integer key: getPrimaryIndexKeys()) {
+		for(String key: getPrimaryIndexKeys()) {
 			hive.directory().insertPrimaryIndexKey(key);
 			d.insertResourceId(resource, key, key);
 			hive.directory().insertSecondaryIndexKey(nameIndex.getResource().getName(), nameIndex.getName(), secondaryKeyString, key);
 			hive.directory().insertSecondaryIndexKey(numIndex.getResource().getName(), numIndex.getName(), secondaryKeyNum, key);
 		}
-	}
-	
-	private Hive getHive() {
-		return Hive.load(getConnectString(getHiveDatabaseName()));
 	}
 }

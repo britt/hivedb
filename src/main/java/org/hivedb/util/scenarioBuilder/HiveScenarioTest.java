@@ -75,7 +75,6 @@ public class HiveScenarioTest {
 	private static void validateHiveMetadata(final SingularHiveConfig hiveConfig) throws HiveException, SQLException
 	{
 		Hive hive = hiveConfig.getHive();
-		String partitionDimensionName = hiveConfig.getEntityConfig().getPartitionDimensionName();
 		final String resourceName = hiveConfig.getEntityConfig().getResourceName();
 		Resource expectedResource = PartitionDimensionCreator.create(hiveConfig).getResource(resourceName);
 		Resource actualResource = hive.getPartitionDimension().getResource(hiveConfig.getEntityConfig().getResourceName());
@@ -159,7 +158,6 @@ public class HiveScenarioTest {
 
 	private static void updatePimaryIndexKeys(final SingularHiveConfig hiveConfig, final Collection<Object> resourceInstances, final Filter iterateFilter) throws HiveException {
 		final Hive hive = hiveConfig.getHive();
-		final String partitionDimensionName = hiveConfig.getEntityConfig().getPartitionDimensionName();
 		
 		try {
 			Undoable undoable = new Undoable() {
@@ -412,7 +410,7 @@ public class HiveScenarioTest {
 						resource.getName(),
 						secondaryIndex.getName(), 
 						secondaryIndexKey,
-						primaryIndexKey);
+						entityConfig.getId(newResourceInstance));
 			}}, HiveReadOnlyException.class);	
 			
 			// Attempt to insert a primary index key

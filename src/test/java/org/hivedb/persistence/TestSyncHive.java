@@ -17,10 +17,7 @@ public class TestSyncHive extends H2HiveTestCase {
 
 	@BeforeMethod
 	public void setUp() throws Exception {
-		Hive hive = Hive.create(
-				getConnectString(getHiveDatabaseName()), 
-				createEmptyPartitionDimension().getName(), 
-				createEmptyPartitionDimension().getColumnType());
+		Hive hive = getHive();
 		Node node = createNode("firstNode");
 		hive.addNode(node);
 		new IndexSchema(hive.getPartitionDimension()).install();

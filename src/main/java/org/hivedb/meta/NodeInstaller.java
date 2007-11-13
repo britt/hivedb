@@ -1,5 +1,5 @@
 package org.hivedb.meta;
 
-public interface InstallHiveService {
+public interface NodeInstaller {
 	public Node registerNode(String name, String dataNodeUri);
 }

@@ -7,7 +7,6 @@ import static org.testng.AssertJUnit.assertNull;
 import static org.testng.AssertJUnit.assertTrue;
 
 import java.math.BigDecimal;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -26,11 +25,8 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 
 	@BeforeMethod
 	public void setup() throws Exception {
-		Hive hive = Hive.create(getConnectString(getHiveDatabaseName()), WeatherReport.CONTINENT, Types.VARCHAR);
-		ConfigurationReader reader = new ConfigurationReader(Continent.class, WeatherReport.class);
-		reader.install(hive);
-		this.config = reader.getHiveConfiguration(hive);
-		hive.addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", Hive.NEW_OBJECT_ID, HiveDbDialect.H2));
+		this.config = getEntityHiveConfig();
+		getHive().addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", Hive.NEW_OBJECT_ID, HiveDbDialect.H2));
 		new ContinentalSchema(getConnectString(getHiveDatabaseName())).install();
 		new WeatherSchema(getConnectString(getHiveDatabaseName())).install();
 	}
@@ -64,7 +60,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	@Test
 	public Integer testInsert() throws Exception {
 		DataAccessObject<WeatherReport, Integer> dao = getDao();
-		WeatherReport report = WeatherReport.generate();
+		WeatherReport report = WeatherReportImpl.generate();
 		dao.save(report);
 		WeatherReport savedReport = dao.get(report.getReportId());
 		assertEquals(report, savedReport);
@@ -92,7 +88,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	public void testSaveAll() throws Exception {
 		Collection<WeatherReport> reports = new ArrayList<WeatherReport>();
 		for(int i=0; i<5; i++) {
-			WeatherReport report = WeatherReport.generate();
+			WeatherReport report = WeatherReportImpl.generate();
 			report.setReportId(i);
 			reports.add(report);
 		}
@@ -107,7 +103,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	public void testUpdateAll() throws Exception {
 		Collection<WeatherReport> reports = new ArrayList<WeatherReport>();
 		for(int i=0; i<5; i++) {
-			WeatherReport report = WeatherReport.generate();
+			WeatherReport report = WeatherReportImpl.generate();
 			report.setReportId(i);
 			reports.add(report);
 		}

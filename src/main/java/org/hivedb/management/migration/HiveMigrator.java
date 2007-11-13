@@ -32,7 +32,8 @@ public class HiveMigrator implements Migrator {
 			mover.copy(migrant, destination);
 			//Copy all dependent records
 			for(Pair<Mover, KeyLocator> p : (List<Pair<Mover, KeyLocator>>) mover.getDependentMovers()){
-				for(Object childKey : p.getValue().findAll(migrant)) {
+				final KeyLocator value = p.getValue();
+				for(Object childKey : value.findAll(migrant)) {
 					Mover childMover = p.getKey();
 					Object child = childMover.get(childKey, origin);
 					childMover.copy(child, destination);

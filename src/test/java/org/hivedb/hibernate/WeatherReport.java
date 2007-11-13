@@ -13,86 +13,31 @@ import org.hivedb.hibernate.annotations.Resource;
 import org.hivedb.util.HiveUtils;
 
 @Resource(name="WeatherReport")
-public class WeatherReport {
-	private static final String[] continents = 
-		new String[]{"North America","South America", "Asia", "Europe","Africa","Australia","Antarctica"};
-    private Integer reportId;
-    private String continent;
-    private BigDecimal latitude,longitude;
-    private int temperature;
-    private Date reportTime;
+public interface WeatherReport {
+	
 	public static final String REPORT_ID = "reportId";
 	public static final String TEMPERATURE = "temperature";
 	public static final String CONTINENT = "continent";
     
-	@PartitionIndex
-	public String getContinent() {
-		return continent;
-	}
-	public void setContinent(String continent) {
-		this.continent = continent;
-	}
-	public BigDecimal getLatitude() {
-		return latitude;
-	}
-	public void setLatitude(BigDecimal latitude) {
-		this.latitude = latitude;
-	}
-	public BigDecimal getLongitude() {
-		return longitude;
-	}
-	public void setLongitude(BigDecimal longitude) {
-		this.longitude = longitude;
-	}
+    @PartitionIndex(name=WeatherReport.CONTINENT)
+	String getContinent();
+	BigDecimal getLatitude();
+	BigDecimal getLongitude();
 	
 	@EntityId
-	public Integer getReportId() {
-		return reportId;
-	}
-	public void setReportId(Integer reportId) {
-		this.reportId = reportId;
-	}
-	
-	public Date getReportTime() {
-		return reportTime;
-	}
-	public void setReportTime(Date reportTime) {
-		this.reportTime = reportTime;
-	}
+	Integer getReportId();
+	Date getReportTime();
+
 	@Index
-	public int getTemperature() {
-		return temperature;
-	}
-	public void setTemperature(int temperature) {
-		this.temperature = temperature;
-	}
-	
-	public Integer[] getArrayIndex() {
-		return new Integer[]{1,2,3,4,5};
-	}
+	int getTemperature();
 	
 	@Index
-	public Collection<Integer> getCollectionIndex() {
-		return Arrays.asList(getArrayIndex());
-	}
+	Collection<Integer> getCollectionIndex();
 	
-	@Override
-	public boolean equals(Object obj) {
-		return this.hashCode() == obj.hashCode();
-	}
-	@Override
-	public int hashCode() {
-		return HiveUtils.makeHashCode(new Object[]{getContinent(),getLatitude(), getLongitude(), getReportId(), getReportTime()});
-	}
-	public static WeatherReport generate() {
-		Random r = new Random(System.currentTimeMillis());
-		WeatherReport weatherReport = new WeatherReport();
-		weatherReport.setContinent(continents[r.nextInt(continents.length)]);
-		weatherReport.setLatitude(new BigDecimal(360*r.nextDouble()));
-		weatherReport.setLongitude(new BigDecimal(360*r.nextDouble()));
-		weatherReport.setReportId(r.nextInt());
-		weatherReport.setReportTime(new Date(System.currentTimeMillis()));
-		weatherReport.setTemperature((int) Math.rint(Math.random() * 100));
-		return weatherReport;
-	}
+	void setContinent(String value);
+	void setLatitude(BigDecimal value);
+	void setLongitude(BigDecimal value);
+	void setReportId(Integer value);
+	void setReportTime(Date value);
+	void setTemperature(int value);
 }

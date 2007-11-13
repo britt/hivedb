@@ -9,10 +9,10 @@ import javax.sql.DataSource;
 
 import org.hivedb.management.KeyAuthority;
 import org.hivedb.management.MySqlKeyAuthority;
-import org.hivedb.util.database.test.HiveMySqlTestCase;
+import org.hivedb.util.database.test.MySqlHiveTestCase;
 import org.testng.annotations.Test;
 
-public class TestMysqlKeyAuthority extends HiveMySqlTestCase{
+public class TestMysqlKeyAuthority extends MySqlHiveTestCase{
 	DataSource ds = null;
 
 	@Test(groups={"mysql"})

@@ -1,11 +1,11 @@
 package org.hivedb.persistence;
 
 import org.hivedb.meta.persistence.HiveBasicDataSource;
-import org.hivedb.util.database.test.H2TestCase;
+import org.hivedb.util.database.test.H2HiveTestCase;
 import org.testng.AssertJUnit;
 import org.testng.annotations.Test;
 
-public class TestHiveBasicDataSource extends H2TestCase{
+public class TestHiveBasicDataSource extends H2HiveTestCase{
 
 	@Test
 	public void testPoolSize() {

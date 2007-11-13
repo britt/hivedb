@@ -1,5 +1,6 @@
 package org.hivedb.util;
 
+import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -28,6 +29,8 @@ public class PrimitiveUtils {
 			return (double) 0;
 		if (isFloat(clazz))
 			return (float) 0;
+		if (isBigDecimal(clazz))
+			return new BigDecimal(0);
 		if (isString(clazz))
 			return "";
 		if (isDate(clazz)) {		
@@ -43,7 +46,7 @@ public class PrimitiveUtils {
 	 * @param clazz
 	 */
 	public static boolean isPrimitiveClass(Class clazz) {
-		return isInteger(clazz) || isLong(clazz) || isShort(clazz) || isDouble(clazz) || isFloat(clazz) || isString(clazz) || isDate(clazz)
+		return isInteger(clazz) || isLong(clazz) || isShort(clazz) || isDouble(clazz) || isFloat(clazz) || isBigDecimal(clazz) || isString(clazz) || isDate(clazz)
 			|| isBoolean(clazz) || isClass(clazz) || isObject(clazz);
 	}
 	
@@ -70,6 +73,10 @@ public class PrimitiveUtils {
 	public static boolean isFloat(Class clazz) {
 		return clazz.equals(float.class)
 		|| clazz.equals(Float.class);
+	}
+	
+	public static boolean isBigDecimal(Class clazz) {
+		return clazz.equals(BigDecimal.class);
 	}
 	
 	public static boolean isDate(Class clazz) {

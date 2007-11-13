@@ -4,8 +4,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.hivedb.Hive;
-import org.hivedb.configuration.HiveConfig;
-import org.hivedb.configuration.SingularHiveConfig;
+import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.meta.Finder;
 import org.hivedb.meta.Nameable;
 import org.hivedb.meta.PartitionDimension;
@@ -15,16 +14,16 @@ public class HiveConfigFinder implements Finder {
 	
 	
 	@SuppressWarnings("unused")
-	private HiveConfig hiveConfig;
+	private EntityHiveConfig entityHiveConfig;
 	private PartitionDimension partitionDimension;
-	public HiveConfigFinder(SingularHiveConfig hiveConfig) {
-		this.hiveConfig = hiveConfig;
-		this.partitionDimension = PartitionDimensionCreator.create(hiveConfig);
+	public HiveConfigFinder(EntityHiveConfig entityHiveConfig) {
+		this.entityHiveConfig = entityHiveConfig;
+		this.partitionDimension = PartitionDimensionCreator.create(entityHiveConfig);
 	}
 	@SuppressWarnings("unchecked")
 	public <T extends Nameable> T findByName(Class<T> forClass, final String name) {
 		if(forClass.equals(Hive.class))
-			return (T) hiveConfig.getHive();
+			return (T) entityHiveConfig.getHive();
 		else
 			return (T)partitionDimension;
 	}
@@ -32,7 +31,7 @@ public class HiveConfigFinder implements Finder {
 	@SuppressWarnings("unchecked")
 	public <T extends Nameable> Collection<T> findCollection(Class<T> forClass) {
 		if(forClass.equals(Hive.class))
-			return (Collection<T>) Arrays.asList(hiveConfig.getHive());
+			return (Collection<T>) Arrays.asList(entityHiveConfig.getHive());
 		else
 			return (Collection<T>) Arrays.asList(partitionDimension);
 	}

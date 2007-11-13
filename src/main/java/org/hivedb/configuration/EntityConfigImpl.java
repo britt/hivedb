@@ -11,7 +11,7 @@ public class EntityConfigImpl implements EntityConfig {
 	private String resourceName;
 	private String primaryIndexKeyPropertyName;
 	private String idPropertyName;
-	private Collection<? extends EntityIndexConfig> secondaryIndexIdentifiables;
+	private Collection<? extends EntityIndexConfig> entityIndexConfigs;
 	private boolean isPartitioningResource;
 	
 	public static EntityConfig createEntity(
@@ -62,14 +62,14 @@ public class EntityConfigImpl implements EntityConfig {
 			String resourceName,
 			String primaryIndexKeyPropertyName,
 			String idPropertyName,
-			Collection<? extends EntityIndexConfig> secondaryIndexIdentifiables,
+			Collection<? extends EntityIndexConfig> entityIndexConfigs,
 			boolean isPartitioningResource) {
 		this.representedInterface = representedInterface;
 		this.partitionDimensionName = partitionDimensionName;
 		this.resourceName = resourceName;
 		this.primaryIndexKeyPropertyName = primaryIndexKeyPropertyName;
 		this.idPropertyName = idPropertyName;
-		this.secondaryIndexIdentifiables = secondaryIndexIdentifiables;
+		this.entityIndexConfigs = entityIndexConfigs;
 		this.isPartitioningResource = isPartitioningResource;
 	}
 	
@@ -78,7 +78,7 @@ public class EntityConfigImpl implements EntityConfig {
 	}
 	
 	public Collection<? extends EntityIndexConfig> getEntitySecondaryIndexConfigs() {
-		return secondaryIndexIdentifiables;
+		return entityIndexConfigs;
 	}
 	
 	public String getIdPropertyName() {
@@ -108,6 +108,11 @@ public class EntityConfigImpl implements EntityConfig {
 	public Object getPrimaryIndexKey(Object resourceInstance) {
 		return ReflectionTools.invokeGetter(resourceInstance, primaryIndexKeyPropertyName);
 	}
+	
+	public Class<?> getPrimaryKeyClass() {
+		return ReflectionTools.getPropertyType(getRepresentedInterface(), getPrimaryIndexKeyPropertyName());
+	}
+	
 	public Class<?> getIdClass() {
 		return ReflectionTools.getPropertyType(getRepresentedInterface(), getIdPropertyName());
 	}

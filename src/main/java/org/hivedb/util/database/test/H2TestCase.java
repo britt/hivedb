@@ -64,10 +64,4 @@ public class H2TestCase extends DatabaseTestCase {
 	protected DataSource getDataSource(String name) {
 		return new HiveBasicDataSource(getConnectString(name));
 	}
-	
-	@Override
-	public Collection<String> getDatabaseNames() {
-		return Arrays.asList(new String[] {TEST_DB});
-	}
-
 }

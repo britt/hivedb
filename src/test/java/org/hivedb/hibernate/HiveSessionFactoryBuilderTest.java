@@ -1,8 +1,8 @@
 package org.hivedb.hibernate;
 
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertNotNull;
-
-import java.sql.Types;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -18,18 +18,13 @@ import org.hivedb.util.database.test.H2HiveTestCase;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import static org.testng.AssertJUnit.*;
-
 public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 	private EntityHiveConfig config;
 	
 	@BeforeMethod
 	public void configureHive() throws Exception {
-		Hive hive = Hive.create(getConnectString(getHiveDatabaseName()), WeatherReport.CONTINENT, Types.VARCHAR);
-		ConfigurationReader reader = new ConfigurationReader(Continent.class, WeatherReport.class);
-		reader.install(hive);
-		this.config = reader.getHiveConfiguration(hive);
-		hive.addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", Hive.NEW_OBJECT_ID, HiveDbDialect.H2));
+		this.config = getEntityHiveConfig();
+		getHive().addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", Hive.NEW_OBJECT_ID, HiveDbDialect.H2));
 		new WeatherSchema(getConnectString(getHiveDatabaseName())).install();
 	}
 	
@@ -55,7 +50,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 	public void testOpenSessionByPrimaryKey() throws Exception {
 		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
 		
-		final WeatherReport report = WeatherReport.generate();
+		final WeatherReport report = WeatherReportImpl.generate();
 		Session session = factoryBuilder.getSessionFactory().openSession();
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
@@ -73,7 +68,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
 		assertNotNull(factoryBuilder.getSessionFactory());
 		
-		final WeatherReport report = WeatherReport.generate();
+		final WeatherReport report = WeatherReportImpl.generate();
 		Session session = factoryBuilder.openSession();
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
@@ -98,7 +93,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 	public void testOpenSessionBySecondaryIndex() throws Exception {
 		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
 
-		final WeatherReport report = WeatherReport.generate();
+		final WeatherReport report = WeatherReportImpl.generate();
 		Session session = factoryBuilder.openSession();
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
@@ -113,7 +108,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 	@Test
 	public void testInsert() throws Exception {
 		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
-		final WeatherReport report = WeatherReport.generate();
+		final WeatherReport report = WeatherReportImpl.generate();
 		Session session = factoryBuilder.openSession();
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
@@ -127,7 +122,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 	@Test
 	public void testInsertAndRetrieve() throws Exception {
 		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
-		final WeatherReport report = WeatherReport.generate();
+		final WeatherReport report = WeatherReportImpl.generate();
 		Session session = factoryBuilder.openSession();
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
@@ -142,7 +137,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 	@Test
 	public void testDelete() throws Exception {
 		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
-		final WeatherReport report = WeatherReport.generate();
+		final WeatherReport report = WeatherReportImpl.generate();
 		Session session = factoryBuilder.openSession();
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
@@ -162,14 +157,14 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 	@Test
 	public void testUpdate() throws Exception {
 		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
-		final WeatherReport report = WeatherReport.generate();
+		final WeatherReport report = WeatherReportImpl.generate();
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
 				session.saveOrUpdate(report);
 			}};
 		doInTransaction(callback, factoryBuilder.openSession());
 		
-		final WeatherReport mutated = WeatherReport.generate();
+		final WeatherReport mutated = WeatherReportImpl.generate();
 		mutated.setReportId(report.getReportId());
 		assertFalse("You have to change something if you want to test update.", mutated.equals(report));
 		
@@ -179,7 +174,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 			}};
 		
 		doInTransaction(updateCallback, factoryBuilder.openSession());
-		WeatherReport fetched = (WeatherReport) factoryBuilder.openSession().get(WeatherReport.class, report.getReportId());
+		WeatherReportImpl fetched = (WeatherReportImpl) factoryBuilder.openSession().get(WeatherReport.class, report.getReportId());
 
 		assertFalse(report.equals(fetched));
 		assertEquals(mutated, fetched);

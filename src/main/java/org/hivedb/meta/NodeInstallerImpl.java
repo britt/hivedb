@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
 import org.hivedb.HiveRuntimeException;
+import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.SingularHiveConfig;
 import org.hivedb.util.InstallHiveIndexSchema;
 
@@ -14,21 +15,22 @@ import org.hivedb.util.InstallHiveIndexSchema;
  * @param <T>
  * @param <N>
  */
-public class InstallHiveServiceImpl implements InstallHiveService {
-	private final Logger log = Logger.getLogger(InstallHiveServiceImpl.class);
-	private final SingularHiveConfig hiveConfig;
+public class NodeInstallerImpl implements NodeInstaller {
+	private final Logger log = Logger.getLogger(NodeInstallerImpl.class);
+	private final EntityHiveConfig entityHiveConfig;
 	
-	public InstallHiveServiceImpl(SingularHiveConfig hiveConfig) {		
-		this.hiveConfig = hiveConfig;
-		installIndexSchema();
+	public NodeInstallerImpl(EntityHiveConfig entityHiveConfig) {		
+		this.entityHiveConfig = entityHiveConfig;
+		//installIndexSchema();
 	}
 
-	private void installIndexSchema() {
-		InstallHiveIndexSchema.install(hiveConfig);
-	}
+	// Using Configuration Reader's installer instead
+	//private void installIndexSchema() {
+		//InstallHiveIndexSchema.install(entityHiveConfig);
+	//}
 
 	public Node registerNode(String name, String dataNodeUri) {
-		final Hive hive = hiveConfig.getHive();
+		final Hive hive = entityHiveConfig.getHive();
 		final PartitionDimension partitionDimension = hive.getPartitionDimension();
 		
 		for (Node node : hive.getNodes()) {

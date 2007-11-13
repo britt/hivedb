@@ -1,6 +1,7 @@
 package org.hivedb.util.database.test;
 
 import java.util.Collection;
+import java.util.Collections;
 
 import org.hivedb.Hive;
 import org.hivedb.configuration.EntityHiveConfig;
@@ -14,11 +15,11 @@ import org.hivedb.util.functional.Unary;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
-public class H2HiveTestCase extends H2TestCase {
+public abstract class MySqlHiveTestCase extends MysqlTestCase {
 	
 	HiveTestCase hiveTestCase;
-	public H2HiveTestCase() {
-		hiveTestCase = new HiveTestCase(HiveDbDialect.H2, new Unary<String,String>() {
+	public MySqlHiveTestCase() {
+		hiveTestCase = new HiveTestCase(HiveDbDialect.MySql, new Unary<String,String>() {
 			public String f(String databaseName) {
 				return getConnectString(databaseName);
 			}
@@ -29,6 +30,7 @@ public class H2HiveTestCase extends H2TestCase {
 	@Override
 	@BeforeClass
 	protected void beforeClass() {
+		super.beforeClass();
 		hiveTestCase.beforeClass();
 		super.beforeClass();
 	}
@@ -49,18 +51,15 @@ public class H2HiveTestCase extends H2TestCase {
 		return hiveTestCase.getEntityHiveConfig();
 	}
 	
-	public String getHiveDatabaseName() {
-		return hiveTestCase.getHiveDatabaseName();
+	protected String getHiveDatabaseName() {
+		return "hive";
 	}
+	
+	@Override
 	public Collection<String> getDatabaseNames() {
-		return hiveTestCase.getDatabaseNames();  
+		return Collections.singletonList(getHiveDatabaseName());  
 	}
-	
-	
-	
-	
-	
-	// Sample data
+
 	protected Collection<Resource> createResources() {
 		return hiveTestCase.createResources();
 	}
@@ -88,5 +87,4 @@ public class H2HiveTestCase extends H2TestCase {
 	protected HiveSemaphore createHiveSemaphore() {
 		return hiveTestCase.createHiveSemaphore();
 	}
-	
 }

@@ -3,7 +3,6 @@ package org.hivedb.hibernate;
 import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertTrue;
 
-import java.sql.Types;
 import java.util.Collection;
 
 import org.hibernate.shards.ShardId;
@@ -21,10 +20,7 @@ public class HiveShardResolverTest extends H2HiveTestCase {
 
 	@BeforeMethod
 	public void setUp() throws Exception {
-		Hive hive = Hive.create(getConnectString(getHiveDatabaseName()), WeatherReport.CONTINENT, Types.VARCHAR);
-		ConfigurationReader config = new ConfigurationReader(Continent.class, WeatherReport.class);
-		config.install(hive);
-		hive.addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", Hive.NEW_OBJECT_ID, HiveDbDialect.H2));
+		getHive().addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", Hive.NEW_OBJECT_ID, HiveDbDialect.H2));
 	}
 	
 	@Test
@@ -33,7 +29,7 @@ public class HiveShardResolverTest extends H2HiveTestCase {
 		ConfigurationReader reader = new ConfigurationReader(Continent.class, WeatherReport.class);
 		EntityHiveConfig config = reader.getHiveConfiguration(hive);
 		
-		WeatherReport report = WeatherReport.generate();
+		WeatherReport report = WeatherReportImpl.generate();
 		Continent asia = new AsiaticContinent();
 		
 		HiveIndexer indexer = new HiveIndexer(hive);
@@ -60,9 +56,5 @@ public class HiveShardResolverTest extends H2HiveTestCase {
 		nodeIds = hive.directory().getNodeIdsOfResourceId("WeatherReport", report.getReportId());
 		for(ShardId id : reportIds)
 			assertTrue(nodeIds.contains(id.getId()));
-	}
-	private Hive getHive() {
-		return Hive.load(getConnectString(getHiveDatabaseName()));
-	}
-	
+	}	
 }
