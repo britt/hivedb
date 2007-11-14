@@ -50,7 +50,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 	public void testOpenSessionByPrimaryKey() throws Exception {
 		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
 		
-		final WeatherReport report = WeatherReportImpl.generate();
+		final WeatherReportImpl report = WeatherReportImpl.generate();
 		Session session = factoryBuilder.getSessionFactory().openSession();
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
@@ -59,7 +59,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 		doInTransaction(callback, session);
 		
 		assertNotNull(factoryBuilder.getSessionFactory());
-		factoryBuilder.openSession(config.getEntityConfig(WeatherReport.class).getPrimaryIndexKey(report));
+		factoryBuilder.openSession(config.getEntityConfig(WeatherReportImpl.class).getPrimaryIndexKey(report));
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -76,14 +76,14 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 			}};
 		doInTransaction(callback, session);
 		
-		factoryBuilder.openSession("WeatherReport", config.getEntityConfig(WeatherReport.class).getId(report));
+		factoryBuilder.openSession("WeatherReport", config.getEntityConfig(WeatherReportImpl.class).getId(report));
 	}
 
 	private HiveSessionFactoryBuilderImpl getHiveSessionFactoryBuilder() {
 		HiveSessionFactoryBuilderImpl factoryBuilder = 
 			new HiveSessionFactoryBuilderImpl(
 					getConnectString(getHiveDatabaseName()), 
-					Lists.newList(Continent.class, WeatherReport.class),
+					Lists.newList(Continent.class, WeatherReportImpl.class),
 					new SequentialShardAccessStrategy());
 		return factoryBuilder;
 	}
@@ -129,7 +129,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 				session.saveOrUpdate(report);
 			}};
 		doInTransaction(callback, session);
-		WeatherReport fetched = (WeatherReport) factoryBuilder.openSession().get(WeatherReport.class, report.getReportId());
+		WeatherReport fetched = (WeatherReport) factoryBuilder.openSession().get(WeatherReportImpl.class, report.getReportId());
 		assertEquals(report, fetched);
 	}
 	
@@ -149,7 +149,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 				session.delete(report);
 			}};
 		doInTransaction(deleteCallback, factoryBuilder.openSession());
-		WeatherReport fetched = (WeatherReport) factoryBuilder.openSession().get(WeatherReport.class, report.getReportId());
+		WeatherReport fetched = (WeatherReport) factoryBuilder.openSession().get(WeatherReportImpl.class, report.getReportId());
 		assertEquals(fetched, null);
 	}
 	
@@ -174,7 +174,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 			}};
 		
 		doInTransaction(updateCallback, factoryBuilder.openSession());
-		WeatherReportImpl fetched = (WeatherReportImpl) factoryBuilder.openSession().get(WeatherReport.class, report.getReportId());
+		WeatherReportImpl fetched = (WeatherReportImpl) factoryBuilder.openSession().get(WeatherReportImpl.class, report.getReportId());
 
 		assertFalse(report.equals(fetched));
 		assertEquals(mutated, fetched);

@@ -13,6 +13,7 @@ import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.EntityIndexConfig;
+import org.hivedb.util.Lists;
 
 public class BaseDataAccessObject<T, ID extends Serializable> implements DataAccessObject<T,ID> {
 	private HiveSessionFactory factory;
@@ -48,7 +49,7 @@ public class BaseDataAccessObject<T, ID extends Serializable> implements DataAcc
 	}
 
 	@SuppressWarnings("unchecked")
-	public T get(ID id) {
+	public T get(final ID id) {
 		T entity = null;
 		Session session = null;
 		try {
@@ -71,14 +72,21 @@ public class BaseDataAccessObject<T, ID extends Serializable> implements DataAcc
 	public Collection<T> findByProperty(String propertyName, Object value) {
 		EntityConfig entityConfig = config.getEntityConfig(getRespresentedClass());
 		EntityIndexConfig indexConfig = getIndexConfig(propertyName, entityConfig.getEntitySecondaryIndexConfigs());
+		Collection<T> entities = Lists.newArrayList();
 		Session session = 
 			factory.openSession(
 				entityConfig.getResourceName(), 
 				indexConfig.getIndexName(), 
 				value);
-		Criteria c = session.createCriteria(entityConfig.getRepresentedInterface());
-		c.add( Restrictions.eq(indexConfig.getPropertyName(), value));
-		return c.list();
+		try {
+			Criteria c = session.createCriteria(entityConfig.getRepresentedInterface());
+			c.add( Restrictions.eq(indexConfig.getPropertyName(), value));
+			entities = c.list();
+		} finally {
+			if(session != null)
+				session.close();
+		}
+		return entities;
 	}
 
 	public T save(final T entity) {

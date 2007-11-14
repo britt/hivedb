@@ -10,8 +10,8 @@ import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.hibernate.ConfigurationReader;
 import org.hivedb.hibernate.Continent;
-import org.hivedb.hibernate.WeatherReportImpl;
 import org.hivedb.hibernate.WeatherReport;
+import org.hivedb.hibernate.WeatherReportImpl;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.Node;
@@ -48,7 +48,7 @@ public class HiveTestCase {
 				installer.registerNode(nodeName, getConnectString.f(nodeName));
 	}
 	
-	final ConfigurationReader configurationReader = new ConfigurationReader(Continent.class, WeatherReport.class);
+	final ConfigurationReader configurationReader = new ConfigurationReader(Continent.class, WeatherReportImpl.class);
 	public EntityHiveConfig getEntityHiveConfig()
 	{
 		final EntityConfig entityConfig = configurationReader.getEntityConfig(Continent.class.getName());

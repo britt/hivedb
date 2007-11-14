@@ -6,8 +6,13 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Random;
 
+import org.hivedb.hibernate.annotations.EntityId;
+import org.hivedb.hibernate.annotations.Index;
+import org.hivedb.hibernate.annotations.PartitionIndex;
+import org.hivedb.hibernate.annotations.Resource;
 import org.hivedb.util.HiveUtils;
 
+@Resource(name="WeatherReport")
 public class WeatherReportImpl implements WeatherReport {
 	private static final String[] continents = 
 		new String[]{"North America","South America", "Asia", "Europe","Africa","Australia","Antarctica"};
@@ -19,7 +24,8 @@ public class WeatherReportImpl implements WeatherReport {
 	public static final String REPORT_ID = "reportId";
 	public static final String TEMPERATURE = "temperature";
 	public static final String CONTINENT = "continent";
-    
+	
+    @PartitionIndex(name=WeatherReport.CONTINENT)
 	public String getContinent() {
 		return continent;
 	}
@@ -38,7 +44,7 @@ public class WeatherReportImpl implements WeatherReport {
 	public void setLongitude(BigDecimal longitude) {
 		this.longitude = longitude;
 	}
-	
+	@EntityId
 	public Integer getReportId() {
 		return reportId;
 	}
@@ -52,7 +58,7 @@ public class WeatherReportImpl implements WeatherReport {
 	public void setReportTime(Date reportTime) {
 		this.reportTime = reportTime;
 	}
-	
+	@Index
 	public int getTemperature() {
 		return temperature;
 	}
@@ -63,7 +69,7 @@ public class WeatherReportImpl implements WeatherReport {
 	public Integer[] getArrayIndex() {
 		return new Integer[]{1,2,3,4,5};
 	}
-	
+	@Index
 	public Collection<Integer> getCollectionIndex() {
 		return Arrays.asList(getArrayIndex());
 	}
@@ -76,9 +82,9 @@ public class WeatherReportImpl implements WeatherReport {
 	public int hashCode() {
 		return HiveUtils.makeHashCode(new Object[]{getContinent(),getLatitude(), getLongitude(), getReportId(), getReportTime()});
 	}
-	public static WeatherReport generate() {
+	public static WeatherReportImpl generate() {
 		Random r = new Random(System.currentTimeMillis());
-		WeatherReport weatherReport = new WeatherReportImpl();
+		WeatherReportImpl weatherReport = new WeatherReportImpl();
 		weatherReport.setContinent(continents[r.nextInt(continents.length)]);
 		weatherReport.setLatitude(new BigDecimal(360*r.nextDouble()));
 		weatherReport.setLongitude(new BigDecimal(360*r.nextDouble()));

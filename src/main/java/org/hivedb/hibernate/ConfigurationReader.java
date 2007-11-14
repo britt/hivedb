@@ -20,6 +20,7 @@ import org.hivedb.hibernate.annotations.EntityId;
 import org.hivedb.hibernate.annotations.Index;
 import org.hivedb.hibernate.annotations.PartitionIndex;
 import org.hivedb.hibernate.annotations.Resource;
+import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.Lists;
 import org.hivedb.util.database.JdbcTypeMapper;
@@ -28,6 +29,7 @@ import org.springframework.beans.BeanUtils;
 public class ConfigurationReader {
 	@SuppressWarnings("unchecked")
 	private Map<String, EntityConfig> configs = new HashMap<String, EntityConfig>();
+	private PartitionDimension dimension = null;
 	
 	public ConfigurationReader() {}
 	
@@ -45,6 +47,14 @@ public class ConfigurationReader {
 	public EntityConfig configure(Class<?> clazz) {
 		String dimensionName = getPartitionDimensionName(clazz);
 		Method partitionIndexMethod = AnnotationHelper.getFirstMethodWithAnnotation(clazz, PartitionIndex.class);
+		
+		if(dimension == null) 
+			dimension = new PartitionDimension(dimensionName, JdbcTypeMapper.primitiveTypeToJdbcType(partitionIndexMethod.getReturnType()));
+		else
+			if(!dimension.getName().equals(dimensionName))
+				throw new UnsupportedOperationException(
+						String.format("You are trying to configure on object from partition dimension %s into a Hive configured to use partition dimension %s. THis is not supported. Use a separate configuration for each dimension.", dimensionName, dimension.getName()));
+		
 		Method resourceIdMethod = AnnotationHelper.getFirstMethodWithAnnotation(clazz, EntityId.class);
 		List<Method> indexMethods = AnnotationHelper.getAllMethodsWithAnnotation(clazz, Index.class);
 		if(indexMethods.contains(resourceIdMethod))
@@ -87,6 +97,11 @@ public class ConfigurationReader {
 	
 	@SuppressWarnings("unchecked")
 	public void install(Hive hive) {
+		try {
+			Hive.create(hive.getUri(), dimension.getName(), dimension.getColumnType());
+		} catch(HiveRuntimeException e) {
+			//quash if there is already a hive installed
+		}
 		for(EntityConfig config : configs.values())
 			installConfiguration(config,hive);
 	}

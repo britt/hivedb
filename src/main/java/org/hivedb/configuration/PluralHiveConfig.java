@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hivedb.Hive;
+import org.hivedb.HiveRuntimeException;
 import org.hivedb.meta.Node;
 import org.hivedb.util.Lists;
 import org.hivedb.util.database.JdbcTypeMapper;
@@ -25,9 +26,7 @@ public class PluralHiveConfig implements EntityHiveConfig {
 	
 	@SuppressWarnings("unchecked")
 	public EntityConfig getEntityConfig(Class<?> clazz) {
-		List<Class> ancestors = Lists.newArrayList();
-		ancestors.add(clazz.getSuperclass());
-		ancestors.addAll(Arrays.asList(clazz.getInterfaces()));
+		List<Class> ancestors = getAncestors(clazz);
 		EntityConfig config = indexConfigurations.get(clazz.getName());
 		if(config == null){
 			for(Class ancestor : ancestors) {
@@ -41,9 +40,21 @@ public class PluralHiveConfig implements EntityHiveConfig {
 	}
 
 	public EntityConfig getEntityConfig(String className) {
-		if (!indexConfigurations.containsKey(className))
-			throw new RuntimeException(String.format("EntityConfig for class named %s not found among %s", className, new DebugMap(indexConfigurations).toString()));
-		return indexConfigurations.get(className);
+		Class clazz = null;
+		try {
+			clazz = Class.forName(className);
+		} catch (ClassNotFoundException e) {
+			throw new HiveRuntimeException(e.getMessage(),e);
+		}
+		return getEntityConfig(clazz);
+	}
+	
+	@SuppressWarnings("unused")
+	private List<Class> getAncestors(Class<?> clazz) {
+		List<Class> ancestors = Lists.newArrayList();
+		ancestors.add(clazz.getSuperclass());
+		ancestors.addAll(Arrays.asList(clazz.getInterfaces()));
+		return ancestors;
 	}
 	
 	public void add(String className, EntityConfig config) {

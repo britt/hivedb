@@ -16,12 +16,12 @@ public class ConfigurationReaderTest extends H2HiveTestCase {
 	
 	@Test
 	public void testGetResourceName() throws Exception {
-		assertEquals("WeatherReport", new ConfigurationReader().getResourceName(WeatherReport.class));
+		assertEquals("WeatherReport", new ConfigurationReader().getResourceName(WeatherReportImpl.class));
 	}
 	@SuppressWarnings("unchecked")
 	@Test
 	public void configureResourceTest() throws Exception {
-		EntityConfig config = getEntityHiveConfig().getEntityConfig(WeatherReport.class.getName());
+		EntityConfig config = getEntityHiveConfig().getEntityConfig(WeatherReportImpl.class);
 		WeatherReport report = WeatherReportImpl.generate();
 		assertEquals(WeatherReport.CONTINENT, config.getPrimaryIndexKeyPropertyName());
 		assertEquals(WeatherReport.CONTINENT, config.getPartitionDimensionName());
@@ -29,7 +29,7 @@ public class ConfigurationReaderTest extends H2HiveTestCase {
 		assertEquals(report.getReportId(), config.getId(report));
 		assertEquals("WeatherReport", config.getResourceName());
 		assertFalse(config.isPartitioningResource());
-		assertEquals(WeatherReport.class, config.getRepresentedInterface());
+		assertEquals(WeatherReportImpl.class, config.getRepresentedInterface());
 		assertEquals(Integer.class, config.getIdClass());
 		
 		Collection<EntityIndexConfig> indexes = (Collection<EntityIndexConfig>) config.getEntitySecondaryIndexConfigs();
