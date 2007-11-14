@@ -19,8 +19,6 @@ import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
 
-// TODO Lots of messy SQL in these DAOs
-
 /**
  * 
  * @author Britt Crawford (bcrawford@cafepress.com)

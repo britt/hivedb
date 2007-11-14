@@ -36,7 +36,7 @@ public class HiveInstaller implements Runnable {
 		Map<String,String> argMap = opt.toMap(argz);
 		if (!opt.validate())
 			throw new IllegalArgumentException(
-					"Usage: java -jar hivedb-jar-with-dependencies.jar -host <host> -db <database name> -user <username> -pw <password>");
+					"Usage: java -jar hivedb-installer.jar -host <host> -db <database name> -user <username> -pw <password>");
 		else {
 			try{
 				//Tickle driver

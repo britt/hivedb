@@ -55,6 +55,32 @@ public class HiveIndexerTest extends H2HiveTestCase {
 		assertTrue(hive.directory().getSecondaryIndexKeysWithResourceId("WeatherReport", "temperature", report.getReportId()).contains(report.getTemperature()));
 	}
 	
+	@Test
+	public void changePartitionKeyTest() throws Exception {
+		Hive hive = getHive();
+		HiveIndexer indexer = new HiveIndexer(hive);
+		WeatherReport report = WeatherReportImpl.generate();
+		report.setContinent("Asia");
+		Integer oldTemp = report.getTemperature();
+		indexer.insert(getWeatherReportConfig(report), report);
+		assertEquals(1, hive.directory().getResourceIdsOfPrimaryIndexKey("WeatherReport", report.getContinent()).size());
+		assertTrue(hive.directory().getSecondaryIndexKeysWithResourceId("WeatherReport", "temperature", report.getReportId()).contains(oldTemp));
+		assertEquals("Asia", hive.directory().getPrimaryIndexKeyOfResourceId("WeatherReport", report.getReportId()));
+		
+		report.setTemperature(32);
+		report.setContinent("Europe");
+		indexer.update(getWeatherReportConfig(report), report);
+		assertFalse(hive.directory().getSecondaryIndexKeysWithResourceId("WeatherReport", "temperature", report.getReportId()).contains(oldTemp));
+		assertTrue(hive.directory().getSecondaryIndexKeysWithResourceId("WeatherReport", "temperature", report.getReportId()).contains(report.getTemperature()));
+		
+		Collection<Object> asiatics = hive.directory().getResourceIdsOfPrimaryIndexKey("WeatherReport", "Asia");
+		Collection<Object> europeans = hive.directory().getResourceIdsOfPrimaryIndexKey("WeatherReport", "Europe");
+		System.out.println(String.format("There are %s asiatics: %s", asiatics.size(), asiatics));
+		System.out.println(String.format("There are %s europeans: %s", europeans.size(), europeans));
+		
+		assertEquals("Europe", hive.directory().getPrimaryIndexKeyOfResourceId("WeatherReport", report.getReportId()));	
+	}
+	
 	// Test for HiveIndexer.delete(EntityIndexConfiguration config, Object entity)
 	@Test
 	public void deleteTest() throws Exception {

@@ -277,9 +277,12 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 
 	@SuppressWarnings("unchecked")
 	public Object getPrimaryIndexKeyOfResourceId(Resource resource, Object id) {
-		Collection keys = getPrimaryIndexKeysOfSecondaryIndexKey(resource.getIdIndex(), id);
+		Collection keys = doRead(
+				sql.selectPrimaryIndexKeysOfResourceId(resource), 
+				new Object[] {id}, 
+				RowMappers.newObjectRowMapper(resource.getPartitionDimension().getColumnType()));
 		if( keys.size() == 0)
-			throw new HiveKeyNotFoundException(String.format("Unable to find resource %s with id %s", resource.getName(), id), id);
+			throw new HiveKeyNotFoundException(String.format("Unable to find primary key for resource %s with id %s", resource.getName(), id), id);
 		else if(keys.size() > 1)
 			throw new DirectoryCorruptionException(String.format("Directory corruption: Resource %s with id %s is owned more than one primary key.", resource.getName(), id));
 		return Atom.getFirstOrNull(keys);

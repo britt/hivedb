@@ -24,14 +24,19 @@ public class HiveIndexer {
 	
 	public void insert(final EntityConfig config, final Object entity) throws HiveReadOnlyException{
 		try {
-			if(!hive.directory().doesPrimaryIndexKeyExist(config.getPrimaryIndexKey(entity)))
-				hive.directory().insertPrimaryIndexKey(config.getPrimaryIndexKey(entity));
+			conditionallyInsertPrimaryIndexKey(config, entity);
 			hive.directory().insertResourceId(config.getResourceName(), config.getId(entity), config.getPrimaryIndexKey(entity));
 			insertSecondaryIndexes(config, entity);
 		} catch(RuntimeException e) {
 			hive.directory().deleteResourceId(config.getResourceName(), config.getId(entity));
 			throw e;
 		}
+	}
+
+	private void conditionallyInsertPrimaryIndexKey(final EntityConfig config,
+			final Object entity) throws HiveReadOnlyException {
+		if(!hive.directory().doesPrimaryIndexKeyExist(config.getPrimaryIndexKey(entity)))
+			hive.directory().insertPrimaryIndexKey(config.getPrimaryIndexKey(entity));
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -73,6 +78,13 @@ public class HiveIndexer {
 			toInsert.put(indexConfig.getIndexName(), diff.getValue());
 		}
 		
+		//Detect partition key changes
+		Object originalPartitionKey = 
+			hive.directory().getPrimaryIndexKeyOfResourceId(config.getResourceName(), config.getId(entity));
+		if(!config.getPrimaryIndexKey(entity).equals(originalPartitionKey)) {
+			conditionallyInsertPrimaryIndexKey(config, entity);
+			hive.directory().updatePrimaryIndexKeyOfResourceId(config.getResourceName(), config.getId(entity), config.getPrimaryIndexKey(entity));
+		}
 		hive.directory().insertSecondaryIndexKeys(config.getResourceName(), toInsert, config.getId(entity));
 		hive.directory().deleteSecondaryIndexKeys(config.getResourceName(), toDelete, config.getId(entity));
 	}
