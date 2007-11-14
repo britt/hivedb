@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hivedb.Hive;
+import org.hivedb.HiveFacade;
 import org.hivedb.HiveReadOnlyException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.configuration.EntityConfig;
@@ -96,7 +97,7 @@ public class ConfigurationReader {
 	
 	
 	@SuppressWarnings("unchecked")
-	public void install(Hive hive) {
+	public void install(HiveFacade hive) {
 		try {
 			Hive.create(hive.getUri(), dimension.getName(), dimension.getColumnType());
 		} catch(HiveRuntimeException e) {
@@ -107,7 +108,7 @@ public class ConfigurationReader {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public void installConfiguration(EntityConfig config, Hive hive) {
+	public void installConfiguration(EntityConfig config, HiveFacade hive) {
 		try {
 			org.hivedb.meta.Resource resource = 
 				hive.addResource(createResource(config));

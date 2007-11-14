@@ -1,6 +1,7 @@
 package org.hivedb.meta;
 
 import org.hivedb.Hive;
+import org.hivedb.HiveFacade;
 import org.hivedb.HiveReadOnlyException;
 import org.hivedb.meta.directory.Directory;
 import org.hivedb.meta.directory.DirectoryWrapper;
@@ -31,7 +32,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	
 	@BeforeMethod
 	public void setUp() throws Exception {
-		Hive hive = getHive();
+		HiveFacade hive = getHive();
 		for(String name: getDatabaseNames())
 			hive.addNode(createNode(name));
 		
@@ -50,7 +51,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	public void testInsertPrimaryIndexKey() throws Exception{
 		Directory d = getDirectory();
 		Integer key = new Integer(43);
-		Hive hive = getHive();
+		HiveFacade hive = getHive();
 		Node firstNode = Atom.getFirst(hive.getNodes());
 		d.insertPrimaryIndexKey( Atom.getFirst(hive.getNodes()), key);
 		for(Integer id: Transform.map(semaphoreToId(), d.getKeySemamphoresOfPrimaryIndexKey(key)))
@@ -60,7 +61,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	@Test
 	public void testInsertPrimaryIndexKeyMultipleNodes() throws Exception{
 		Directory d = getDirectory();
-		Hive hive = getHive();
+		HiveFacade hive = getHive();
 		Integer key = new Integer(43);
 		for(Node node : hive.getNodes())
 			d.insertPrimaryIndexKey( node, key);
@@ -82,7 +83,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	@Test
 	public void testDeletePrimaryIndexKeyMultipleNodes() throws Exception {
 		Directory d = getDirectory();
-		Hive hive = getHive();
+		HiveFacade hive = getHive();
 		for(String key: getPrimaryIndexKeys())
 			for(Node node : hive.getNodes())
 			d.insertPrimaryIndexKey(node, key);
@@ -127,7 +128,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	
 	@Test
 	public void testGetKeySemaphoresOfPartitioningResourceIds() throws Exception{
-		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
+		HiveFacade hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		hive.deleteResource(resource);
 		resource = Atom.getFirstOrNull(dimension.getResources());
 		resource.setIsPartitioningResource(true);
@@ -152,7 +153,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	@Test
 	public void testGetPrimaryIndexKeysOfResourceId() throws Exception {
 		Directory d = getDirectory();
-		Hive hive = getHive();
+		HiveFacade hive = getHive();
 		for(String key :  getPrimaryIndexKeys()) {
 			d.insertPrimaryIndexKey(Atom.getFirstOrThrow(hive.getNodes()), key);
 			d.insertResourceId(resource, key+1, key);
@@ -238,7 +239,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	@Test
 	public void testGetKeySemaphoresOfPrimaryIndexKeyMultiNode() throws Exception {
 		Directory d = getDirectory();
-		Hive hive = getHive();
+		HiveFacade hive = getHive();
 		for(String pkey : getPrimaryIndexKeys()) {
 			for(Node node : hive.getNodes())
 				d.insertPrimaryIndexKey(node, pkey);

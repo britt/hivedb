@@ -1,6 +1,6 @@
 package org.hivedb.util;
 
-import org.hivedb.Hive;
+import org.hivedb.HiveFacade;
 import org.hivedb.HiveReadOnlyException;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityIndexConfig;
@@ -53,7 +53,7 @@ public class PersisterImpl implements Persister {
 		return entitySecondaryIndexConfig;
 	}
 	
-	private SecondaryIndex getSecondaryIndex(Hive hive, EntityIndexConfig secondaryIndexIdentifable, EntityConfig entityConfig)
+	private SecondaryIndex getSecondaryIndex(HiveFacade hive, EntityIndexConfig secondaryIndexIdentifable, EntityConfig entityConfig)
 	{
 		String resourceName = entityConfig.getResourceName();
 		return hive.getPartitionDimension().getResource(resourceName).getSecondaryIndex(secondaryIndexIdentifable.getIndexName());

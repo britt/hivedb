@@ -24,6 +24,7 @@ import org.hibernate.shards.strategy.access.ShardAccessStrategy;
 import org.hibernate.shards.util.Lists;
 import org.hibernate.shards.util.Maps;
 import org.hivedb.Hive;
+import org.hivedb.HiveFacade;
 import org.hivedb.Synchronizeable;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
@@ -77,7 +78,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 		return (ShardedSessionFactoryImplementor) shardedConfig.buildShardedSessionFactory();
 	}
 	
-	private Map<Integer, Configuration> getConfigurationsFromNodes(Hive hive) {
+	private Map<Integer, Configuration> getConfigurationsFromNodes(HiveFacade hive) {
 		Map<Integer, Configuration> configMap = Maps.newHashMap();
 		for(Node node : hive.getNodes())
 			configMap.put(node.getId(), createConfigurationFromNode(node));

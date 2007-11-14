@@ -1,8 +1,8 @@
 package org.hivedb.meta;
 
 import org.apache.log4j.Logger;
-import org.hivedb.Hive;
 import org.hivedb.HiveException;
+import org.hivedb.HiveFacade;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.SingularHiveConfig;
@@ -30,7 +30,7 @@ public class NodeInstallerImpl implements NodeInstaller {
 	//}
 
 	public Node registerNode(String name, String dataNodeUri) {
-		final Hive hive = entityHiveConfig.getHive();
+		final HiveFacade hive = entityHiveConfig.getHive();
 		final PartitionDimension partitionDimension = hive.getPartitionDimension();
 		
 		for (Node node : hive.getNodes()) {

@@ -6,6 +6,7 @@ import java.util.Map.Entry;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
+import org.hivedb.HiveFacade;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.SingularHiveConfig;
@@ -36,7 +37,7 @@ import org.hivedb.util.functional.Filter.BinaryPredicate;
 public class HiveSyncer {
 
 	private HiveFinder hiveFinder;
-	private Hive hive;
+	private HiveFacade hive;
 	public HiveSyncer(Hive hive)
 	{
 		this.hive = hive;

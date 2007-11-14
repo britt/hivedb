@@ -88,7 +88,7 @@ public class BaseDataAccessObject<T, ID extends Serializable> implements DataAcc
 		}
 		return entities;
 	}
-
+	
 	public T save(final T entity) {
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {

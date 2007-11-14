@@ -3,7 +3,7 @@ package org.hivedb.hibernate;
 import java.sql.Types;
 import java.util.Collection;
 
-import org.hivedb.Hive;
+import org.hivedb.HiveFacade;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.util.database.test.H2HiveTestCase;
@@ -78,7 +78,7 @@ public class ConfigurationReaderTest extends H2HiveTestCase {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testInstall() throws Exception {
-		Hive hive = getHive();
+		HiveFacade hive = getHive();
 		EntityConfig config = new ConfigurationReader().configure(Continent.class);
 		assertNotNull(hive.getPartitionDimension().getResource(config.getResourceName()));
 		assertEquals(1,hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes().size());
@@ -88,7 +88,7 @@ public class ConfigurationReaderTest extends H2HiveTestCase {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testInstallPartitioningResource() throws Exception {
-		Hive hive = getHive();
+		HiveFacade hive = getHive();
 		EntityConfig config = new ConfigurationReader().configure(Continent.class);
 		assertNotNull(hive.getPartitionDimension().getResource(config.getResourceName()));
 		assertEquals(1,hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes().size());

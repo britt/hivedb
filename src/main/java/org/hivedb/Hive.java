@@ -24,7 +24,7 @@ import java.util.*;
  * @author Andy Likuski (alikuski@cafepress.com)
  * @author Britt Crawford (bcrawford@cafepress.com)
  */
-public class Hive extends Observable implements Synchronizeable, Observer, Lockable, Finder, Nameable {
+public class Hive extends Observable implements Synchronizeable, Observer, Lockable, Finder, Nameable, HiveFacade {
 	//constants
 	private static final int DEFAULT_JDBC_TIMEOUT = 500;
 	public static final int NEW_OBJECT_ID = 0;
@@ -69,7 +69,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		return create(hiveUri, dimensionName, indexType, new HiveBasicDataSourceProvider(DEFAULT_JDBC_TIMEOUT), null);
 	}
 	
-	public static Hive create(String hiveUri, String dimensionName, int indexType, DataSourceProvider provider) {
+	public static HiveFacade create(String hiveUri, String dimensionName, int indexType, DataSourceProvider provider) {
 		return create(hiveUri, dimensionName, indexType, provider, null);
 	}
 	
@@ -160,6 +160,9 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		return hashCode() == obj.hashCode();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.hivedb.HiveFacade#isReadOnly()
+	 */
 	public boolean isReadOnly() {
 		return semaphore.isReadOnly();
 	}
@@ -377,12 +380,14 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	public Collection<Node> getNodes() {
 		return nodes;
 	}
+	
 	public Node getNode(final String name) {
 		return Filter.grepSingle(new Predicate<Node>(){
 			public boolean f(Node item) {
 				return item.getName().equalsIgnoreCase(name);
 			}}, getNodes());
 	}
+	
 	public Node getNode(final int id) {
 		return Filter.grepSingle(new Predicate<Node>(){
 			public boolean f(Node item) {

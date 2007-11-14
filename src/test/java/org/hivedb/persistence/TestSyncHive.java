@@ -5,6 +5,7 @@ import java.util.Observer;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
+import org.hivedb.HiveFacade;
 import org.hivedb.HiveSyncDaemon;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.persistence.IndexSchema;
@@ -17,7 +18,7 @@ public class TestSyncHive extends H2HiveTestCase {
 
 	@BeforeMethod
 	public void setUp() throws Exception {
-		Hive hive = getHive();
+		HiveFacade hive = getHive();
 		Node node = createNode("firstNode");
 		hive.addNode(node);
 		new IndexSchema(hive.getPartitionDimension()).install();
@@ -29,7 +30,7 @@ public class TestSyncHive extends H2HiveTestCase {
 	 */ 
 	@Test
 	public void testDaemonSync() throws Exception {
-		Hive hive = loadHive();
+		HiveFacade hive = loadHive();
 		Hive passiveSync = loadHive();
 		ArrayList<Observer> observers = new ArrayList<Observer>();
 		observers.add(passiveSync);
@@ -46,7 +47,7 @@ public class TestSyncHive extends H2HiveTestCase {
 	}
 	
 	@SuppressWarnings("unused")
-	private void nodeReport(Hive passiveSync, Hive hive) {
+	private void nodeReport(HiveFacade passiveSync, HiveFacade hive) {
 		System.out.println("Passively synced Hive:" + passiveSync.getRevision());
 		for(Node node: passiveSync.getNodes())
 			System.out.println(node.getName());

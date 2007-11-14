@@ -3,7 +3,7 @@ package org.hivedb.util.database.test;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.hivedb.Hive;
+import org.hivedb.HiveFacade;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.Node;
@@ -42,7 +42,7 @@ public abstract class MySqlHiveTestCase extends MysqlTestCase {
 		hiveTestCase.beforeMethod();
 	}
 	
-	public Hive getHive() { 
+	public HiveFacade getHive() { 
 		return hiveTestCase.getHive();
 	}
 	

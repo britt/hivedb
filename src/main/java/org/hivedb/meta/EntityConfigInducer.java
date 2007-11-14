@@ -2,7 +2,7 @@ package org.hivedb.meta;
 
 import java.util.Collection;
 
-import org.hivedb.Hive;
+import org.hivedb.HiveFacade;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityConfigImpl;
 import org.hivedb.configuration.EntityIndexConfig;
@@ -15,7 +15,7 @@ import org.hivedb.util.functional.Unary;
 // This can be used for simple activities like adding a new data node.
 public class EntityConfigInducer {
 
-	public static EntityConfig induce(Hive hive, String partitionDimensionName, String resourceName) {
+	public static EntityConfig induce(HiveFacade hive, String partitionDimensionName, String resourceName) {
 		PartitionDimension partitionDimension = hive.getPartitionDimension();
 		Resource resource = partitionDimension.getResource(resourceName);
 		

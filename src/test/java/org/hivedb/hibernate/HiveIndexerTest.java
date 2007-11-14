@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.hivedb.Hive;
+import org.hivedb.HiveFacade;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityConfigImpl;
 import org.hivedb.configuration.EntityIndexConfig;
@@ -21,7 +22,7 @@ import org.testng.annotations.Test;
 public class HiveIndexerTest extends H2HiveTestCase {
 	@BeforeMethod
 	public void setup() throws Exception {
-		Hive hive = getHive();
+		HiveFacade hive = getHive();
 		hive.addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", hive.getPartitionDimension().getId(), HiveDbDialect.H2));
 	}
 
