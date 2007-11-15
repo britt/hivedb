@@ -20,6 +20,7 @@ public interface DataAccessObject<T, ID extends Serializable> {
      */
     public Collection<T> findByProperty(String propertyName, Object value);
     
+    public Collection<T> findByPropertyRange(String propertyName, Object minValue, Object maxValue);
     /**
      *  Create or Update this instance.
      * @param entity

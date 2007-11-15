@@ -24,6 +24,8 @@ import org.hivedb.hibernate.annotations.Resource;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.Lists;
+import org.hivedb.util.PrimitiveUtils;
+import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.springframework.beans.BeanUtils;
 
@@ -67,7 +69,10 @@ public class ConfigurationReader {
 		List<EntityIndexConfig> indexes = Lists.newArrayList();
 		
 		for(Method indexMethod : indexMethods)
-			indexes.add(new EntityIndexConfigImpl(clazz, getSecondaryIndexName(indexMethod)));
+			if (isCollectionPropertyOfAComplexType(clazz, indexMethod))
+				indexes.add(new EntityIndexConfigImpl(clazz, getSecondaryIndexName(indexMethod), getIndexPropertyOfCollectionType(ReflectionTools.getCollectionItemType(clazz, ReflectionTools.getPropertyNameOfAccessor(indexMethod)))));
+			else
+				indexes.add(new EntityIndexConfigImpl(clazz, getSecondaryIndexName(indexMethod)));
 		
 		EntityConfig config = new EntityConfigImpl(
 				clazz,
@@ -81,6 +86,20 @@ public class ConfigurationReader {
 	
 		configs.put(clazz.getName(), config);
 		return config;
+	}
+
+	private boolean isCollectionPropertyOfAComplexType(Class<?> clazz, Method indexMethod) {
+		return ReflectionTools.isCollectionProperty(clazz, ReflectionTools.getPropertyNameOfAccessor(indexMethod)) &&
+			!PrimitiveUtils.isPrimitiveClass(ReflectionTools.getCollectionItemType(clazz,ReflectionTools.getPropertyNameOfAccessor(indexMethod)));
+	}
+
+	private String getIndexPropertyOfCollectionType(Class collectionType) {
+		try {
+			return AnnotationHelper.getFirstMethodWithAnnotation(collectionType, EntityId.class).getName();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(String.format("Unable to find an EntityId annotation for collection type %s", collectionType.getName()));
+		}
 	}
 	
 	@SuppressWarnings("unchecked")

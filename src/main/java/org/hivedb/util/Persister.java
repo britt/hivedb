@@ -1,7 +1,7 @@
 package org.hivedb.util;
 
+import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.EntityIndexConfig;
-import org.hivedb.configuration.SingularHiveConfig;
 
 /**
  *  Persists PrimaryIndexIdentifiables and ResourceIdentifiables. This interface allows persistence directly via a data access object class or indirectly
@@ -10,7 +10,7 @@ import org.hivedb.configuration.SingularHiveConfig;
  *
  */
 public interface Persister {
-	Object persistPrimaryIndexKey(final SingularHiveConfig hiveConfig, final Object primaryIndexKey);
-	Object persistResourceInstance(SingularHiveConfig hiveConfig, Object resourceInstance);
-	Object persistSecondaryIndexKey(final SingularHiveConfig hiveConfig, EntityIndexConfig secondaryIndexIdentifiable, Object resourceInstance);
+	Object persistPrimaryIndexKey(EntityHiveConfig entityHiveConfig, Class representedInterface, final Object primaryIndexKey);
+	Object persistResourceInstance(EntityHiveConfig entityHiveConfig, Class representedInterface, Object resourceInstance);
+	Object persistSecondaryIndexKey(EntityHiveConfig entityHiveConfig, Class representedInterface, EntityIndexConfig secondaryIndexIdentifiable, Object resourceInstance);
 }

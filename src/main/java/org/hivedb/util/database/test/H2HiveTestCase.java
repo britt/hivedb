@@ -1,9 +1,15 @@
 package org.hivedb.util.database.test;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
+import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hivedb.Hive;
 import org.hivedb.configuration.EntityHiveConfig;
+import org.hivedb.hibernate.Continent;
+import org.hivedb.hibernate.HiveSessionFactoryBuilderImpl;
+import org.hivedb.hibernate.WeatherReportImpl;
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
@@ -18,12 +24,28 @@ public class H2HiveTestCase extends H2TestCase {
 	
 	HiveTestCase hiveTestCase;
 	public H2HiveTestCase() {
-		hiveTestCase = new HiveTestCase(HiveDbDialect.H2, new Unary<String,String>() {
-			public String f(String databaseName) {
-				return getConnectString(databaseName);
-			}
-		});
+		hiveTestCase = new HiveTestCase(
+			getPartitionDimensionClass(),
+			getEntityClasses(),
+			HiveDbDialect.H2, 
+			new Unary<String,String>() {
+				public String f(String databaseName) {
+					return getConnectString(databaseName);
+				}
+			});
 		cleanupAfterEachTest = true;
+	}
+
+	protected List<Class<? extends Object>> getEntityClasses() {
+		return Arrays.asList(getPartitionDimensionClass(), WeatherReportImpl.class);
+	}
+	protected Class<?> getPartitionDimensionClass() {
+		return Continent.class;
+	}
+	
+	protected HiveSessionFactoryBuilderImpl getFactory() {
+		return new HiveSessionFactoryBuilderImpl(
+				getEntityHiveConfig(), new SequentialShardAccessStrategy());
 	}
 	
 	@Override
@@ -55,10 +77,6 @@ public class H2HiveTestCase extends H2TestCase {
 	public Collection<String> getDatabaseNames() {
 		return hiveTestCase.getDatabaseNames();  
 	}
-	
-	
-	
-	
 	
 	// Sample data
 	protected Collection<Resource> createResources() {

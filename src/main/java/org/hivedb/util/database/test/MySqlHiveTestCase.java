@@ -1,10 +1,15 @@
 package org.hivedb.util.database.test;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import org.hivedb.HiveFacade;
 import org.hivedb.configuration.EntityHiveConfig;
+import org.hivedb.hibernate.Continent;
+import org.hivedb.hibernate.WeatherReport;
+import org.hivedb.hibernate.WeatherReportImpl;
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
@@ -19,12 +24,23 @@ public abstract class MySqlHiveTestCase extends MysqlTestCase {
 	
 	HiveTestCase hiveTestCase;
 	public MySqlHiveTestCase() {
-		hiveTestCase = new HiveTestCase(HiveDbDialect.MySql, new Unary<String,String>() {
-			public String f(String databaseName) {
-				return getConnectString(databaseName);
-			}
-		});
+		hiveTestCase = new HiveTestCase(
+			getPartitionDimensionClass(),
+			getEntityClasses(),
+			HiveDbDialect.MySql, 
+			new Unary<String,String>() {
+				public String f(String databaseName) {
+					return getConnectString(databaseName);
+				}
+			});
 		cleanupAfterEachTest = true;
+	}
+
+	protected List<Class<? extends Object>> getEntityClasses() {
+		return Arrays.asList(getPartitionDimensionClass(), WeatherReportImpl.class);
+	}
+	protected Class<?> getPartitionDimensionClass() {
+		return Continent.class;
 	}
 	
 	@Override

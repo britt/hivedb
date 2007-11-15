@@ -41,7 +41,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	@Test
 	public void testFindByProperty() throws Exception {
 		Integer id = testInsert();
-		BaseDataAccessObject<WeatherReportImpl, Integer> dao = getDao();
+		DataAccessObject<WeatherReportImpl, Integer> dao = getDao();
 		WeatherReportImpl report = dao.get(id);
 		report.setTemperature(101);
 		dao.save(report);
@@ -52,7 +52,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	@Test
 	public void testDelete() throws Exception {
 		Integer id = testInsert();
-		BaseDataAccessObject<WeatherReportImpl, Integer> dao = getDao();
+		DataAccessObject<WeatherReportImpl, Integer> dao = getDao();
 		dao.delete(id);
 		assertNull(dao.get(id));
 	}
@@ -67,15 +67,17 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		return report.getReportId();
 	}
 
-	private BaseDataAccessObject<WeatherReportImpl, Integer> getDao() {
-		return new BaseDataAccessObject<WeatherReportImpl,Integer>(
-				WeatherReportImpl.class, config, getFactory());
+	private DataAccessObject<WeatherReportImpl, Integer> getDao() {
+		
+		return new DataAccessObjectFactory<WeatherReportImpl,Integer>(
+				this.config,
+				WeatherReportImpl.class).create();
 	}
 	
 	@Test
 	public void testUpdate() throws Exception {
 		Integer id = testInsert();
-		BaseDataAccessObject<WeatherReportImpl, Integer> dao = getDao();
+		DataAccessObject<WeatherReportImpl, Integer> dao = getDao();
 		WeatherReportImpl updated = dao.get(id);
 		updated.setLatitude(new BigDecimal(30));
 		updated.setLongitude(new BigDecimal(30));
@@ -92,7 +94,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 			report.setReportId(i);
 			reports.add(report);
 		}
-		BaseDataAccessObject<WeatherReportImpl,Integer> dao = getDao();
+		DataAccessObject<WeatherReportImpl,Integer> dao = getDao();
 		dao.saveAll(reports);
 		
 		for(WeatherReport report : reports)
@@ -107,7 +109,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 			report.setReportId(i);
 			reports.add(report);
 		}
-		BaseDataAccessObject<WeatherReportImpl,Integer> dao = getDao();
+		DataAccessObject<WeatherReportImpl,Integer> dao = getDao();
 		dao.saveAll(reports);
 
 
@@ -128,9 +130,5 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		Integer id = testInsert();
 		assertTrue(getDao().exists(id));
 	}
-	
-	private HiveSessionFactoryBuilderImpl getFactory() {
-		return new HiveSessionFactoryBuilderImpl(
-				config, new SequentialShardAccessStrategy());
-	}
+
 }

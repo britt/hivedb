@@ -3,6 +3,7 @@ package org.hivedb.hibernate;
 import java.io.Serializable;
 import java.util.Collection;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.hibernate.Criteria;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Interceptor;
@@ -88,7 +89,11 @@ public class BaseDataAccessObject<T, ID extends Serializable> implements DataAcc
 		}
 		return entities;
 	}
-	
+
+	public Collection<T> findByPropertyRange(String propertyName, Object minValue, Object maxValue) {
+		throw new NotImplementedException("Not implemented");
+	}
+
 	public T save(final T entity) {
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {

@@ -1,8 +1,11 @@
 package org.hivedb.configuration;
 
+import java.io.Serializable;
 import java.util.Collection;
 
 import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Predicate;
 
 public class EntityConfigImpl implements EntityConfig {
 
@@ -20,14 +23,14 @@ public class EntityConfigImpl implements EntityConfig {
 			String resourceName,
 			String primaryIndexPropertyName,
 			String idPropertyName,
-			Collection<? extends EntityIndexConfig> secondaryIndexIdentifiables) {
+			Collection<? extends EntityIndexConfig> indexConfigs) {
 		return new EntityConfigImpl(
 				representedInterface, 
 				partitionDimensionName,
 				resourceName,
 				primaryIndexPropertyName,
 				idPropertyName,
-				secondaryIndexIdentifiables,
+				indexConfigs,
 				false);
 	}
 	/***
@@ -85,8 +88,8 @@ public class EntityConfigImpl implements EntityConfig {
 		return this.idPropertyName;
 	}
 	@SuppressWarnings("unchecked")
-	public Object getId(Object instance) {
-		return ReflectionTools.invokeGetter(instance, idPropertyName);
+	public Serializable getId(Object instance) {
+		return (Serializable) ReflectionTools.invokeGetter(instance, idPropertyName);
 	}
 
 	public boolean isPartitioningResource() {
@@ -115,5 +118,16 @@ public class EntityConfigImpl implements EntityConfig {
 	
 	public Class<?> getIdClass() {
 		return ReflectionTools.getPropertyType(getRepresentedInterface(), getIdPropertyName());
+	}
+	public Collection<? extends EntityIndexConfig> getIndexConfigs(final IndexType indexType) {
+		return Filter.grep(new Predicate<EntityIndexConfig>() {
+			public boolean f(EntityIndexConfig entityIndexConfig) {
+				return entityIndexConfig.getIndexType().equals(indexType);
+			}},
+			entityIndexConfigs);
+	}
+	
+	public String getStoredVersionProperty() {
+		return "version";
 	}
 }

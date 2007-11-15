@@ -2,12 +2,14 @@ package org.hivedb.configuration;
 
 import java.util.Collection;
 
+import org.hivedb.configuration.EntityConfig.IndexType;
 import org.hivedb.util.InstanceCollectionValueGetter;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.SqlUtils;
 import org.hivedb.util.functional.Actor;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
+import org.hivedb.util.functional.Validator;
 
 public class EntityIndexConfigImpl implements EntityIndexConfig {
 		
@@ -74,6 +76,13 @@ public class EntityIndexConfigImpl implements EntityIndexConfig {
 	private Class<?> indexClass;
 	public Class<?> getIndexClass() {
 		return indexClass;
+	}
+	public IndexType getIndexType() {
+		return IndexType.HiveIndex;
+	}
+	public Validator getValidator() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 }

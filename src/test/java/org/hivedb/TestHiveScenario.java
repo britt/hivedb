@@ -18,7 +18,7 @@ public class TestHiveScenario {
 			int resourceInstanceCount = entityConfig.isPartitioningResource()
 				? 2 // must equal primaryIndexKeyCount
 				: 4; // make greater so that primaryIndexKeys are shared
-			new HiveScenarioTest(new SingularHiveConfigImpl(enitityHiveConfig.getHive(), entityConfig)).performTest(2,resourceInstanceCount, new PersisterImpl());
+			new HiveScenarioTest(enitityHiveConfig, entityConfig.getRepresentedInterface()).performTest(2,resourceInstanceCount, new PersisterImpl());
 		}
 	}
 }

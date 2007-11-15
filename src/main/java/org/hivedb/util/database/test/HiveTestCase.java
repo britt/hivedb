@@ -9,9 +9,6 @@ import org.hivedb.Hive;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.hibernate.ConfigurationReader;
-import org.hivedb.hibernate.Continent;
-import org.hivedb.hibernate.WeatherReport;
-import org.hivedb.hibernate.WeatherReportImpl;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.Node;
@@ -28,10 +25,20 @@ public class HiveTestCase {
 	
 	private Unary<String,String> getConnectString;
 	private HiveDbDialect hiveDbDialect;
-	HiveTestCase(HiveDbDialect hiveDbDialect, Unary<String,String> getConnectString)
+	private Class partitionDimensionClass;
+	private Collection<Class<?>> entityClasses;
+	private ConfigurationReader configurationReader;
+	HiveTestCase(
+			Class partitionDimensionClass,
+			Collection<Class<?>> entityClasses,
+			HiveDbDialect hiveDbDialect, 
+			Unary<String,String> getConnectString)
 	{
+		this.partitionDimensionClass = partitionDimensionClass;
+		this.entityClasses = entityClasses;
 		this.getConnectString = getConnectString;
 		this.hiveDbDialect = hiveDbDialect;
+		this.configurationReader = new ConfigurationReader(entityClasses);
 	}
 	public void beforeClass() {
 		
@@ -48,10 +55,9 @@ public class HiveTestCase {
 				installer.registerNode(nodeName, getConnectString.f(nodeName));
 	}
 	
-	final ConfigurationReader configurationReader = new ConfigurationReader(Continent.class, WeatherReportImpl.class);
 	public EntityHiveConfig getEntityHiveConfig()
 	{
-		final EntityConfig entityConfig = configurationReader.getEntityConfig(Continent.class.getName());
+		final EntityConfig entityConfig = configurationReader.getEntityConfig(partitionDimensionClass.getName());
 		final Hive hive = resolveHive(
 				entityConfig.getPartitionDimensionName(),
 				entityConfig.getPrimaryKeyClass());

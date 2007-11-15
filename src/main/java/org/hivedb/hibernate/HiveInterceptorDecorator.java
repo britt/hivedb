@@ -9,6 +9,10 @@ import org.hibernate.shards.util.InterceptorDecorator;
 import org.hibernate.type.Type;
 import org.hivedb.HiveReadOnlyException;
 import org.hivedb.configuration.EntityHiveConfig;
+import org.hivedb.util.functional.Transform;
+import org.hivedb.util.functional.Unary;
+
+import com.sun.org.apache.xml.internal.serialize.Serializer;
 
 public class HiveInterceptorDecorator extends InterceptorDecorator implements Interceptor {
 	private EntityHiveConfig hiveConfig;

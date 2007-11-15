@@ -2,11 +2,12 @@ package org.hivedb.util;
 
 import java.util.Collection;
 
+import org.hivedb.configuration.EntityConfig;
+import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.EntityIndexConfig;
-import org.hivedb.configuration.SingularHiveConfig;
-import org.hivedb.meta.PrimaryIndexKeyGenerator;
 import org.hivedb.meta.EntityGenerator;
 import org.hivedb.meta.EntityGeneratorImpl;
+import org.hivedb.meta.PrimaryIndexKeyGenerator;
 import org.hivedb.util.functional.Generate;
 import org.hivedb.util.functional.Generator;
 import org.hivedb.util.functional.NumberIterator;
@@ -27,14 +28,15 @@ public class GenerateHiveIndexKeys {
 	}
 	
 	public Collection<Object> createResourceInstances(
-		final SingularHiveConfig hiveConfig)
+		final EntityHiveConfig entityHiveConfig, final Class representedInterface)
 	{
-		if (hiveConfig.getEntityConfig().isPartitioningResource()
+		final EntityConfig entityConfig =  entityHiveConfig.getEntityConfig(representedInterface);
+		if (entityConfig.isPartitioningResource()
 			&& primaryInstanceCount != resourceInstanceCount)
 			throw new RuntimeException("For partitioning resources, configure the primaryInstanceCount and resourceInstanceCount equally");
-		final Collection<Object> primaryIndexIdentifiables = createPrimaryIndexKeys(hiveConfig);
+		final Collection<Object> primaryIndexIdentifiables = createPrimaryIndexKeys(entityHiveConfig, representedInterface);
 		final EntityGenerator<Object> entityConfigGenerator =
-				new EntityGeneratorImpl<Object>(hiveConfig.getEntityConfig());
+				new EntityGeneratorImpl<Object>(entityConfig);
 		
 		final Iterable<Object> primaryIndexKeysIterable = new RingIteratorable<Object>(
 			primaryIndexIdentifiables,
@@ -49,10 +51,10 @@ public class GenerateHiveIndexKeys {
 		
 		for (Object resourceInstance : resourceInstances) {
 			// reassign to the result. The returned instance need not be that passed in.
-			resourceInstance = persister.persistResourceInstance(hiveConfig, resourceInstance);
-			Collection<? extends EntityIndexConfig> entitySecondaryIndexConfigs = hiveConfig.getEntityConfig().getEntitySecondaryIndexConfigs();
+			resourceInstance = persister.persistResourceInstance(entityHiveConfig, representedInterface, resourceInstance);
+			Collection<? extends EntityIndexConfig> entitySecondaryIndexConfigs = entityConfig.getEntitySecondaryIndexConfigs();
 			for (EntityIndexConfig entitySecondaryIndexConfig : entitySecondaryIndexConfigs) {
-				persister.persistSecondaryIndexKey(hiveConfig, entitySecondaryIndexConfig, resourceInstance);
+				persister.persistSecondaryIndexKey(entityHiveConfig, representedInterface, entitySecondaryIndexConfig, resourceInstance);
 			}
 		}
 		
@@ -61,19 +63,19 @@ public class GenerateHiveIndexKeys {
 	
 
 	/**
-	 * @param hiveConfig
+	 * @param entityConfig
 	 * @return
 	 */
-	private Collection<Object> createPrimaryIndexKeys(final SingularHiveConfig hiveConfig)
+	private Collection<Object> createPrimaryIndexKeys(final EntityHiveConfig entityHiveConfig, final Class representedInterface)
 	{	
 		final Generator primaryIndexIdentifiableGenerator = 
-			new PrimaryIndexKeyGenerator(hiveConfig.getEntityConfig());
+			new PrimaryIndexKeyGenerator(entityHiveConfig.getEntityConfig(representedInterface));
 		
 		return Generate.create(new Generator<Object>() { 
 			public Object generate() {
 				try {
 					Object primaryIndexKey = primaryIndexIdentifiableGenerator.generate();
-					persister.persistPrimaryIndexKey(hiveConfig, primaryIndexKey);						
+					persister.persistPrimaryIndexKey(entityHiveConfig, representedInterface, primaryIndexKey);						
 					return primaryIndexKey;
 				} catch (Exception e) { throw new RuntimeException(e); }
 			}},

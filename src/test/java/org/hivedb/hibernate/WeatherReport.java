@@ -1,16 +1,13 @@
 package org.hivedb.hibernate;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Random;
 
 import org.hivedb.hibernate.annotations.EntityId;
 import org.hivedb.hibernate.annotations.Index;
 import org.hivedb.hibernate.annotations.PartitionIndex;
 import org.hivedb.hibernate.annotations.Resource;
-import org.hivedb.util.HiveUtils;
 
 @Resource(name="WeatherReport")
 public interface WeatherReport {
