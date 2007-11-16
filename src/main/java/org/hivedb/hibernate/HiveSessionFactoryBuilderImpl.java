@@ -117,20 +117,12 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	}
 
 	public static Configuration createConfigurationFromNode(Node node) {
-		Configuration config = new Configuration();
+		Configuration config = new Configuration().configure();
 		config.setProperty("hibernate.session_factory_name", "factory:"+node.getName());
-		// TODO: Configurable pool size
-		config.setProperty("hibernate.connection.pool_size", "5");
 		
 		config.setProperty("hibernate.dialect", dialectMap.get(node.getDialect()).getName());
 		config.setProperty("hibernate.connection.driver_class", DriverLoader.getDriverClass(node.getDialect()));
 		config.setProperty("hibernate.connection.url", node.getUri());
-		
-//		String user = node.getUsername() == null ? node.getUsername() : "";
-//		config.setProperty("hibernate.connection.username", user);
-//		
-//		String pw = node.getPassword() == null ? node.getPassword() : "";
-//		config.setProperty("hibernate.connection.password", pw);
 		
 		config.setProperty("hibernate.connection.shard_id", new Integer(node.getId()).toString());
 		config.setProperty("hibernate.shard.enable_cross_shard_relationship_checks", "true");
