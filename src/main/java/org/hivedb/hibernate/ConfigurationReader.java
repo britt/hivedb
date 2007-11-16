@@ -21,6 +21,7 @@ import org.hivedb.hibernate.annotations.EntityId;
 import org.hivedb.hibernate.annotations.Index;
 import org.hivedb.hibernate.annotations.PartitionIndex;
 import org.hivedb.hibernate.annotations.Resource;
+import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.Lists;
@@ -114,16 +115,20 @@ public class ConfigurationReader {
 		return new PluralHiveConfig(configs, hive);
 	}
 	
+	public void install(String uri) {
+		new HiveInstaller(uri).run();
+		install(Hive.load(uri));
+	}
 	
 	@SuppressWarnings("unchecked")
 	public void install(HiveFacade hive) {
-		try {
-			Hive.create(hive.getUri(), dimension.getName(), dimension.getColumnType());
-		} catch(HiveRuntimeException e) {
-			//quash if there is already a hive installed
+		HiveFacade target = hive;
+		if(hive.getPartitionDimension() == null) {
+			target = Hive.create(hive.getUri(), dimension.getName(), dimension.getColumnType());
 		}
+		
 		for(EntityConfig config : configs.values())
-			installConfiguration(config,hive);
+			installConfiguration(config,target);
 	}
 	
 	@SuppressWarnings("unchecked")
