@@ -4,9 +4,12 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 
 import net.sf.cglib.proxy.Enhancer;
@@ -42,6 +45,8 @@ public class GenerateInstance<T> implements Generator<T> {
 		    
 	    for (Method getter : ReflectionTools.getGetters(interfaceToImplement))
 	    {
+	    	if (getter.getDeclaringClass().equals(Object.class))
+	    		continue; // Only interfaces should be reflected upon here, until then we skip Object methods
 	    	String propertyName = ReflectionTools.getPropertyNameOfAccessor(getter);
 	    	Class<Object> clazz = (Class<Object>) getter.getReturnType();
 			if (ReflectionTools.doesImplementOrExtend(clazz, Collection.class)) {
@@ -76,7 +81,15 @@ public class GenerateInstance<T> implements Generator<T> {
 			try{
 				Interceptor interceptor = new Interceptor();
 				Enhancer e = new Enhancer();
-				e.setInterfaces(new Class[] {clazz, PropertySetter.class});
+				if (clazz.isInterface())
+					e.setInterfaces(new Class[] {clazz, PropertySetter.class});
+				else {
+					List list = new ArrayList(Arrays.asList(clazz.getInterfaces()));
+					list.add(PropertySetter.class);
+					Class[] copy = new Class[list.size()];
+					list.toArray(copy);
+					e.setInterfaces(copy);
+				}
 				e.setCallback(interceptor);
 				Object instance = e.create();
 				interceptor.propertySupport = new PropertyChangeSupport( instance );
@@ -85,7 +98,7 @@ public class GenerateInstance<T> implements Generator<T> {
 				return instance;
 			}catch( Throwable e ){
 				 e.printStackTrace();
-				 throw new Error(e.getMessage());
+				 throw new RuntimeException(e.getMessage(), e);
 			}
 		}
 		Map<Object,Object> dictionary = new Hashtable<Object,Object>();

@@ -25,8 +25,6 @@ public class JdbcDaoSupportCacheTest extends H2HiveTestCase {
 	public void setUp() throws Exception{
 		new HiveInstaller(getConnectString(getHiveDatabaseName())).run();
 		
-		for (String nodeName : getDataNodeNames())
-			getHive().addNode(new Node(Hive.NEW_OBJECT_ID, nodeName, getHiveDatabaseName(), "", Hive.NEW_OBJECT_ID, HiveDbDialect.H2));
 		getHive().directory().insertPrimaryIndexKey(intKey());
 	}
 	protected Collection<Node> getDataNodes() {

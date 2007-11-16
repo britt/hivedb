@@ -66,12 +66,9 @@ public class WeatherReportImpl implements WeatherReport {
 		this.temperature = temperature;
 	}
 	
-	public Integer[] getArrayIndex() {
-		return new Integer[]{1,2,3,4,5};
-	}
 	@Index
 	public Collection<Integer> getCollectionIndex() {
-		return Arrays.asList(getArrayIndex());
+		return Arrays.asList(new Integer[]{1,2,3,4,5});
 	}
 	
 	@Override

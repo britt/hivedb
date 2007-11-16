@@ -6,7 +6,6 @@ import java.util.Collection;
 import java.util.Collections;
 
 import org.hivedb.Hive;
-import org.hivedb.HiveReadOnlyException;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.hibernate.ConfigurationReader;
@@ -27,7 +26,6 @@ public class HiveTestCase {
 	private Unary<String,String> getConnectString;
 	private HiveDbDialect hiveDbDialect;
 	private Class partitionDimensionClass;
-	private Collection<Class<?>> entityClasses;
 	private ConfigurationReader configurationReader;
 	private Collection<String> dataNodeNames;
 	HiveTestCase(
@@ -38,11 +36,10 @@ public class HiveTestCase {
 			Collection<String> dataNodeNames)
 	{
 		this.partitionDimensionClass = partitionDimensionClass;
-		this.entityClasses = entityClasses;
 		this.getConnectString = getConnectString;
-		this.dataNodeNames = dataNodeNames;
 		this.hiveDbDialect = hiveDbDialect;
 		this.configurationReader = new ConfigurationReader(entityClasses);
+		this.dataNodeNames = dataNodeNames;
 	}
 	public void beforeClass() {
 		
@@ -55,9 +52,8 @@ public class HiveTestCase {
 		installEntityHiveConfig();
 		NodeInstaller installer = new NodeInstallerImpl(entityHiveConfig);
 			
-		for(String nodeName : this.getDatabaseNames()) 
-			if (nodeName != getHiveDatabaseName())
-				installer.registerNode(nodeName, getConnectString.f(nodeName));
+		for(String nodeName : dataNodeNames) 
+			installer.registerNode(nodeName, getConnectString.f(nodeName));
 	}
 	
 	public EntityHiveConfig getEntityHiveConfig()
@@ -136,8 +132,5 @@ public class HiveTestCase {
 	
 	public String getHiveDatabaseName() {
 		return "hive";
-	}
-	public Collection<String> getDatabaseNames() {
-		return Collections.singletonList(getHiveDatabaseName());  
 	}
 }
