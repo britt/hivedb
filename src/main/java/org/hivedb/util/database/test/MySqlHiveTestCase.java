@@ -16,6 +16,7 @@ import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.database.HiveDbDialect;
+import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -32,15 +33,21 @@ public abstract class MySqlHiveTestCase extends MysqlTestCase {
 				public String f(String databaseName) {
 					return getConnectString(databaseName);
 				}
-			});
+			},
+			getDataNodeNames());
 		cleanupAfterEachTest = true;
 	}
 
 	protected List<Class<? extends Object>> getEntityClasses() {
 		return Arrays.asList(getPartitionDimensionClass(), WeatherReportImpl.class);
 	}
+	
 	protected Class<?> getPartitionDimensionClass() {
 		return Continent.class;
+	}
+	
+	protected Collection<String> getDataNodeNames() {
+		return Collections.emptyList();
 	}
 	
 	@Override
@@ -71,9 +78,10 @@ public abstract class MySqlHiveTestCase extends MysqlTestCase {
 		return "hive";
 	}
 	
-	@Override
 	public Collection<String> getDatabaseNames() {
-		return Collections.singletonList(getHiveDatabaseName());  
+		return Transform.flatten(new Collection[] {
+			Collections.singletonList(getHiveDatabaseName()),
+			getDataNodeNames() });	
 	}
 
 	protected Collection<Resource> createResources() {

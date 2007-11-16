@@ -2,6 +2,7 @@ package org.hivedb.util.database.test;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
@@ -16,6 +17,7 @@ import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.database.HiveDbDialect;
+import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -32,7 +34,8 @@ public class H2HiveTestCase extends H2TestCase {
 				public String f(String databaseName) {
 					return getConnectString(databaseName);
 				}
-			});
+			},
+			getDataNodeNames());
 		cleanupAfterEachTest = true;
 	}
 
@@ -41,6 +44,16 @@ public class H2HiveTestCase extends H2TestCase {
 	}
 	protected Class<?> getPartitionDimensionClass() {
 		return Continent.class;
+	}
+	
+	protected Collection<String> getDataNodeNames() {
+		return Collections.emptyList();
+	}
+	
+	public Collection<String> getDatabaseNames() {
+		return Transform.flatten(new Collection[] {
+			Collections.singletonList(getHiveDatabaseName()),
+			getDataNodeNames() });	
 	}
 	
 	protected HiveSessionFactoryBuilderImpl getFactory() {
@@ -73,9 +86,6 @@ public class H2HiveTestCase extends H2TestCase {
 	
 	public String getHiveDatabaseName() {
 		return hiveTestCase.getHiveDatabaseName();
-	}
-	public Collection<String> getDatabaseNames() {
-		return hiveTestCase.getDatabaseNames();  
 	}
 	
 	// Sample data

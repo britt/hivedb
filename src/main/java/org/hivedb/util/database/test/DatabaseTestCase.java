@@ -2,6 +2,7 @@ package org.hivedb.util.database.test;
 
 import java.sql.Connection;
 import java.util.Collection;
+import java.util.Collections;
 
 import javax.sql.DataSource;
 
@@ -10,6 +11,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
+@SuppressWarnings("unchecked")
 public abstract class DatabaseTestCase {
 	protected boolean cleanupAfterEachTest = true;
 	protected boolean cleanupOnExit = true;
@@ -17,7 +19,7 @@ public abstract class DatabaseTestCase {
 	protected String userName = "test";
 	protected String password = "test";
 	
-	private Collection<String> databaseNames;
+	private Collection<String> databaseNames = Collections.EMPTY_LIST;
 	
 	protected abstract void createDatabase(String name);
 	protected abstract void deleteDatabase(String name);

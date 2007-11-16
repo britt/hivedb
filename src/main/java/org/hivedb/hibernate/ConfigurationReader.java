@@ -95,7 +95,7 @@ public class ConfigurationReader {
 
 	private String getIndexPropertyOfCollectionType(Class collectionType) {
 		try {
-			return AnnotationHelper.getFirstMethodWithAnnotation(collectionType, EntityId.class).getName();
+			return ReflectionTools.getPropertyNameOfAccessor(AnnotationHelper.getFirstMethodWithAnnotation(collectionType, EntityId.class));
 		}
 		catch (Exception e) {
 			throw new RuntimeException(String.format("Unable to find an EntityId annotation for collection type %s", collectionType.getName()));

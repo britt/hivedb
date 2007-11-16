@@ -29,14 +29,14 @@ public class JdbcDaoSupportCacheTest extends H2HiveTestCase {
 			getHive().addNode(new Node(Hive.NEW_OBJECT_ID, nodeName, getHiveDatabaseName(), "", Hive.NEW_OBJECT_ID, HiveDbDialect.H2));
 		getHive().directory().insertPrimaryIndexKey(intKey());
 	}
-	private Collection<Node> getDataNodes() {
+	protected Collection<Node> getDataNodes() {
 		return Transform.map(new Unary<String, Node>() {
 			public Node f(String dataNodeName) {
 				return new Node(0, dataNodeName, dataNodeName, "", 0, HiveDbDialect.H2);
 		}},
 		getDataNodeNames());
 	}
-	private Collection<String> getDataNodeNames() {
+	protected Collection<String> getDataNodeNames() {
 		return Arrays.asList(new String[]{"data1","data2","data3"});
 	}
 	
