@@ -19,7 +19,7 @@ public class HiveUtils {
 	 * @param objects
 	 * @return
 	 */
-	public static int makeHashCode(Object[] objects) {
+	public static int makeHashCode(Object...objects) {
 		return makeHashCode(Arrays.asList(objects));
 	}
 	public static int makeHashCode(Collection<?> collection) {

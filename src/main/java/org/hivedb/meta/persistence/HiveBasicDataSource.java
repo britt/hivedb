@@ -1,10 +1,9 @@
 package org.hivedb.meta.persistence;
 
-import java.sql.SQLException;
-
 import org.apache.commons.dbcp.BasicDataSource;
+import org.hivedb.util.HiveUtils;
 
-public class HiveBasicDataSource extends BasicDataSource {
+public class HiveBasicDataSource extends BasicDataSource implements Cloneable {
 	public static final String CONNECTION_POOL_SIZE = "HiveDataSourceConnectionPoolSize";
 	public static final int DEFAULT_POOL_SIZE = 32;
 	private Long connectionTimeout = 500l;
@@ -35,11 +34,6 @@ public class HiveBasicDataSource extends BasicDataSource {
 	@Override
 	public HiveBasicDataSource clone() throws CloneNotSupportedException {
 		HiveBasicDataSource clone = new HiveBasicDataSource();
-		try {
-			clone.setLoginTimeout(this.getLoginTimeout());
-		} catch (SQLException e) {
-			//Quash
-		}
 		clone.setConnectionTimeout(this.getConnectionTimeout());
 		clone.setSocketTimeout(this.getSocketTimeout());
 		clone.setInitialSize(this.getInitialSize());
@@ -52,7 +46,43 @@ public class HiveBasicDataSource extends BasicDataSource {
 		clone.setDefaultAutoCommit(this.getDefaultAutoCommit());
 		clone.setPoolPreparedStatements(this.isPoolPreparedStatements());
 		clone.setMinEvictableIdleTimeMillis(this.getMinEvictableIdleTimeMillis());
+		clone.setNumTestsPerEvictionRun(this.getNumTestsPerEvictionRun());
+		clone.setPassword(this.getPassword());
+		clone.setTestOnBorrow(this.getTestOnBorrow());
+		clone.setTestOnReturn(this.getTestOnReturn());
+		clone.setTestWhileIdle(this.getTestWhileIdle());
+		clone.setTimeBetweenEvictionRunsMillis(this.getTimeBetweenEvictionRunsMillis());
+		clone.setUrl(this.getUrl());
+		clone.setUsername(this.getUsername());
+		clone.setValidationQuery(this.getValidationQuery());
 		return clone;
+	}
+
+	@Override
+	public int hashCode() {
+		return HiveUtils.makeHashCode(
+				this.getConnectionTimeout(),
+				this.getSocketTimeout(),
+				this.getInitialSize(),
+				this.getMinIdle(),
+				this.getMaxIdle(),
+				this.getMaxActive(),
+				this.getMaxWait(),
+				this.getMaxOpenPreparedStatements(),
+				this.getDefaultTransactionIsolation(),
+				this.getDefaultAutoCommit(),
+				this.isPoolPreparedStatements(),
+				this.getMinEvictableIdleTimeMillis(),
+				this.getNumTestsPerEvictionRun(),
+				this.getPassword(),
+				this.getTestOnBorrow(),
+				this.getTestOnReturn(),
+				this.getTestWhileIdle(),
+				this.getTimeBetweenEvictionRunsMillis(),
+				this.getUrl(),
+				this.getUsername(),
+				this.getValidationQuery()
+		);
 	}
 
 	public Long getConnectionTimeout() {

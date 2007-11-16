@@ -1,27 +1,29 @@
 package org.hivedb.meta;
 
-import org.hivedb.Hive;
-import org.hivedb.HiveFacade;
-import org.hivedb.HiveReadOnlyException;
-import org.hivedb.meta.directory.Directory;
-import org.hivedb.meta.directory.DirectoryWrapper;
 import static org.hivedb.meta.directory.DirectoryWrapper.semaphoreToId;
-import org.hivedb.meta.persistence.HiveBasicDataSource;
-import org.hivedb.meta.persistence.IndexSchema;
-import org.hivedb.util.AssertUtils;
-import org.hivedb.util.Lists;
-import org.hivedb.util.database.test.H2HiveTestCase;
-import org.hivedb.util.functional.Atom;
-import org.hivedb.util.functional.Transform;
-import static org.testng.AssertJUnit.*;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertTrue;
 
 import java.sql.Types;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Map;
+
+import org.hivedb.Hive;
+import org.hivedb.HiveFacade;
+import org.hivedb.HiveReadOnlyException;
+import org.hivedb.meta.directory.Directory;
+import org.hivedb.meta.directory.DirectoryWrapper;
+import org.hivedb.meta.persistence.HiveBasicDataSource;
+import org.hivedb.util.AssertUtils;
+import org.hivedb.util.Lists;
+import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.functional.Atom;
+import org.hivedb.util.functional.Transform;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 public class DirectoryTest extends H2HiveTestCase {
 	private PartitionDimension dimension;
