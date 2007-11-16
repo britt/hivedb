@@ -102,29 +102,41 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		
 		if(this.getRevision() != hs.getRevision()) {
 			this.setSemaphore(hs);
-			initialize(new PartitionDimensionDao(hiveDataSource).get());
+			initialize(hiveDataSource);
 			updated = true;
 		}
 		return updated;
 	}
 	
 	public boolean forceSync() {
-		initialize(new PartitionDimensionDao(hiveDataSource).get());
+		initialize(hiveDataSource);
 		return true;
 	}
 	
-	public void initialize(PartitionDimension dimension) {
-        DataSource dataSource = dataSourceProvider.getDataSource(dimension.getIndexUri());
-        DirectoryFacade directory = new DirectoryWrapper(dimension, dataSource, getAssigner(), this);
-        Collection<Node> nodes = new NodeDao(hiveDataSource).loadAll();
+	private void initialize(DataSource ds) {
+		//Always fetch and add nodes
+		Collection<Node> nodes = new NodeDao(hiveDataSource).loadAll();
 		synchronized (this) {
 			this.nodes = nodes;
-			ConnectionManager connection = new ConnectionManager(new Directory(dimension, dataSource), this, dataSourceProvider);
-			this.dimension = dimension;
-			this.directory = directory;
-			this.connection = connection;
 		}
+		
+		//Only synchronize other properties if a Partition Dimension exists
+		PartitionDimension dimension = null;
+		try {
+			dimension = new PartitionDimensionDao(ds).get();
+			DirectoryFacade directory = new DirectoryWrapper(dimension, ds, getAssigner(), this);
+			synchronized (this) {
+				ConnectionManager connection = new ConnectionManager(new Directory(dimension, ds), this, dataSourceProvider);
+				this.dimension = dimension;
+				this.directory = directory;
+				this.connection = connection;
+			}
+		} catch( HiveRuntimeException e) {
+			//quash
+		}
+        
 	}
+	
 
 	protected Hive() {
 		this.semaphore = new HiveSemaphore();
@@ -249,9 +261,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 
 	public Node addNode(Node node)
 			throws HiveReadOnlyException {
-		
-		node.setPartitionDimensionId(dimension.getId());
-		
+				
 		Preconditions.isWritable(this);
 		Preconditions.nameIsUnique(getNodes(), node);
 		
