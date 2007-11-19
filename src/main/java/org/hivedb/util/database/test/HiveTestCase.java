@@ -3,17 +3,16 @@ package org.hivedb.util.database.test;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 
 import org.hivedb.Hive;
+import org.hivedb.HiveReadOnlyException;
+import org.hivedb.HiveRuntimeException;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.hibernate.ConfigurationReader;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.NodeInstaller;
-import org.hivedb.meta.NodeInstallerImpl;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
@@ -50,10 +49,13 @@ public class HiveTestCase {
 		
 		final EntityHiveConfig entityHiveConfig = getEntityHiveConfig();
 		installEntityHiveConfig();
-		NodeInstaller installer = new NodeInstallerImpl(entityHiveConfig);
 			
-		for(String nodeName : dataNodeNames) 
-			installer.registerNode(nodeName, getConnectString.f(nodeName));
+		for(String nodeName : dataNodeNames)
+			try {
+				hive.addNode(new Node(Hive.NEW_OBJECT_ID,nodeName, nodeName, hiveDbDialect == HiveDbDialect.H2 ? "" : "localhost", Hive.NEW_OBJECT_ID, hiveDbDialect));
+			} catch (HiveReadOnlyException e) {
+				throw new HiveRuntimeException("Hive was read-only", e);
+			}
 	}
 	
 	public EntityHiveConfig getEntityHiveConfig()

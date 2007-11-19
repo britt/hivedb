@@ -7,6 +7,9 @@ package org.hivedb;
  */
 @SuppressWarnings("serial")
 public class HiveRuntimeException extends RuntimeException {
+	public HiveRuntimeException(Exception inner) {
+		super(inner);
+	}
 	public HiveRuntimeException(String message) { 
 		super(message);
 	}
