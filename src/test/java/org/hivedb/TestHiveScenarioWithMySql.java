@@ -22,10 +22,5 @@ public class TestHiveScenarioWithMySql extends MySqlHiveTestCase {
 	protected Collection<String> getDataNodeNames() {
 		return Arrays.asList(new String[]{"data1","data2","data3"});
 	}
-	
-	@SuppressWarnings("unchecked")
-	@Override
-	public Collection<String> getDatabaseNames() {
-		return Transform.flatten(Collections.singletonList(getHiveDatabaseName()),getDataNodeNames());
-	}
+
 }

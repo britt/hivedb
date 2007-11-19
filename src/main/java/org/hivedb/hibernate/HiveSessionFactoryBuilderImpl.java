@@ -10,6 +10,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLInnoDBDialect;
 import org.hibernate.shards.ShardId;
@@ -68,7 +69,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 			Configuration cfg = entry.getValue();
 			for(EntityConfig entityConfig : config.getEntityConfigs())
 				cfg.addClass(entityConfig.getRepresentedInterface());
-			
+			//cfg.setProperty("hibernate.default_entity_mode", "dynamic-map");
 			this.nodeSessionFactories.put(entry.getKey(), cfg.buildSessionFactory());
 		}
 		

@@ -27,8 +27,5 @@ public class TestHiveScenarioWithH2 extends H2HiveTestCase {
 	protected Collection<String> getDataNodeNames() {
 		return Arrays.asList(new String[]{"data1","data2","data3"});
 	}
-	@SuppressWarnings("unchecked")
-	public Collection<String> getDatabaseNames() {
-		return Transform.flatten(Collections.singletonList(getHiveDatabaseName()),getDataNodeNames());
-	}
+	
 }

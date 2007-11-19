@@ -114,7 +114,7 @@ public class BaseDataAccessObject<T, ID extends Serializable> implements DataAcc
 		return collection;
 	}
 	
-	private Session getSession() {
+	protected Session getSession() {
 		return factory.openSession(new HiveInterceptorDecorator(defaultInterceptor, config));
 	}
 
