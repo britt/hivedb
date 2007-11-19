@@ -3,13 +3,11 @@ package org.hivedb.configuration;
 import java.io.Serializable;
 import java.util.Collection;
 
+import org.hivedb.hibernate.annotations.IndexType;
+
 
 public interface EntityConfig {
-	
-	public enum IndexType {
-		HiveIndex,
-		DataIndex
-	}
+
 	String getPrimaryIndexKeyPropertyName();
 	String getPartitionDimensionName();
 	Object getPrimaryIndexKey(Object instance);

@@ -13,7 +13,7 @@ import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityConfigImpl;
 import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.configuration.EntityIndexConfigImpl;
-import org.hivedb.configuration.EntityConfig.IndexType;
+import org.hivedb.hibernate.annotations.IndexType;
 import org.hivedb.meta.Node;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2HiveTestCase;

@@ -2,7 +2,7 @@ package org.hivedb.configuration;
 
 import java.util.Collection;
 
-import org.hivedb.configuration.EntityConfig.IndexType;
+import org.hivedb.hibernate.annotations.IndexType;
 import org.hivedb.util.InstanceCollectionValueGetter;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.SqlUtils;
@@ -78,7 +78,7 @@ public class EntityIndexConfigImpl implements EntityIndexConfig {
 		return indexClass;
 	}
 	public IndexType getIndexType() {
-		return IndexType.HiveIndex;
+		return IndexType.Hive;
 	}
 	public Validator getValidator() {
 		// TODO Auto-generated method stub
