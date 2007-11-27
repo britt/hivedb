@@ -41,7 +41,7 @@ public class DirectoryTest extends H2HiveTestCase {
 		hive.addResource(createResource());
 		nameIndex = new SecondaryIndex("name", Types.VARCHAR);
 		numIndex = new SecondaryIndex("num", Types.INTEGER);
-		resource = Atom.getFirstOrNull(hive.getPartitionDimension().getResources());
+		resource = hive.getPartitionDimension().getResource(createResource().getName());
 		hive.addSecondaryIndex(resource, nameIndex);
 		hive.addSecondaryIndex(resource, numIndex);
 		resource = hive.getPartitionDimension().getResource(resource.getName());
@@ -387,7 +387,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	
 	private void insertKeys(Hive hive) throws HiveReadOnlyException {
 		Directory d = getDirectory();
-		Resource resource = Atom.getFirstOrNull(dimension.getResources());
+		Resource resource = dimension.getResource(createResource().getName());
 		for(String key: getPrimaryIndexKeys()) {
 			hive.directory().insertPrimaryIndexKey(key);
 			d.insertResourceId(resource, key, key);

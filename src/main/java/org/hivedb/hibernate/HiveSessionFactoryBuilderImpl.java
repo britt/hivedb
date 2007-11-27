@@ -5,12 +5,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Properties;
+import java.util.Map.Entry;
 
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLInnoDBDialect;
 import org.hibernate.shards.ShardId;
@@ -39,7 +40,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	private Map<Integer, SessionFactory> nodeSessionFactories;
 	private EntityHiveConfig config;
 	private ShardAccessStrategy accessStrategy;
-	
+	private Properties overrides = new Properties();
 	private ShardedSessionFactoryImplementor factory = null;
 	
 	public HiveSessionFactoryBuilderImpl(String hiveUri, List<Class<?>> classes, ShardAccessStrategy strategy) {
@@ -48,6 +49,16 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	
 	public HiveSessionFactoryBuilderImpl(EntityHiveConfig config, ShardAccessStrategy strategy) {
 		initialize(config, strategy);
+	}
+	
+	public HiveSessionFactoryBuilderImpl(EntityHiveConfig config, ShardAccessStrategy strategy, Properties overrides) {
+		this.overrides = overrides;
+		initialize(config, strategy);
+	}
+	
+	public HiveSessionFactoryBuilderImpl(String hiveUri, List<Class<?>> classes, ShardAccessStrategy strategy, Properties overrides) {
+		this.overrides = overrides;
+		initialize(buildHiveConfiguration(Hive.load(hiveUri), classes), strategy);
 	}
 	
 	private void initialize(EntityHiveConfig config, ShardAccessStrategy strategy) {
@@ -82,7 +93,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	private Map<Integer, Configuration> getConfigurationsFromNodes(HiveFacade hive) {
 		Map<Integer, Configuration> configMap = Maps.newHashMap();
 		for(Node node : hive.getNodes())
-			configMap.put(node.getId(), createConfigurationFromNode(node));
+			configMap.put(node.getId(), createConfigurationFromNode(node, overrides));
 		return configMap;
 	}
 	
@@ -94,7 +105,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	}
 
 	private Configuration buildPrototypeConfiguration() {
-		Configuration hibernateConfig = createConfigurationFromNode(Atom.getFirstOrThrow(config.getHive().getNodes()));
+		Configuration hibernateConfig = createConfigurationFromNode(Atom.getFirstOrThrow(config.getHive().getNodes()), overrides);
 		for(EntityConfig entityConfig : config.getEntityConfigs())
 			hibernateConfig.addClass(entityConfig.getRepresentedInterface());
 		hibernateConfig.setProperty("hibernate.session_factory_name", "factory:prototype");
@@ -117,7 +128,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 		};
 	}
 
-	public static Configuration createConfigurationFromNode(Node node) {
+	public static Configuration createConfigurationFromNode(Node node, Properties overrides) {
 		Configuration config = new Configuration().configure();
 		config.setProperty("hibernate.session_factory_name", "factory:"+node.getName());
 		
@@ -127,6 +138,10 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 		
 		config.setProperty("hibernate.connection.shard_id", new Integer(node.getId()).toString());
 		config.setProperty("hibernate.shard.enable_cross_shard_relationship_checks", "true");
+		
+		for(Entry<Object,Object> prop : overrides.entrySet()) 
+			config.setProperty(prop.getKey().toString(), prop.getValue().toString());
+		
 		return config;
 	}
 

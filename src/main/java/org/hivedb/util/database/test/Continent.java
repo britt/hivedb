@@ -1,4 +1,4 @@
-package org.hivedb.hibernate;
+package org.hivedb.util.database.test;
 
 import org.hivedb.hibernate.annotations.EntityId;
 import org.hivedb.hibernate.annotations.Index;

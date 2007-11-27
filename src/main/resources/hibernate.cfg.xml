@@ -8,5 +8,4 @@
         name="java:hibernate/SessionFactory">
 		<property name="connection.pool_size">8</property>
     </session-factory>
-
 </hibernate-configuration>

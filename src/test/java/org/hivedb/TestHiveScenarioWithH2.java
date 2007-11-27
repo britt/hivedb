@@ -2,7 +2,6 @@ package org.hivedb;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
 import org.hivedb.meta.Node;
 import org.hivedb.util.database.HiveDbDialect;

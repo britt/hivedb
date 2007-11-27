@@ -13,6 +13,9 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
+import net.sf.cglib.core.DefaultNamingPolicy;
+import net.sf.cglib.core.NamingPolicy;
+import net.sf.cglib.core.Predicate;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
@@ -20,7 +23,9 @@ import net.sf.cglib.proxy.MethodProxy;
 import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.DebugMap;
 
-class Interceptor implements MethodInterceptor {
+import sun.reflect.ReflectionFactory.GetReflectionFactoryAction;
+
+public class GeneratedInstanceInterceptor implements MethodInterceptor {
 	private PropertyChangeSupport propertySupport;
 	   
 	public void addPropertyChangeListener(PropertyChangeListener listener) {          
@@ -32,10 +37,11 @@ class Interceptor implements MethodInterceptor {
 	}
 	   
 	private final static String IMPLEMENTS_INTERFACE_PROPERTY = "_implementsInterface";
-	public static Object newInstance( Class clazz ){
+	public static<T> T newInstance( Class<T> clazz ){
 		try{
-			Interceptor interceptor = new Interceptor();
+			GeneratedInstanceInterceptor interceptor = new GeneratedInstanceInterceptor();
 			Enhancer e = new Enhancer();
+//			e.setNamingPolicy(new ImplNamer(clazz.getName()));
 			if (clazz.isInterface())
 				e.setInterfaces(new Class[] {clazz, PropertySetter.class});
 			else {
@@ -50,12 +56,19 @@ class Interceptor implements MethodInterceptor {
 			interceptor.propertySupport = new PropertyChangeSupport( instance );
 		
 			((PropertySetter)instance).set(IMPLEMENTS_INTERFACE_PROPERTY, clazz);
-			return instance;
+			return (T) instance;
 		}catch( Throwable e ){
 			 e.printStackTrace();
 			 throw new RuntimeException(e.getMessage(), e);
 		}
 	}
+	public static<T> T newInstance( Class<T> clazz, Map<String, Object> prototype ){
+		PropertySetter<T> instance = (PropertySetter<T>) newInstance(clazz);
+		for (String propertyName : ReflectionTools.getPropertiesOfGetters((Class<?>)clazz))
+			instance.set(propertyName, prototype.get(propertyName));
+		return (T) instance;
+	}
+	
 	Map<Object,Object> dictionary = new Hashtable<Object,Object>();
 	public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
 		Object retValFromSuper = null;
@@ -83,6 +96,12 @@ class Interceptor implements MethodInterceptor {
 			dictionary.put(new String( propName ), args[0]);
 			propertySupport.firePropertyChange( new String( propName ) , null , args[0]);
 		}
+		else if ( name.equals("getAsMap")) {
+			return dictionary;
+		}
+		else if( name.equals("getClass")) {
+			return dictionary.get(IMPLEMENTS_INTERFACE_PROPERTY);
+		}
 		else if( name.startsWith("get") && args.length == 0 ) {
 			char propName[] = name.substring("get".length()).toCharArray();
 			propName[0] = Character.toLowerCase( propName[0] );
@@ -106,5 +125,17 @@ class Interceptor implements MethodInterceptor {
 	private Object hashCode(Object obj) {
 		Class implementsInterface = (Class) dictionary.get(IMPLEMENTS_INTERFACE_PROPERTY);
 		return Amass.makeHashCode(ReflectionTools.invokeGetters(obj, implementsInterface));
+	}
+	
+	static class ImplNamer extends DefaultNamingPolicy {
+		private String specialClass;
+		
+		public ImplNamer(String className) {
+			this.specialClass = className;
+		}
+		
+		public String getClassName(String prefix, String source, Object key, Predicate names) {
+			return prefix.equals(specialClass) ? prefix + "Gen" : super.getClassName(prefix, source, key, names);
+		}
 	}
 }

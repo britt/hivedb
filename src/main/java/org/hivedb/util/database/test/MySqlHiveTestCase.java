@@ -7,8 +7,6 @@ import java.util.List;
 
 import org.hivedb.HiveFacade;
 import org.hivedb.configuration.EntityHiveConfig;
-import org.hivedb.hibernate.Continent;
-import org.hivedb.hibernate.WeatherReportImpl;
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;

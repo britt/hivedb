@@ -17,6 +17,8 @@ import org.hivedb.hibernate.annotations.IndexType;
 import org.hivedb.meta.Node;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.WeatherReport;
+import org.hivedb.util.database.test.WeatherReportImpl;
 import org.hivedb.util.functional.Validator;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;

@@ -16,25 +16,25 @@ import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.util.Lists;
 
-public class BaseDataAccessObject<T, ID extends Serializable> implements DataAccessObject<T,ID> {
+public class BaseDataAccessObject implements DataAccessObject<Object, Serializable>{
 	private HiveSessionFactory factory;
 	private EntityHiveConfig config;
-	private Class<T> clazz;
+	private Class<?> clazz;
 	private Interceptor defaultInterceptor = EmptyInterceptor.INSTANCE;
 	
 
-	public BaseDataAccessObject(Class<T> clazz, EntityHiveConfig config, HiveSessionFactory factory) {
+	public BaseDataAccessObject(Class<?> clazz, EntityHiveConfig config, HiveSessionFactory factory) {
 		this.clazz = clazz;
 		this.config = config;
 		this.factory = factory;
 	}
 	
-	public BaseDataAccessObject(Class<T> clazz, EntityHiveConfig config, HiveSessionFactory factory, Interceptor interceptor) {
+	public BaseDataAccessObject(Class<?> clazz, EntityHiveConfig config, HiveSessionFactory factory, Interceptor interceptor) {
 		this(clazz,config,factory);
 		this.defaultInterceptor = interceptor;
 	}
 	
-	public ID delete(final ID id) {
+	public Serializable delete(final Serializable id) {
 		SessionCallback callback = new SessionCallback() {
 			public void execute(Session session) {
 				Object deleted = get(id, session);
@@ -44,18 +44,17 @@ public class BaseDataAccessObject<T, ID extends Serializable> implements DataAcc
 		return id;
 	}
 
-	public boolean exists(ID id) {
+	public boolean exists(Serializable id) {
 		EntityConfig entityConfig = config.getEntityConfig(getRespresentedClass());
 		return config.getHive().directory().doesResourceIdExist(entityConfig.getResourceName(), id);
 	}
 
-	@SuppressWarnings("unchecked")
-	public T get(final ID id) {
-		T entity = null;
+	public Object get(final Serializable id) {
+		Object entity = null;
 		Session session = null;
 		try {
 			session = getSession();
-			entity = (T) get(id, session);
+			entity = get(id, session);
 		} finally {
 			if(session != null)
 				session.close();
@@ -63,17 +62,16 @@ public class BaseDataAccessObject<T, ID extends Serializable> implements DataAcc
 		return entity;
 	}
 	
-	@SuppressWarnings("unchecked")
-	private T get(ID id, Session session) {
-		T fetched = (T) session.get(getRespresentedClass(), id);
+	private Object get(Serializable id, Session session) {
+		Object fetched = session.get(getRespresentedClass(), id);
 		return fetched;
 	}
 	
 	@SuppressWarnings("unchecked")
-	public Collection<T> findByProperty(String propertyName, Object value) {
+	public Collection<Object> findByProperty(String propertyName, Object value) {
 		EntityConfig entityConfig = config.getEntityConfig(getRespresentedClass());
 		EntityIndexConfig indexConfig = getIndexConfig(propertyName, entityConfig.getEntitySecondaryIndexConfigs());
-		Collection<T> entities = Lists.newArrayList();
+		Collection<Object> entities = Lists.newArrayList();
 		Session session = 
 			factory.openSession(
 				entityConfig.getResourceName(), 
@@ -90,25 +88,20 @@ public class BaseDataAccessObject<T, ID extends Serializable> implements DataAcc
 		return entities;
 	}
 
-	public Collection<T> findByPropertyRange(String propertyName, Object minValue, Object maxValue) {
-		throw new NotImplementedException("Not implemented");
-	}
-
-	public T save(final T entity) {
+	public Object save(final Object entity) {
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
-				session.saveOrUpdate(entity);
+				session.saveOrUpdate(getRespresentedClass().getName(),entity);
 			}};
 		doInTransaction(callback, getSession());
 		return entity;
 	}
 
-	@SuppressWarnings("unchecked")
-	public Collection<T> saveAll(final Collection<T> collection) {
+	public Collection<Object> saveAll(final Collection<Object> collection) {
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
 				for(Object entity : collection)
-					session.saveOrUpdate(entity);
+					session.saveOrUpdate(getRespresentedClass().getName(),entity);
 			}};
 		doInTransaction(callback, getSession());
 		return collection;
@@ -119,8 +112,8 @@ public class BaseDataAccessObject<T, ID extends Serializable> implements DataAcc
 	}
 
 	@SuppressWarnings("unchecked")
-	public Class getRespresentedClass() {
-		return clazz;
+	public Class<Object> getRespresentedClass() {
+		return (Class<Object>) clazz;
 	}
 	
 	private EntityIndexConfig getIndexConfig(String name, Collection<? extends EntityIndexConfig> configs) {
@@ -147,5 +140,9 @@ public class BaseDataAccessObject<T, ID extends Serializable> implements DataAcc
 		} finally {
 			session.close();
 		}
+	}
+
+	public Collection<Object> findByPropertyRange(String propertyName, java.lang.Object minValue, java.lang.Object maxValue) {
+		throw new NotImplementedException("Not implemented");
 	}
 }

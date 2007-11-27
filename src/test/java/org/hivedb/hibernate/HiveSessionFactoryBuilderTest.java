@@ -4,6 +4,8 @@ import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertNotNull;
 
+import java.util.Properties;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
@@ -14,7 +16,11 @@ import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.meta.Node;
 import org.hivedb.util.Lists;
 import org.hivedb.util.database.HiveDbDialect;
+import org.hivedb.util.database.test.Continent;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.WeatherReport;
+import org.hivedb.util.database.test.WeatherReportImpl;
+import org.hivedb.util.database.test.WeatherSchema;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -31,7 +37,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 	@Test
 	public void testCreateConfigurationFromNode() throws Exception {
 		Node node = new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", Hive.NEW_OBJECT_ID, HiveDbDialect.H2);
-		Configuration config = HiveSessionFactoryBuilderImpl.createConfigurationFromNode(node);
+		Configuration config = HiveSessionFactoryBuilderImpl.createConfigurationFromNode(node, new Properties());
 		assertEquals(node.getUri(), config.getProperty("hibernate.connection.url"));
 		assertEquals(H2Dialect.class.getName(), config.getProperty("hibernate.dialect"));
 		assertEquals(node.getId().toString(), config.getProperty("hibernate.connection.shard_id"));

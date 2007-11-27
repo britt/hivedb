@@ -1,9 +1,10 @@
 package org.hivedb.hibernate;
 
-import java.io.Serializable;
 import java.util.Collection;
 
-public interface DataAccessObject<T, ID extends Serializable> {
+import org.hivedb.HiveKeyNotFoundException;
+
+public interface DataAccessObject<T, ID> {
 	/**
 	 *  Retrieve the object with the given id
 	 * @param id

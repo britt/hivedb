@@ -12,7 +12,10 @@ import org.hivedb.Hive;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.meta.Node;
 import org.hivedb.util.database.HiveDbDialect;
+import org.hivedb.util.database.test.Continent;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.WeatherReport;
+import org.hivedb.util.database.test.WeatherReportImpl;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 

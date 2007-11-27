@@ -27,7 +27,7 @@ public class GenerateInstance<T> implements Generator<T> {
 	
 	@SuppressWarnings("unchecked")
 	public T generate() {
-		T instance = (T)Interceptor.newInstance( interfaceToImplement );
+		T instance = (T)GeneratedInstanceInterceptor.newInstance( interfaceToImplement );
 		    
 	    for (Method getter : ReflectionTools.getGetters(interfaceToImplement))
 	    {

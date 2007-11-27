@@ -3,6 +3,8 @@
  */
 package org.hivedb.hibernate;
 
+import org.hivedb.util.database.test.Continent;
+
 public class AsiaticContinent implements Continent {
 	private String name = "Asia";
 	private Integer population = 5;

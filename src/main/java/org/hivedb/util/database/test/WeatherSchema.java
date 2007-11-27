@@ -1,4 +1,4 @@
-package org.hivedb.hibernate;
+package org.hivedb.util.database.test;
 
 import java.util.Arrays;
 import java.util.Collection;
