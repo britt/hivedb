@@ -34,7 +34,7 @@ public class TestHiveLoading extends H2TestCase {
 	}
 
 	private Node getNode() {
-		return new Node(Hive.NEW_OBJECT_ID, "nodal", H2TestCase.TEST_DB, "", Hive.NEW_OBJECT_ID, HiveDbDialect.H2);
+		return new Node(Hive.NEW_OBJECT_ID, "nodal", H2TestCase.TEST_DB, "", HiveDbDialect.H2);
 	}
 	
 	@Test

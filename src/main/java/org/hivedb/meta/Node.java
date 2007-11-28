@@ -16,18 +16,22 @@ import org.hivedb.util.database.JdbcUriFormatter;
  * @author Andy Likuski (alikuski@cafepress.com)
  */
 public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable<Integer>, Lockable {
-	private int id,partitionDimensionId,port;
+	private int id,port;
 	private String name, host,databaseName, username, password, options;
 	private boolean readOnly = false;
 	private double capacity;
 	private HiveDbDialect dialect;
 
-	public Node(int id, String name, String databaseName, String host, int partitionDimensionId, HiveDbDialect dialect) {
+	public Node(int id, String name, String databaseName, String host, HiveDbDialect dialect) {
+		this(name, databaseName, host, dialect);
 		this.id = id;
+		
+	}
+	
+	public Node(String name, String databaseName, String host, HiveDbDialect dialect){
 		this.name = name;
 		this.databaseName = databaseName;
 		this.host = host;
-		this.partitionDimensionId = partitionDimensionId;
 		this.dialect = dialect;
 	}
 	
@@ -129,21 +133,13 @@ public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable<
 		this.name = name;
 	}
 
-	public int getPartitionDimensionId() {
-		return partitionDimensionId;
-	}
-
-	public void setPartitionDimensionId(int partitionDimensionId) {
-		this.partitionDimensionId = partitionDimensionId;
-	}
-	
 	public boolean equals(Object obj)
 	{
 		return obj.hashCode() == hashCode();
 	}
 	public int hashCode() {
 		return HiveUtils.makeHashCode(new Object[] {
-				id,partitionDimensionId,port,name, host,databaseName, username, password, options,readOnly,capacity,dialect
+				id,port,name, host,databaseName, username, password, options,readOnly,capacity,dialect
 		});
 	}
 	public String toString()

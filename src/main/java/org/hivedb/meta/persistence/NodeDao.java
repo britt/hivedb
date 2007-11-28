@@ -120,7 +120,6 @@ public class NodeDao extends JdbcDaoSupport {
 							rs.getString("name"), 
 							rs.getString("database_name"), 
 							rs.getString("host"), 
-							rs.getInt("partition_dimension_id"), 
 							rs.getString("dialect") == null ? HiveDbDialect.MySql : DialectTools.stringToDialect(rs.getString("dialect"))
 			);
 			node.setReadOnly(readOnlyAsBoolean(rs.getInt("read_only")));
@@ -160,7 +159,6 @@ public class NodeDao extends JdbcDaoSupport {
 	//values() comes out in a different order than keySet()
 	private String[] getFields() {
 		return new String[] {
-				"partition_dimension_id",
 				"name",
 				"database_name",
 				"host",
@@ -176,7 +174,6 @@ public class NodeDao extends JdbcDaoSupport {
 
 	private int[] getTypes() {
 		return new int[] {
-				Types.INTEGER,
 				Types.VARCHAR,
 				Types.VARCHAR,
 				Types.VARCHAR,
@@ -192,7 +189,6 @@ public class NodeDao extends JdbcDaoSupport {
 	
 	private Object[] getParameters(Node newObject) {
 		return new Object[] { 
-				newObject.getPartitionDimensionId(),
 				newObject.getName(), 
 				newObject.getDatabaseName(),
 				newObject.getHost(),

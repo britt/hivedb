@@ -28,7 +28,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	@BeforeMethod
 	public void setup() throws Exception {
 		this.config = getEntityHiveConfig();
-		getHive().addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", Hive.NEW_OBJECT_ID, HiveDbDialect.H2));
+		getHive().addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", HiveDbDialect.H2));
 		new ContinentalSchema(getConnectString(getHiveDatabaseName())).install();
 		new WeatherSchema(getConnectString(getHiveDatabaseName())).install();
 	}

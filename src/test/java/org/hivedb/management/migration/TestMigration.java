@@ -31,7 +31,7 @@ public class TestMigration extends H2HiveTestCase {
 		super.beforeMethod();
 		try {
 			for(String name : getDatabaseNames())
-				getHive().addNode(new Node(0, name, name, "", 0, HiveDbDialect.H2));
+				getHive().addNode(new Node(0, name, name, "", HiveDbDialect.H2));
 			
 		} catch (Exception e) {
 			throw new RuntimeException(e);

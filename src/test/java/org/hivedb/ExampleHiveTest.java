@@ -55,7 +55,7 @@ public class ExampleHiveTest extends H2HiveTestCase {
 		Hive hive = Hive.create(getConnectString(H2TestCase.TEST_DB), dimensionName, Types.VARCHAR);
 		
 		//Create a Data Node
-		Node dataNode = new Node(Hive.NEW_OBJECT_ID,"aNode",H2TestCase.TEST_DB, "", hive.getPartitionDimension().getId(), HiveDbDialect.H2);
+		Node dataNode = new Node(Hive.NEW_OBJECT_ID,"aNode",H2TestCase.TEST_DB, "", HiveDbDialect.H2);
 		
 		//Add it to the partition dimension
 		hive.addNode(dataNode);

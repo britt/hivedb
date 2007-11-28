@@ -27,7 +27,7 @@ public class HiveIndexerTest extends H2HiveTestCase {
 	@BeforeMethod
 	public void setup() throws Exception {
 		HiveFacade hive = getHive();
-		hive.addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", hive.getPartitionDimension().getId(), HiveDbDialect.H2));
+		hive.addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", HiveDbDialect.H2));
 	}
 
 	

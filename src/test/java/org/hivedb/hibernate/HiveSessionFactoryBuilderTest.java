@@ -30,13 +30,13 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 	@BeforeMethod
 	public void configureHive() throws Exception {
 		this.config = getEntityHiveConfig();
-		getHive().addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", Hive.NEW_OBJECT_ID, HiveDbDialect.H2));
+		getHive().addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", HiveDbDialect.H2));
 		new WeatherSchema(getConnectString(getHiveDatabaseName())).install();
 	}
 	
 	@Test
 	public void testCreateConfigurationFromNode() throws Exception {
-		Node node = new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", Hive.NEW_OBJECT_ID, HiveDbDialect.H2);
+		Node node = new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", HiveDbDialect.H2);
 		Configuration config = HiveSessionFactoryBuilderImpl.createConfigurationFromNode(node, new Properties());
 		assertEquals(node.getUri(), config.getProperty("hibernate.connection.url"));
 		assertEquals(H2Dialect.class.getName(), config.getProperty("hibernate.dialect"));

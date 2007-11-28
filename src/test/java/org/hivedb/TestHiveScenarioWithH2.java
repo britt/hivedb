@@ -19,7 +19,7 @@ public class TestHiveScenarioWithH2 extends H2HiveTestCase {
 	private Collection<Node> getDataNodes() {
 		return Transform.map(new Unary<String, Node>() {
 			public Node f(String dataNodeName) {
-				return new Node(0, dataNodeName, dataNodeName, "", 0, HiveDbDialect.H2);
+				return new Node(0, dataNodeName, dataNodeName, "", HiveDbDialect.H2);
 		}},
 		getDataNodeNames());
 	}

@@ -62,14 +62,6 @@ public class PartitionDimensionCreator {
 		}, resources);
 	}
 
-	private static Collection<Node> cloneDataNodes(Collection<Node> dataNodes) {
-		return Transform.map(new Unary<Node,Node>() {
-			public Node f(Node node) {
-				return new Node(node.getId(), node.getName(), node.getDatabaseName(), node.getHost(), node.getPartitionDimensionId(), node.getDialect());
-			}
-		}, dataNodes);
-	}
-
 	public static Collection<SecondaryIndex> constructSecondaryIndexesOfResource(final EntityConfig entityConfig) {	
 		try {
 			return 

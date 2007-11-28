@@ -27,7 +27,7 @@ import org.testng.annotations.Test;
 public class HiveShardSelectorTest extends H2HiveTestCase {
 	@BeforeMethod
 	public void setUp() throws Exception {
-		getHive().addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", Hive.NEW_OBJECT_ID, HiveDbDialect.H2));
+		getHive().addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", HiveDbDialect.H2));
 	}
 
 	@Test

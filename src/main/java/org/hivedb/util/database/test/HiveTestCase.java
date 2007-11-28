@@ -24,11 +24,11 @@ public class HiveTestCase {
 	
 	private Unary<String,String> getConnectString;
 	private HiveDbDialect hiveDbDialect;
-	private Class partitionDimensionClass;
+	private Class<?> partitionDimensionClass;
 	private ConfigurationReader configurationReader;
 	private Collection<String> dataNodeNames;
 	HiveTestCase(
-			Class partitionDimensionClass,
+			Class<?> partitionDimensionClass,
 			Collection<Class<?>> entityClasses,
 			HiveDbDialect hiveDbDialect, 
 			Unary<String,String> getConnectString,
@@ -45,14 +45,12 @@ public class HiveTestCase {
 	}
 	public void beforeMethod() {
 		hive = null;
-		new HiveInstaller(getConnectString.f(getHiveDatabaseName())).run();
-		
-		final EntityHiveConfig entityHiveConfig = getEntityHiveConfig();
+		new HiveInstaller(getConnectString.f(getHiveDatabaseName())).run();		
 		installEntityHiveConfig();
 			
 		for(String nodeName : dataNodeNames)
 			try {
-				hive.addNode(new Node(Hive.NEW_OBJECT_ID,nodeName, nodeName, hiveDbDialect == HiveDbDialect.H2 ? "" : "localhost", Hive.NEW_OBJECT_ID, hiveDbDialect));
+				hive.addNode(new Node(Hive.NEW_OBJECT_ID,nodeName, nodeName, hiveDbDialect == HiveDbDialect.H2 ? "" : "localhost", hiveDbDialect));
 			} catch (HiveReadOnlyException e) {
 				throw new HiveRuntimeException("Hive was read-only", e);
 			}
@@ -61,33 +59,23 @@ public class HiveTestCase {
 	public EntityHiveConfig getEntityHiveConfig()
 	{
 		final EntityConfig entityConfig = configurationReader.getEntityConfig(partitionDimensionClass.getName());
-		final Hive hive = resolveHive(
-				entityConfig.getPartitionDimensionName(),
-				entityConfig.getPrimaryKeyClass());
+		final Hive hive = getOrCreateHive(entityConfig.getPartitionDimensionName(), entityConfig.getPrimaryKeyClass());
 		return configurationReader.getHiveConfiguration(hive);
 	}
 	protected void installEntityHiveConfig() {
 		EntityHiveConfig entityHiveConfig = getEntityHiveConfig();
-		configurationReader.install(resolveHive(
+		configurationReader.install(getOrCreateHive(
 				entityHiveConfig.getPartitionDimensionName(),
 				entityHiveConfig.getPartitionDimensionType()));
 	}
-	private Hive resolveHive(String partitionDimensionName,
-							 Class primaryIndexKeyClass) {
-		final Hive hive = getOrCreateHive(
-				partitionDimensionName,
-				JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKeyClass));
-		return hive;
-	}
-
 	
 	Hive hive = null;
-	protected Hive getOrCreateHive(final String dimensionName, final int primaryIndexKeyType) {
+	protected Hive getOrCreateHive(final String dimensionName, final Class primaryIndexKeyType) {
 		if (hive == null)
 			hive = Hive.create(
 						getConnectString.f(getHiveDatabaseName()),
 						dimensionName,
-						primaryIndexKeyType);
+						JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKeyType));
 		return hive;
 	}
 	public Hive getHive() { 
@@ -115,7 +103,7 @@ public class HiveTestCase {
 		return index;
 	}
 	protected Node createNode(String name) {
-		return new Node(0, name, name, "", 0, hiveDbDialect);
+		return new Node(0, name, name, "", hiveDbDialect);
 	}
 	protected PartitionDimension createPopulatedPartitionDimension() {
 		return new PartitionDimension(Hive.NEW_OBJECT_ID, partitionDimensionName(), Types.INTEGER,

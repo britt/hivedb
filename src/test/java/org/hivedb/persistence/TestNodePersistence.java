@@ -60,7 +60,6 @@ public class TestNodePersistence extends H2HiveTestCase {
 		dao.create(minimal);
 		
 		full.setDatabaseName("notBlahDatabase");
-		full.setPartitionDimensionId(27);
 		
 		minimal.setUsername("minimus");
 		minimal.setPassword("maximus");
@@ -137,7 +136,6 @@ public class TestNodePersistence extends H2HiveTestCase {
 				"minimal node", 
 				"blahbase", 
 				"localhost", 
-				7, 
 				HiveDbDialect.MySql
 			);
 	}
