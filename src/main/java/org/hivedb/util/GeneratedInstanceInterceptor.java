@@ -16,6 +16,7 @@ import java.util.Map;
 import net.sf.cglib.core.DefaultNamingPolicy;
 import net.sf.cglib.core.NamingPolicy;
 import net.sf.cglib.core.Predicate;
+import net.sf.cglib.proxy.Callback;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
@@ -35,26 +36,45 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 	public void removePropertyChangeListener(PropertyChangeListener listener) {
 		propertySupport.removePropertyChangeListener(listener);
 	}
-	   
+	
+	private static Class<?> baseClass;
+	public static Class<?> getBaseClass() {
+		if (baseClass == null) {
+		
+			Enhancer e = new Enhancer();
+			
+			baseClass = e.create().getClass();
+		}
+		return baseClass;
+	}
+	
+	public static Map<Class<?>, Class<?>> generatedClasses = new Hashtable<Class<?>, Class<?>>();
+	public static<T> Class<?> getGeneratedClass( Class<T> clazz ) {
+	//	if (generatedClasses.containsKey(clazz))
+	//		return generatedClasses.get(clazz);
+		Enhancer e = new Enhancer();
+		e.setCallbackType(GeneratedInstanceInterceptor.class);
+		e.setNamingPolicy(new ImplNamer(clazz));
+		GeneratedInstanceInterceptor interceptor = new GeneratedInstanceInterceptor();	
+		if (clazz.isInterface())
+			e.setInterfaces(new Class[] {clazz, PropertySetter.class});
+		else {
+			List list = new ArrayList(Arrays.asList(clazz.getInterfaces()));
+			list.add(PropertySetter.class);
+			Class[] copy = new Class[list.size()];
+			list.toArray(copy);
+			e.setInterfaces(copy);
+		}
+		Class<?> generatedClass = e.createClass();
+	//	generatedClasses.put(clazz, generatedClass);
+		Enhancer.registerCallbacks(generatedClass, new Callback[] { interceptor });
+		return generatedClass;
+	}
 	private final static String IMPLEMENTS_INTERFACE_PROPERTY = "_implementsInterface";
 	public static<T> T newInstance( Class<T> clazz ){
 		try{
+			Object instance = getGeneratedClass(clazz).newInstance();
 			GeneratedInstanceInterceptor interceptor = new GeneratedInstanceInterceptor();
-			Enhancer e = new Enhancer();
-//			e.setNamingPolicy(new ImplNamer(clazz.getName()));
-			if (clazz.isInterface())
-				e.setInterfaces(new Class[] {clazz, PropertySetter.class});
-			else {
-				List list = new ArrayList(Arrays.asList(clazz.getInterfaces()));
-				list.add(PropertySetter.class);
-				Class[] copy = new Class[list.size()];
-				list.toArray(copy);
-				e.setInterfaces(copy);
-			}
-			e.setCallback(interceptor);
-			Object instance = e.create();
-			interceptor.propertySupport = new PropertyChangeSupport( instance );
-		
 			((PropertySetter)instance).set(IMPLEMENTS_INTERFACE_PROPERTY, clazz);
 			return (T) instance;
 		}catch( Throwable e ){
@@ -88,13 +108,11 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 		if( name.equals("set")) {
 			String propName = (String) args[0];
 			dictionary.put(new String( propName ), args[1]);
-			propertySupport.firePropertyChange( new String( propName ) , null , args[0]);
 		}
 		else if( name.startsWith("set") && args.length == 1 && method.getReturnType() == Void.TYPE ) {
 			char propName[] = name.substring("set".length()).toCharArray();
 			propName[0] = Character.toLowerCase( propName[0] );
 			dictionary.put(new String( propName ), args[0]);
-			propertySupport.firePropertyChange( new String( propName ) , null , args[0]);
 		}
 		else if ( name.equals("getAsMap")) {
 			return dictionary;
@@ -128,14 +146,19 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 	}
 	
 	static class ImplNamer extends DefaultNamingPolicy {
-		private String specialClass;
-		
-		public ImplNamer(String className) {
-			this.specialClass = className;
+		private Class representedInterface;
+		public ImplNamer(Class representedInterface) {
+			this.representedInterface = representedInterface;
 		}
-		
 		public String getClassName(String prefix, String source, Object key, Predicate names) {
-			return prefix.equals(specialClass) ? prefix + "Gen" : super.getClassName(prefix, source, key, names);
+			
+
+			// The RepresentedInterface comes through here twice. I only accept the first pass through
+			// where the key is not equal to the represented interface name. I don't understand
+			// the CGLib implementation yet
+			return prefix.equals(representedInterface.getName()) && !key.toString().equals(representedInterface.getName())
+				? representedInterface.getName()+"Generated"
+				: super.getClassName(prefix, source, key, names);
 		}
 	}
 }
