@@ -132,7 +132,7 @@ public class HiveScenarioTest {
 						Collection<Object> actualPrimaryIndexKeys = directory.getPrimaryIndexKeysOfSecondaryIndexKey(
 								secondaryIndex,
 								expectedSecondaryIndexKey);
-						assertTrue(String.format("directory.getPrimaryIndexKeysOfSecondaryIndexKey(%s,%s)", secondaryIndex.getName(), expectedSecondaryIndexKey),
+						assertTrue(String.format("directory.getPrimaryIndexKeysOfSecondaryIndexKey(%s,%s): expected %s got %s", secondaryIndex.getName(), expectedSecondaryIndexKey, expectedPrimaryIndexKey, actualPrimaryIndexKeys),
 								Filter.grepItemAgainstList(expectedPrimaryIndexKey, actualPrimaryIndexKeys));
 					
 						// Assert that one of the nodes of the secondary index key is the same as that of the primary index key

@@ -22,7 +22,7 @@ import org.testng.annotations.BeforeMethod;
 
 public class H2HiveTestCase extends H2TestCase {
 	
-	HiveTestCase hiveTestCase;
+	protected HiveTestCase hiveTestCase;
 	public H2HiveTestCase() {
 		hiveTestCase = new HiveTestCase(
 			getEntityClasses(),

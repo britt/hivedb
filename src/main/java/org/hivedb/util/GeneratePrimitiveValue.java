@@ -15,7 +15,7 @@ public class GeneratePrimitiveValue<F> implements Generator<F> {
 	public GeneratePrimitiveValue(Class<F> clazz)
 	{
 		this.clazz = clazz;
-		this.random = new Random();
+		this.random = new Random(System.currentTimeMillis());
 	}
 	
 	@SuppressWarnings("unchecked")

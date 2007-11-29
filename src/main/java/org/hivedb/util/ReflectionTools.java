@@ -346,7 +346,6 @@ public class ReflectionTools {
 					public boolean f(Method method) {
 						try {
 							return isGetter(method) &&
-								method.getParameterTypes().length == 0 &&
 								invokableMemberPredicate(method);
 						} catch (Exception e) {
 							throw new RuntimeException(e);

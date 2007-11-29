@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import org.hivedb.util.functional.Atom;
 import org.testng.Assert;
+import org.testng.annotations.Test;
 
 public class TestGenerateInstance {
 	interface Foo {
@@ -18,6 +19,7 @@ public class TestGenerateInstance {
 		long getLong();
 	}
 	
+	@Test
 	public void testGenerateInstance() {
 		Foo foo = (Foo)new GenerateInstance<Foo>(Foo.class).generate();
 		Assert.assertTrue(foo.getInt() != 0);
