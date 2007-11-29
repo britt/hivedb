@@ -18,23 +18,21 @@ import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.JdbcTypeMapper;
+import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Unary;
 
 public class HiveTestCase {
 	
 	private Unary<String,String> getConnectString;
 	private HiveDbDialect hiveDbDialect;
-	private Class<?> partitionDimensionClass;
 	private ConfigurationReader configurationReader;
 	private Collection<String> dataNodeNames;
 	HiveTestCase(
-			Class<?> partitionDimensionClass,
 			Collection<Class<?>> entityClasses,
 			HiveDbDialect hiveDbDialect, 
 			Unary<String,String> getConnectString,
 			Collection<String> dataNodeNames)
 	{
-		this.partitionDimensionClass = partitionDimensionClass;
 		this.getConnectString = getConnectString;
 		this.hiveDbDialect = hiveDbDialect;
 		this.configurationReader = new ConfigurationReader(entityClasses);
@@ -58,7 +56,7 @@ public class HiveTestCase {
 	
 	public EntityHiveConfig getEntityHiveConfig()
 	{
-		final EntityConfig entityConfig = configurationReader.getEntityConfig(partitionDimensionClass.getName());
+		final EntityConfig entityConfig = Atom.getFirstOrThrow(configurationReader.getConfigurations());
 		final Hive hive = getOrCreateHive(entityConfig.getPartitionDimensionName(), entityConfig.getPrimaryKeyClass());
 		return configurationReader.getHiveConfiguration(hive);
 	}

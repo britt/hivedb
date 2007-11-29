@@ -25,7 +25,6 @@ public class H2HiveTestCase extends H2TestCase {
 	HiveTestCase hiveTestCase;
 	public H2HiveTestCase() {
 		hiveTestCase = new HiveTestCase(
-			getPartitionDimensionClass(),
 			getEntityClasses(),
 			HiveDbDialect.H2, 
 			new Unary<String,String>() {

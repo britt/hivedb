@@ -23,7 +23,6 @@ public abstract class MySqlHiveTestCase extends MysqlTestCase {
 	HiveTestCase hiveTestCase;
 	public MySqlHiveTestCase() {
 		hiveTestCase = new HiveTestCase(
-			getPartitionDimensionClass(),
 			getEntityClasses(),
 			HiveDbDialect.MySql, 
 			new Unary<String,String>() {
