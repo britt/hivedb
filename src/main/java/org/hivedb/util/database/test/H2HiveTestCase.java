@@ -37,7 +37,7 @@ public class H2HiveTestCase extends H2TestCase {
 		cleanupAfterEachTest = true;
 	}
 
-	protected List<Class<? extends Object>> getEntityClasses() {
+	protected List<Class<?>> getEntityClasses() {
 		return Arrays.asList(getPartitionDimensionClass(), WeatherReportImpl.class);
 	}
 	protected Class<?> getPartitionDimensionClass() {
