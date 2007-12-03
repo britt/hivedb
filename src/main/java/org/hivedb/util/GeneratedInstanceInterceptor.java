@@ -27,6 +27,11 @@ import org.hivedb.util.functional.DebugMap;
 import sun.reflect.ReflectionFactory.GetReflectionFactoryAction;
 
 public class GeneratedInstanceInterceptor implements MethodInterceptor {
+	
+	Class clazz;
+	public GeneratedInstanceInterceptor(Class clazz) {
+		this.clazz = clazz;
+	}
 	private PropertyChangeSupport propertySupport;
 	   
 	public void addPropertyChangeListener(PropertyChangeListener listener) {          
@@ -37,25 +42,11 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 		propertySupport.removePropertyChangeListener(listener);
 	}
 	
-	private static Class<?> baseClass;
-	public static Class<?> getBaseClass() {
-		if (baseClass == null) {
-		
-			Enhancer e = new Enhancer();
-			
-			baseClass = e.create().getClass();
-		}
-		return baseClass;
-	}
-	
-	public static Map<Class<?>, Class<?>> generatedClasses = new Hashtable<Class<?>, Class<?>>();
 	public static<T> Class<?> getGeneratedClass( Class<T> clazz ) {
-	//	if (generatedClasses.containsKey(clazz))
-	//		return generatedClasses.get(clazz);
 		Enhancer e = new Enhancer();
 		e.setCallbackType(GeneratedInstanceInterceptor.class);
 		e.setNamingPolicy(new ImplNamer(clazz));
-		GeneratedInstanceInterceptor interceptor = new GeneratedInstanceInterceptor();	
+		GeneratedInstanceInterceptor interceptor = new GeneratedInstanceInterceptor(clazz);	
 		if (clazz.isInterface())
 			e.setInterfaces(new Class[] {clazz, PropertySetter.class});
 		else {
@@ -66,16 +57,12 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 			e.setInterfaces(copy);
 		}
 		Class<?> generatedClass = e.createClass();
-	//	generatedClasses.put(clazz, generatedClass);
 		Enhancer.registerCallbacks(generatedClass, new Callback[] { interceptor });
 		return generatedClass;
 	}
-	private final static String IMPLEMENTS_INTERFACE_PROPERTY = "_implementsInterface";
 	public static<T> T newInstance( Class<T> clazz ){
 		try{
 			Object instance = getGeneratedClass(clazz).newInstance();
-			GeneratedInstanceInterceptor interceptor = new GeneratedInstanceInterceptor();
-			((PropertySetter)instance).set(IMPLEMENTS_INTERFACE_PROPERTY, clazz);
 			return (T) instance;
 		}catch( Throwable e ){
 			 e.printStackTrace();
@@ -117,9 +104,6 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 		else if ( name.equals("getAsMap")) {
 			return dictionary;
 		}
-		else if( name.equals("getClass")) {
-			return dictionary.get(IMPLEMENTS_INTERFACE_PROPERTY);
-		}
 		else if( name.startsWith("get") && args.length == 0 ) {
 			char propName[] = name.substring("get".length()).toCharArray();
 			propName[0] = Character.toLowerCase( propName[0] );
@@ -134,15 +118,14 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 			return obj.hashCode() == args[0].hashCode();
 		}
 		else if ( name.equals("toString")) {
-			return new DebugMap<Object, Object>(dictionary).toString() + "###("+dictionary.hashCode()+")";
+			return new DebugMap<Object, Object>(dictionary, true).toString() + "###("+dictionary.hashCode()+")";
 		}
 			
 		return retValFromSuper;
 	}
 
 	private Object hashCode(Object obj) {
-		Class implementsInterface = (Class) dictionary.get(IMPLEMENTS_INTERFACE_PROPERTY);
-		return Amass.makeHashCode(ReflectionTools.invokeGetters(obj, implementsInterface));
+		return Amass.makeHashCode(ReflectionTools.invokeGetters(obj, clazz));
 	}
 	
 	static class ImplNamer extends DefaultNamingPolicy {

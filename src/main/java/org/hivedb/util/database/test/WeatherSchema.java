@@ -20,6 +20,10 @@ public class WeatherSchema extends Schema {
     "LATITUDE FLOAT," +
     "LONGITUDE FLOAT," +
     "TEMPERATURE INT," +
-    "REPORT_TIME TIMESTAMP);"));
+    "REPORT_TIME TIMESTAMP);"),
+    	new TableInfo("WEEKLY_TEMPERATURE", "CREATE TABLE WEEKLY_TEMPERATURE (" + 
+    	    "REPORT_ID INT NOT NULL ," +
+    	    "TEMPERATURE INT);")
+    );
 	}
 }

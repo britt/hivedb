@@ -35,9 +35,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	@BeforeMethod
 	public void setUp() throws Exception {
 		HiveFacade hive = getHive();
-		for(String name: getDatabaseNames())
-			hive.addNode(createNode(name));
-		
+	
 		hive.addResource(createResource());
 		nameIndex = new SecondaryIndex("name", Types.VARCHAR);
 		numIndex = new SecondaryIndex("num", Types.INTEGER);

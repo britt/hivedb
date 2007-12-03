@@ -22,29 +22,55 @@ import org.testng.annotations.BeforeMethod;
 
 public class H2HiveTestCase extends H2TestCase {
 	
-	protected HiveTestCase hiveTestCase;
-	public H2HiveTestCase() {
-		hiveTestCase = new HiveTestCase(
-			getEntityClasses(),
-			HiveDbDialect.H2, 
-			new Unary<String,String>() {
-				public String f(String databaseName) {
-					return getConnectString(databaseName);
-				}
-			},
-			getDataNodeNames());
+	@Override
+	@BeforeClass
+	protected void beforeClass() {
 		cleanupAfterEachTest = true;
+		hiveTestCase = createHiveTestCase();
+		hiveTestCase.beforeClass();
+		super.beforeClass();
+	}
+	
+	@Override
+	@BeforeMethod
+	public void beforeMethod() {
+		super.beforeMethod();
+		hiveTestCase = createHiveTestCase();
+		hiveTestCase.beforeMethod();
+		installDataSchemas();
 	}
 
+	private HiveTestCase createHiveTestCase() {
+		return new HiveTestCase(
+				getEntityClasses(),
+				HiveDbDialect.H2, 
+				new Unary<String,String>() {
+					public String f(String databaseName) {
+						return getConnectString(databaseName);
+					}
+				},
+				getDataNodeNames());
+	}
+	
+	protected HiveTestCase hiveTestCase;
+
+
 	protected List<Class<?>> getEntityClasses() {
-		return Arrays.asList(getPartitionDimensionClass(), WeatherReportImpl.class);
+		return Arrays.asList(getPartitionDimensionClass(), WeatherReport.class);
 	}
 	protected Class<?> getPartitionDimensionClass() {
 		return Continent.class;
 	}
 	
 	protected Collection<String> getDataNodeNames() {
-		return Collections.emptyList();
+		return Arrays.asList("data1", "data2");
+	}
+	
+	protected void installDataSchemas() {
+		for (String dataNodeName : getDataNodeNames()) {
+			new ContinentalSchema(getConnectString(dataNodeName)).install();
+			new WeatherSchema(getConnectString(dataNodeName)).install();
+		}
 	}
 	
 	public Collection<String> getDatabaseNames() {
@@ -56,20 +82,6 @@ public class H2HiveTestCase extends H2TestCase {
 	protected HiveSessionFactoryBuilderImpl getFactory() {
 		return new HiveSessionFactoryBuilderImpl(
 				getEntityHiveConfig(), new SequentialShardAccessStrategy());
-	}
-	
-	@Override
-	@BeforeClass
-	protected void beforeClass() {
-		hiveTestCase.beforeClass();
-		super.beforeClass();
-	}
-	
-	@Override
-	@BeforeMethod
-	public void beforeMethod() {
-		super.beforeMethod();
-		hiveTestCase.beforeMethod();
 	}
 	
 	public Hive getHive() { 

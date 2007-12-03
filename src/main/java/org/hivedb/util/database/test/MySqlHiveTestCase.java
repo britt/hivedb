@@ -35,7 +35,7 @@ public abstract class MySqlHiveTestCase extends MysqlTestCase {
 	}
 
 	protected List<Class<? extends Object>> getEntityClasses() {
-		return Arrays.asList(getPartitionDimensionClass(), WeatherReportImpl.class);
+		return Arrays.asList(getPartitionDimensionClass(), WeatherReport.class);
 	}
 	
 	protected Class<?> getPartitionDimensionClass() {

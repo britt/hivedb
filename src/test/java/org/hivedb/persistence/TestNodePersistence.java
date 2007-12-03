@@ -17,8 +17,9 @@ import org.testng.annotations.Test;
 public class TestNodePersistence extends H2HiveTestCase {	  
 	@Test
 	public void testCreate() throws Exception {
+		int count = getHive().getNodes().size();
 		NodeDao dao = new NodeDao(getDataSource(getHiveDatabaseName()));
-		assertEquals(0,dao.loadAll().size());
+		assertEquals(count,dao.loadAll().size());
 		
 		Node full = createFullyPopulatedNode();
 		Node minimal = createMinimalNode();
@@ -27,7 +28,7 @@ public class TestNodePersistence extends H2HiveTestCase {
 		dao.create(minimal);
 		
 		List<Node> nodes = dao.loadAll();
-		assertEquals(2,nodes.size());	
+		assertEquals(2+count,nodes.size());	
 		
 		Node fetchedFull = null;
 		Node fetchedMinimal = null;
@@ -50,8 +51,9 @@ public class TestNodePersistence extends H2HiveTestCase {
 	
 	@Test
 	public void testUpdate() {
+		int count = getHive().getNodes().size();
 		NodeDao dao = new NodeDao(getDataSource(getHiveDatabaseName()));
-		assertEquals(0,dao.loadAll().size());
+		assertEquals(count,dao.loadAll().size());
 		
 		Node full = createFullyPopulatedNode();
 		Node minimal = createMinimalNode();
@@ -68,7 +70,7 @@ public class TestNodePersistence extends H2HiveTestCase {
 		dao.update(minimal);
 		
 		List<Node> nodes = dao.loadAll();
-		assertEquals(2,nodes.size());	
+		assertEquals(2+count,nodes.size());	
 		
 		Node fetchedFull = null;
 		Node fetchedMinimal = null;
@@ -91,8 +93,9 @@ public class TestNodePersistence extends H2HiveTestCase {
 	
 	@Test
 	public void testDelete() {
+		int count = getHive().getNodes().size();
 		NodeDao dao = new NodeDao(getDataSource(getHiveDatabaseName()));
-		assertEquals(0,dao.loadAll().size());
+		assertEquals(count,dao.loadAll().size());
 		
 		Node full = createFullyPopulatedNode();
 		Node minimal = createMinimalNode();
@@ -101,7 +104,7 @@ public class TestNodePersistence extends H2HiveTestCase {
 		dao.create(minimal);
 		
 		List<Node> nodes = dao.loadAll();
-		assertEquals(2,nodes.size());
+		assertEquals(count+2,nodes.size());
 		for(Node n : nodes)
 			dao.delete(n);
 		

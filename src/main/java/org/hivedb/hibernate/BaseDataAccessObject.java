@@ -10,6 +10,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.exception.JDBCConnectionException;
 import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
@@ -133,6 +134,8 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			tx = session.beginTransaction();
 			callback.execute(session);
 			tx.commit();
+		} catch (JDBCConnectionException ce) {
+			throw new RuntimeException(ce);
 		} catch( RuntimeException e ) {
 			if(tx != null)
 				tx.rollback();

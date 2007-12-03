@@ -29,7 +29,7 @@ public interface WeatherReport {
 	int getTemperature();
 	
 	@Index
-	Collection<Integer> getCollectionIndex();
+	Collection<Integer> getWeeklyTemperatures();
 	
 	void setContinent(String value);
 	void setLatitude(BigDecimal value);
@@ -37,4 +37,5 @@ public interface WeatherReport {
 	void setReportId(Integer value);
 	void setReportTime(Date value);
 	void setTemperature(int value);
+	void setWeeklyTemperatures(Collection<Integer> values);
 }

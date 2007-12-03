@@ -1,5 +1,8 @@
 package org.hivedb.util.functional;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 public abstract class Joiner<C,R> {
 	public abstract R f(C item, R result);
 	
@@ -23,7 +26,13 @@ public abstract class Joiner<C,R> {
 	public static class ConcatHashCodesOfValues extends Joiner<Object, String>
 	{
 		public String f(Object item, String result) {
-			return result + (item != null ? new Integer(item.hashCode()).toString() : "");
-		}		
+			return result + (item != null ? getSafeHashCode(item).toString() : "");
+		}
+
+		private Integer getSafeHashCode(Object item) {
+			if (item instanceof Collection) 
+				return new HashSet((Collection)item).hashCode();
+			return new Integer(item.hashCode());
+		}
 	}
 }

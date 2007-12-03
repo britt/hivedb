@@ -29,13 +29,6 @@ public class TestMigration extends H2HiveTestCase {
 	@BeforeMethod
 	public void beforeMethod() {
 		super.beforeMethod();
-		try {
-			for(String name : getDatabaseNames())
-				getHive().addNode(new Node(0, name, name, "", HiveDbDialect.H2));
-			
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
 		
 		for(String name: getDatabaseNames()) {
 			SimpleJdbcDaoSupport dao = new SimpleJdbcDaoSupport();

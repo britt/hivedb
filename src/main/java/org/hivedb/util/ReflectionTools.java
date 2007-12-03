@@ -16,6 +16,7 @@ import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Predicate;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
+import org.hivedb.util.functional.Joiner.ConcatStrings;
 
 public class ReflectionTools {
 	
@@ -306,6 +307,10 @@ public class ReflectionTools {
 					return diff.getMethod().getName().equals(getterName);
 				}
 			}, this);
+		}
+		@Override
+		public String toString() {
+			return String.format("The following fields differ %s", Amass.joinByToString(new ConcatStrings<Diff>(", "), this));
 		}
 	}
 	

@@ -9,11 +9,13 @@ import org.hivedb.HiveFacade;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.management.HiveInstaller;
+import org.hivedb.util.GenerateInstance;
+import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.database.test.Continent;
 import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.H2TestCase;
 import org.hivedb.util.database.test.WeatherReport;
-import org.hivedb.util.database.test.WeatherReportImpl;
+import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.functional.Atom;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -24,21 +26,21 @@ public class ConfigurationReaderTest extends H2TestCase {
 	
 	@Test
 	public void testGetResourceName() throws Exception {
-		assertEquals("WeatherReport", new ConfigurationReader().getResourceName(WeatherReportImpl.class));
+		assertEquals("WeatherReport", new ConfigurationReader().getResourceName(WeatherReport.class));
 	}
 	
 	@SuppressWarnings("unchecked")
 	@Test
 	public void configureResourceTest() throws Exception {
-		EntityConfig config = new ConfigurationReader().configure(WeatherReportImpl.class);
-		WeatherReport report = WeatherReportImpl.generate();
+		EntityConfig config = new ConfigurationReader().configure(WeatherReport.class);
+		WeatherReport report = generateInstance();
 		assertEquals(WeatherReport.CONTINENT, config.getPrimaryIndexKeyPropertyName());
 		assertEquals(WeatherReport.CONTINENT, config.getPartitionDimensionName());
 		assertEquals(report.getContinent(), config.getPrimaryIndexKey(report));
 		assertEquals(report.getReportId(), config.getId(report));
 		assertEquals("WeatherReport", config.getResourceName());
 		assertFalse(config.isPartitioningResource());
-		assertEquals(WeatherReportImpl.class, config.getRepresentedInterface());
+		assertEquals(WeatherReport.class, config.getRepresentedInterface());
 		assertEquals(Integer.class, config.getIdClass());
 		
 		Collection<EntityIndexConfig> indexes = (Collection<EntityIndexConfig>) config.getEntitySecondaryIndexConfigs();
@@ -56,14 +58,19 @@ public class ConfigurationReaderTest extends H2TestCase {
 		
 		EntityIndexConfig collection = null;
 		for(EntityIndexConfig icfg : indexes) {
-			if("collectionIndex".equals(icfg.getIndexName())){
+			if("weeklyTemperatures".equals(icfg.getIndexName())){
 				collection = icfg;
 				break;
 			}
 		}
 		assertNotNull(collection);
-		assertEquals(report.getCollectionIndex(), collection.getIndexValues(report));
+		assertEquals(report.getWeeklyTemperatures(), collection.getIndexValues(report));
 	}
+
+	private WeatherReport generateInstance() {
+		return new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
+	}
+	
 	@SuppressWarnings("unchecked")
 	@Test
 	public void configurePartitioningResourceTest() throws Exception {
@@ -88,10 +95,10 @@ public class ConfigurationReaderTest extends H2TestCase {
 	@Test
 	public void testInstallWithPartitionDimensionInstalled() throws Exception {
 		new HiveInstaller(getConnectString(H2TestCase.TEST_DB)).run();
-		HiveFacade hive = Hive.create(getConnectString(H2TestCase.TEST_DB), WeatherReportImpl.CONTINENT, Types.VARCHAR);
-		ConfigurationReader reader = new ConfigurationReader(WeatherReportImpl.class);
+		HiveFacade hive = Hive.create(getConnectString(H2TestCase.TEST_DB), WeatherReport.CONTINENT, Types.VARCHAR);
+		ConfigurationReader reader = new ConfigurationReader(WeatherReport.class);
 		reader.install(hive);
-		EntityConfig config = reader.getEntityConfig(WeatherReportImpl.class.getName());
+		EntityConfig config = reader.getEntityConfig(WeatherReport.class.getName());
 		assertNotNull(hive.getPartitionDimension().getResource(config.getResourceName()));
 		assertEquals(2,hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes().size());
 		assertEquals(Types.INTEGER,Atom.getFirst(hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes()).getColumnInfo().getColumnType());
@@ -101,7 +108,7 @@ public class ConfigurationReaderTest extends H2TestCase {
 	@Test
 	public void testInstallPartitioningResourceWithPartitionDimensionInstalled() throws Exception {
 		new HiveInstaller(getConnectString(H2TestCase.TEST_DB)).run();
-		HiveFacade hive = Hive.create(getConnectString(H2TestCase.TEST_DB), WeatherReportImpl.CONTINENT, Types.VARCHAR);
+		HiveFacade hive = Hive.create(getConnectString(H2TestCase.TEST_DB), WeatherReport.CONTINENT, Types.VARCHAR);
 		ConfigurationReader reader = new ConfigurationReader(Continent.class);
 		reader.install(hive);
 		EntityConfig config = reader.getEntityConfig(Continent.class.getName());
@@ -114,9 +121,9 @@ public class ConfigurationReaderTest extends H2TestCase {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testInstallWithoutHiveSchema() throws Exception {
-		ConfigurationReader reader = new ConfigurationReader(WeatherReportImpl.class);
+		ConfigurationReader reader = new ConfigurationReader(WeatherReport.class);
 		reader.install(getConnectString(H2HiveTestCase.TEST_DB));
-		EntityConfig config = reader.getEntityConfig(WeatherReportImpl.class.getName());
+		EntityConfig config = reader.getEntityConfig(WeatherReport.class.getName());
 		Hive hive = Hive.load(getConnectString(H2HiveTestCase.TEST_DB));
 		assertNotNull(hive.getPartitionDimension().getResource(config.getResourceName()));
 		assertEquals(2,hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes().size());
@@ -141,9 +148,9 @@ public class ConfigurationReaderTest extends H2TestCase {
 	@Test
 	public void testInstallWithoutPartitionDimension() throws Exception {
 		new HiveInstaller(getConnectString(H2TestCase.TEST_DB)).run();
-		ConfigurationReader reader = new ConfigurationReader(WeatherReportImpl.class);
+		ConfigurationReader reader = new ConfigurationReader(WeatherReport.class);
 		reader.install(getConnectString(H2HiveTestCase.TEST_DB));
-		EntityConfig config = reader.getEntityConfig(WeatherReportImpl.class.getName());
+		EntityConfig config = reader.getEntityConfig(WeatherReport.class.getName());
 		Hive hive = Hive.load(getConnectString(H2HiveTestCase.TEST_DB));
 		assertNotNull(hive.getPartitionDimension().getResource(config.getResourceName()));
 		assertEquals(2,hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes().size());

@@ -15,10 +15,11 @@ import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.configuration.EntityIndexConfigImpl;
 import org.hivedb.hibernate.annotations.IndexType;
 import org.hivedb.meta.Node;
+import org.hivedb.util.GenerateInstance;
+import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.WeatherReport;
-import org.hivedb.util.database.test.WeatherReportImpl;
 import org.hivedb.util.functional.Validator;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -36,12 +37,12 @@ public class HiveIndexerTest extends H2HiveTestCase {
 	public void insertTest() throws Exception {
 		Hive hive = getHive();
 		HiveIndexer indexer = new HiveIndexer(hive);
-		WeatherReport report = WeatherReportImpl.generate();
+		WeatherReport report = generateIntance();
 		indexer.insert(getWeatherReportConfig(report), report);
 		assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
 		assertTrue(hive.directory().doesSecondaryIndexKeyExist("WeatherReport", "temperature", report.getTemperature(), report.getReportId()));
-		for(Integer i : report.getCollectionIndex()) 
-			assertTrue(hive.directory().doesSecondaryIndexKeyExist("WeatherReport", "collectionIndex", i, report.getReportId()));
+		for(Integer temperature : report.getWeeklyTemperatures()) 
+			assertTrue(hive.directory().doesSecondaryIndexKeyExist("WeatherReport", "weeklyTemperatures", temperature, report.getReportId()));
 	}
 	
 	// Test for HiveIndexer.update(EntityIndexConfiguration config, Object entity)
@@ -49,7 +50,7 @@ public class HiveIndexerTest extends H2HiveTestCase {
 	public void updateTest() throws Exception {
 		Hive hive = getHive();
 		HiveIndexer indexer = new HiveIndexer(hive);
-		WeatherReport report = WeatherReportImpl.generate();
+		WeatherReport report = generateIntance();
 		Integer oldTemp = report.getTemperature();
 		indexer.insert(getWeatherReportConfig(report), report);
 		assertEquals(1, hive.directory().getResourceIdsOfPrimaryIndexKey("WeatherReport", report.getContinent()).size());
@@ -64,7 +65,7 @@ public class HiveIndexerTest extends H2HiveTestCase {
 	public void changePartitionKeyTest() throws Exception {
 		Hive hive = getHive();
 		HiveIndexer indexer = new HiveIndexer(hive);
-		WeatherReport report = WeatherReportImpl.generate();
+		WeatherReport report = generateIntance();
 		report.setContinent("Asia");
 		Integer oldTemp = report.getTemperature();
 		indexer.insert(getWeatherReportConfig(report), report);
@@ -85,13 +86,18 @@ public class HiveIndexerTest extends H2HiveTestCase {
 		
 		assertEquals("Europe", hive.directory().getPrimaryIndexKeyOfResourceId("WeatherReport", report.getReportId()));	
 	}
+
+
+	private WeatherReport generateIntance() {
+		return new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
+	}
 	
 	// Test for HiveIndexer.delete(EntityIndexConfiguration config, Object entity)
 	@Test
 	public void deleteTest() throws Exception {
 		Hive hive = getHive();
 		HiveIndexer indexer = new HiveIndexer(hive);
-		WeatherReport report = WeatherReportImpl.generate();
+		WeatherReport report = generateIntance();
 		indexer.insert(getWeatherReportConfig(report), report);
 		assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
 		assertTrue(hive.directory().doesSecondaryIndexKeyExist("WeatherReport", "temperature", report.getTemperature(), report.getReportId()));
@@ -106,7 +112,7 @@ public class HiveIndexerTest extends H2HiveTestCase {
 	public void existsTest() throws Exception {
 		Hive hive = getHive();
 		HiveIndexer indexer = new HiveIndexer(hive);
-		WeatherReport report = WeatherReportImpl.generate();
+		WeatherReport report = generateIntance();
 		assertFalse(indexer.exists(getWeatherReportConfig(report), report));
 		indexer.insert(getWeatherReportConfig(report), report);
 		assertTrue(indexer.exists(getWeatherReportConfig(report), report));
@@ -121,7 +127,7 @@ public class HiveIndexerTest extends H2HiveTestCase {
 				"reportId",
 				Arrays.asList(
 						new EntityIndexConfigImpl(WeatherReport.class, "temperature"),
-						new EntityIndexConfigImpl(WeatherReport.class, "collectionIndex")),
+						new EntityIndexConfigImpl(WeatherReport.class, "weeklyTemperatures")),
 				false);	
 	}
 

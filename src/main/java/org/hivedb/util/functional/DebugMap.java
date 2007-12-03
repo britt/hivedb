@@ -11,6 +11,7 @@ import java.util.Set;
 public class DebugMap<K,V> implements Map<K,V>
 {
 	protected Map<K,V> map;
+	protected boolean showHashes;
 	public DebugMap()
 	{
 		map = new Hashtable<K,V>();
@@ -18,6 +19,11 @@ public class DebugMap<K,V> implements Map<K,V>
 	public DebugMap(Map<K,V> map)
 	{
 		this.map = map;
+	}
+	public DebugMap(Map<K,V> map, boolean showHashes)
+	{
+		this.map = map;
+		this.showHashes = showHashes;
 	}
 	
 	public void clear() {
@@ -79,7 +85,7 @@ public class DebugMap<K,V> implements Map<K,V>
 			new Joiner.ConcatStrings<String>("\n"),
 			Transform.map(new Unary<Entry<K,V>, String>() {
 					public String f(Entry entry) {
-						return entry.getKey().toString() + " -> " + entry.getValue().toString();
+						return entry.getKey().toString() + " -> " + entry.getValue().toString() + (showHashes ? "(Hash: " + entry.getValue().hashCode() + ")" : "");
 				}},
 				map.entrySet()),
 			"");

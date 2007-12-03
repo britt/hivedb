@@ -30,22 +30,23 @@ public abstract class DatabaseTestCase {
 	
 	@BeforeClass
 	protected void beforeClass(){
-		for(String name : getDatabaseNames()){
-			if(databaseExists(name))
-				deleteDatabase(name);
-			if(!databaseExists(name))
-				createDatabase(name);
-		}
+		
 	}
 
 	@BeforeMethod
 	protected void beforeMethod() {
 		if( cleanupAfterEachTest ) {
 			for(String name : getDatabaseNames()){
-				if(!databaseExists(name))
+				if(databaseExists(name)) {
+					deleteDatabase(name);
+					createDatabase(name);
+				} else
 					createDatabase(name);
 			}
 		}
+		else
+			for(String name : getDatabaseNames())
+				createDatabase(name);
 	}
 	
 	@AfterClass

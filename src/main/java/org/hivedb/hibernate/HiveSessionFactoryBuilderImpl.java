@@ -31,9 +31,13 @@ import org.hivedb.Synchronizeable;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.meta.Node;
+import org.hivedb.util.GeneratedInstanceInterceptor;
+import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.DriverLoader;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.functional.Atom;
+import org.hivedb.util.functional.Transform;
+import org.hivedb.util.functional.Unary;
 
 public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder, HiveSessionFactory, Observer, Synchronizeable {	
 	private static Map<HiveDbDialect, Class<?>> dialectMap = buildDialectMap();
@@ -76,11 +80,13 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	private ShardedSessionFactoryImplementor buildBaseSessionFactory() {
 		Map<Integer, Configuration> hibernateConfigs = getConfigurationsFromNodes(config.getHive());
 		
+		Collection<Class<?>> classes = getComplexClassesOfEntityConfig();
+		
 		for(Map.Entry<Integer,Configuration> entry : hibernateConfigs.entrySet()) {
 			Configuration cfg = entry.getValue();
-			for(EntityConfig entityConfig : config.getEntityConfigs())
-				cfg.addClass(entityConfig.getRepresentedInterface());
-			//cfg.setProperty("hibernate.default_entity_mode", "dynamic-map");
+			for(Class<?> clazz : classes)
+				cfg.addClass(
+						GeneratedInstanceInterceptor.getGeneratedClass(clazz));
 			this.nodeSessionFactories.put(entry.getKey(), cfg.buildSessionFactory());
 		}
 		
@@ -88,6 +94,14 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 		Configuration prototypeConfig = buildPrototypeConfiguration();
 		ShardedConfiguration shardedConfig = new ShardedConfiguration(prototypeConfig, shardConfigs, buildShardStrategyFactory());
 		return (ShardedSessionFactoryImplementor) shardedConfig.buildShardedSessionFactory();
+	}
+
+	private Collection<Class<?>> getComplexClassesOfEntityConfig() {
+		return ReflectionTools.getUniqueComplexPropertyTypes(
+				Transform.map(new Unary<EntityConfig, Class<?>>() {
+					public Class<?> f(EntityConfig entityConfig) {
+						return entityConfig.getRepresentedInterface();
+				}}, config.getEntityConfigs()));
 	}
 	
 	private Map<Integer, Configuration> getConfigurationsFromNodes(HiveFacade hive) {
@@ -106,8 +120,9 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 
 	private Configuration buildPrototypeConfiguration() {
 		Configuration hibernateConfig = createConfigurationFromNode(Atom.getFirstOrThrow(config.getHive().getNodes()), overrides);
-		for(EntityConfig entityConfig : config.getEntityConfigs())
-			hibernateConfig.addClass(entityConfig.getRepresentedInterface());
+		Collection<Class<?>> classes = getComplexClassesOfEntityConfig();
+		for(Class<?> clazz : classes)
+			hibernateConfig.addClass(GeneratedInstanceInterceptor.getGeneratedClass(clazz));
 		hibernateConfig.setProperty("hibernate.session_factory_name", "factory:prototype");
 		return hibernateConfig;
 	}
@@ -138,7 +153,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 		
 		config.setProperty("hibernate.connection.shard_id", new Integer(node.getId()).toString());
 		config.setProperty("hibernate.shard.enable_cross_shard_relationship_checks", "true");
-		
+		//config.setProperty("hibernate.show_sql", "true");
 		for(Entry<Object,Object> prop : overrides.entrySet()) 
 			config.setProperty(prop.getKey().toString(), prop.getValue().toString());
 		
@@ -212,7 +227,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 		if(nodeIds.size() == 1)
 			return nodeSessionFactories.get(Atom.getFirstOrThrow(nodeIds)).openSession(interceptor);
 		else
-			throw new UnsupportedOperationException("This operation is not yet implemneted " + nodeIds.size());
+			throw new UnsupportedOperationException("This operation is not yet implemented " + nodeIds.size());
 	}
 	
 	private HiveInterceptorDecorator getHiveInterceptor() {

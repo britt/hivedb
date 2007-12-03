@@ -12,6 +12,9 @@ import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
+import org.hivedb.util.GeneratedInstanceInterceptor;
+import org.hivedb.util.PropertySetter;
+import org.hivedb.util.database.test.WeatherReport;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -21,13 +24,6 @@ public class TestCglib {
 	public void test() {
 	    Foo  foo =  (Foo)Interceptor.newInstance( Foo.class );
 	    
-	    foo.addPropertyChangeListener(
-	        new PropertyChangeListener(){
-	            public void propertyChange(PropertyChangeEvent evt){
-	                System.out.println(evt);
-	            }
-	        }
-	    );
 	    try {
 			((HiddenPropertySetter)foo).set("sampleProperty","TEST");
 		} catch (Exception e) {
@@ -35,7 +31,23 @@ public class TestCglib {
 		}
 	    String sampleProperty = foo.getSampleProperty();
 	    Assert.assertEquals(sampleProperty,"TEST");
-	}   
+	   
+	    
+	}
+	@Test
+	public void testGeneratedInstanceInterceptor() {
+		WeatherReport weatherReport = GeneratedInstanceInterceptor.newInstance(WeatherReport.class);
+		// Make sure the interceptor is attached when the created class is constructed with reflection
+	    try {
+	    	WeatherReport instance = (WeatherReport) weatherReport.getClass().getConstructor(new Class[] {}).newInstance(null);
+				((PropertySetter)weatherReport).set("continent","TEST");
+				String sampleProp = weatherReport.getContinent();
+			    Assert.assertEquals(sampleProp,"TEST");
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			} 
+	}
+
 	public interface HiddenPropertySetter {
 		void set(String property, Object value);
 	}

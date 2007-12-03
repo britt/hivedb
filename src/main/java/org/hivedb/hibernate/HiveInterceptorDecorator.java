@@ -8,11 +8,13 @@ import org.hibernate.Interceptor;
 import org.hibernate.shards.util.InterceptorDecorator;
 import org.hibernate.type.Type;
 import org.hivedb.HiveReadOnlyException;
+import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
+import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 
-import com.sun.org.apache.xml.internal.serialize.Serializer;
+import sun.security.x509.RFC822Name;
 
 public class HiveInterceptorDecorator extends InterceptorDecorator implements Interceptor {
 	private EntityHiveConfig hiveConfig;
@@ -32,7 +34,24 @@ public class HiveInterceptorDecorator extends InterceptorDecorator implements In
 
 	@Override
 	public Boolean isTransient(Object entity) {
-		return !indexer.exists(hiveConfig.getEntityConfig(entity.getClass()), entity);
+		final EntityConfig resolvedEntityConfig = resolveEntityConfig(entity.getClass());
+		return resolvedEntityConfig != null
+			? !indexer.exists(resolvedEntityConfig, entity)
+			: super.isTransient(entity);
+	}
+
+	private EntityConfig resolveEntityConfig(Class clazz) {
+		return hiveConfig.getEntityConfig(ReflectionTools.whichIsImplemented(
+				clazz, 
+				Transform.map(new Unary<EntityConfig, Class>() {
+					public Class f(EntityConfig entityConfig) {
+						return entityConfig.getRepresentedInterface();
+					}},
+					hiveConfig.getEntityConfigs())));
+	}
+
+	private boolean isHiveEntity(Object entity) {
+		return hiveConfig.getEntityConfig(entity.getClass()) != null;
 	}
 
 	@Override
@@ -40,7 +59,8 @@ public class HiveInterceptorDecorator extends InterceptorDecorator implements In
 		//Read-only checks are implicit in the delete calls
 		//We just need to wrap the exception
 		try {
-			indexer.delete(hiveConfig.getEntityConfig(entity.getClass()), entity);
+			if (isHiveEntity(entity.getClass()))
+				indexer.delete(hiveConfig.getEntityConfig(entity.getClass()), entity);
 		} catch (HiveReadOnlyException e) {
 			throw new CallbackException(e);
 		}
@@ -64,7 +84,8 @@ public class HiveInterceptorDecorator extends InterceptorDecorator implements In
 	
 	private void updateIndexes(Object entity) {
 		try {
-			indexer.update(hiveConfig.getEntityConfig(entity.getClass()), entity);
+			if (isHiveEntity(entity))
+				indexer.update(hiveConfig.getEntityConfig(entity.getClass()), entity);
 		} catch (HiveReadOnlyException e) {
 			throw new CallbackException(e);
 		}
@@ -72,7 +93,8 @@ public class HiveInterceptorDecorator extends InterceptorDecorator implements In
 
 	private void insertIndexes(Object entity, Serializable id) {
 		try {
-			indexer.insert(hiveConfig.getEntityConfig(entity.getClass()), entity);
+			if (isHiveEntity(entity))
+				indexer.insert(hiveConfig.getEntityConfig(entity.getClass()), entity);
 		} catch (HiveReadOnlyException e) {
 			throw new CallbackException(e);
 		}

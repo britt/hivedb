@@ -10,8 +10,14 @@ import org.hivedb.hibernate.annotations.EntityId;
 import org.hivedb.hibernate.annotations.Index;
 import org.hivedb.hibernate.annotations.PartitionIndex;
 import org.hivedb.hibernate.annotations.Resource;
+import org.hivedb.util.GenerateInstance;
+import org.hivedb.util.GeneratePrimitiveCollection;
 import org.hivedb.util.HiveUtils;
+import org.hivedb.util.functional.NumberIterator;
+import org.hivedb.util.functional.Transform;
+import org.hivedb.util.functional.Unary;
 
+@Deprecated
 @Resource(name="WeatherReport")
 public class WeatherReportImpl implements WeatherReport {
 	private static final String[] continents = 
@@ -67,8 +73,8 @@ public class WeatherReportImpl implements WeatherReport {
 	}
 	
 	@Index
-	public Collection<Integer> getCollectionIndex() {
-		return Arrays.asList(new Integer[]{1,2,3,4,5});
+	public Collection<Integer> getWeeklyTemperatures() {
+		return new GeneratePrimitiveCollection<Integer>(Integer.class,7).generate();
 	}
 	
 	@Override
@@ -89,5 +95,8 @@ public class WeatherReportImpl implements WeatherReport {
 		weatherReport.setReportTime(new Date(System.currentTimeMillis()));
 		weatherReport.setTemperature((int) Math.rint(Math.random() * 100));
 		return weatherReport;
+	}
+	public void setWeeklyTemperatures(Collection<Integer> values) {
+		
 	}
 }

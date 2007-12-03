@@ -36,6 +36,17 @@ public class Amass {
 		return result;
 	}
 	
+	public static<C> String joinByToString(Joiner<C,String> joiner, Iterable<C> iterable)
+	{
+		String result = "";
+		for (C item : iterable) {
+			result = (result == null) 
+				? item.toString()
+				: joiner.f(item,result);
+		}					
+		return result;
+	}
+	
 	/**
 	 * 
 	 * Joins with the given join function. The initial value is that of firstCall with the first item of the iterable passed to it.

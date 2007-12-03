@@ -76,14 +76,16 @@ public abstract class Schema extends JdbcDaoSupport {
 	 * @param tableName
 	 * @return
 	 */
-	protected boolean tableExists(String tableName)
+	public boolean tableExists(String tableName)
 	{
 		JdbcTemplate t = getJdbcTemplate();
 		try {
 			t.query( "select * from " + tableName + ifMySql(" LIMIT 1", dialect), new TrueRowMapper());
+			//System.err.println("Table " + tableName + " exists for database " + dbURI);
 			return true;
 		}
 		catch (Exception e) {
+			//System.err.println("Table " + tableName + " does not for database " + dbURI);
 			return false;
 		}
 	}
@@ -102,6 +104,7 @@ public abstract class Schema extends JdbcDaoSupport {
 			PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
 					createStatement);
 			j.update(creatorFactory.newPreparedStatementCreator(new Object[] {}));
+			//System.err.println("Table " + table.getName() + " created for for database " + dbURI);
 		}
 	}
 	

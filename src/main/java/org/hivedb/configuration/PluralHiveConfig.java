@@ -14,7 +14,7 @@ import org.hivedb.util.functional.DebugMap;
 import org.hivedb.util.functional.Maps;
 
 public class PluralHiveConfig implements EntityHiveConfig {
-	private Map<String,EntityConfig> indexConfigurations = Maps.newHashMap();
+	private Map<String,EntityConfig> indexConfigurations = new DebugMap<String, EntityConfig>();
 	private Collection<Node> dataNodes = Lists.newArrayList();
 	private Hive hive;
 	
@@ -52,7 +52,8 @@ public class PluralHiveConfig implements EntityHiveConfig {
 	@SuppressWarnings("unused")
 	private List<Class> getAncestors(Class<?> clazz) {
 		List<Class> ancestors = Lists.newArrayList();
-		ancestors.add(clazz.getSuperclass());
+		if (!clazz.isInterface())
+			ancestors.add(clazz.getSuperclass());
 		ancestors.addAll(Arrays.asList(clazz.getInterfaces()));
 		return ancestors;
 	}
