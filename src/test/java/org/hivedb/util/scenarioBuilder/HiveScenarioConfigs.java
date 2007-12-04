@@ -12,6 +12,7 @@ import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.configuration.EntityIndexConfigImpl;
 import org.hivedb.configuration.PluralHiveConfig;
+import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.functional.Pair;
 import org.hivedb.util.functional.Transform;
 
@@ -26,6 +27,7 @@ public class HiveScenarioConfigs {
 						Pirate.class,
 						Pirate.class.getSimpleName().toLowerCase(),
 						"id",
+						null,
 						(Collection<? extends EntityIndexConfig>)Collections.singletonList(
 								new EntityIndexConfigImpl(Pirate.class,"name"))
 						)),			
@@ -36,12 +38,14 @@ public class HiveScenarioConfigs {
 						Treasure.class.getSimpleName().toLowerCase(),
 						"pirateId",
 						"id",
+						null,
 						Arrays.asList(new EntityIndexConfig[] {
 							new EntityIndexConfigImpl(Treasure.class,"jewels"),
 							new EntityIndexConfigImpl(Treasure.class,"parrots", "id"),
 							new EntityIndexConfigImpl(Treasure.class,"price")
 						})))}),
-			hive);					
+			hive.getPartitionDimension().getName(),
+			JdbcTypeMapper.jdbcTypeToPrimitiveClass(hive.getPartitionDimension().getColumnType()));					
 	}
 	
 	public interface Pirate

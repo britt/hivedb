@@ -8,6 +8,7 @@ import org.hibernate.shards.ShardId;
 import org.hibernate.shards.strategy.resolution.ShardResolutionStrategy;
 import org.hibernate.shards.strategy.selection.ShardResolutionStrategyData;
 import org.hibernate.shards.util.Lists;
+import org.hivedb.Hive;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.util.ReflectionTools;
@@ -16,9 +17,11 @@ import org.hivedb.util.functional.Unary;
 
 public class HiveShardResolver implements ShardResolutionStrategy {
 	private EntityHiveConfig hiveConfig;
+	private Hive hive;
 
-	public HiveShardResolver(EntityHiveConfig hiveConfig) {
+	public HiveShardResolver(EntityHiveConfig hiveConfig, Hive hive) {
 		this.hiveConfig = hiveConfig;
+		this.hive = hive;
 	}
 	
 	public List<ShardId> selectShardIdsFromShardResolutionStrategyData(ShardResolutionStrategyData data) {
@@ -26,12 +29,13 @@ public class HiveShardResolver implements ShardResolutionStrategy {
 				resolveEntityInterface(data.getEntityName()));
 		Collection<Integer> ids;
 		if(config.isPartitioningResource())
-			ids = hiveConfig.getHive().directory().getNodeIdsOfPrimaryIndexKey(data.getId());
+			ids = hive.directory().getNodeIdsOfPrimaryIndexKey(data.getId());
 		else
-			ids = hiveConfig.getHive().directory().getNodeIdsOfResourceId(config.getResourceName(), data.getId());
+			ids = hive.directory().getNodeIdsOfResourceId(config.getResourceName(), data.getId());
 		return Lists.newArrayList(Transform.map(nodeIdToShardIdConverter(), ids));
 	}
 	
+	@SuppressWarnings("unchecked")
 	private Class<?> resolveEntityInterface(String entityName) {
 		try {
 			return ReflectionTools.whichIsImplemented(

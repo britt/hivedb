@@ -86,7 +86,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		
 		return new DataAccessObjectFactory<WeatherReport,Integer>(
 				this.config,
-				clazz).create();
+				clazz, getHive()).create();
 	}
 	
 	@Test

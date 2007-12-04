@@ -16,7 +16,7 @@ public class TestHiveScenarioWithMySql extends MySqlHiveTestCase {
 	public void test()  throws Exception {
 		for (String nodeName : getDataNodeNames())
 			getHive().addNode(new Node(Hive.NEW_OBJECT_ID, nodeName, getHiveDatabaseName(), "", HiveDbDialect.H2));
-		new TestHiveScenario(getEntityHiveConfig()).test();
+		new TestHiveScenario(getEntityHiveConfig(), getHive()).test();
 	}
 
 	protected Collection<String> getDataNodeNames() {

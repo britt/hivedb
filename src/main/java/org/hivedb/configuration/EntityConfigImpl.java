@@ -11,10 +11,7 @@ import org.hivedb.util.functional.Predicate;
 public class EntityConfigImpl implements EntityConfig {
 
 	private Class<?> representedInterface;
-	private String partitionDimensionName;
-	private String resourceName;
-	private String primaryIndexKeyPropertyName;
-	private String idPropertyName;
+	private String partitionDimensionName, resourceName, primaryIndexKeyPropertyName, idPropertyName, versionPropertyName;
 	private Collection<? extends EntityIndexConfig> entityIndexConfigs;
 	private boolean isPartitioningResource;
 	
@@ -24,6 +21,7 @@ public class EntityConfigImpl implements EntityConfig {
 			String resourceName,
 			String primaryIndexPropertyName,
 			String idPropertyName,
+			String versionPropertyName,
 			Collection<? extends EntityIndexConfig> indexConfigs) {
 		return new EntityConfigImpl(
 				representedInterface, 
@@ -31,6 +29,7 @@ public class EntityConfigImpl implements EntityConfig {
 				resourceName,
 				primaryIndexPropertyName,
 				idPropertyName,
+				versionPropertyName,
 				indexConfigs,
 				false);
 	}
@@ -48,6 +47,7 @@ public class EntityConfigImpl implements EntityConfig {
 			Class<?> representedInterface, 
 			String partitionDimensionName,
 			String idPropertyName,
+			String versionPropertyName,
 			Collection<? extends EntityIndexConfig> secondaryIndexIdentifiables) {
 		return new EntityConfigImpl(
 				representedInterface, 
@@ -55,6 +55,7 @@ public class EntityConfigImpl implements EntityConfig {
 				partitionDimensionName,
 				idPropertyName,
 				idPropertyName,
+				versionPropertyName,
 				secondaryIndexIdentifiables,
 				true);
 		
@@ -66,6 +67,7 @@ public class EntityConfigImpl implements EntityConfig {
 			String resourceName,
 			String primaryIndexKeyPropertyName,
 			String idPropertyName,
+			String versionPropertyName,
 			Collection<? extends EntityIndexConfig> entityIndexConfigs,
 			boolean isPartitioningResource) {
 		this.representedInterface = representedInterface;
@@ -75,6 +77,7 @@ public class EntityConfigImpl implements EntityConfig {
 		this.idPropertyName = idPropertyName;
 		this.entityIndexConfigs = entityIndexConfigs;
 		this.isPartitioningResource = isPartitioningResource;
+		this.versionPropertyName = versionPropertyName;
 	}
 	
 	public String getResourceName() {
@@ -128,7 +131,9 @@ public class EntityConfigImpl implements EntityConfig {
 			entityIndexConfigs);
 	}
 	
-	public String getStoredVersionProperty() {
-		return "version";
+	public int getVersion(Object instance) {
+		return versionPropertyName == null ? 
+				0 : 
+				((Integer) ReflectionTools.invokeGetter(instance, versionPropertyName));
 	}
 }

@@ -34,7 +34,7 @@ public class HiveShardSelectorTest extends H2HiveTestCase {
 	public void testSelectNode() throws Exception {
 		ConfigurationReader reader = new ConfigurationReader(Continent.class, WeatherReport.class);
 		Hive hive = getHive();
-		HiveShardSelector selector = new HiveShardSelector(reader.getHiveConfiguration(hive));
+		HiveShardSelector selector = new HiveShardSelector(reader.getHiveConfiguration(hive), hive);
 		WeatherReport report = WeatherReportImpl.generate();
 		
 		ShardId id = selector.selectShardIdForNewObject(report);

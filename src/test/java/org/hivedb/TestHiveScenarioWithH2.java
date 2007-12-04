@@ -6,6 +6,6 @@ import org.testng.annotations.Test;
 public class TestHiveScenarioWithH2 extends H2HiveTestCase {
 	@Test
 	public void test() throws Exception {
-		new TestHiveScenario(getEntityHiveConfig()).test();
+		new TestHiveScenario(getEntityHiveConfig(), getHive()).test();
 	}
 }

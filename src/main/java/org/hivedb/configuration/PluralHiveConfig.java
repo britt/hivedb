@@ -15,13 +15,13 @@ import org.hivedb.util.functional.Maps;
 
 public class PluralHiveConfig implements EntityHiveConfig {
 	private Map<String,EntityConfig> indexConfigurations = new DebugMap<String, EntityConfig>();
-	private Collection<Node> dataNodes = Lists.newArrayList();
-	private Hive hive;
+	private String dimensionName;
+	private Class<?> dimensionClass;
 	
-	public PluralHiveConfig(Map<String, EntityConfig> map, Hive hive) {
+	public PluralHiveConfig(Map<String, EntityConfig> map, String dimensionName, Class<?> dimensionClass) {
 		this.indexConfigurations = map;
-		this.dataNodes = hive.getNodes();
-		this.hive = hive;
+		this.dimensionClass = dimensionClass;
+		this.dimensionName = dimensionName;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -66,19 +66,12 @@ public class PluralHiveConfig implements EntityHiveConfig {
 		return indexConfigurations.values();
 	}
 
-	public Collection<Node> getDataNodes() {
-		return dataNodes;
-	}
-
-	public Hive getHive() {
-		return hive;
-	}
 
 	public String getPartitionDimensionName() {
-		return hive.getPartitionDimension().getName();
+		return this.dimensionName;
 	}
 
 	public Class<?> getPartitionDimensionType() {
-		return JdbcTypeMapper.jdbcTypeToPrimitiveClass(hive.getPartitionDimension().getColumnType());
+		return this.dimensionClass;
 	}
 }

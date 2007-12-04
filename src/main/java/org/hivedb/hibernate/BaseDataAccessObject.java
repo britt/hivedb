@@ -10,6 +10,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
+import org.hivedb.Hive;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.configuration.EntityConfig;
@@ -22,16 +23,17 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	private EntityHiveConfig config;
 	private Class<?> clazz;
 	private Interceptor defaultInterceptor = EmptyInterceptor.INSTANCE;
-	
+	private Hive hive;
 
-	public BaseDataAccessObject(Class<?> clazz, EntityHiveConfig config, HiveSessionFactory factory) {
+	public BaseDataAccessObject(Class<?> clazz, EntityHiveConfig config, Hive hive, HiveSessionFactory factory) {
 		this.clazz = clazz;
 		this.config = config;
 		this.factory = factory;
+		this.hive = hive;
 	}
 	
-	public BaseDataAccessObject(Class<?> clazz, EntityHiveConfig config, HiveSessionFactory factory, Interceptor interceptor) {
-		this(clazz,config,factory);
+	public BaseDataAccessObject(Class<?> clazz, EntityHiveConfig config, Hive hive, HiveSessionFactory factory, Interceptor interceptor) {
+		this(clazz,config,hive,factory);
 		this.defaultInterceptor = interceptor;
 	}
 	
@@ -47,7 +49,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 
 	public boolean exists(Serializable id) {
 		EntityConfig entityConfig = config.getEntityConfig(getRespresentedClass());
-		return config.getHive().directory().doesResourceIdExist(entityConfig.getResourceName(), id);
+		return hive.directory().doesResourceIdExist(entityConfig.getResourceName(), id);
 	}
 
 	public Object get(final Serializable id) {
@@ -109,7 +111,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	}
 	
 	protected Session getSession() {
-		return factory.openSession(new HiveInterceptorDecorator(defaultInterceptor, config));
+		return factory.openSession(new HiveInterceptorDecorator(defaultInterceptor, config,hive));
 	}
 
 	@SuppressWarnings("unchecked")

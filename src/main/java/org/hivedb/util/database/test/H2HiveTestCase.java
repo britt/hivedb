@@ -55,6 +55,7 @@ public class H2HiveTestCase extends H2TestCase {
 	protected HiveTestCase hiveTestCase;
 
 
+	@SuppressWarnings("unchecked")
 	protected List<Class<?>> getEntityClasses() {
 		return Arrays.asList(getPartitionDimensionClass(), WeatherReport.class);
 	}
@@ -73,6 +74,7 @@ public class H2HiveTestCase extends H2TestCase {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	public Collection<String> getDatabaseNames() {
 		return Transform.flatten(new Collection[] {
 			Collections.singletonList(getHiveDatabaseName()),
@@ -80,8 +82,7 @@ public class H2HiveTestCase extends H2TestCase {
 	}
 	
 	protected HiveSessionFactoryBuilderImpl getFactory() {
-		return new HiveSessionFactoryBuilderImpl(
-				getEntityHiveConfig(), new SequentialShardAccessStrategy());
+		return new HiveSessionFactoryBuilderImpl(getEntityHiveConfig(), getHive(), new SequentialShardAccessStrategy());
 	}
 	
 	public Hive getHive() { 

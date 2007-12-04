@@ -36,7 +36,7 @@ public class HiveShardResolverTest extends H2HiveTestCase {
 		Continent asia = new AsiaticContinent();
 		
 		HiveIndexer indexer = new HiveIndexer(hive);
-		HiveShardResolver resolver = new HiveShardResolver(config);
+		HiveShardResolver resolver = new HiveShardResolver(config, hive);
 		
 		indexer.insert(config.getEntityConfig(Continent.class), asia);
 		indexer.insert(config.getEntityConfig(WeatherReport.class), report);

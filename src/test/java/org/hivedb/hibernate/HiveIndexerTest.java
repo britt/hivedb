@@ -125,6 +125,7 @@ public class HiveIndexerTest extends H2HiveTestCase {
 				"WeatherReport",
 				"continent",
 				"reportId",
+				null,
 				Arrays.asList(
 						new EntityIndexConfigImpl(WeatherReport.class, "temperature"),
 						new EntityIndexConfigImpl(WeatherReport.class, "weeklyTemperatures")),

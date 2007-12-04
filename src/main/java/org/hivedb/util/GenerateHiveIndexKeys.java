@@ -17,7 +17,7 @@ import org.hivedb.util.functional.Unary;
 
 public class GenerateHiveIndexKeys {
 	
-	private Persister persister = new PersisterImpl();
+	private Persister persister;
 	private int primaryInstanceCount;
 	private int resourceInstanceCount;
 	public GenerateHiveIndexKeys(Persister persister, int primaryIndexInstanceCount, int resourceInstanceCount)
@@ -27,6 +27,7 @@ public class GenerateHiveIndexKeys {
 		this.resourceInstanceCount = resourceInstanceCount;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public Collection<Object> createResourceInstances(
 		final EntityHiveConfig entityHiveConfig, final Class representedInterface)
 	{
@@ -66,6 +67,7 @@ public class GenerateHiveIndexKeys {
 	 * @param entityConfig
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	private Collection<Object> createPrimaryIndexKeys(final EntityHiveConfig entityHiveConfig, final Class representedInterface)
 	{	
 		final Generator primaryIndexIdentifiableGenerator = 

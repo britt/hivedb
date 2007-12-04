@@ -3,52 +3,33 @@ package org.hivedb.util;
 import java.util.Collection;
 import java.util.Map;
 
-import org.hivedb.Hive;
-import org.hivedb.meta.Node;
-import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
-import org.hivedb.util.functional.DebugMap;
 
 public class HiveDiff {
 
-	Collection<PartitionDimension> missingPartitionDimensions;
-	Map<Hive, Collection<Node>> missingNodesOfExistingPartitionDimension;
-	Map<PartitionDimension, Collection<Resource>> missingResourcesOfExistingPartitionDimension;
-	Map<PartitionDimension, Map<Resource, Collection<SecondaryIndex>>> missingSecondaryIndexesOfExistingResources;
+	Collection<Resource> missingResources;
+	Map<Resource, Collection<SecondaryIndex>> missingSecondaryIndexes;
 	public HiveDiff(
-			Collection<PartitionDimension> missingPartitionDimensions,
-			Map<Hive, Collection<Node>> missingNodesOfExistingPartitionDimension,
-			Map<PartitionDimension, Collection<Resource>> missingResourcesOfExistingPartitionDimension,
-			Map<PartitionDimension, Map<Resource, Collection<SecondaryIndex>>> missingSecondaryIndexesOfExistingResources) {
+			Collection<Resource> missingResources,
+			Map<Resource, Collection<SecondaryIndex>> missingSecondaryIndexes) {
 		
-		this.missingPartitionDimensions = missingPartitionDimensions;
-		this.missingNodesOfExistingPartitionDimension = missingNodesOfExistingPartitionDimension;
-		this.missingResourcesOfExistingPartitionDimension = missingResourcesOfExistingPartitionDimension;
-		this.missingSecondaryIndexesOfExistingResources = missingSecondaryIndexesOfExistingResources;
+		this.missingResources = missingResources;
+		this.missingSecondaryIndexes = missingSecondaryIndexes;
 	}
-	public Map<Hive, Collection<Node>> getMissingNodesOfExistingPartitionDimension() {
-		return missingNodesOfExistingPartitionDimension;
+	public Collection<Resource> getMissingResources() {
+		return missingResources;
 	}
-	public Collection<PartitionDimension> getMissingPartitionDimensions() {
-		return missingPartitionDimensions;
-	}
-	public Map<PartitionDimension, Collection<Resource>> getMissingResourcesOfExistingPartitionDimension() {
-		return missingResourcesOfExistingPartitionDimension;
-	}
-	public Map<PartitionDimension, Map<Resource, Collection<SecondaryIndex>>> getMissingSecondaryIndexesOfExistingResources() {
-		return missingSecondaryIndexesOfExistingResources;
+	public Map<Resource, Collection<SecondaryIndex>> getMissingSecondaryIndexes() {
+		return missingSecondaryIndexes;
 	}
 	@Override
 	public String toString() {
-		return String.format("Missing partition dimensions: %s\n"+
-							 "Missing resources of existing partition dimensions: %s\n"+
-							 "Missing nodes of existing resources: %s\n"+
-							 "Missing secondary indexes of existing secondary indexes: %s\n",
-							 missingPartitionDimensions,
-							 new DebugMap<PartitionDimension, Collection<Resource>>(missingResourcesOfExistingPartitionDimension),
-							 new DebugMap<Hive, Collection<Node>>(missingNodesOfExistingPartitionDimension),
-							 new DebugMap<PartitionDimension, Map<Resource, Collection<SecondaryIndex>>>(missingSecondaryIndexesOfExistingResources));
+		return String.format(
+							 "Missing resources: %s\n"+
+							 "Missing secondary indexes: %s\n",
+							 missingResources,
+							 missingSecondaryIndexes);
 	}
 
 }

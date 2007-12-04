@@ -29,7 +29,8 @@ public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
 	@Test
 	public void testIsTransient() throws Exception{
 		EntityHiveConfig config = getEntityHiveConfig();
-		HiveInterceptorDecorator interceptor = new HiveInterceptorDecorator(config);
+		Hive hive = getHive();
+		HiveInterceptorDecorator interceptor = new HiveInterceptorDecorator(config, hive);
 		
 		WeatherReport report = generateInstance();
 		Continent asia = new AsiaticContinent();
@@ -55,7 +56,7 @@ public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
 	public void testOnSaveInsert() throws Exception {
 		EntityHiveConfig config = getEntityHiveConfig();
 		Hive hive = getHive();
-		HiveInterceptorDecorator interceptor = new HiveInterceptorDecorator(config);
+		HiveInterceptorDecorator interceptor = new HiveInterceptorDecorator(config, hive);
 		
 		WeatherReport report = generateInstance();
 		Continent asia = new AsiaticContinent();
@@ -77,7 +78,7 @@ public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
 		ConfigurationReader reader = new ConfigurationReader(Continent.class, WeatherReport.class);
 		hive.updateHiveReadOnly(true);
 		EntityHiveConfig config = reader.getHiveConfiguration(hive);
-		HiveInterceptorDecorator interceptor = new HiveInterceptorDecorator(config);
+		HiveInterceptorDecorator interceptor = new HiveInterceptorDecorator(config, hive);
 		
 		WeatherReport report = generateInstance();
 		
@@ -94,7 +95,7 @@ public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
 		EntityHiveConfig config = getEntityHiveConfig();
 		Hive hive = getHive();
 
-		HiveInterceptorDecorator interceptor = new HiveInterceptorDecorator(config);
+		HiveInterceptorDecorator interceptor = new HiveInterceptorDecorator(config, hive);
 		
 		WeatherReport report = generateInstance();
 		interceptor.onSave(report, null, null, null, null);
@@ -103,7 +104,7 @@ public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
 		assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
 		assertTrue(hive.directory().doesSecondaryIndexKeyExist("WeatherReport", "temperature", report.getTemperature(), report.getReportId()));
 		
-		config.getHive().updateHiveReadOnly(true);
+		hive.updateHiveReadOnly(true);
 		try {
 			interceptor.onDelete(report, null, null, null, null);
 			fail("No exception thrown");
@@ -117,7 +118,7 @@ public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
 		Hive hive = getHive();
 		ConfigurationReader reader = new ConfigurationReader(Continent.class, WeatherReport.class);
 		EntityHiveConfig config = reader.getHiveConfiguration(hive);
-		HiveInterceptorDecorator interceptor = new HiveInterceptorDecorator(config);
+		HiveInterceptorDecorator interceptor = new HiveInterceptorDecorator(config, hive);
 		
 		WeatherReport report = generateInstance();
 		Continent asia = new AsiaticContinent();
@@ -146,7 +147,7 @@ public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
 	public void testOnSaveUpdate() throws Exception {
 		Hive hive = getHive();
 		EntityHiveConfig config = getEntityHiveConfig();
-		HiveInterceptorDecorator interceptor = new HiveInterceptorDecorator(config);
+		HiveInterceptorDecorator interceptor = new HiveInterceptorDecorator(config, hive);
 		
 		WeatherReport report = generateInstance();
 		interceptor.onSave(report, null, null, null, null);

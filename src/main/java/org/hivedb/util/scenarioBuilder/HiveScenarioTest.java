@@ -45,29 +45,30 @@ import org.hivedb.util.functional.Unary;
 import org.hivedb.util.functional.Undoable;
 
 public class HiveScenarioTest {
-	
+	Hive hive;
 	EntityHiveConfig entityHiveConfig;
 	Class representedInterface;
 
-	public HiveScenarioTest(EntityHiveConfig entityHiveConfig, Class representedInterface)
+	public HiveScenarioTest(EntityHiveConfig entityHiveConfig, Hive hive, Class representedInterface)
 	{
+		this.hive = hive;
 		this.entityHiveConfig = entityHiveConfig;
 		this.representedInterface = representedInterface;
 	}
 	public void performTest(int primaryIndexInstanceCount, int resourceInstanceCount, Persister persister) {
 		HiveScenario hiveScenario = HiveScenario.run(entityHiveConfig, representedInterface, primaryIndexInstanceCount, resourceInstanceCount, persister);
-		validate(entityHiveConfig, representedInterface, hiveScenario.getGeneratedResourceInstances());
+		validate(entityHiveConfig, hive, representedInterface, hiveScenario.getGeneratedResourceInstances());
 	}
 
-	public static void validate(final EntityHiveConfig entityHiveConfig, Class representedInterface, Collection<Object> resourceInstances) {
+	public static void validate(final EntityHiveConfig entityHiveConfig, Hive hive, Class representedInterface, Collection<Object> resourceInstances) {
 		try {
-			validateHiveMetadata(entityHiveConfig, representedInterface);		
+			validateHiveMetadata(entityHiveConfig, hive, representedInterface);		
 			// Validate CRUD operations. Read at the beginning and after updates
 			// to verify that the update restored the data to its original state.
-			validateReadsFromPersistence(entityHiveConfig, representedInterface, resourceInstances);
-			validateUpdatesToPersistence(entityHiveConfig, representedInterface, resourceInstances);
-			validateReadsFromPersistence(entityHiveConfig, representedInterface, resourceInstances);
-			validateDeletesToPersistence(entityHiveConfig, representedInterface, resourceInstances);
+			validateReadsFromPersistence(entityHiveConfig, hive, representedInterface, resourceInstances);
+			validateUpdatesToPersistence(entityHiveConfig, hive, representedInterface, resourceInstances);
+			validateReadsFromPersistence(entityHiveConfig, hive, representedInterface, resourceInstances);
+			validateDeletesToPersistence(entityHiveConfig, hive, representedInterface, resourceInstances);
 			// data is reinserted after deletes but nodes can change so we can't validate equality again
 		}
 		catch (Exception e) {
@@ -75,11 +76,10 @@ public class HiveScenarioTest {
 		}
 	}
 	
-	private static void validateHiveMetadata(final EntityHiveConfig entityHiveConifg, Class representedInterface) throws HiveException, SQLException
+	private static void validateHiveMetadata(final EntityHiveConfig entityHiveConifg, final Hive hive, Class representedInterface) throws HiveException, SQLException
 	{
-		Hive hive = entityHiveConifg.getHive();
 		final String resourceName = entityHiveConifg.getEntityConfig(representedInterface).getResourceName();
-		Resource expectedResource = PartitionDimensionCreator.create(entityHiveConifg).getResource(resourceName);
+		Resource expectedResource = PartitionDimensionCreator.create(entityHiveConifg,hive).getResource(resourceName);
 		Resource actualResource = hive.getPartitionDimension().getResource(entityHiveConifg.getEntityConfig(representedInterface).getResourceName());
 		
 		// Validate our PartitionDimension in memory against those that are in the persistence
@@ -90,9 +90,8 @@ public class HiveScenarioTest {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private static void validateReadsFromPersistence(final EntityHiveConfig entityHiveConifg, Class representedInterface, Collection<Object> resourceInstances) throws HiveException, SQLException
+	private static void validateReadsFromPersistence(final EntityHiveConfig entityHiveConifg, final Hive hive, Class representedInterface, Collection<Object> resourceInstances) throws HiveException, SQLException
 	{
-		Hive hive = entityHiveConifg.getHive();
 		final PartitionDimension partitionDimension = hive.getPartitionDimension();
 		final Resource resource = hive.getPartitionDimension().getResource(entityHiveConifg.getEntityConfig(representedInterface).getResourceName());
 		Collection<Object> primaryIndexKeys = getGeneratedPrimaryIndexKeys(entityHiveConifg.getEntityConfig(representedInterface), resourceInstances);
@@ -152,17 +151,16 @@ public class HiveScenarioTest {
 		}, resourceInstances);
 	}
 
-	private static void validateUpdatesToPersistence(final EntityHiveConfig entityHiveConifg, Class representedInterface, Collection<Object> resourceInstances) throws HiveException, SQLException
+	private static void validateUpdatesToPersistence(final EntityHiveConfig entityHiveConifg, final Hive hive,  Class representedInterface, Collection<Object> resourceInstances) throws HiveException, SQLException
 	{
-		updatePimaryIndexKeys(entityHiveConifg, representedInterface, resourceInstances, new Filter.AllowAllFilter());
-		updatePrimaryIndexKeyOfResource(entityHiveConifg, representedInterface, resourceInstances, new Filter.AllowAllFilter());			
+		updatePimaryIndexKeys(entityHiveConifg, hive, representedInterface, resourceInstances, new Filter.AllowAllFilter());
+		updatePrimaryIndexKeyOfResource(entityHiveConifg, hive, representedInterface, resourceInstances, new Filter.AllowAllFilter());			
 		// TODO something mysterious fails here during the H2 test. I can't figure it out after extensive
 		//updateMetaData(hiveConfig, resourceInstances);
-		commitReadonlyViolations(entityHiveConifg,representedInterface, resourceInstances);
+		commitReadonlyViolations(entityHiveConifg,hive,representedInterface, resourceInstances);
 	}
 
-	private static void updatePimaryIndexKeys(final EntityHiveConfig entityHiveConfig, Class representedInterface, final Collection<Object> resourceInstances, final Filter iterateFilter) throws HiveException {
-		final Hive hive = entityHiveConfig.getHive();
+	private static void updatePimaryIndexKeys(final EntityHiveConfig entityHiveConfig, final Hive hive, Class representedInterface, final Collection<Object> resourceInstances, final Filter iterateFilter) throws HiveException {
 		final EntityConfig entityConfig = entityHiveConfig.getEntityConfig(representedInterface);
 		try {
 			Undoable undoable = new Undoable() {
@@ -191,9 +189,8 @@ public class HiveScenarioTest {
 		} catch (Exception e)  { throw new HiveException("Undoable exception", e); }
 	}
 	
-	private static void updatePrimaryIndexKeyOfResource(final EntityHiveConfig entityHiveConifg, Class representedInterface, final Collection<Object> resourceInstances, final Filter iterateFilter) throws HiveException {
+	private static void updatePrimaryIndexKeyOfResource(final EntityHiveConfig entityHiveConifg, final Hive hive, Class representedInterface, final Collection<Object> resourceInstances, final Filter iterateFilter) throws HiveException {
 		
-		final Hive hive = entityHiveConifg.getHive();
 		final PartitionDimension partitionDimension = hive.getPartitionDimension();
 		final EntityConfig entityConfig = entityHiveConifg.getEntityConfig(representedInterface);
 		final Resource resource = partitionDimension.getResource(entityConfig.getResourceName());
@@ -229,9 +226,8 @@ public class HiveScenarioTest {
 		
 	}
 	
-	private static void updateMetaData(final SingularHiveConfig hiveConfig, Collection<Object> resourceInstances)
+	private static void updateMetaData(final SingularHiveConfig hiveConfig, final Hive hive,  Collection<Object> resourceInstances)
 	{
-		final Hive hive = hiveConfig.getHive();
 		final PartitionDimension partitionDimension = hive.getPartitionDimension();
 		final EntityConfig entityConfig = hiveConfig.getEntityConfig();
 		final Resource resource = partitionDimension.getResource(entityConfig.getResourceName());
@@ -389,9 +385,8 @@ public class HiveScenarioTest {
 			hive.getNode(node.getId()));
 	}
 	
-	private static void commitReadonlyViolations(final EntityHiveConfig enityHiveConfig, Class representedInterface, Collection<Object> resourceInstances) throws HiveException 
+	private static void commitReadonlyViolations(final EntityHiveConfig enityHiveConfig, final Hive hive, Class representedInterface, Collection<Object> resourceInstances) throws HiveException 
 	{
-		final Hive hive = enityHiveConfig.getHive();
 		final EntityConfig entityConfig = enityHiveConfig.getEntityConfig(representedInterface);
 		final PartitionDimension partitionDimension = hive.getPartitionDimension();
 		final Resource resource = partitionDimension.getResource(entityConfig.getResourceName());
@@ -430,16 +425,15 @@ public class HiveScenarioTest {
 		} catch (Exception e) { throw new HiveException("Undoable exception", e); }
 	}	
 	
-	private static void validateDeletesToPersistence(final EntityHiveConfig entityHiveConfig, Class representedInterface, Collection<Object> resourceInstances) throws HiveException, SQLException
+	private static void validateDeletesToPersistence(final EntityHiveConfig entityHiveConfig, final Hive hive, Class representedInterface, Collection<Object> resourceInstances) throws HiveException, SQLException
 	{	
-		validateDeletePrimaryIndexKey(entityHiveConfig, representedInterface, resourceInstances);	
-		validateDeleteResourceInstances(entityHiveConfig,representedInterface, resourceInstances);
-		validateDeleteSecondaryIndexKeys(entityHiveConfig, representedInterface, resourceInstances);
+		validateDeletePrimaryIndexKey(entityHiveConfig, hive,  representedInterface, resourceInstances);	
+		validateDeleteResourceInstances(entityHiveConfig, hive, representedInterface, resourceInstances);
+		validateDeleteSecondaryIndexKeys(entityHiveConfig, hive, representedInterface, resourceInstances);
 	}
 	
 	
-	private static void validateDeletePrimaryIndexKey(final EntityHiveConfig entityHiveConfig, Class representedInterface, final Collection<Object> resourceInstances) {
-		final Hive hive = entityHiveConfig.getHive();
+	private static void validateDeletePrimaryIndexKey(final EntityHiveConfig entityHiveConfig, final Hive hive, Class representedInterface, final Collection<Object> resourceInstances) {
 		final EntityConfig entityConfig = entityHiveConfig.getEntityConfig(representedInterface);
 		final PartitionDimension partitionDimension = hive.getPartitionDimension();
 		final Resource resource = partitionDimension.getResource(entityConfig.getResourceName());
@@ -490,8 +484,7 @@ public class HiveScenarioTest {
 		
 		}
 	}
-	private static void validateDeleteResourceInstances(final EntityHiveConfig entityHiveConifg, Class representedInterface, final Collection<Object> resourceInstances) {
-		final Hive hive = entityHiveConifg.getHive();
+	private static void validateDeleteResourceInstances(final EntityHiveConfig entityHiveConifg, final Hive hive, Class representedInterface, final Collection<Object> resourceInstances) {
 		final EntityConfig entityConfig = entityHiveConifg.getEntityConfig(representedInterface);
 		final PartitionDimension partitionDimension = hive.getPartitionDimension();
 		final Resource resource = partitionDimension.getResource(entityConfig.getResourceName());
@@ -537,8 +530,7 @@ public class HiveScenarioTest {
 		}
 	
 	}
-	private static void validateDeleteSecondaryIndexKeys(final EntityHiveConfig entityHiveConfig, Class representedInterface, final Collection<Object> resourceInstances) {
-		final Hive hive = entityHiveConfig.getHive();
+	private static void validateDeleteSecondaryIndexKeys(final EntityHiveConfig entityHiveConfig, final Hive hive, Class representedInterface, final Collection<Object> resourceInstances) {
 		final EntityConfig entityConfig = entityHiveConfig.getEntityConfig(representedInterface);
 		final PartitionDimension partitionDimension = hive.getPartitionDimension();
 		final Resource resource = partitionDimension.getResource(entityConfig.getResourceName());

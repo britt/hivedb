@@ -7,6 +7,7 @@ import org.hibernate.EmptyInterceptor;
 import org.hibernate.Interceptor;
 import org.hibernate.shards.util.InterceptorDecorator;
 import org.hibernate.type.Type;
+import org.hivedb.Hive;
 import org.hivedb.HiveReadOnlyException;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
@@ -14,22 +15,18 @@ import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 
-import sun.security.x509.RFC822Name;
-
 public class HiveInterceptorDecorator extends InterceptorDecorator implements Interceptor {
 	private EntityHiveConfig hiveConfig;
 	private HiveIndexer indexer;
 	
-	public HiveInterceptorDecorator(EntityHiveConfig hiveConfig) {
-		super(EmptyInterceptor.INSTANCE);
-		this.hiveConfig = hiveConfig;
-		this.indexer = new HiveIndexer(hiveConfig.getHive());
+	public HiveInterceptorDecorator(EntityHiveConfig hiveConfig, Hive hive) {
+		this(EmptyInterceptor.INSTANCE, hiveConfig, hive);
 	}
 	
-	public HiveInterceptorDecorator(Interceptor interceptor, EntityHiveConfig hiveConfig) {
+	public HiveInterceptorDecorator(Interceptor interceptor, EntityHiveConfig hiveConfig, Hive hive) {
 		super(interceptor);
 		this.hiveConfig = hiveConfig;
-		this.indexer = new HiveIndexer(hiveConfig.getHive());
+		this.indexer = new HiveIndexer(hive);
 	}
 
 	@Override
@@ -40,6 +37,7 @@ public class HiveInterceptorDecorator extends InterceptorDecorator implements In
 			: super.isTransient(entity);
 	}
 
+	@SuppressWarnings("unchecked")
 	private EntityConfig resolveEntityConfig(Class clazz) {
 		return hiveConfig.getEntityConfig(ReflectionTools.whichIsImplemented(
 				clazz, 

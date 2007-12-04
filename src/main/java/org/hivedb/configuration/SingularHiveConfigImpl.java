@@ -1,15 +1,12 @@
 package org.hivedb.configuration;
 
-import org.hivedb.Hive;
-import org.hivedb.util.database.JdbcTypeMapper;
 
 public class SingularHiveConfigImpl implements SingularHiveConfig {
-
-	private final Hive hive;
 	private final EntityConfig entityConfig;
-	public SingularHiveConfigImpl(Hive hive, EntityConfig entityConfig)
+	private Class<?> clazz;
+	public SingularHiveConfigImpl(Class<?>  clazz, EntityConfig entityConfig)
 	{
-		this.hive = hive;
+		this.clazz = clazz;
 		this.entityConfig = entityConfig;
 	}
 	
@@ -17,15 +14,11 @@ public class SingularHiveConfigImpl implements SingularHiveConfig {
 		return entityConfig;
 	}
 
-	public Hive getHive() {
-		return hive;
-	}
-
 	public String getPartitionDimensionName() {
 		return entityConfig.getPartitionDimensionName();
 	}
 
 	public Class<?> getPartitionDimensionType() {
-		return JdbcTypeMapper.jdbcTypeToPrimitiveClass(hive.getPartitionDimension().getColumnType());
+		return this.clazz;
 	}
 }

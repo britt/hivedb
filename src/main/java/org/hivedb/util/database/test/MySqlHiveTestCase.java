@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.hivedb.Hive;
 import org.hivedb.HiveFacade;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.meta.HiveSemaphore;
@@ -61,7 +62,7 @@ public abstract class MySqlHiveTestCase extends MysqlTestCase {
 		hiveTestCase.beforeMethod();
 	}
 	
-	public HiveFacade getHive() { 
+	public Hive getHive() { 
 		return hiveTestCase.getHive();
 	}
 	

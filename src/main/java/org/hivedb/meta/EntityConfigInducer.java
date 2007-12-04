@@ -24,6 +24,7 @@ public class EntityConfigInducer {
 				AnonymousEntityInterface.class,
 				partitionDimensionName,
 				"id",
+				null,
 				createEntitySecondaryIndexes(resource))
 			: EntityConfigImpl.createEntity(
 				AnonymousEntityInterface.class,
@@ -31,6 +32,7 @@ public class EntityConfigInducer {
 				resourceName,
 				"primaryIndexKey", 
 				"id",
+				null,
 				createEntitySecondaryIndexes(resource));
 	}
 	

@@ -1,14 +1,20 @@
 package org.hivedb.util;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
 import org.hivedb.HiveFacade;
+import org.hivedb.HiveKeyNotFoundException;
+import org.hivedb.HiveReadOnlyException;
 import org.hivedb.HiveRuntimeException;
+import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
+import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.configuration.SingularHiveConfig;
 import org.hivedb.meta.Finder;
 import org.hivedb.meta.Nameable;
@@ -16,6 +22,7 @@ import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.functional.Binary;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Maps;
@@ -36,12 +43,10 @@ import org.hivedb.util.functional.Filter.BinaryPredicate;
  */
 public class HiveSyncer {
 
-	private HiveFinder hiveFinder;
-	private HiveFacade hive;
+	private Hive hive;
 	public HiveSyncer(Hive hive)
 	{
 		this.hive = hive;
-		this.hiveFinder = new HiveFinder(hive);
 	}
 	/**
 	 *  Sync a Hive to the configuration of the given HiveScenarioConfig. This is an additive process only:
@@ -49,68 +54,16 @@ public class HiveSyncer {
 	 *  specified by the HiveScenarioConfig they will be left alone, not deleted.
 	 * @param entityHiveConfig
 	 * @return
+	 * @throws HiveReadOnlyException 
 	 */
-	public HiveDiff syncHive(EntityHiveConfig entityHiveConfig)
+	public HiveDiff syncHive(EntityHiveConfig entityHiveConfig) throws HiveReadOnlyException
 	{
-		HiveDiff hiveDiff = diffHive(
-			new HiveConfigFinder(entityHiveConfig));
-		
-		// Add missing secondary indexes
-		Maps.digMapToCollection(new Ternary<PartitionDimension, Resource, SecondaryIndex, Void>() {
-			public Void f(PartitionDimension partitionDimension, Resource resource, SecondaryIndex secondaryIndex) {
-				try {
-					hive.addSecondaryIndex(resource, secondaryIndex);
-				} catch (HiveException e) {
-					throw new HiveRuntimeException(String.format("Unable to add secondary index %s to resource %s of partition dimesnion %s",
-							partitionDimension.getName(),
-							resource.getName(),
-							secondaryIndex.getName()));
-				}
-				return null;
-			}
-		}, hiveDiff.getMissingSecondaryIndexesOfExistingResources());
-		
-		// Add missing resources
-		Maps.digMapToCollection(new Binary<PartitionDimension, Resource, Object>() {
-			
-			public Void f(PartitionDimension partitionDimension, Resource resource) {
-				try {
-					hive.addResource(resource);
-				} catch (HiveException e) {
-					throw new HiveRuntimeException(String.format("Unable to add resource %s to partition dimesnion %s",
-							partitionDimension.getName(),
-							resource.getName()), e);
-				}
-				return null;
-			}
-		}, hiveDiff.getMissingResourcesOfExistingPartitionDimension());
-		
-		// Add missing nodes
-		Maps.digMapToCollection(new Binary<Hive, Node, Void>() {
-			public Void f(Hive hive, Node node) {
-				try {
-					hive.addNode(node);
-				} catch (HiveException e) {
-					throw new HiveRuntimeException(String.format("Unable to add Node %s to Hive",
-							node.getName()), e);
-				}
-				return null;
-			}
-		}, hiveDiff.getMissingNodesOfExistingPartitionDimension());
-		
-//		// Add missing partition dimensions
-//		Transform.map(new Unary<PartitionDimension, Void>() {
-//				public Void f(PartitionDimension partitionDimension) {
-//					try {
-//						hive.addPartitionDimension(partitionDimension);
-//					} catch (HiveException e) {
-//						throw new HiveRuntimeException(String.format("Unable to add partition dimension %s to the hive",
-//								partitionDimension.getName()), e);
-//					}
-//					return null;
-//				}
-//		},	hiveDiff.getMissingPartitionDimensions());
-		
+		HiveDiff hiveDiff = diffHive(entityHiveConfig);
+		for(Resource resource: hiveDiff.getMissingResources())
+			hive.addResource(resource);
+		for(Entry<Resource, Collection<SecondaryIndex>> entry : hiveDiff.getMissingSecondaryIndexes().entrySet())
+			for(SecondaryIndex index: entry.getValue())
+				hive.addSecondaryIndex(entry.getKey(), index);
 		return hiveDiff;
 	}
 
@@ -120,92 +73,38 @@ public class HiveSyncer {
 	 * @return a HiveDiff class that describes what partition dimensions are missing, what resources and nodes are missing
 	 * from existing partion dimensions, and what secondary indexes are missing from existing resources
 	 */
-	public HiveDiff diffHive(final HiveConfigFinder updater)
+	public HiveDiff diffHive(final EntityHiveConfig updater)
 	{	
-		Collection<PartitionDimension> missingPartitionDimensions = getMissingItems(PartitionDimension.class, hiveFinder, updater);
-		
-		Collection<Entry<PartitionDimension, PartitionDimension>> partitionDimensionPairs =	getLikeNamedInstances(PartitionDimension.class, hiveFinder, updater);
-		// Add missing nodes of each existing partion dimension 
-		Collection<Entry<Hive, Hive>> hivePairs = getLikeNamedInstances(Hive.class, hiveFinder, updater);
-		Map<Hive, Collection<Node>> missingNodesOfExistingPartitionDimension = getMissingItems(Node.class, hivePairs);
-		// Add missing resources of each existing partion dimension
-		Map<PartitionDimension, Collection<Resource>> missingResourcesOfExistingPartitionDimension = getMissingItems(Resource.class, partitionDimensionPairs);
-		Collection<PartitionDimension> partitionDimensionsWithoutMissingResources
-			= getExistingItems(Resource.class, partitionDimensionPairs).keySet();
-		// Add missing secondary indexes of each resource
-		Map<PartitionDimension, Map<Resource, Collection<SecondaryIndex>>> missingSecondaryIndexesOfExistingResources =
-			Transform.toMap(
-				new Transform.IdentityFunction<PartitionDimension>(),
-				new Unary<PartitionDimension, Map<Resource, Collection<SecondaryIndex>> >() {
-					public Map<Resource, Collection<SecondaryIndex>> f(PartitionDimension partitionDimension) {
-						try {
-							Collection<Entry<Resource, Resource>> resourcePairs = getLikeNamedInstances(
-									Resource.class, 
-									hiveFinder.findByName(PartitionDimension.class, partitionDimension.getName()), 
-									updater.findByName(PartitionDimension.class, partitionDimension.getName()));
-							return getMissingItems(SecondaryIndex.class, resourcePairs);
-						} catch (Exception e) { throw new RuntimeException(e); }
-				}},
-				partitionDimensionsWithoutMissingResources);
-		
-		return new HiveDiff(missingPartitionDimensions,
-					missingNodesOfExistingPartitionDimension,  
-					missingResourcesOfExistingPartitionDimension,
-					missingSecondaryIndexesOfExistingResources );
-	}
+		Collection<Resource> missingResources = Lists.newArrayList();
+		Map<Resource, Collection<SecondaryIndex>> indexMap = Maps.newHashMap();
 
-	public <T extends Nameable> Collection<Entry<T, T>> getLikeNamedInstances(final Class<T> ofClass, final Finder live, final Finder updater) {
-		return Transform.map(
-				new Unary<String, Entry<T, T>>() {
-					@SuppressWarnings("unchecked")
-					public Entry<T, T> f(String name) {
-						return new Pair<T, T>(
-								(T)live.findByName(ofClass, name),
-								(T)updater.findByName(ofClass, name));}},	
-				Filter.grepAgainstList(getNames(live.findCollection(ofClass)), getNames(updater.findCollection(ofClass))));
-	}
-
-	public <C extends Finder,R extends Nameable> Map<C,Collection<R>> getMissingItems(final Class<R> ofClass, Collection<Entry<C, C>> pairs) {
-		return
-			Transform.toMap(
-					new Transform.MapToKeyFunction<C,C>(),
-					new Unary<Entry<C, C>, Collection<R>>() { public Collection<R> f(Entry<C, C> pair) {
-						return getMissingItems(ofClass, pair.getKey(), pair.getValue());
-					}},
-					pairs);
-	}
-	private<C extends Finder,R extends Nameable> Collection<R> getMissingItems(final Class<R> ofClass, C live, C updater) {
-		return Filter.grepFalseAgainstList(
-				live.findCollection(ofClass),
-				updater.findCollection(ofClass), 
-				new NameableBinaryPredicate<R>());
-	}
-	public <C extends Finder,R extends Nameable> Map<C,Collection<R>> getExistingItems(final Class<R> ofClass, Collection<Entry<C, C>> pairs) {
-		return
-			Transform.toMap(
-					new Transform.MapToKeyFunction<C,C>(),
-					new Unary<Entry<C, C>, Collection<R>>() { public Collection<R> f(Entry<C, C> pair) {
-						return getExistingItems(ofClass, pair.getKey(), pair.getValue());
-					}},
-					pairs);
-	}
-	public<C extends Finder,R extends Nameable> Collection<R> getExistingItems(final Class<R> ofClass, C live, C updater) {
-		return Filter.grepAgainstList(
-				live.findCollection(ofClass), 
-				updater.findCollection(ofClass),
-				new NameableBinaryPredicate<R>());
-	}
-	
-	private<T extends Nameable> Collection<String> getNames(Collection<T> collection)
-	{
-		return Transform.map(new Unary<T, String>() {
-			public String f(T identifiable) { return identifiable.getName();}},
-			collection);
-	}
-	private class NameableBinaryPredicate<T extends Nameable> extends BinaryPredicate<T, T>
-	{
-		public boolean f(T item1, T item2) {
-			return item1.getName().equals(item2.getName());
+		for(EntityConfig config : updater.getEntityConfigs()) {
+			try {
+				Resource resource = hive.getPartitionDimension().getResource(config.getResourceName());
+				for(EntityIndexConfig indexConfig : config.getEntitySecondaryIndexConfigs()) {
+					try {
+						resource.getSecondaryIndex(indexConfig.getIndexName());
+					} catch(HiveKeyNotFoundException ex) {
+						if(!indexMap.containsKey(resource))
+							indexMap.put(resource, new ArrayList<SecondaryIndex>());
+						indexMap.get(resource).add(configToIndex().f(indexConfig));
+					}
+				}
+			} catch(HiveKeyNotFoundException e) {
+				Resource resource = new Resource(
+						config.getResourceName(),
+						JdbcTypeMapper.primitiveTypeToJdbcType(config.getIdClass()),
+						config.isPartitioningResource());
+				missingResources.add(resource);
+				indexMap.put(resource, Transform.map(configToIndex(), config.getEntitySecondaryIndexConfigs()));
+			}
 		}
+		return new HiveDiff(missingResources, indexMap);
+	}
+	private Unary<EntityIndexConfig, SecondaryIndex> configToIndex() {
+		return new Unary<EntityIndexConfig, SecondaryIndex>(){
+			public SecondaryIndex f(EntityIndexConfig item) {
+				return new SecondaryIndex(item.getIndexName(), JdbcTypeMapper.primitiveTypeToJdbcType(item.getIndexClass()));
+			}};
 	}
 }

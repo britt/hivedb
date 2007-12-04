@@ -1,5 +1,6 @@
 package org.hivedb.hibernate;
 
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
@@ -18,6 +19,7 @@ import org.hivedb.configuration.EntityIndexConfigImpl;
 import org.hivedb.configuration.PluralHiveConfig;
 import org.hivedb.hibernate.annotations.AnnotationHelper;
 import org.hivedb.hibernate.annotations.EntityId;
+import org.hivedb.hibernate.annotations.EntityVersion;
 import org.hivedb.hibernate.annotations.Index;
 import org.hivedb.hibernate.annotations.PartitionIndex;
 import org.hivedb.hibernate.annotations.Resource;
@@ -47,18 +49,26 @@ public class ConfigurationReader {
 			configure(clazz);
 	}
 	
-	@SuppressWarnings("unchecked")
 	public EntityConfig configure(Class<?> clazz) {
-		String dimensionName = getPartitionDimensionName(clazz);
+		EntityConfig config = readConfiguration(clazz) ;
+		if(dimension == null) 
+			dimension = new PartitionDimension(config.getPartitionDimensionName(), JdbcTypeMapper.primitiveTypeToJdbcType(config.getPrimaryKeyClass()));
+		else
+			if(!dimension.getName().equals(config.getPartitionDimensionName()))
+				throw new UnsupportedOperationException(
+						String.format("You are trying to configure on object from partition dimension %s into a Hive configured to use partition dimension %s. THis is not supported. Use a separate configuration for each dimension.", config.getPartitionDimensionName(), dimension.getName()));
+		
+		configs.put(clazz.getName(), config);
+		return config;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static EntityConfig readConfiguration(Class<?> clazz) {
 		Method partitionIndexMethod = AnnotationHelper.getFirstMethodWithAnnotation(clazz, PartitionIndex.class);
 		
-		if(dimension == null) 
-			dimension = new PartitionDimension(dimensionName, JdbcTypeMapper.primitiveTypeToJdbcType(partitionIndexMethod.getReturnType()));
-		else
-			if(!dimension.getName().equals(dimensionName))
-				throw new UnsupportedOperationException(
-						String.format("You are trying to configure on object from partition dimension %s into a Hive configured to use partition dimension %s. THis is not supported. Use a separate configuration for each dimension.", dimensionName, dimension.getName()));
+		PartitionDimension dimension = new PartitionDimension(getPartitionDimensionName(clazz), JdbcTypeMapper.primitiveTypeToJdbcType(partitionIndexMethod.getReturnType()));
 		
+		Method versionMethod = AnnotationHelper.getFirstMethodWithAnnotation(clazz, EntityVersion.class);
 		Method resourceIdMethod = AnnotationHelper.getFirstMethodWithAnnotation(clazz, EntityId.class);
 		List<Method> indexMethods = AnnotationHelper.getAllMethodsWithAnnotation(clazz, Index.class);
 		if(indexMethods.contains(resourceIdMethod))
@@ -66,6 +76,7 @@ public class ConfigurationReader {
 	
 		String primaryIndexPropertyName = getIndexNameForMethod(partitionIndexMethod);
 		String idPropertyName = getIndexNameForMethod(resourceIdMethod);
+		String versionPropertyName = versionMethod == null ? null : getIndexNameForMethod(versionMethod);
 		
 		List<EntityIndexConfig> indexes = Lists.newArrayList();
 		
@@ -77,24 +88,23 @@ public class ConfigurationReader {
 		
 		EntityConfig config = new EntityConfigImpl(
 				clazz,
-				dimensionName,
+				dimension.getName(),
 				getResourceName(clazz),
 				primaryIndexPropertyName,
 				idPropertyName,
+				versionPropertyName,
 				indexes,
 				partitionIndexMethod.getName().equals(resourceIdMethod.getName())
-		);
-	
-		configs.put(clazz.getName(), config);
+		);	
 		return config;
 	}
 
-	private boolean isCollectionPropertyOfAComplexType(Class<?> clazz, Method indexMethod) {
+	private static boolean isCollectionPropertyOfAComplexType(Class<?> clazz, Method indexMethod) {
 		return ReflectionTools.isCollectionProperty(clazz, ReflectionTools.getPropertyNameOfAccessor(indexMethod)) &&
 			!PrimitiveUtils.isPrimitiveClass(ReflectionTools.getCollectionItemType(clazz,ReflectionTools.getPropertyNameOfAccessor(indexMethod)));
 	}
 
-	private String getIndexPropertyOfCollectionType(Class collectionType) {
+	private static String getIndexPropertyOfCollectionType(Class collectionType) {
 		try {
 			return ReflectionTools.getPropertyNameOfAccessor(AnnotationHelper.getFirstMethodWithAnnotation(collectionType, Index.class));
 		}
@@ -112,7 +122,7 @@ public class ConfigurationReader {
 	}
 
 	public EntityHiveConfig getHiveConfiguration(Hive hive) {
-		return new PluralHiveConfig(configs, hive);
+		return new PluralHiveConfig(configs, hive.getPartitionDimension().getName(), JdbcTypeMapper.jdbcTypeToPrimitiveClass(hive.getPartitionDimension().getColumnType()));
 	}
 	
 	public void install(String uri) {
@@ -156,7 +166,7 @@ public class ConfigurationReader {
 				config.isPartitioningResource());
 	}
 	
-	public String getResourceName(Class<?> clazz) {
+	public static String getResourceName(Class<?> clazz) {
 		Resource resource = clazz.getAnnotation(Resource.class);
 		if(resource != null)
 			return resource.name();
@@ -164,13 +174,13 @@ public class ConfigurationReader {
 			return getResourceNameForClass(clazz);
 	}
 
-	private String getPartitionDimensionName(Class<?> clazz) {
+	private static String getPartitionDimensionName(Class<?> clazz) {
 		String name = AnnotationHelper.getFirstInstanceOfAnnotation(clazz, PartitionIndex.class).name();
 		Method m = AnnotationHelper.getFirstMethodWithAnnotation(clazz, PartitionIndex.class);
 		return "".equals(name) ? getIndexNameForMethod(m) : name;
 	}
 	
-	private String getSecondaryIndexName(Method method) {
+	private static String getSecondaryIndexName(Method method) {
 		Index annotation = method.getAnnotation(Index.class);
 		if(annotation != null && !"".equals(annotation.name()))
 			return annotation.name();
