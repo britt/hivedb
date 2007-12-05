@@ -22,7 +22,7 @@ import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
-import org.hivedb.hibernate.annotations.PersistedClass;
+import org.hivedb.hibernate.annotations.GeneratedClass;
 import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.DebugMap;
 
@@ -144,7 +144,7 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 //			return prefix.equals(representedInterface.getName()) && !key.toString().equals(representedInterface.getName())
 //				? representedInterface.getName()
 //				: super.getClassName(prefix, source, key, names);
-			PersistedClass annotation = (PersistedClass) representedInterface.getAnnotation(PersistedClass.class);
+			GeneratedClass annotation = (GeneratedClass) representedInterface.getAnnotation(GeneratedClass.class);
 			return annotation == null ? super.getClassName(prefix, source, key, names) : annotation.name();
 		}
 	}

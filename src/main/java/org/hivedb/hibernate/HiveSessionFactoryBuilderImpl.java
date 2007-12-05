@@ -30,7 +30,7 @@ import org.hivedb.HiveFacade;
 import org.hivedb.Synchronizeable;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
-import org.hivedb.hibernate.annotations.PersistedClass;
+import org.hivedb.hibernate.annotations.GeneratedClass;
 import org.hivedb.meta.Node;
 import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.ReflectionTools;
@@ -239,6 +239,6 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	}
 	
 	private boolean isGeneratedClass(Class<?> clazz) {
-		return clazz.getAnnotation(PersistedClass.class) != null;
+		return clazz.getAnnotation(GeneratedClass.class) != null;
 	}
 }
