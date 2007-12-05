@@ -1,7 +1,6 @@
 package org.hivedb.services;
 
 import static org.testng.AssertJUnit.*;
-import static org.testng.AssertJUnit.assertFalse;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
@@ -10,19 +9,16 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
-import org.apache.commons.pool.impl.GenericKeyedObjectPool.Config;
 import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hivedb.Hive;
 import org.hivedb.HiveReadOnlyException;
 import org.hivedb.HiveRuntimeException;
-import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.hibernate.BaseDataAccessObject;
 import org.hivedb.hibernate.ConfigurationReader;
-import org.hivedb.hibernate.DataAccessObjectFactory;
 import org.hivedb.hibernate.HiveSessionFactory;
-import org.hivedb.hibernate.HiveSessionFactoryBuilder;
 import org.hivedb.hibernate.HiveSessionFactoryBuilderImpl;
 import org.hivedb.hibernate.annotations.AnnotationHelper;
 import org.hivedb.hibernate.annotations.Index;
@@ -161,12 +157,34 @@ public class ClassDaoServiceTest extends H2TestCase {
 	}
 	
 	private void validateRetrieval(ServiceResponse original, ServiceResponse response) {
-		assertEquals("Expected only one instance", 1, response.getInstances().size());
+		assertEquals(original.getInstances().size(), response.getInstances().size());
 		validate(original, response);
 	}
 	
 	private void validate(ServiceResponse expected, ServiceResponse actual) {
 		assertEquals(expected.getInstances().size(), actual.getInstances().size());
+		Map<Integer, ServiceContainer> expectedMap = getInstanceHashCodeMap(expected);
+		Map<Integer, ServiceContainer> actualMap = getInstanceHashCodeMap(actual);
+		
+		for(Integer key : actualMap.keySet()) {
+			assertTrue(
+					String.format("Expected results did not contian a ServiceContainer with hashCode %s", key), 
+					expectedMap.containsKey(key));
+			validate(expectedMap.get(key), actualMap.get(key));
+		}
+	}
+
+	private Map<Integer, ServiceContainer> getInstanceHashCodeMap(
+			ServiceResponse expected) {
+		return Transform.toMap(new Unary<ServiceContainer, Integer>(){
+			public Integer f(ServiceContainer item) {
+				return item.getInstance().hashCode();
+			}}, new Transform.IdentityFunction<ServiceContainer>(), expected.getContainers());
+	}
+	
+	private void validate(ServiceContainer expected, ServiceContainer actual) {
+		assertEquals(expected.getVersion(), actual.getVersion());
+		assertEquals(expected.getInstance(), actual.getInstance());
 	}
 	
 	@Override

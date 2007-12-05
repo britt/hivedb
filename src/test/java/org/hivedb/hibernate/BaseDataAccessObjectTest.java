@@ -10,16 +10,11 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.hivedb.Hive;
 import org.hivedb.configuration.EntityHiveConfig;
-import org.hivedb.meta.Node;
 import org.hivedb.util.GenerateInstance;
 import org.hivedb.util.GeneratedInstanceInterceptor;
-import org.hivedb.util.database.HiveDbDialect;
-import org.hivedb.util.database.test.ContinentalSchema;
 import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.WeatherReport;
-import org.hivedb.util.database.test.WeatherSchema;
 import org.hivedb.util.functional.Atom;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;

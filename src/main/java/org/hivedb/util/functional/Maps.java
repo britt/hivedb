@@ -1,5 +1,6 @@
 package org.hivedb.util.functional;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -169,5 +170,16 @@ public class Maps {
 						entryI1I2.getValue().entrySet());				
 				}},
 			map.entrySet());
+	}
+	
+	public static<T> Map<Integer, T> hashCodeMap(Collection<T> items) {
+		return Transform.toMap(new Unary<T, Integer>(){
+			public Integer f(T item) {
+				return item.hashCode();
+			}}, new Transform.IdentityFunction<T>(), items);
+	}
+	
+	public static<T> Map<Integer, T> hashCodeMap(T... items) {
+		return hashCodeMap(Arrays.asList(items));
 	}
 }

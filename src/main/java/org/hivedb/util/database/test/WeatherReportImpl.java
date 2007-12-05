@@ -1,7 +1,6 @@
 package org.hivedb.util.database.test;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Random;
@@ -10,14 +9,9 @@ import org.hivedb.hibernate.annotations.EntityId;
 import org.hivedb.hibernate.annotations.Index;
 import org.hivedb.hibernate.annotations.PartitionIndex;
 import org.hivedb.hibernate.annotations.Resource;
-import org.hivedb.util.GenerateInstance;
 import org.hivedb.util.GeneratePrimitiveCollection;
 import org.hivedb.util.HiveUtils;
-import org.hivedb.util.functional.NumberIterator;
-import org.hivedb.util.functional.Transform;
-import org.hivedb.util.functional.Unary;
 
-@Deprecated
 @Resource(name="WeatherReport")
 public class WeatherReportImpl implements WeatherReport {
 	private static final String[] continents = 

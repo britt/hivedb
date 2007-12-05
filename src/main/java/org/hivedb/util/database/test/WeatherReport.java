@@ -11,7 +11,7 @@ import org.hivedb.hibernate.annotations.PartitionIndex;
 import org.hivedb.hibernate.annotations.PersistedClass;
 import org.hivedb.hibernate.annotations.Resource;
 
-@PersistedClass(name="WeatherReportImpl")
+@PersistedClass(name="org.hivedb.util.database.test.WeatherReportGenerated")
 @Resource(name="WeatherReport")
 public interface WeatherReport {
 	
