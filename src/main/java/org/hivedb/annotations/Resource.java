@@ -1,4 +1,4 @@
-package org.hivedb.hibernate.annotations;
+package org.hivedb.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -6,5 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface EntityVersion {}
+@Target(ElementType.TYPE)
+public @interface Resource {
+	String name();
+}

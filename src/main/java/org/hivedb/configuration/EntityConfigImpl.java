@@ -3,7 +3,7 @@ package org.hivedb.configuration;
 import java.io.Serializable;
 import java.util.Collection;
 
-import org.hivedb.hibernate.annotations.IndexType;
+import org.hivedb.annotations.IndexType;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Predicate;

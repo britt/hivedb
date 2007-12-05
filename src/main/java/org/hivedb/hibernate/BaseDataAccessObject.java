@@ -156,6 +156,6 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	}
 
 	public Collection<Object> findByPropertyRange(String propertyName, java.lang.Object minValue, java.lang.Object maxValue) {
-		throw new NotImplementedException("Not implemented");
+		throw new UnsupportedOperationException("Not implemented");
 	}
 }

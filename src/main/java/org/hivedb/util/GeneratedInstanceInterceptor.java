@@ -22,7 +22,7 @@ import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
-import org.hivedb.hibernate.annotations.GeneratedClass;
+import org.hivedb.annotations.GeneratedClass;
 import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.DebugMap;
 

@@ -4,12 +4,12 @@ import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Date;
 
-import org.hivedb.hibernate.annotations.EntityId;
-import org.hivedb.hibernate.annotations.Index;
-import org.hivedb.hibernate.annotations.IndexType;
-import org.hivedb.hibernate.annotations.PartitionIndex;
-import org.hivedb.hibernate.annotations.GeneratedClass;
-import org.hivedb.hibernate.annotations.Resource;
+import org.hivedb.annotations.EntityId;
+import org.hivedb.annotations.GeneratedClass;
+import org.hivedb.annotations.Index;
+import org.hivedb.annotations.IndexType;
+import org.hivedb.annotations.PartitionIndex;
+import org.hivedb.annotations.Resource;
 
 @GeneratedClass(name="org.hivedb.util.database.test.WeatherReportGenerated")
 @Resource(name="WeatherReport")

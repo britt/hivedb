@@ -2,7 +2,7 @@ package org.hivedb.configuration;
 
 import java.util.Collection;
 
-import org.hivedb.hibernate.annotations.IndexType;
+import org.hivedb.annotations.IndexType;
 import org.hivedb.util.InstanceCollectionValueGetter;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.SqlUtils;

@@ -5,10 +5,10 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Random;
 
-import org.hivedb.hibernate.annotations.EntityId;
-import org.hivedb.hibernate.annotations.Index;
-import org.hivedb.hibernate.annotations.PartitionIndex;
-import org.hivedb.hibernate.annotations.Resource;
+import org.hivedb.annotations.EntityId;
+import org.hivedb.annotations.Index;
+import org.hivedb.annotations.PartitionIndex;
+import org.hivedb.annotations.Resource;
 import org.hivedb.util.GeneratePrimitiveCollection;
 import org.hivedb.util.HiveUtils;
 

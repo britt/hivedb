@@ -9,11 +9,11 @@ import java.util.Collection;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveFacade;
+import org.hivedb.annotations.IndexType;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityConfigImpl;
 import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.configuration.EntityIndexConfigImpl;
-import org.hivedb.hibernate.annotations.IndexType;
 import org.hivedb.meta.Node;
 import org.hivedb.util.GenerateInstance;
 import org.hivedb.util.GeneratedInstanceInterceptor;

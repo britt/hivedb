@@ -1,9 +1,9 @@
 package org.hivedb.util.database.test;
 
-import org.hivedb.hibernate.annotations.EntityId;
-import org.hivedb.hibernate.annotations.Index;
-import org.hivedb.hibernate.annotations.PartitionIndex;
-import org.hivedb.hibernate.annotations.Resource;
+import org.hivedb.annotations.EntityId;
+import org.hivedb.annotations.Index;
+import org.hivedb.annotations.PartitionIndex;
+import org.hivedb.annotations.Resource;
 
 @Resource(name=WeatherReport.CONTINENT)
 public interface Continent {

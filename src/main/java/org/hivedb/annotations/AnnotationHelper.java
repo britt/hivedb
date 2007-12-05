@@ -1,4 +1,4 @@
-package org.hivedb.hibernate.annotations;
+package org.hivedb.annotations;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
