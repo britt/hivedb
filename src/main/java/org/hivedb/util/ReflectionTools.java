@@ -17,6 +17,7 @@ import org.hivedb.util.functional.Predicate;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.hivedb.util.functional.Joiner.ConcatStrings;
+import org.springframework.beans.BeanUtils;
 
 public class ReflectionTools {
 	
@@ -403,7 +404,7 @@ public class ReflectionTools {
 		
 		Type type;
 		try {
-			type = ofThisInterface.getMethod("get"+capitalize(propertyName), new Class[] {}).getGenericReturnType();
+			type = BeanUtils.getPropertyDescriptor(ofThisInterface, propertyName).getReadMethod().getGenericReturnType();
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

@@ -3,7 +3,6 @@ package org.hivedb.hibernate;
 import java.io.Serializable;
 import java.util.Collection;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.hibernate.Criteria;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Interceptor;

@@ -24,7 +24,6 @@ import org.hivedb.hibernate.HiveSessionFactory;
 import org.hivedb.hibernate.HiveSessionFactoryBuilderImpl;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.Node;
-import org.hivedb.util.BeanGenerator;
 import org.hivedb.util.GenerateInstance;
 import org.hivedb.util.Lists;
 import org.hivedb.util.ReflectionTools;
