@@ -25,6 +25,14 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	private Interceptor defaultInterceptor = EmptyInterceptor.INSTANCE;
 	private Hive hive;
 
+	public Hive getHive() {
+		return hive;
+	}
+
+	public void setHive(Hive hive) {
+		this.hive = hive;
+	}
+
 	public BaseDataAccessObject(Class<?> clazz, EntityHiveConfig config, Hive hive, HiveSessionFactory factory) {
 		this.clazz = clazz;
 		this.config = config;

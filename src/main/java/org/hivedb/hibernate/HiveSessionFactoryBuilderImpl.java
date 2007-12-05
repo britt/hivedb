@@ -30,6 +30,7 @@ import org.hivedb.HiveFacade;
 import org.hivedb.Synchronizeable;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
+import org.hivedb.hibernate.annotations.PersistedClass;
 import org.hivedb.meta.Node;
 import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.ReflectionTools;
@@ -83,8 +84,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 		for(Map.Entry<Integer,Configuration> entry : hibernateConfigs.entrySet()) {
 			Configuration cfg = entry.getValue();
 			for(Class<?> clazz : classes)
-				cfg.addClass(
-						GeneratedInstanceInterceptor.getGeneratedClass(clazz));
+				cfg.addClass(getMappedClass(clazz));
 			this.nodeSessionFactories.put(entry.getKey(), cfg.buildSessionFactory());
 		}
 		
@@ -120,7 +120,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 		Configuration hibernateConfig = createConfigurationFromNode(Atom.getFirstOrThrow(hive.getNodes()), overrides);
 		Collection<Class<?>> classes = getComplexClassesOfEntityConfig();
 		for(Class<?> clazz : classes)
-			hibernateConfig.addClass(GeneratedInstanceInterceptor.getGeneratedClass(clazz));
+			hibernateConfig.addClass(getMappedClass(clazz));
 		hibernateConfig.setProperty("hibernate.session_factory_name", "factory:prototype");
 		return hibernateConfig;
 	}
@@ -151,7 +151,6 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 		
 		config.setProperty("hibernate.connection.shard_id", new Integer(node.getId()).toString());
 		config.setProperty("hibernate.shard.enable_cross_shard_relationship_checks", "true");
-		//config.setProperty("hibernate.show_sql", "true");
 		for(Entry<Object,Object> prop : overrides.entrySet()) 
 			config.setProperty(prop.getKey().toString(), prop.getValue().toString());
 		
@@ -230,5 +229,16 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	
 	private HiveInterceptorDecorator getHiveInterceptor() {
 		return new HiveInterceptorDecorator(config, hive);
+	}
+	
+	private Class<?> getMappedClass(Class<?> clazz) {
+		if(isGeneratedClass(clazz))
+			return GeneratedInstanceInterceptor.getGeneratedClass(clazz);
+		else
+			return clazz;
+	}
+	
+	private boolean isGeneratedClass(Class<?> clazz) {
+		return clazz.getAnnotation(PersistedClass.class) != null;
 	}
 }

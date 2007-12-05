@@ -7,8 +7,10 @@ import java.util.Date;
 import org.hivedb.hibernate.annotations.EntityId;
 import org.hivedb.hibernate.annotations.Index;
 import org.hivedb.hibernate.annotations.PartitionIndex;
+import org.hivedb.hibernate.annotations.PersistedClass;
 import org.hivedb.hibernate.annotations.Resource;
 
+@PersistedClass(name="WeatherReportImpl")
 @Resource(name="WeatherReport")
 public interface WeatherReport {
 	

@@ -5,6 +5,7 @@ package org.hivedb.util;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
+import org.hivedb.hibernate.annotations.PersistedClass;
 import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.DebugMap;
 
@@ -139,9 +141,11 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 			// The RepresentedInterface comes through here twice. I only accept the first pass through
 			// where the key is not equal to the represented interface name. I don't understand
 			// the CGLib implementation yet
-			return prefix.equals(representedInterface.getName()) && !key.toString().equals(representedInterface.getName())
-				? representedInterface.getName()+"Generated"
-				: super.getClassName(prefix, source, key, names);
+//			return prefix.equals(representedInterface.getName()) && !key.toString().equals(representedInterface.getName())
+//				? representedInterface.getName()
+//				: super.getClassName(prefix, source, key, names);
+			PersistedClass annotation = (PersistedClass) representedInterface.getAnnotation(PersistedClass.class);
+			return annotation == null ? super.getClassName(prefix, source, key, names) : annotation.name();
 		}
 	}
 }
