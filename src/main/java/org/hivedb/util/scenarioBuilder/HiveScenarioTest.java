@@ -26,18 +26,22 @@ import org.hivedb.meta.KeySemaphore;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.PartitionDimensionCreator;
-import org.hivedb.meta.PrimaryIndexKeyGenerator;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.directory.Directory;
 import org.hivedb.meta.persistence.ColumnInfo;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.AssertUtils;
+import org.hivedb.util.GeneratePrimitiveValue;
 import org.hivedb.util.Persister;
+import org.hivedb.util.QuickCache;
+import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.functional.Actor;
 import org.hivedb.util.functional.Atom;
+import org.hivedb.util.functional.Delay;
 import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Generator;
 import org.hivedb.util.functional.Predicate;
 import org.hivedb.util.functional.RingIteratorable;
 import org.hivedb.util.functional.Transform;
@@ -103,7 +107,17 @@ public class HiveScenarioTest {
 		
 		// Validate that the secondary index keys are in the database with the right primary index key	
 		for (final Object resourceInstance : resourceInstances) {
-								
+			Object actualPrimaryIndexKey = null;
+			
+			// Make sure that non partitioning resources instances have the correct primary index key
+			if (!entityConfig.isPartitioningResource()) {
+				actualPrimaryIndexKey = hive.directory().getPrimaryIndexKeyOfResourceId(resource.getName(), entityConfig.getId(resourceInstance));					
+				Object expectedPrimaryIndexKey = entityConfig.getPrimaryIndexKey(resourceInstance);
+			
+				assertEquals(String.format("directory.getPrimaryIndexKeyOfResourceId(%s,%s)", resource.getName(), entityConfig.getId(resourceInstance)),
+					actualPrimaryIndexKey, expectedPrimaryIndexKey);
+			}
+			
 			Collection<? extends EntityIndexConfig> secondaryIndexConfigs = entityConfig.getEntitySecondaryIndexConfigs();
 			for (EntityIndexConfig secondaryIndexConfig : secondaryIndexConfigs) {	
 				final SecondaryIndex secondaryIndex = resource.getSecondaryIndex(secondaryIndexConfig.getIndexName());
@@ -131,11 +145,12 @@ public class HiveScenarioTest {
 						Collection<Object> actualPrimaryIndexKeys = directory.getPrimaryIndexKeysOfSecondaryIndexKey(
 								secondaryIndex,
 								expectedSecondaryIndexKey);
+							
 						assertTrue(String.format("directory.getPrimaryIndexKeysOfSecondaryIndexKey(%s,%s): expected %s got %s", secondaryIndex.getName(), expectedSecondaryIndexKey, expectedPrimaryIndexKey, actualPrimaryIndexKeys),
 								Filter.grepItemAgainstList(expectedPrimaryIndexKey, actualPrimaryIndexKeys));
-					
+						
 						// Assert that one of the nodes of the secondary index key is the same as that of the primary index key
-						// There are multiple nodes returned when multiple primray index keys exist for a secondary index key
+						// There are multiple nodes returned when multiple primary index keys exist for a secondary index key
 						Collection<KeySemaphore> keySemaphoreOfPrimaryIndexKey = directory.getKeySemamphoresOfPrimaryIndexKey(expectedPrimaryIndexKey);
 						for(KeySemaphore semaphore : keySemaphoreOfPrimaryIndexKey)
 							assertTrue(Filter.grepItemAgainstList(semaphore, keySemaphoreOfSecondaryIndexKeys));	
@@ -385,6 +400,7 @@ public class HiveScenarioTest {
 			hive.getNode(node.getId()));
 	}
 	
+	static QuickCache primitiveGenerators = new QuickCache(); // cache generators for sequential randomness
 	private static void commitReadonlyViolations(final EntityHiveConfig enityHiveConfig, final Hive hive, Class representedInterface, Collection<Object> resourceInstances) throws HiveException 
 	{
 		final EntityConfig entityConfig = enityHiveConfig.getEntityConfig(representedInterface);
@@ -393,34 +409,42 @@ public class HiveScenarioTest {
 		
 		try {
 			final Object primaryIndexKey = Atom.getFirst(getGeneratedPrimaryIndexKeys(entityConfig, resourceInstances));
-			final SecondaryIndex secondaryIndex = Atom.getFirst(resource.getSecondaryIndexes());			
-			
-			// Attempt to insert a secondary index key
-			AssertUtils.assertThrows(new AssertUtils.UndoableToss() { public void f() throws Exception {				
-				hive.updateHiveReadOnly(true);
-				new Undo() { public void f() throws Exception {
-					hive.updateHiveReadOnly(false);
-				}};
-				Object newResourceInstance = new EntityGeneratorImpl<Object>(entityConfig)
-										.generate(primaryIndexKey);
-				Collection<? extends EntityIndexConfig> secondaryIndexConfigs = 
-					entityConfig .getEntitySecondaryIndexConfigs();
-				final Collection<Object> secondaryIndexKeys = Atom.getFirst(secondaryIndexConfigs).getIndexValues(newResourceInstance);
-				for (final Object secondaryIndexKey : secondaryIndexKeys)
-					hive.directory().insertSecondaryIndexKey(
-						resource.getName(),
-						secondaryIndex.getName(), 
-						secondaryIndexKey,
-						entityConfig.getId(newResourceInstance));
-			}}, HiveReadOnlyException.class);	
-			
+			final SecondaryIndex secondaryIndex = Atom.getFirstOrNull(resource.getSecondaryIndexes());			
+			if (secondaryIndex != null) {
+				// Attempt to insert a secondary index key
+				AssertUtils.assertThrows(new AssertUtils.UndoableToss() { public void f() throws Exception {				
+					hive.updateHiveReadOnly(true);
+					new Undo() { public void f() throws Exception {
+						hive.updateHiveReadOnly(false);
+					}};
+					Object newResourceInstance = new EntityGeneratorImpl<Object>(entityConfig)
+											.generate(primaryIndexKey);
+					Collection<? extends EntityIndexConfig> secondaryIndexConfigs = 
+						entityConfig .getEntitySecondaryIndexConfigs();
+					final Collection<Object> secondaryIndexKeys = Atom.getFirst(secondaryIndexConfigs).getIndexValues(newResourceInstance);
+					for (final Object secondaryIndexKey : secondaryIndexKeys)
+						hive.directory().insertSecondaryIndexKey(
+							resource.getName(),
+							secondaryIndex.getName(), 
+							secondaryIndexKey,
+							entityConfig.getId(newResourceInstance));
+				}}, HiveReadOnlyException.class);	
+			}
 			// Attempt to insert a primary index key
 			AssertUtils.assertThrows(new AssertUtils.UndoableToss() { public void f() throws Exception {				
 				hive.updateHiveReadOnly(true);
 				new Undo() { public void f() throws Exception {
 					hive.updateHiveReadOnly(false);
 				}};
-				hive.directory().insertPrimaryIndexKey(new PrimaryIndexKeyGenerator(entityConfig).generate());
+				hive.directory().insertPrimaryIndexKey(
+						primitiveGenerators.get(entityConfig.getPrimaryIndexKeyPropertyName(), new Delay<Generator>() {
+    						public Generator f() {
+    							return new GeneratePrimitiveValue(ReflectionTools.getPropertyType(
+    									entityConfig.getRepresentedInterface(),
+    									entityConfig.getPrimaryIndexKeyPropertyName()));
+    						}}).generate());
+						
+						
 			}}, HiveReadOnlyException.class);	
 		} catch (Exception e) { throw new HiveException("Undoable exception", e); }
 	}	

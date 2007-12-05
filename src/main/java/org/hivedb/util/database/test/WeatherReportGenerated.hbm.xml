@@ -14,5 +14,11 @@
         	 	<key column="REPORT_ID" />
 				<element type="integer" column="TEMPERATURE"/>
 			</bag>
+			<bag name="weatherEvents" lazy="false"
+           		 table="WEATHER_REPORT_WEATHER_EVENT"
+            	 cascade="save-update" >
+          	  <key column="REPORT_ID"/>
+              <many-to-many class="WeatherEventGenerated" column="EVENT_ID"/>
+			</bag>
     </class>
 </hibernate-mapping>

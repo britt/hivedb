@@ -7,7 +7,7 @@ import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.meta.EntityGenerator;
 import org.hivedb.meta.EntityGeneratorImpl;
-import org.hivedb.meta.PrimaryIndexKeyGenerator;
+import org.hivedb.util.functional.Delay;
 import org.hivedb.util.functional.Generate;
 import org.hivedb.util.functional.Generator;
 import org.hivedb.util.functional.NumberIterator;
@@ -63,6 +63,7 @@ public class GenerateHiveIndexKeys {
 	}
 	
 
+	static QuickCache primitiveGenerators = new QuickCache(); // cache generators for sequential randomness
 	/**
 	 * @param entityConfig
 	 * @return
@@ -70,8 +71,14 @@ public class GenerateHiveIndexKeys {
 	@SuppressWarnings("unchecked")
 	private Collection<Object> createPrimaryIndexKeys(final EntityHiveConfig entityHiveConfig, final Class representedInterface)
 	{	
+		final EntityConfig entityConfig = entityHiveConfig.getEntityConfig(representedInterface);
 		final Generator primaryIndexIdentifiableGenerator = 
-			new PrimaryIndexKeyGenerator(entityHiveConfig.getEntityConfig(representedInterface));
+			primitiveGenerators.get(entityConfig.getPrimaryIndexKeyPropertyName(), new Delay<GeneratePrimitiveValue>() {
+				public GeneratePrimitiveValue f() {
+					return new GeneratePrimitiveValue(ReflectionTools.getPropertyType(
+							entityConfig.getRepresentedInterface(),
+							entityConfig.getPrimaryIndexKeyPropertyName()));
+				}});
 		
 		return Generate.create(new Generator<Object>() { 
 			public Object generate() {

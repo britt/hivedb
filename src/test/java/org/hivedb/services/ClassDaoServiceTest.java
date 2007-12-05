@@ -25,6 +25,7 @@ import org.hivedb.hibernate.HiveSessionFactoryBuilderImpl;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.Node;
 import org.hivedb.util.BeanGenerator;
+import org.hivedb.util.GenerateInstance;
 import org.hivedb.util.Lists;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.HiveDbDialect;
@@ -145,7 +146,7 @@ public class ClassDaoServiceTest extends H2TestCase {
 	}
 	
 	private Object getInstance(Class<Object> clazz) throws Exception {
-		return new BeanGenerator<Object>(clazz).generate();
+		return new GenerateInstance<Object>(clazz).generate();
 	}
 	
 	private ServiceResponse getPersistentInstance(ClassDaoService service) throws Exception {

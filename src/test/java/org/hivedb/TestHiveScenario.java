@@ -1,26 +1,43 @@
 package org.hivedb;
 
+import java.io.Serializable;
+
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
-import org.hivedb.configuration.SingularHiveConfigImpl;
-import org.hivedb.util.PersisterImpl;
+import org.hivedb.hibernate.DataAccessObject;
+import org.hivedb.hibernate.DataAccessObjectFactory;
+import org.hivedb.util.DataPersister;
 import org.hivedb.util.scenarioBuilder.HiveScenarioTest;
 
 public class TestHiveScenario {
 	
-	EntityHiveConfig enitityHiveConfig;
+	EntityHiveConfig entityHiveConfig;
 	Hive hive;
 	public TestHiveScenario(EntityHiveConfig enitityHiveConfig, Hive hive) {
-		this.enitityHiveConfig = enitityHiveConfig;
+		this.entityHiveConfig = enitityHiveConfig;
 		this.hive = hive;
 	}
 	
 	public void test() {
-		for (EntityConfig entityConfig : enitityHiveConfig.getEntityConfigs()) {
+		for (EntityConfig entityConfig : entityHiveConfig.getEntityConfigs()) {
 			int resourceInstanceCount = entityConfig.isPartitioningResource()
 				? 2 // must equal primaryIndexKeyCount
 				: 4; // make greater so that primaryIndexKeys are shared
-			new HiveScenarioTest(enitityHiveConfig, hive, entityConfig.getRepresentedInterface()).performTest(2,resourceInstanceCount, new PersisterImpl(hive));
+			new HiveScenarioTest(
+					entityHiveConfig, 
+					hive, 
+					entityConfig.getRepresentedInterface()).performTest(2,resourceInstanceCount, 
+					new DataPersister(
+							entityHiveConfig, 
+							entityConfig.getRepresentedInterface(),
+							getDao(entityConfig.getRepresentedInterface()),
+							hive));
 		}
+	}
+	private DataAccessObject<Object, Serializable> getDao(Class clazz) {	
+		return new DataAccessObjectFactory<Object,Serializable>(
+				this.entityHiveConfig,
+				clazz,
+				hive).create();
 	}
 }

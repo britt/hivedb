@@ -31,6 +31,8 @@ import org.hivedb.util.Lists;
 import org.hivedb.util.PrimitiveUtils;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.JdbcTypeMapper;
+import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Predicate;
 import org.springframework.beans.BeanUtils;
 
 import sun.text.Trie.DataManipulate;
@@ -73,8 +75,8 @@ public class ConfigurationReader {
 		
 		Method versionMethod = AnnotationHelper.getFirstMethodWithAnnotation(clazz, EntityVersion.class);
 		Method resourceIdMethod = AnnotationHelper.getFirstMethodWithAnnotation(clazz, EntityId.class);
-		List<Method> indexMethods = getHiveIndexMethods(clazz,resourceIdMethod);
-	
+
+		List<Method> indexMethods = getHiveIndexMethods(clazz,resourceIdMethod);	
 		String primaryIndexPropertyName = getIndexNameForMethod(partitionIndexMethod);
 		String idPropertyName = getIndexNameForMethod(resourceIdMethod);
 		String versionPropertyName = versionMethod == null ? null : getIndexNameForMethod(versionMethod);
@@ -125,7 +127,7 @@ public class ConfigurationReader {
 			return ReflectionTools.getPropertyNameOfAccessor(AnnotationHelper.getFirstMethodWithAnnotation(collectionType, Index.class));
 		}
 		catch (Exception e) {
-			throw new RuntimeException(String.format("Unable to find an EntityId annotation for collection type %s", collectionType.getName()));
+			throw new RuntimeException(String.format("Unable to find an Index annotation for collection type %s", collectionType.getName()));
 		}
 	}
 	

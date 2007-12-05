@@ -148,7 +148,12 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			throw new RuntimeException(ce);
 		} catch( RuntimeException e ) {
 			if(tx != null)
-				tx.rollback();
+				try {
+					tx.rollback();
+				}
+				catch (Exception ex){
+					throw e;
+				}
 			throw e;
 		} finally {
 			session.close();

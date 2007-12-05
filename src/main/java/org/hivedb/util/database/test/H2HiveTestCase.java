@@ -57,7 +57,7 @@ public class H2HiveTestCase extends H2TestCase {
 
 	@SuppressWarnings("unchecked")
 	protected List<Class<?>> getEntityClasses() {
-		return Arrays.asList(getPartitionDimensionClass(), WeatherReport.class);
+		return Arrays.asList(getPartitionDimensionClass(), WeatherReport.class, WeatherEvent.class);
 	}
 	protected Class<?> getPartitionDimensionClass() {
 		return Continent.class;

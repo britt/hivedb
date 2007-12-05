@@ -5,9 +5,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hivedb.Hive;
 import org.hivedb.HiveFacade;
 import org.hivedb.configuration.EntityHiveConfig;
+import org.hivedb.hibernate.HiveSessionFactoryBuilderImpl;
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
@@ -21,36 +23,11 @@ import org.testng.annotations.BeforeMethod;
 
 public abstract class MySqlHiveTestCase extends MysqlTestCase {
 	
-	HiveTestCase hiveTestCase;
-	public MySqlHiveTestCase() {
-		hiveTestCase = new HiveTestCase(
-			getEntityClasses(),
-			HiveDbDialect.MySql, 
-			new Unary<String,String>() {
-				public String f(String databaseName) {
-					return getConnectString(databaseName);
-				}
-			},
-			getDataNodeNames());
-		cleanupAfterEachTest = true;
-	}
-
-	protected List<Class<? extends Object>> getEntityClasses() {
-		return Arrays.asList(getPartitionDimensionClass(), WeatherReport.class);
-	}
-	
-	protected Class<?> getPartitionDimensionClass() {
-		return Continent.class;
-	}
-	
-	protected Collection<String> getDataNodeNames() {
-		return Collections.emptyList();
-	}
-	
 	@Override
 	@BeforeClass
 	protected void beforeClass() {
-		super.beforeClass();
+		cleanupAfterEachTest = true;
+		hiveTestCase = createHiveTestCase();
 		hiveTestCase.beforeClass();
 		super.beforeClass();
 	}
@@ -59,7 +36,48 @@ public abstract class MySqlHiveTestCase extends MysqlTestCase {
 	@BeforeMethod
 	public void beforeMethod() {
 		super.beforeMethod();
+		hiveTestCase = createHiveTestCase();
 		hiveTestCase.beforeMethod();
+		installDataSchemas();
+	}
+
+	private HiveTestCase createHiveTestCase() {
+		return new HiveTestCase(
+				getEntityClasses(),
+				HiveDbDialect.MySql, 
+				new Unary<String,String>() {
+					public String f(String databaseName) {
+						return getConnectString(databaseName);
+					}
+				},
+				getDataNodeNames());
+	}
+	
+	protected HiveTestCase hiveTestCase;
+
+
+	protected List<Class<?>> getEntityClasses() {
+		return Arrays.asList(getPartitionDimensionClass(), WeatherReport.class, WeatherEvent.class);
+	}
+	protected Class<?> getPartitionDimensionClass() {
+		return Continent.class;
+	}
+	
+	protected Collection<String> getDataNodeNames() {
+		return Arrays.asList("data1", "data2");
+	}
+	
+	protected void installDataSchemas() {
+		for (String dataNodeName : getDataNodeNames()) {
+			new ContinentalSchema(getConnectString(dataNodeName)).install();
+			new WeatherSchema(getConnectString(dataNodeName)).install();
+		}
+	}
+	
+	public Collection<String> getDatabaseNames() {
+		return Transform.flatten(new Collection[] {
+			Collections.singletonList(getHiveDatabaseName()),
+			getDataNodeNames() });	
 	}
 	
 	public Hive getHive() { 
@@ -71,16 +89,11 @@ public abstract class MySqlHiveTestCase extends MysqlTestCase {
 		return hiveTestCase.getEntityHiveConfig();
 	}
 	
-	protected String getHiveDatabaseName() {
-		return "hive";
+	public String getHiveDatabaseName() {
+		return hiveTestCase.getHiveDatabaseName();
 	}
 	
-	public Collection<String> getDatabaseNames() {
-		return Transform.flatten(new Collection[] {
-			Collections.singletonList(getHiveDatabaseName()),
-			getDataNodeNames() });	
-	}
-
+	// Sample data
 	protected Collection<Resource> createResources() {
 		return hiveTestCase.createResources();
 	}

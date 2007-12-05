@@ -197,7 +197,9 @@ public class DirectoryWrapper implements DirectoryFacade {
 	}
 
 	public Object getPrimaryIndexKeyOfResourceId(String name, Object resourceId) {
-		return directory.getPrimaryIndexKeyOfResourceId(getResource(name), resourceId);
+		return getResource(name).isPartitioningResource()
+			? resourceId
+			: directory.getPrimaryIndexKeyOfResourceId(getResource(name), resourceId);
 	}
 
 	public Collection getPrimaryIndexKeysOfSecondaryIndexKey(String resource, String secondaryIndex, Object secondaryIndexKey) {

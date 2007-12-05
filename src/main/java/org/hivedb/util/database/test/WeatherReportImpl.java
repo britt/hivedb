@@ -93,4 +93,12 @@ public class WeatherReportImpl implements WeatherReport {
 	public void setWeeklyTemperatures(Collection<Integer> values) {
 		
 	}
+	
+	private Collection<WeatherEvent> weatherEvents;
+	public Collection<WeatherEvent> getWeatherEvents() {
+		return weatherEvents;
+	}
+	public void setWeatherEvents(Collection<WeatherEvent> weatherEvents) {
+		this.weatherEvents = weatherEvents;
+	}
 }

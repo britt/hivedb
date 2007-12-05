@@ -136,16 +136,19 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 			this.representedInterface = representedInterface;
 		}
 		public String getClassName(String prefix, String source, Object key, Predicate names) {
-			
-
+		
 			// The RepresentedInterface comes through here twice. I only accept the first pass through
 			// where the key is not equal to the represented interface name. I don't understand
 			// the CGLib implementation yet
-//			return prefix.equals(representedInterface.getName()) && !key.toString().equals(representedInterface.getName())
-//				? representedInterface.getName()
-//				: super.getClassName(prefix, source, key, names);
-			GeneratedClass annotation = (GeneratedClass) representedInterface.getAnnotation(GeneratedClass.class);
-			return annotation == null ? super.getClassName(prefix, source, key, names) : annotation.name();
+			return prefix.equals(representedInterface.getName()) && !key.toString().equals(representedInterface.getName())
+				? representedInterface.getAnnotation(GeneratedClass.class) != null
+						? removeClass(prefix) + ((GeneratedClass)  representedInterface.getAnnotation(GeneratedClass.class)).name()
+						: super.getClassName(prefix, source, key, names)
+				: super.getClassName(prefix, source, key, names);
+
+		}
+		private String removeClass(String prefix) {
+			return prefix.substring(0,prefix.lastIndexOf(".")+1); // maintains the final dot
 		}
 	}
 }

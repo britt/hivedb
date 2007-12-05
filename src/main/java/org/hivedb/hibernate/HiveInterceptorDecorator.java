@@ -31,25 +31,24 @@ public class HiveInterceptorDecorator extends InterceptorDecorator implements In
 
 	@Override
 	public Boolean isTransient(Object entity) {
-		final EntityConfig resolvedEntityConfig = resolveEntityConfig(entity.getClass());
-		return resolvedEntityConfig != null
-			? !indexer.exists(resolvedEntityConfig, entity)
-			: super.isTransient(entity);
+		final Class resolvedEntityClass = resolveEntityClass(entity.getClass());
+		if (resolvedEntityClass != null)
+			return !indexer.exists(this.hiveConfig.getEntityConfig(resolvedEntityClass), entity);
+		Boolean isTransient = super.isTransient(entity);
+		if (isTransient != null)
+			return isTransient;
+		return false;
 	}
-
+	
 	@SuppressWarnings("unchecked")
-	private EntityConfig resolveEntityConfig(Class clazz) {
-		return hiveConfig.getEntityConfig(ReflectionTools.whichIsImplemented(
+	private Class resolveEntityClass(Class clazz) {
+		return ReflectionTools.whichIsImplemented(
 				clazz, 
 				Transform.map(new Unary<EntityConfig, Class>() {
 					public Class f(EntityConfig entityConfig) {
 						return entityConfig.getRepresentedInterface();
 					}},
-					hiveConfig.getEntityConfigs())));
-	}
-
-	private boolean isHiveEntity(Object entity) {
-		return hiveConfig.getEntityConfig(entity.getClass()) != null;
+					hiveConfig.getEntityConfigs()));
 	}
 
 	@Override
@@ -57,7 +56,8 @@ public class HiveInterceptorDecorator extends InterceptorDecorator implements In
 		//Read-only checks are implicit in the delete calls
 		//We just need to wrap the exception
 		try {
-			if (isHiveEntity(entity))
+			final Class resolvedEntityClass = resolveEntityClass(entity.getClass());
+			if (resolvedEntityClass != null)
 				indexer.delete(hiveConfig.getEntityConfig(entity.getClass()), entity);
 		} catch (HiveReadOnlyException e) {
 			throw new CallbackException(e);
@@ -82,7 +82,8 @@ public class HiveInterceptorDecorator extends InterceptorDecorator implements In
 	
 	private void updateIndexes(Object entity) {
 		try {
-			if (isHiveEntity(entity))
+			final Class resolvedEntityClass = resolveEntityClass(entity.getClass());
+			if (resolvedEntityClass != null)
 				indexer.update(hiveConfig.getEntityConfig(entity.getClass()), entity);
 		} catch (HiveReadOnlyException e) {
 			throw new CallbackException(e);
@@ -91,8 +92,9 @@ public class HiveInterceptorDecorator extends InterceptorDecorator implements In
 
 	private void insertIndexes(Object entity, Serializable id) {
 		try {
-			if (isHiveEntity(entity))
-				indexer.insert(hiveConfig.getEntityConfig(entity.getClass()), entity);
+			final Class resolvedEntityClass = resolveEntityClass(entity.getClass());
+			if (resolvedEntityClass != null)
+				indexer.insert(hiveConfig.getEntityConfig(resolvedEntityClass), entity);
 		} catch (HiveReadOnlyException e) {
 			throw new CallbackException(e);
 		}

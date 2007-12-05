@@ -4,20 +4,21 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 
 
+import org.hivedb.util.functional.Delay;
 import org.hivedb.util.functional.Generator;
 
 public class GenerateInstance<T> implements Generator<T> {
 	
 	private final int COLLECTION_SIZE = 3;
-	private Class<T> interfaceToImplement;
-	public GenerateInstance(Class<T> interfaceToImplement)
+	private Class<T> clazz;
+	public GenerateInstance(Class<T> clazz)
 	{
-		this.interfaceToImplement = interfaceToImplement;
+		this.clazz = clazz;
 	}
 	
 	public T generateAndCopyProperties(Object templateInstance) {
 		T instance = generate();
-		for (String propertyName : ReflectionTools.getPropertiesOfGetters(interfaceToImplement))
+		for (String propertyName : ReflectionTools.getPropertiesOfGetters(clazz))
 			ReflectionTools.invokeSetter(
 				instance, 
 				propertyName, 
@@ -25,27 +26,40 @@ public class GenerateInstance<T> implements Generator<T> {
 		return instance;
 	}
 	
+	static QuickCache primitiveGenerators = new QuickCache(); // cache generators for sequential randomness
 	@SuppressWarnings("unchecked")
 	public T generate() {
-		T instance = (T)GeneratedInstanceInterceptor.newInstance( interfaceToImplement );
+		T instance;
+		try {
+			instance = clazz.isInterface() 
+				? (T)GeneratedInstanceInterceptor.newInstance( clazz )
+				: clazz.newInstance();
+		} catch (InstantiationException e) {
+			throw new RuntimeException(e);
+		} catch (IllegalAccessException e) {
+			throw new RuntimeException(e);
+		}
 		    
-	    for (Method getter : ReflectionTools.getGetters(interfaceToImplement))
+	    for (Method getter : ReflectionTools.getGetters(clazz))
 	    {
 	    	if (getter.getDeclaringClass().equals(Object.class))
 	    		continue; // Only interfaces should be reflected upon here, until then we skip Object methods
 	    	String propertyName = ReflectionTools.getPropertyNameOfAccessor(getter);
-	    	Class<Object> clazz = (Class<Object>) getter.getReturnType();
+	    	final Class<Object> clazz = (Class<Object>) getter.getReturnType();
 			if (ReflectionTools.doesImplementOrExtend(clazz, Collection.class)) {
-	    		Class<Object> collectionItemClass = (Class<Object>) ReflectionTools.getCollectionItemType(interfaceToImplement,propertyName);
-	    		((PropertySetter<T>)instance).set(propertyName,
+	    		Class<Object> collectionItemClass = (Class<Object>) ReflectionTools.getCollectionItemType(clazz,propertyName);
+	    		ReflectionTools.invokeSetter(instance, propertyName,
 	    				PrimitiveUtils.isPrimitiveClass(collectionItemClass)
 	    					? new GeneratePrimitiveCollection<Object>(collectionItemClass,COLLECTION_SIZE).generate()
 	    					: new GenerateInstanceCollection<Object>(collectionItemClass, COLLECTION_SIZE).generate());
 	    	}
 	    	else 
-	    		((PropertySetter<T>)instance).set(propertyName,
+	    		ReflectionTools.invokeSetter(instance, propertyName,
 	    				PrimitiveUtils.isPrimitiveClass(clazz)
-	    					? new GeneratePrimitiveValue<Object>(clazz).generate()
+	    					? primitiveGenerators.get(clazz.hashCode(), new Delay<Generator>() {
+	    						public Generator f() {
+	    							return new GeneratePrimitiveValue<Object>(clazz);
+	    						}}).generate()
 	    					: new GenerateInstance<Object>(clazz).generate());
 	    }
 	    return instance;

@@ -2,7 +2,6 @@ package org.hivedb.util;
 
 import java.math.BigDecimal;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Random;
 
@@ -15,6 +14,7 @@ public class GeneratePrimitiveValue<F> implements Generator<F> {
 	public GeneratePrimitiveValue(Class<F> clazz)
 	{
 		this.clazz = clazz;
+		this.random = new Random();
 	}
 	
 	@SuppressWarnings("unchecked")
