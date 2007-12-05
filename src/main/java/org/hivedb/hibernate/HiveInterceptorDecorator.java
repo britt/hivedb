@@ -57,7 +57,7 @@ public class HiveInterceptorDecorator extends InterceptorDecorator implements In
 		//Read-only checks are implicit in the delete calls
 		//We just need to wrap the exception
 		try {
-			if (isHiveEntity(entity.getClass()))
+			if (isHiveEntity(entity))
 				indexer.delete(hiveConfig.getEntityConfig(entity.getClass()), entity);
 		} catch (HiveReadOnlyException e) {
 			throw new CallbackException(e);

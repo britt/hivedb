@@ -11,11 +11,10 @@ import org.hivedb.util.functional.Generator;
 public class GeneratePrimitiveValue<F> implements Generator<F> {
 
 	Class<F> clazz;
-	Random random;
+	static Random random;
 	public GeneratePrimitiveValue(Class<F> clazz)
 	{
 		this.clazz = clazz;
-		this.random = new Random(System.currentTimeMillis());
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -49,6 +48,7 @@ public class GeneratePrimitiveValue<F> implements Generator<F> {
 	static {
 		calendar = GregorianCalendar.getInstance();
 		calendar.clear();
+		random = new Random(System.currentTimeMillis());
 	}
 
 }
