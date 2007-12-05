@@ -58,28 +58,26 @@ public class ClassDaoServiceTest extends H2TestCase {
 	@BeforeClass
 	public void initializeDataProvider() {
 		services = new Delay[]{
-			new Delay<ClassDaoService>(){
-				public ClassDaoService f() {
-					beforeMethod();
-					return new BaseClassDaoService(
-							ConfigurationReader.readConfiguration(WeatherReportImpl.class),
-							new BaseDataAccessObject(
-									WeatherReportImpl.class,
-									config,
-									hive,
-									factory));
-				}}	
+			new LazyInitializer(
+					new Delay<ClassDaoService>(){
+						public ClassDaoService f() {
+							return new BaseClassDaoService(
+									ConfigurationReader.readConfiguration(WeatherReportImpl.class),
+									new BaseDataAccessObject(
+											WeatherReportImpl.class,
+											config,
+											hive,
+											factory));}})	
 		};
 	}
 	
 	@SuppressWarnings("unused")
 	@DataProvider(name = "service")
-	private Iterator getServices() {
+	private Iterator<?> getServices() {
 		return new ServiceIterator();
 	}
 	
 	@Override
-//	@BeforeMethod
 	protected void beforeMethod() {
 		super.beforeMethod();
 		new HiveInstaller(getConnectString(getHiveDatabaseName())).run();		
@@ -213,6 +211,16 @@ public class ClassDaoServiceTest extends H2TestCase {
 
 		public void remove() {
 			throw new UnsupportedOperationException();
+		}
+		
+	}
+	
+	public class LazyInitializer implements Delay<Object> {
+		private Delay<?> delay;
+		public LazyInitializer(Delay<?> delay) {this.delay = delay;}
+		public Object f() {
+			beforeMethod();
+			return delay.f();
 		}
 		
 	}

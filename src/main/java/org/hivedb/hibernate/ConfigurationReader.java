@@ -21,6 +21,7 @@ import org.hivedb.hibernate.annotations.AnnotationHelper;
 import org.hivedb.hibernate.annotations.EntityId;
 import org.hivedb.hibernate.annotations.EntityVersion;
 import org.hivedb.hibernate.annotations.Index;
+import org.hivedb.hibernate.annotations.IndexType;
 import org.hivedb.hibernate.annotations.PartitionIndex;
 import org.hivedb.hibernate.annotations.Resource;
 import org.hivedb.management.HiveInstaller;
@@ -31,6 +32,8 @@ import org.hivedb.util.PrimitiveUtils;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.springframework.beans.BeanUtils;
+
+import sun.text.Trie.DataManipulate;
 
 public class ConfigurationReader {
 	@SuppressWarnings("unchecked")
@@ -70,9 +73,7 @@ public class ConfigurationReader {
 		
 		Method versionMethod = AnnotationHelper.getFirstMethodWithAnnotation(clazz, EntityVersion.class);
 		Method resourceIdMethod = AnnotationHelper.getFirstMethodWithAnnotation(clazz, EntityId.class);
-		List<Method> indexMethods = AnnotationHelper.getAllMethodsWithAnnotation(clazz, Index.class);
-		if(indexMethods.contains(resourceIdMethod))
-			indexMethods.remove(resourceIdMethod);
+		List<Method> indexMethods = getHiveIndexMethods(clazz,resourceIdMethod);
 	
 		String primaryIndexPropertyName = getIndexNameForMethod(partitionIndexMethod);
 		String idPropertyName = getIndexNameForMethod(resourceIdMethod);
@@ -97,6 +98,21 @@ public class ConfigurationReader {
 				partitionIndexMethod.getName().equals(resourceIdMethod.getName())
 		);	
 		return config;
+	}
+
+	private static List<Method> getHiveIndexMethods(Class<?> clazz, Method resourceIdMethod) {
+		List<Method> indexMethods = AnnotationHelper.getAllMethodsWithAnnotation(clazz, Index.class);
+		if(indexMethods.contains(resourceIdMethod))
+			indexMethods.remove(resourceIdMethod);
+		
+		List<Method> dataIndexes = Lists.newArrayList();
+		for(Method indexMethod : indexMethods) {
+			Index annotation = indexMethod.getAnnotation(Index.class);
+			if(annotation.type() == IndexType.Data)
+				dataIndexes.add(indexMethod);
+		}
+		indexMethods.removeAll(dataIndexes);
+		return indexMethods;
 	}
 
 	private static boolean isCollectionPropertyOfAComplexType(Class<?> clazz, Method indexMethod) {

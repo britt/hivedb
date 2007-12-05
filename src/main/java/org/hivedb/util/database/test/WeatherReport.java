@@ -6,6 +6,7 @@ import java.util.Date;
 
 import org.hivedb.hibernate.annotations.EntityId;
 import org.hivedb.hibernate.annotations.Index;
+import org.hivedb.hibernate.annotations.IndexType;
 import org.hivedb.hibernate.annotations.PartitionIndex;
 import org.hivedb.hibernate.annotations.PersistedClass;
 import org.hivedb.hibernate.annotations.Resource;
@@ -20,6 +21,7 @@ public interface WeatherReport {
     
     @PartitionIndex(name=WeatherReport.CONTINENT)
 	String getContinent();
+    @Index(type=IndexType.Data)
 	BigDecimal getLatitude();
 	BigDecimal getLongitude();
 	
