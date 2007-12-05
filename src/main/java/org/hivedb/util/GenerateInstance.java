@@ -39,14 +39,14 @@ public class GenerateInstance<T> implements Generator<T> {
 		} catch (IllegalAccessException e) {
 			throw new RuntimeException(e);
 		}
-		    
+			
 	    for (Method getter : ReflectionTools.getGetters(clazz))
 	    {
 	    	if (getter.getDeclaringClass().equals(Object.class))
-	    		continue; // Only interfaces should be reflected upon here, until then we skip Object methods
+	    		continue; 
 	    	String propertyName = ReflectionTools.getPropertyNameOfAccessor(getter);
-	    	final Class<Object> clazz = (Class<Object>) getter.getReturnType();
-			if (ReflectionTools.doesImplementOrExtend(clazz, Collection.class)) {
+	    	final Class<Object> returnType = (Class<Object>) getter.getReturnType();
+			if (ReflectionTools.doesImplementOrExtend(returnType, Collection.class)) {
 	    		Class<Object> collectionItemClass = (Class<Object>) ReflectionTools.getCollectionItemType(clazz,propertyName);
 	    		ReflectionTools.invokeSetter(instance, propertyName,
 	    				PrimitiveUtils.isPrimitiveClass(collectionItemClass)
@@ -55,12 +55,12 @@ public class GenerateInstance<T> implements Generator<T> {
 	    	}
 	    	else 
 	    		ReflectionTools.invokeSetter(instance, propertyName,
-	    				PrimitiveUtils.isPrimitiveClass(clazz)
-	    					? primitiveGenerators.get(clazz.hashCode(), new Delay<Generator>() {
+	    				PrimitiveUtils.isPrimitiveClass(returnType)
+	    					? primitiveGenerators.get(returnType.hashCode(), new Delay<Generator>() {
 	    						public Generator f() {
-	    							return new GeneratePrimitiveValue<Object>(clazz);
+	    							return new GeneratePrimitiveValue<Object>(returnType);
 	    						}}).generate()
-	    					: new GenerateInstance<Object>(clazz).generate());
+	    					: new GenerateInstance<Object>(returnType).generate());
 	    }
 	    return instance;
 	}
