@@ -17,6 +17,7 @@ import org.hivedb.services.ServiceResponse;
 import org.hivedb.util.GenerateInstance;
 import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.WeatherEvent;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.functional.Atom;
 import org.testng.annotations.BeforeMethod;
@@ -30,6 +31,15 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		this.cleanupAfterEachTest = true;
 		this.config = getEntityHiveConfig();
 	}
+	
+//	@Test
+//	public void testGeneration() throws Exception {
+//		Class clazz = GeneratedInstanceInterceptor.getGeneratedClass(WeatherEvent.class);
+//		GenerateInstance<WeatherEvent> g = new GenerateInstance<WeatherEvent>(WeatherEvent.class);
+//		WeatherEvent event1 = (WeatherEvent) clazz.getConstructor(new Class[]{}).newInstance();
+//		WeatherEvent event2 = (WeatherEvent) clazz.getConstructor(new Class[]{}).newInstance();
+//		System.out.println(event1);
+//	}
 	
 	@Test
 	public void testGet() throws Exception {

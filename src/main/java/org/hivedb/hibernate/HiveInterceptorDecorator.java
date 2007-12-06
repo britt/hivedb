@@ -8,6 +8,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.shards.util.InterceptorDecorator;
 import org.hibernate.type.Type;
 import org.hivedb.Hive;
+import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.HiveReadOnlyException;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
@@ -34,10 +35,8 @@ public class HiveInterceptorDecorator extends InterceptorDecorator implements In
 		final Class resolvedEntityClass = resolveEntityClass(entity.getClass());
 		if (resolvedEntityClass != null)
 			return !indexer.exists(this.hiveConfig.getEntityConfig(resolvedEntityClass), entity);
-		Boolean isTransient = super.isTransient(entity);
-		if (isTransient != null)
-			return isTransient;
-		return false;
+		else
+			throw new HiveKeyNotFoundException(String.format("Class %s is not indexed in the Hive.", entity.getClass().getCanonicalName()));
 	}
 	
 	@SuppressWarnings("unchecked")

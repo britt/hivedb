@@ -22,6 +22,7 @@ import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.Continent;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.WeatherEvent;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.database.test.WeatherSchema;
 import org.testng.Assert;
@@ -98,7 +99,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 		HiveSessionFactoryBuilderImpl factoryBuilder = 
 			new HiveSessionFactoryBuilderImpl(
 					getConnectString(getHiveDatabaseName()), 
-					Lists.newList(Continent.class, WeatherReport.class),
+					Lists.newList(Continent.class, WeatherReport.class, WeatherEvent.class),
 					new SequentialShardAccessStrategy());
 		return factoryBuilder;
 	}
