@@ -4,7 +4,7 @@
     "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <hibernate-mapping package="org.hivedb.util.database.test">
 	<class name="WeatherEventGenerated" table="WEATHER_EVENT">
-		<id name="eventId" column="EVENT_ID" unsaved-value="0"/>
+		<id name="eventId" column="EVENT_ID"/>
 		<property name="continent" column="CONTINENT"/>
     	<property name="name" column="NAME"/>
     	<bag name="statistics" table="EVENT_STATISTIC" lazy="false">

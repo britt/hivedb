@@ -4,7 +4,9 @@ import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertNotNull;
 
+import java.util.Date;
 import java.util.Properties;
+import java.util.Random;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -188,7 +190,12 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 		doInTransaction(callback, factoryBuilder.openSession());
 		
 		final WeatherReport mutated = newInstance();
+		
 		mutated.setReportId(report.getReportId());
+		mutated.setContinent(report.getContinent());
+		mutated.setTemperature(report.getTemperature() + 1);
+		mutated.setReportTime(new Date(System.currentTimeMillis()));
+		
 		assertFalse("You have to change something if you want to test update.", mutated.equals(report));
 		
 		SessionCallback updateCallback = new SessionCallback(){
@@ -198,7 +205,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 		
 		doInTransaction(updateCallback, factoryBuilder.openSession());
 		WeatherReport fetched = (WeatherReport) factoryBuilder.openSession().get(getGeneratedClass(WeatherReport.class), report.getReportId());
-
+		assertNotNull(fetched);
 		assertFalse(report.equals(fetched));
 		assertEquals(mutated, fetched);
 	}
@@ -215,6 +222,19 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 			throw e;
 		} finally {
 			session.close();
+		}
+	}
+	
+	public static void doInTransactionDontCloseSession(SessionCallback callback, Session session) {
+		Transaction tx = null;
+		try {
+			tx = session.beginTransaction();
+			callback.execute(session);
+			tx.commit();
+		} catch( RuntimeException e ) {
+			if(tx != null)
+				tx.rollback();
+			throw e;
 		}
 	}
 }

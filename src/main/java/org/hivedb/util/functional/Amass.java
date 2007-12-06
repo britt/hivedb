@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.hivedb.util.ReflectionTools;
+
 public class Amass {
 	public static<C,R> R join(Joiner<C,R> joiner, Iterable<C> iterable, R initialValue)
 	{
@@ -143,7 +145,12 @@ public class Amass {
 				new Joiner.ConcatHashCodesOfValues(),
 				new Unary<Object, String>() {
 					public String f(Object item) {
-						return new Integer(item.hashCode()).toString();
+						int hash;
+						if(ReflectionTools.doesImplementOrExtend(item.getClass(), Collection.class))
+							hash = makeHashCode((Collection<Object>) item);
+						else
+							hash = item.hashCode();
+						return new Integer(hash).toString();
 					}
 				},
 				objects).hashCode();
