@@ -4,12 +4,12 @@
     "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <hibernate-mapping package="org.hivedb.util.serialization">
     <class name="BlobbedEntityGenerated" table="BLOBBED_ENTITY">
-		<id name="id" column="ID">
+		<id name="id" column="ID" >
 			<generator class="foreign">
             	<param name="property">entity</param>
         	</generator>
         </id>
         <property name="value" column="VALUE"/>
-        <one-to-one name="entity" class="org.hivedb.util.serialization.BlobbedEntityGenerated"/>
+        <one-to-one name="entity" class="org.hivedb.util.database.test.WeatherReportGenerated" constrained="true"/>
     </class>
 </hibernate-mapping>

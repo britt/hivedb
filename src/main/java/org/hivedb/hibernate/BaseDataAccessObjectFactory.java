@@ -26,21 +26,15 @@ public class BaseDataAccessObjectFactory<T, ID extends Serializable> implements 
 	}
 	@SuppressWarnings("unchecked")
 	public DataAccessObject<T, ID> create() {
-		try {
-			return (DataAccessObject<T, ID>) new BaseDataAccessObject(
-					representedClass, 
+		return (DataAccessObject<T, ID>) new BaseDataAccessObject(
+				representedClass, 
+				entityHiveConfig, 
+				hive,
+				new HiveSessionFactoryBuilderImpl(
 					entityHiveConfig, 
 					hive,
-					new HiveSessionFactoryBuilderImpl(
-						entityHiveConfig, 
-						hive,
-						new SequentialShardAccessStrategy(),
-						Arrays.asList((Class<?>[])new Class[] { BlobbedEntity.class })),
-					representedClass.equals(Class.forName("org.hivedb.util.database.test.WeatherReportGenerated"))
-						? new BlobbingDelegateDataAccessObject(representedClass, entityHiveConfig, hive)
-						: new DefaultDelegateDataAccessObject());
-		} catch (ClassNotFoundException e) {
-			throw new RuntimeException(e);
-		}
+					new SequentialShardAccessStrategy(),
+					Arrays.asList((Class<?>[])new Class[] { BlobbedEntity.class })),
+				new DefaultDelegateDataAccessObject());
 	}
 }
