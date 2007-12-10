@@ -1,6 +1,7 @@
 package org.hivedb.hibernate;
 
 import java.io.Serializable;
+import java.util.Map;
 
 import org.hibernate.CallbackException;
 import org.hibernate.EmptyInterceptor;
@@ -32,11 +33,10 @@ public class HiveInterceptorDecorator extends InterceptorDecorator implements In
 
 	@Override
 	public Boolean isTransient(Object entity) {
-		final Class resolvedEntityClass = resolveEntityClass(entity.getClass());
-		if (resolvedEntityClass != null)
-			return !indexer.exists(this.hiveConfig.getEntityConfig(resolvedEntityClass), entity);
-		else
-			throw new HiveKeyNotFoundException(String.format("Class %s is not indexed in the Hive.", entity.getClass().getCanonicalName()));
+		Class<?> clazz = new EntityResolver(hiveConfig).resolveEntityInterface(entity.getClass());
+		if (clazz != null)
+			return !indexer.exists(this.hiveConfig.getEntityConfig(clazz), entity);
+		return super.isTransient(entity);
 	}
 	
 	@SuppressWarnings("unchecked")

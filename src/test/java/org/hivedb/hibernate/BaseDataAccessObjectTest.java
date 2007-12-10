@@ -6,18 +6,14 @@ import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertNull;
 import static org.testng.AssertJUnit.assertTrue;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 
 import org.hivedb.configuration.EntityHiveConfig;
-import org.hivedb.services.ClassDaoService;
-import org.hivedb.services.ServiceResponse;
 import org.hivedb.util.GenerateInstance;
 import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.database.test.H2HiveTestCase;
-import org.hivedb.util.database.test.WeatherEvent;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.functional.Atom;
 import org.testng.annotations.BeforeMethod;
@@ -83,7 +79,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 
 	private DataAccessObject<WeatherReport, Integer> getDao(Class clazz) {
 		
-		return new DataAccessObjectFactory<WeatherReport,Integer>(
+		return new BaseDataAccessObjectFactory<WeatherReport,Integer>(
 				this.config,
 				clazz, getHive()).create();
 	}

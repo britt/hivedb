@@ -99,4 +99,7 @@ public class HiveIndexer {
 	public boolean exists(EntityConfig config, Object entity) {
 		return hive.directory().doesResourceIdExist(config.getResourceName(), config.getId(entity));
 	}
+	public boolean idExists(EntityConfig config, Object id) {
+		return hive.directory().doesResourceIdExist(config.getResourceName(), id);
+	}
 }

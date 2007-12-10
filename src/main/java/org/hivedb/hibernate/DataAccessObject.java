@@ -50,7 +50,7 @@ public interface DataAccessObject<T, ID> {
 	 * @param id
 	 * @return
 	 */
-    public boolean exists(ID id);
+    public Boolean exists(ID id);
     
     /**
      *  Returns the class that this DAO persists

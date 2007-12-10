@@ -18,6 +18,7 @@ import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
+import org.hivedb.util.serialization.BlobbedEntity;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
@@ -44,6 +45,7 @@ public abstract class MySqlHiveTestCase extends MysqlTestCase {
 	private HiveTestCase createHiveTestCase() {
 		return new HiveTestCase(
 				getEntityClasses(),
+				getNonEntityClasses(),
 				HiveDbDialect.MySql, 
 				new Unary<String,String>() {
 					public String f(String databaseName) {
@@ -61,6 +63,9 @@ public abstract class MySqlHiveTestCase extends MysqlTestCase {
 	}
 	protected Class<?> getPartitionDimensionClass() {
 		return Continent.class;
+	}
+	protected List<Class> getNonEntityClasses() {
+		return Arrays.asList((Class)BlobbedEntity.class);
 	}
 	
 	protected Collection<String> getDataNodeNames() {

@@ -5,7 +5,7 @@ import java.io.Serializable;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.hibernate.DataAccessObject;
-import org.hivedb.hibernate.DataAccessObjectFactory;
+import org.hivedb.hibernate.BaseDataAccessObjectFactory;
 import org.hivedb.util.DataPersister;
 import org.hivedb.util.scenarioBuilder.HiveScenarioTest;
 
@@ -35,7 +35,7 @@ public class TestHiveScenario {
 		}
 	}
 	private DataAccessObject<Object, Serializable> getDao(Class clazz) {	
-		return new DataAccessObjectFactory<Object,Serializable>(
+		return new BaseDataAccessObjectFactory<Object,Serializable>(
 				this.entityHiveConfig,
 				clazz,
 				hive).create();

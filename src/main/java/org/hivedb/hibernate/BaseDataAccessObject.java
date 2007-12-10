@@ -23,6 +23,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	private Class<?> clazz;
 	private Interceptor defaultInterceptor = EmptyInterceptor.INSTANCE;
 	private Hive hive;
+	private DelegateDataAccessObject<Object, Serializable> delegateDataAccessObject = getDefaultDataAccessObject();
 
 	public Hive getHive() {
 		return hive;
@@ -37,10 +38,16 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		this.config = config;
 		this.factory = factory;
 		this.hive = hive;
+		
 	}
 	
-	public BaseDataAccessObject(Class<?> clazz, EntityHiveConfig config, Hive hive, HiveSessionFactory factory, Interceptor interceptor) {
+	public BaseDataAccessObject(Class<?> clazz, EntityHiveConfig config, Hive hive, HiveSessionFactory factory, DelegateDataAccessObject<Object, Serializable> delegateDataAccessObject) {
 		this(clazz,config,hive,factory);
+		this.delegateDataAccessObject = delegateDataAccessObject;
+	}
+	
+	public BaseDataAccessObject(Class<?> clazz, EntityHiveConfig config, Hive hive, HiveSessionFactory factory, DelegateDataAccessObject<Object, Serializable> delegateDataAccessObject, Interceptor interceptor) {
+		this(clazz,config,hive,factory, delegateDataAccessObject);
 		this.defaultInterceptor = interceptor;
 	}
 	
@@ -49,12 +56,13 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			public void execute(Session session) {
 				Object deleted = get(id, session);
 				session.delete(deleted);
+				delegateDataAccessObject.delete(id, session, deleted);
 			}};
 		doInTransaction(callback, getSession());
 		return id;
 	}
 
-	public boolean exists(Serializable id) {
+	public Boolean exists(Serializable id) {
 		EntityConfig entityConfig = config.getEntityConfig(getRespresentedClass());
 		return hive.directory().doesResourceIdExist(entityConfig.getResourceName(), id);
 	}
@@ -64,7 +72,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		Session session = null;
 		try {
 			session = getSession();
-			entity = get(id, session);
+			entity = delegateDataAccessObject.get(id, session, get(id, session));
 		} finally {
 			if(session != null)
 				session.close();
@@ -78,7 +86,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	}
 	
 	@SuppressWarnings("unchecked")
-	public Collection<Object> findByProperty(String propertyName, Object value) {
+	public Collection<Object> findByProperty(String propertyName, Object propertyValue) {
 		EntityConfig entityConfig = config.getEntityConfig(getRespresentedClass());
 		EntityIndexConfig indexConfig = getIndexConfig(propertyName, entityConfig.getEntitySecondaryIndexConfigs());
 		Collection<Object> entities = Lists.newArrayList();
@@ -86,11 +94,11 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			factory.openSession(
 				entityConfig.getResourceName(), 
 				indexConfig.getIndexName(), 
-				value);
+				propertyValue);
 		try {
 			Criteria c = session.createCriteria(entityConfig.getRepresentedInterface());
-			c.add( Restrictions.eq(indexConfig.getPropertyName(), value));
-			entities = c.list();
+			c.add( Restrictions.eq(indexConfig.getPropertyName(), propertyValue));
+			entities = delegateDataAccessObject.findByProperty(propertyName, propertyValue, session, c.list());
 		} finally {
 			if(session != null)
 				session.close();
@@ -102,6 +110,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
 				session.saveOrUpdate(getRespresentedClass().getName(),entity);
+				delegateDataAccessObject.save(entity, session);
 			}};
 		doInTransaction(callback, getSession());
 		return entity;
@@ -110,15 +119,16 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	public Collection<Object> saveAll(final Collection<Object> collection) {
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
-				for(Object entity : collection)
-					session.saveOrUpdate(getRespresentedClass().getName(),entity);
+				for(Object entity : collection) 
+					session.saveOrUpdate(getRespresentedClass().getName(), entity);
+				delegateDataAccessObject.saveAll(collection, session);
 			}};
 		doInTransaction(callback, getSession());
 		return collection;
 	}
 	
 	protected Session getSession() {
-		return factory.openSession(new HiveInterceptorDecorator(defaultInterceptor, config,hive));
+		return factory.openSession(factory.getDefaultInterceptor());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -161,5 +171,11 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 
 	public Collection<Object> findByPropertyRange(String propertyName, java.lang.Object minValue, java.lang.Object maxValue) {
 		throw new UnsupportedOperationException("Not implemented");
+	}
+	
+	private DelegateDataAccessObject<Object,Serializable> getDefaultDataAccessObject() {
+		if (delegateDataAccessObject == null)
+			delegateDataAccessObject = new DefaultDelegateDataAccessObject();
+		return delegateDataAccessObject;
 	}
 }

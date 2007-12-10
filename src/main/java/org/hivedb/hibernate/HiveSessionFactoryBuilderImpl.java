@@ -1,6 +1,7 @@
 package org.hivedb.hibernate;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Observable;
@@ -48,10 +49,16 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	private Properties overrides = new Properties();
 	private ShardedSessionFactoryImplementor factory = null;
 	private Hive hive;
+	private Collection<Class<?>> nonHiveHibernateClasses = Collections.emptyList();
 	
 	public HiveSessionFactoryBuilderImpl(String hiveUri, List<Class<?>> classes, ShardAccessStrategy strategy) {
 		hive = Hive.load(hiveUri);
 		initialize(buildHiveConfiguration(hive, classes), hive, strategy);
+	}
+	
+	public HiveSessionFactoryBuilderImpl(String hiveUri, List<Class<?>> classes, ShardAccessStrategy strategy, Properties overrides) {
+		this(hiveUri, classes, strategy);
+		this.overrides = overrides;
 	}
 	
 	public HiveSessionFactoryBuilderImpl(EntityHiveConfig config,Hive hive, ShardAccessStrategy strategy) {
@@ -59,9 +66,10 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 		initialize(config, hive, strategy);
 	}
 	
-	public HiveSessionFactoryBuilderImpl(String hiveUri, List<Class<?>> classes, ShardAccessStrategy strategy, Properties overrides) {
-		this(hiveUri, classes, strategy);
-		this.overrides = overrides;
+	public HiveSessionFactoryBuilderImpl(EntityHiveConfig config,Hive hive, ShardAccessStrategy strategy, List<Class<?>> nonHiveHibernateClasses) {
+		this.hive = hive;
+		this.nonHiveHibernateClasses = nonHiveHibernateClasses;
+		initialize(config, hive, strategy);
 	}
 	
 	private void initialize(EntityHiveConfig config,Hive hive, ShardAccessStrategy strategy) {
@@ -79,7 +87,9 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	private ShardedSessionFactoryImplementor buildBaseSessionFactory() {
 		Map<Integer, Configuration> hibernateConfigs = getConfigurationsFromNodes(hive);
 		
-		Collection<Class<?>> classes = getComplexClassesOfEntityConfig();
+		Collection<Class<?>> classes = Transform.flatten(
+			getComplexClassesOfEntityConfig(),
+			nonHiveHibernateClasses);
 		
 		for(Map.Entry<Integer,Configuration> entry : hibernateConfigs.entrySet()) {
 			Configuration cfg = entry.getValue();
@@ -118,7 +128,9 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 
 	private Configuration buildPrototypeConfiguration() {
 		Configuration hibernateConfig = createConfigurationFromNode(Atom.getFirstOrThrow(hive.getNodes()), overrides);
-		Collection<Class<?>> classes = getComplexClassesOfEntityConfig();
+		Collection<Class<?>> classes = Transform.flatten(
+			getComplexClassesOfEntityConfig(),
+			nonHiveHibernateClasses);
 		for(Class<?> clazz : classes)
 			hibernateConfig.addClass(getMappedClass(clazz));
 		hibernateConfig.setProperty("hibernate.session_factory_name", "factory:prototype");
@@ -177,7 +189,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	}
 
 	public Session openSession() {
-		return factory.openSession(getHiveInterceptor());
+		return factory.openSession(getDefaultInterceptor());
 	}
 
 	public Session openSession(Interceptor interceptor) {
@@ -187,7 +199,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	public Session openSession(Object primaryIndexKey) {
 		return openSession(
 				hive.directory().getNodeIdsOfPrimaryIndexKey(primaryIndexKey), 
-				getHiveInterceptor());
+				getDefaultInterceptor());
 	}
 
 	public Session openSession(Object primaryIndexKey, Interceptor interceptor) {
@@ -199,7 +211,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	public Session openSession(String resource, Object resourceId) {
 		return openSession(
 				hive.directory().getNodeIdsOfResourceId(resource, resourceId),
-				getHiveInterceptor());
+				getDefaultInterceptor());
 	}
 
 	public Session openSession(String resource, Object resourceId, Interceptor interceptor) {
@@ -211,7 +223,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	public Session openSession(String resource, String indexName, Object secondaryIndexKey) {
 		return openSession(
 				hive.directory().getNodeIdsOfSecondaryIndexKey(resource, indexName, secondaryIndexKey),
-				getHiveInterceptor());
+				getDefaultInterceptor());
 	}
 
 	public Session openSession(String resource, String indexName, Object secondaryIndexKey, Interceptor interceptor) {
@@ -227,18 +239,18 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 			throw new UnsupportedOperationException("This operation is not yet implemented " + nodeIds.size());
 	}
 	
-	private HiveInterceptorDecorator getHiveInterceptor() {
+	public Interceptor getDefaultInterceptor() {
 		return new HiveInterceptorDecorator(config, hive);
 	}
 	
 	private Class<?> getMappedClass(Class<?> clazz) {
-		if(isGeneratedClass(clazz))
+		if(generatesImplementation(clazz))
 			return GeneratedInstanceInterceptor.getGeneratedClass(clazz);
 		else
 			return clazz;
 	}
 	
-	private boolean isGeneratedClass(Class<?> clazz) {
+	private boolean generatesImplementation(Class<?> clazz) {
 		return clazz.getAnnotation(GeneratedClass.class) != null;
 	}
 }

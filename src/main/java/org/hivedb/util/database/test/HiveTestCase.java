@@ -26,9 +26,11 @@ public class HiveTestCase {
 	private Unary<String,String> getConnectString;
 	private HiveDbDialect hiveDbDialect;
 	private ConfigurationReader configurationReader;
+	private Collection<Class> nonEntityClasses;
 	private Collection<String> dataNodeNames;
 	HiveTestCase(
 			Collection<Class<?>> entityClasses,
+			Collection<Class> nonEntityClasses,
 			HiveDbDialect hiveDbDialect, 
 			Unary<String,String> getConnectString,
 			Collection<String> dataNodeNames)
@@ -37,6 +39,7 @@ public class HiveTestCase {
 		this.hiveDbDialect = hiveDbDialect;
 		this.configurationReader = new ConfigurationReader(entityClasses);
 		this.dataNodeNames = dataNodeNames;
+		this.nonEntityClasses = nonEntityClasses;
 	}
 	public void beforeClass() {
 		

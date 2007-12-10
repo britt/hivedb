@@ -23,7 +23,7 @@ public class WeatherSchema extends Schema {
     "REPORT_TIME TIMESTAMP);"),
     	// Demonstrates a primitive indexed collection
     	new TableInfo("WEEKLY_TEMPERATURE", "CREATE TABLE WEEKLY_TEMPERATURE (" + 
-    	    "REPORT_ID VARCHAR(50) NOT NULL ," +
+    	    "REPORT_ID INT NOT NULL ," +
     	    "TEMPERATURE INT);"),
     	// Demonstrates a complex indexed collection
 	    new TableInfo("WEATHER_EVENT", "CREATE TABLE WEATHER_EVENT (" + 
@@ -36,7 +36,9 @@ public class WeatherSchema extends Schema {
 	    // Demonstrates an unindexed primitive collection of the complex collection class
 		new TableInfo("EVENT_STATISTIC", "CREATE TABLE EVENT_STATISTIC (" + 
 	    	    "EVENT_ID INT NOT NULL," +
-	    	    "STAT INT);")
-		);
+	    	    "STAT INT);"),
+		new TableInfo("BLOBBED_ENTITY", "CREATE TABLE BLOBBED_ENTITY (" + 
+			    "ID INT NOT NULL PRIMARY KEY," +
+			    "VALUE BLOB);"));
 	}
 }

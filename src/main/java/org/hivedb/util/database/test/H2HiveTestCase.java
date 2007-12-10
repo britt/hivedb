@@ -17,6 +17,7 @@ import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
+import org.hivedb.util.serialization.BlobbedEntity;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
@@ -43,6 +44,7 @@ public class H2HiveTestCase extends H2TestCase {
 	private HiveTestCase createHiveTestCase() {
 		return new HiveTestCase(
 				getEntityClasses(),
+				getNonEntityClasses(),
 				HiveDbDialect.H2, 
 				new Unary<String,String>() {
 					public String f(String databaseName) {
@@ -56,11 +58,17 @@ public class H2HiveTestCase extends H2TestCase {
 
 
 	@SuppressWarnings("unchecked")
-	protected List<Class<?>> getEntityClasses() {
-		return Arrays.asList(getPartitionDimensionClass(), WeatherReport.class, WeatherEvent.class);
+	protected Collection<Class<?>> getEntityClasses() {
+		return Arrays.asList(
+				getPartitionDimensionClass(),
+				WeatherReport.class, 
+				WeatherEvent.class);
 	}
 	protected Class<?> getPartitionDimensionClass() {
 		return Continent.class;
+	}
+	protected Collection<Class> getNonEntityClasses() {
+		return Arrays.asList((Class)BlobbedEntity.class);
 	}
 	
 	protected Collection<String> getDataNodeNames() {

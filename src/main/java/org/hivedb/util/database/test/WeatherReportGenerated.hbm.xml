@@ -5,20 +5,20 @@
 <hibernate-mapping package="org.hivedb.util.database.test">
 	<class name="WeatherReportGenerated" table="WEATHER_REPORT">
 		<id name="reportId" column="REPORT_ID" unsaved-value="0"/>
-        	<property name="continent" column="CONTINENT"/>
-        	<property name="latitude" column="LATITUDE"/>
-        	<property name="longitude" column="LONGITUDE"/>
-        	<property name="temperature" column="TEMPERATURE"/>
-        	<property name="reportTime" type="timestamp" column="REPORT_TIME"/>
-        	<bag name="weeklyTemperatures" table="WEEKLY_TEMPERATURE" lazy="false">
-        	 	<key column="REPORT_ID" />
-				<element type="integer" column="TEMPERATURE"/>
-			</bag>
-			<bag name="weatherEvents" lazy="false"
-           		 table="WEATHER_REPORT_WEATHER_EVENT"
-            	 cascade="save-update" >
-          	  <key column="REPORT_ID"/>
-              <many-to-many class="WeatherEventGenerated" column="EVENT_ID"/>
-			</bag>
+    	<property name="continent" column="CONTINENT"/>
+    	<property name="latitude" column="LATITUDE"/>
+    	<property name="longitude" column="LONGITUDE"/>
+    	<property name="temperature" column="TEMPERATURE"/>
+    	<property name="reportTime" type="timestamp" column="REPORT_TIME"/>
+    	<bag name="weeklyTemperatures" table="WEEKLY_TEMPERATURE" lazy="false">
+    	 	<key column="REPORT_ID" />
+			<element type="integer" column="TEMPERATURE"/>
+		</bag>
+		<bag name="weatherEvents" lazy="false"
+       		 table="WEATHER_REPORT_WEATHER_EVENT"
+        	 cascade="save-update" >
+      	  <key column="REPORT_ID"/>
+          <many-to-many class="WeatherEventGenerated" column="EVENT_ID"/>
+		</bag>
     </class>
 </hibernate-mapping>

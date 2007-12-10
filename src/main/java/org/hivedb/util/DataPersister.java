@@ -9,7 +9,7 @@ import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.configuration.SingularHiveConfig;
 import org.hivedb.hibernate.DataAccessObject;
-import org.hivedb.hibernate.DataAccessObjectFactory;
+import org.hivedb.hibernate.BaseDataAccessObjectFactory;
 import org.hivedb.util.Persister;
 
 public class DataPersister implements Persister {
