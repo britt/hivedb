@@ -9,11 +9,12 @@ import org.hivedb.annotations.EntityId;
 import org.hivedb.annotations.Index;
 import org.hivedb.annotations.PartitionIndex;
 import org.hivedb.annotations.Resource;
+import org.hivedb.serialization.Blobject;
 import org.hivedb.util.GeneratePrimitiveCollection;
 import org.hivedb.util.HiveUtils;
 
 @Resource(name="WeatherReport")
-public class WeatherReportImpl implements WeatherReport {
+public class WeatherReportImpl extends Blobject implements WeatherReport {
 	private static final String[] continents = 
 		new String[]{"North America","South America", "Asia", "Europe","Africa","Australia","Antarctica"};
     private Integer reportId;

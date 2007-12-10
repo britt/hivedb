@@ -24,6 +24,10 @@ public class XmlXStreamSerializationProvider implements SerializationProvider {
 	
 	private XmlXStreamSerializationProvider() {}
 	
+	public static XmlXStreamSerializationProvider initialize(Class...classes){
+		return initialize(Arrays.asList(classes));
+	}
+	
 	public static XmlXStreamSerializationProvider initialize(Collection<Class> classes) {
 		XmlXStreamSerializationProvider provider = new XmlXStreamSerializationProvider();
 		

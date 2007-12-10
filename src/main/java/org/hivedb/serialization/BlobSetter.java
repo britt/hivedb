@@ -41,6 +41,8 @@ public class BlobSetter implements Setter {
 					(Class)defrosted.getClass(), 
 					(Collection<Class>)XmlXStreamSerializationProvider.instance().getSerializableInterfaces());
 		for(Method get : ReflectionTools.getGetters(clazz)) {
+			if(get.getDeclaringClass().equals(Object.class))
+				continue;
 			Object propertyValue;
 			try {
 				propertyValue = get.invoke(defrosted, new Object[]{});

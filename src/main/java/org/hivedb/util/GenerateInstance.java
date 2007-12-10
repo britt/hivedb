@@ -6,6 +6,7 @@ import java.util.Collection;
 
 import org.hivedb.util.functional.Delay;
 import org.hivedb.util.functional.Generator;
+import org.springframework.beans.BeanUtils;
 
 public class GenerateInstance<T> implements Generator<T> {
 	
@@ -18,11 +19,18 @@ public class GenerateInstance<T> implements Generator<T> {
 	
 	public T generateAndCopyProperties(Object templateInstance) {
 		T instance = generate();
-		for (String propertyName : ReflectionTools.getPropertiesOfGetters(clazz))
-			ReflectionTools.invokeSetter(
-				instance, 
-				propertyName, 
-				ReflectionTools.invokeGetter(templateInstance, propertyName));
+		for( Method getter : ReflectionTools.getGetters(clazz)) {
+			if (getter.getDeclaringClass().equals(Object.class))
+	    		continue;
+			else {
+				String propertyName = BeanUtils.findPropertyForMethod(getter).getName();
+				ReflectionTools.invokeSetter(
+						instance, 
+						propertyName, 
+						ReflectionTools.invokeGetter(templateInstance, propertyName));
+			}
+			
+		}
 		return instance;
 	}
 	

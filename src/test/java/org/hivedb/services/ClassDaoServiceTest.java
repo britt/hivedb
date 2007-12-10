@@ -24,6 +24,9 @@ import org.hivedb.hibernate.HiveSessionFactory;
 import org.hivedb.hibernate.HiveSessionFactoryBuilderImpl;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.Node;
+import org.hivedb.serialization.SimpleBlobject;
+import org.hivedb.serialization.SimpleBlobjectSchema;
+import org.hivedb.serialization.XmlXStreamSerializationProvider;
 import org.hivedb.util.GenerateInstance;
 import org.hivedb.util.Lists;
 import org.hivedb.util.ReflectionTools;
@@ -63,7 +66,20 @@ public class ClassDaoServiceTest extends H2TestCase {
 											WeatherReportImpl.class,
 											config,
 											hive,
-											factory));}})	
+											factory));}}),
+			new LazyInitializer(
+					new Delay<ClassDaoService>(){
+						public ClassDaoService f() {
+							XmlXStreamSerializationProvider.initialize(SimpleBlobject.class);
+							return new BaseClassDaoService(
+									ConfigurationReader.readConfiguration(SimpleBlobject.class),
+									new BaseDataAccessObject(
+											SimpleBlobject.class,
+											config,
+											hive,
+											factory));
+						}}
+			)
 		};
 	}
 	
@@ -84,6 +100,7 @@ public class ClassDaoServiceTest extends H2TestCase {
 			try {
 				hive.addNode(new Node(nodeName, nodeName, "" , HiveDbDialect.H2));
 				new WeatherSchema(getConnectString(nodeName)).install();
+				new SimpleBlobjectSchema(getConnectString(nodeName)).install();
 			} catch (HiveReadOnlyException e) {
 				throw new HiveRuntimeException("Hive was read-only", e);
 			}
@@ -93,7 +110,7 @@ public class ClassDaoServiceTest extends H2TestCase {
 	
 	@SuppressWarnings("deprecation")
 	protected Class<?>[] getEntityClasses() {
-		return new Class<?>[]{WeatherReportImpl.class};
+		return new Class<?>[]{WeatherReportImpl.class, SimpleBlobject.class};
 	}
 
 	@Test(dataProvider = "service")
