@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 
+import org.hivedb.annotations.AnnotationHelper;
 import org.hivedb.annotations.HiveForeignKey;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
