@@ -19,32 +19,32 @@ public class TestBlobGetterAndSetter {
 
 	@BeforeClass
 	public void initializeSerializationProvider() {
-		XmlXStreamSerializationProvider.initialize(Collections.singletonList((Class)WeatherReport.class));
+		XmlXStreamSerializationProvider.initialize(Collections.singletonList((Class)SimpleBlobject.class));
 	}
 	
 	@Test
 	public void testGet() throws Exception {
-		WeatherReport report = WeatherReportImpl.generate();
-		Blob blob = (Blob) new BlobGetter().get(report);
+		SimpleBlobject blobject = getGenerator().generate();
+		Blob blob = (Blob) new BlobGetter().get(blobject);
 		assertNotNull(blob);
 		Object thawed = getSerializer().deserialize(blob.getBinaryStream());
-		assertEquals(getGenerator().generateAndCopyProperties(report), thawed);
+		assertEquals(getGenerator().generateAndCopyProperties(blobject), thawed);
 	}
 
 	private Serializer<Object, InputStream> getSerializer() {
-		return XmlXStreamSerializationProvider.instance().getSerializer((Class)WeatherReport.class);
+		return XmlXStreamSerializationProvider.instance().getSerializer((Class)SimpleBlobject.class);
 	}
 	
 	@Test
 	public void testSet() throws Exception {
-		WeatherReport target = getGenerator().generate();
-		WeatherReport updated = WeatherReportImpl.generate();
+		SimpleBlobject target = getGenerator().generate();
+		SimpleBlobject updated = getGenerator().generate();
 		assertFalse(target.equals(updated));
 		new BlobSetter().set(target, new BlobGetter().get(updated), null);
 		assertEquals(getGenerator().generateAndCopyProperties(updated), target);
 	}
 
-	private GenerateInstance<WeatherReport> getGenerator() {
-		return new GenerateInstance<WeatherReport>(WeatherReport.class);
+	private GenerateInstance<SimpleBlobject> getGenerator() {
+		return new GenerateInstance<SimpleBlobject>(SimpleBlobject.class);
 	}
 }
