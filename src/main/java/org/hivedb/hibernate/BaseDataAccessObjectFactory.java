@@ -25,7 +25,6 @@ public class BaseDataAccessObjectFactory<T, ID extends Serializable> implements 
 				new HiveSessionFactoryBuilderImpl(
 					entityHiveConfig, 
 					hive,
-					new SequentialShardAccessStrategy()),
-				new DefaultDelegateDataAccessObject());
+					new SequentialShardAccessStrategy()));
 	}
 }

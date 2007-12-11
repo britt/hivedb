@@ -23,7 +23,6 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	private Class<?> clazz;
 	private Interceptor defaultInterceptor = EmptyInterceptor.INSTANCE;
 	private Hive hive;
-	private DelegateDataAccessObject<Object, Serializable> delegateDataAccessObject = getDefaultDataAccessObject();
 
 	public Hive getHive() {
 		return hive;
@@ -41,13 +40,8 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		
 	}
 	
-	public BaseDataAccessObject(Class<?> clazz, EntityHiveConfig config, Hive hive, HiveSessionFactory factory, DelegateDataAccessObject<Object, Serializable> delegateDataAccessObject) {
+	public BaseDataAccessObject(Class<?> clazz, EntityHiveConfig config, Hive hive, HiveSessionFactory factory, Interceptor interceptor) {
 		this(clazz,config,hive,factory);
-		this.delegateDataAccessObject = delegateDataAccessObject;
-	}
-	
-	public BaseDataAccessObject(Class<?> clazz, EntityHiveConfig config, Hive hive, HiveSessionFactory factory, DelegateDataAccessObject<Object, Serializable> delegateDataAccessObject, Interceptor interceptor) {
-		this(clazz,config,hive,factory, delegateDataAccessObject);
 		this.defaultInterceptor = interceptor;
 	}
 	
@@ -56,7 +50,6 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			public void execute(Session session) {
 				Object deleted = get(id, session);
 				session.delete(deleted);
-				delegateDataAccessObject.delete(id, session, deleted);
 			}};
 		doInTransaction(callback, getSession());
 		return id;
@@ -72,12 +65,11 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		Session session = null;
 		try {
 			session = getSession();
-			entity = delegateDataAccessObject.get(id, session, get(id, session));
+			return get(id, session);
 		} finally {
 			if(session != null)
 				session.close();
 		}
-		return entity;
 	}
 	
 	private Object get(Serializable id, Session session) {
@@ -98,19 +90,17 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		try {
 			Criteria c = session.createCriteria(entityConfig.getRepresentedInterface());
 			c.add( Restrictions.eq(indexConfig.getPropertyName(), propertyValue));
-			entities = delegateDataAccessObject.findByProperty(propertyName, propertyValue, session, c.list());
+			return c.list();
 		} finally {
 			if(session != null)
 				session.close();
 		}
-		return entities;
 	}
 
 	public Object save(final Object entity) {
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
 				session.saveOrUpdate(getRespresentedClass().getName(),entity);
-				delegateDataAccessObject.save(entity, session);
 			}};
 		doInTransaction(callback, getSession());
 		return entity;
@@ -121,7 +111,6 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			public void execute(Session session) {
 				for(Object entity : collection) 
 					session.saveOrUpdate(getRespresentedClass().getName(), entity);
-				delegateDataAccessObject.saveAll(collection, session);
 			}};
 		doInTransaction(callback, getSession());
 		return collection;
@@ -171,11 +160,5 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 
 	public Collection<Object> findByPropertyRange(String propertyName, java.lang.Object minValue, java.lang.Object maxValue) {
 		throw new UnsupportedOperationException("Not implemented");
-	}
-	
-	private DelegateDataAccessObject<Object,Serializable> getDefaultDataAccessObject() {
-		if (delegateDataAccessObject == null)
-			delegateDataAccessObject = new DefaultDelegateDataAccessObject();
-		return delegateDataAccessObject;
 	}
 }

@@ -38,11 +38,6 @@ public class WeatherSchema extends Schema {
 	    // Demonstrates an unindexed primitive collection of the complex collection class
 		new TableInfo("EVENT_STATISTIC", "CREATE TABLE EVENT_STATISTIC (" + 
 	    	    "EVENT_ID INT NOT NULL," +
-	    	    "STAT INT);"),
-	    new TableInfo(
-				"WEATHER_REPORT_BLOB", 
-				"CREATE TABLE WEATHER_REPORT_BLOB (" + 
-				"ID INT NOT NULL PRIMARY KEY, " + 
-				"DATA BLOB);"));
+	    	    "STAT INT);"));
 	}
 }

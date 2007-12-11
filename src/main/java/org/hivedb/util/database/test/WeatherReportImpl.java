@@ -104,10 +104,4 @@ public class WeatherReportImpl extends Blobject implements WeatherReport {
 	public void setWeatherEvents(Collection<WeatherEvent> weatherEvents) {
 		this.weatherEvents = weatherEvents;
 	}
-	@Ignore
-	public Blob getBlob() {
-		return null;
-	}
-	public void setBlob(Blob value) {
-	}
 }
