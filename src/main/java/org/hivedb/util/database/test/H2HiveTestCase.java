@@ -3,7 +3,6 @@ package org.hivedb.util.database.test;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hivedb.Hive;
@@ -17,7 +16,6 @@ import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
-import org.hivedb.util.serialization.BlobbedEntity;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 

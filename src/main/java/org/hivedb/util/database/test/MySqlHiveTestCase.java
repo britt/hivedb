@@ -5,11 +5,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hivedb.Hive;
-import org.hivedb.HiveFacade;
 import org.hivedb.configuration.EntityHiveConfig;
-import org.hivedb.hibernate.HiveSessionFactoryBuilderImpl;
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
@@ -18,7 +15,6 @@ import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
-import org.hivedb.util.serialization.BlobbedEntity;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 

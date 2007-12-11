@@ -1,18 +1,10 @@
 package org.hivedb.hibernate;
 
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hivedb.Hive;
 import org.hivedb.configuration.EntityHiveConfig;
-import org.hivedb.util.GeneratedInstanceInterceptor;
-import org.hivedb.util.database.test.WeatherReport;
-import org.hivedb.util.functional.Generator;
-import org.hivedb.util.serialization.BlobbedEntity;
-import org.hivedb.util.serialization.BlobbingDelegateDataAccessObject;
 
 public class BaseDataAccessObjectFactory<T, ID extends Serializable> implements DataAccessObjectFactory<T, ID> {
 	
