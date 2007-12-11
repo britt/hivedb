@@ -6,9 +6,11 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.hivedb.annotations.AnnotationHelper;
+import org.hivedb.annotations.GeneratedClass;
 import org.hivedb.annotations.HiveForeignKey;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
+import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Pair;
@@ -64,6 +66,16 @@ public class EntityResolver {
 			throw new RuntimeException(
 				String.format("Class %s cannot be resolved to a Hive enity and does not reference a Hive entity", clazz.getCanonicalName()));
 		return annotatedMethod;
+	}
+	public static Class<?> getMappedClass(Class<?> clazz) {
+		if(generatesImplementation(clazz))
+			return GeneratedInstanceInterceptor.getGeneratedClass(clazz);
+		else
+			return clazz;
+	}
+	
+	public static boolean generatesImplementation(Class<?> clazz) {
+		return clazz.getAnnotation(GeneratedClass.class) != null;
 	}
 
 }

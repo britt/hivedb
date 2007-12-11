@@ -94,7 +94,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 		for(Map.Entry<Integer,Configuration> entry : hibernateConfigs.entrySet()) {
 			Configuration cfg = entry.getValue();
 			for(Class<?> clazz : classes)
-				cfg.addClass(getMappedClass(clazz));
+				cfg.addClass(EntityResolver.getMappedClass(clazz));
 			this.nodeSessionFactories.put(entry.getKey(), cfg.buildSessionFactory());
 		}
 		
@@ -132,7 +132,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 			getComplexClassesOfEntityConfig(),
 			nonHiveHibernateClasses);
 		for(Class<?> clazz : classes)
-			hibernateConfig.addClass(getMappedClass(clazz));
+			hibernateConfig.addClass(EntityResolver.getMappedClass(clazz));
 		hibernateConfig.setProperty("hibernate.session_factory_name", "factory:prototype");
 		return hibernateConfig;
 	}
@@ -241,16 +241,5 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	
 	public Interceptor getDefaultInterceptor() {
 		return new HiveInterceptorDecorator(config, hive);
-	}
-	
-	private Class<?> getMappedClass(Class<?> clazz) {
-		if(generatesImplementation(clazz))
-			return GeneratedInstanceInterceptor.getGeneratedClass(clazz);
-		else
-			return clazz;
-	}
-	
-	private boolean generatesImplementation(Class<?> clazz) {
-		return clazz.getAnnotation(GeneratedClass.class) != null;
 	}
 }

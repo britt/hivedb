@@ -29,7 +29,7 @@ public class SimpleBlobject extends Blobject {
 		this.id = id;
 	}
 	// Just because ClassDaoServiceTest needs all of its entities within the same PartitionDImension
-	@PartitionIndex(name = WeatherReportImpl.CONTINENT)
+	@PartitionIndex
 	public String getMapped() {
 		return mapped;
 	}

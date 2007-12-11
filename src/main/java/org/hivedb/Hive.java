@@ -294,6 +294,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		ResourceDao resourceDao = new ResourceDao(hiveDataSource);
 		resourceDao.create(resource);
 		incrementAndPersistHive(hiveDataSource);
+		new IndexSchema(dimension).install();
 		return dimension.getResource(resource.getName());
 	}
 
