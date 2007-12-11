@@ -63,9 +63,6 @@ public abstract class MySqlHiveTestCase extends MysqlTestCase {
 	protected Class<?> getPartitionDimensionClass() {
 		return Continent.class;
 	}
-	protected List<Class> getNonEntityClasses() {
-		return Arrays.asList((Class)BlobbedEntity.class);
-	}
 	
 	protected Collection<String> getDataNodeNames() {
 		return Arrays.asList("data1", "data2");

@@ -1,11 +1,13 @@
 package org.hivedb.util.database.test;
 
 import java.math.BigDecimal;
+import java.sql.Blob;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Random;
 
 import org.hivedb.annotations.EntityId;
+import org.hivedb.annotations.Ignore;
 import org.hivedb.annotations.Index;
 import org.hivedb.annotations.PartitionIndex;
 import org.hivedb.annotations.Resource;
@@ -101,5 +103,11 @@ public class WeatherReportImpl extends Blobject implements WeatherReport {
 	}
 	public void setWeatherEvents(Collection<WeatherEvent> weatherEvents) {
 		this.weatherEvents = weatherEvents;
+	}
+	@Ignore
+	public Blob getBlob() {
+		return null;
+	}
+	public void setBlob(Blob value) {
 	}
 }

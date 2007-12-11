@@ -66,10 +66,7 @@ public class H2HiveTestCase extends H2TestCase {
 	protected Class<?> getPartitionDimensionClass() {
 		return Continent.class;
 	}
-	protected Collection<Class> getNonEntityClasses() {
-		return Arrays.asList((Class)BlobbedEntity.class);
-	}
-	
+
 	protected Collection<String> getDataNodeNames() {
 		return Arrays.asList("data1", "data2");
 	}

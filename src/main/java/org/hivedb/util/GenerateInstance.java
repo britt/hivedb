@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 
 
+import org.hivedb.annotations.Ignore;
 import org.hivedb.util.functional.Delay;
 import org.hivedb.util.functional.Generator;
 import org.springframework.beans.BeanUtils;
@@ -50,7 +51,7 @@ public class GenerateInstance<T> implements Generator<T> {
 			
 	    for (Method getter : ReflectionTools.getGetters(clazz))
 	    {
-	    	if (getter.getDeclaringClass().equals(Object.class))
+	    	if (getter.getDeclaringClass().equals(Object.class) || getter.getAnnotation(Ignore.class) != null)
 	    		continue; 
 	    	String propertyName = ReflectionTools.getPropertyNameOfAccessor(getter);
 	    	final Class<Object> returnType = (Class<Object>) getter.getReturnType();

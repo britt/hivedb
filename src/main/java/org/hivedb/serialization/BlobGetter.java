@@ -13,6 +13,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.property.Getter;
 import org.hivedb.util.Converters;
+import org.hivedb.util.database.test.WeatherEvent;
+import org.hivedb.util.database.test.WeatherReport;
 
 
 public class BlobGetter implements Getter {
@@ -23,7 +25,7 @@ public class BlobGetter implements Getter {
 	private static final long serialVersionUID = 7192532599957992415L;
 
 	public Object get(Object owner) throws HibernateException {
-		InputStream stream = XmlXStreamSerializationProvider.instance().getSerializer(owner.getClass()).serialize(owner);
+		InputStream stream = XmlXStreamSerializationProvider.initialize(WeatherReport.class, WeatherEvent.class, SimpleBlobject.class).instance().getSerializer(owner.getClass()).serialize(owner);
 		SerialBlob blob;
 		try {
 			blob = new SerialBlob(Converters.getBytes(stream));

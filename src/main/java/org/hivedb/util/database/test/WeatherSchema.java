@@ -39,8 +39,10 @@ public class WeatherSchema extends Schema {
 		new TableInfo("EVENT_STATISTIC", "CREATE TABLE EVENT_STATISTIC (" + 
 	    	    "EVENT_ID INT NOT NULL," +
 	    	    "STAT INT);"),
-		new TableInfo("BLOBBED_ENTITY", "CREATE TABLE BLOBBED_ENTITY (" + 
-			    "ID INT NOT NULL PRIMARY KEY," +
-			    "VALUE BLOB);"));
+	    new TableInfo(
+				"WEATHER_REPORT_BLOB", 
+				"CREATE TABLE WEATHER_REPORT_BLOB (" + 
+				"ID INT NOT NULL PRIMARY KEY, " + 
+				"DATA BLOB);"));
 	}
 }

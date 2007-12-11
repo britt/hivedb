@@ -20,5 +20,9 @@
       	  <key column="REPORT_ID"/>
           <many-to-many class="WeatherEventGenerated" column="EVENT_ID"/>
 		</bag>
+		<join table="WEATHER_REPORT_BLOB">
+        	<key column="ID" />
+        	<property name="blob" access="org.hivedb.serialization.BlobAccessor" lazy="false" column="DATA"/>
+        </join>
     </class>
 </hibernate-mapping>

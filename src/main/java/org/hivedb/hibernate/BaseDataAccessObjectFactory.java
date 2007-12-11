@@ -33,8 +33,7 @@ public class BaseDataAccessObjectFactory<T, ID extends Serializable> implements 
 				new HiveSessionFactoryBuilderImpl(
 					entityHiveConfig, 
 					hive,
-					new SequentialShardAccessStrategy(),
-					Arrays.asList((Class<?>[])new Class[] { BlobbedEntity.class })),
+					new SequentialShardAccessStrategy()),
 				new DefaultDelegateDataAccessObject());
 	}
 }

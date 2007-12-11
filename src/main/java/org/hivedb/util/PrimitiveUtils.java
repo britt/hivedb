@@ -1,6 +1,8 @@
 package org.hivedb.util;
 
+import java.io.InputStream;
 import java.math.BigDecimal;
+import java.sql.Blob;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -47,7 +49,7 @@ public class PrimitiveUtils {
 	 */
 	public static boolean isPrimitiveClass(Class clazz) {
 		return isInteger(clazz) || isLong(clazz) || isShort(clazz) || isDouble(clazz) || isFloat(clazz) || isBigDecimal(clazz) || isString(clazz) || isDate(clazz)
-			|| isBoolean(clazz) || isClass(clazz) || isObject(clazz);
+			|| isBoolean(clazz) || isClass(clazz) || isObject(clazz) || isSerializationClass(clazz);
 	}
 	
 	public static boolean isString(Class clazz) {
@@ -90,5 +92,8 @@ public class PrimitiveUtils {
 	}
 	public static boolean isObject(Class clazz) {
 		return clazz.equals(Object.class);
+	}
+	public static boolean isSerializationClass(Class clazz) {
+		return clazz.equals(Blob.class) || clazz.equals(InputStream.class);
 	}
 }

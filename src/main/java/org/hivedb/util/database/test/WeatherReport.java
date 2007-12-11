@@ -2,11 +2,13 @@ package org.hivedb.util.database.test;
 
 
 import java.math.BigDecimal;
+import java.sql.Blob;
 import java.util.Collection;
 import java.util.Date;
 
 import org.hivedb.annotations.EntityId;
 import org.hivedb.annotations.GeneratedClass;
+import org.hivedb.annotations.Ignore;
 import org.hivedb.annotations.Index;
 import org.hivedb.annotations.IndexType;
 import org.hivedb.annotations.PartitionIndex;
@@ -47,4 +49,8 @@ public interface WeatherReport {
 	void setTemperature(int value);
 	void setWeeklyTemperatures(Collection<Integer> values);
 	void setWeatherEvents(Collection<WeatherEvent> weatherEvents);
+	
+	@Ignore
+	Blob getBlob();
+	void setBlob(Blob value);
 }
