@@ -11,7 +11,6 @@ import java.util.Collections;
 import org.hivedb.util.GenerateInstance;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.database.test.WeatherReportImpl;
-import org.hivedb.util.serialization.Serializer;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 

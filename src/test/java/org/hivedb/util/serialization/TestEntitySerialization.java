@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hivedb.configuration.EntityConfig;
+import org.hivedb.serialization.ClassXmlTransformerImpl;
+import org.hivedb.serialization.XmlXStreamSerializer;
 import org.hivedb.util.GenerateInstance;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.test.H2HiveTestCase;

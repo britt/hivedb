@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.hivedb.util.serialization;
+package org.hivedb.serialization;
 
 public class IdentityModernizer<T> implements Modernizer<T> {
 	public String getNewAbreviatedElementName(String abreviatedElementName) {

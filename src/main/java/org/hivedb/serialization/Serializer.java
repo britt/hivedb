@@ -1,4 +1,4 @@
-package org.hivedb.util.serialization;
+package org.hivedb.serialization;
 
 public interface Serializer<RAW,SERIAL> {
 	SERIAL serialize(RAW raw);

@@ -12,8 +12,6 @@ import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.functional.Maps;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
-import org.hivedb.util.serialization.Serializer;
-import org.hivedb.util.serialization.XmlXStreamSerializer;
 
 
 public class XmlXStreamSerializationProvider implements SerializationProvider {

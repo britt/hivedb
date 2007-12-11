@@ -1,4 +1,4 @@
-package org.hivedb.util.serialization;
+package org.hivedb.serialization;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
