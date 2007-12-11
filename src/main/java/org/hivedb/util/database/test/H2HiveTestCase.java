@@ -44,7 +44,6 @@ public class H2HiveTestCase extends H2TestCase {
 	private HiveTestCase createHiveTestCase() {
 		return new HiveTestCase(
 				getEntityClasses(),
-				getNonEntityClasses(),
 				HiveDbDialect.H2, 
 				new Unary<String,String>() {
 					public String f(String databaseName) {

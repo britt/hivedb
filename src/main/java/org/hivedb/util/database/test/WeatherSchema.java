@@ -8,6 +8,8 @@ import org.hivedb.meta.persistence.TableInfo;
 
 public class WeatherSchema extends Schema {
 
+	public WeatherSchema(){}
+	
 	public WeatherSchema(String dbURI) {
 		super(dbURI);
 	}

@@ -29,6 +29,8 @@ import org.springframework.jdbc.core.support.JdbcDaoSupport;
 public abstract class Schema extends JdbcDaoSupport {
 	protected String dbURI;
 	protected HiveDbDialect dialect = HiveDbDialect.MySql;
+		
+	public Schema() {}
 	
 	public Schema(String dbURI){
 		this.dbURI = dbURI;
@@ -61,6 +63,13 @@ public abstract class Schema extends JdbcDaoSupport {
 		// Register any new Global tables here
 		for (TableInfo table : getTables())
 			createTable(table);
+	}
+	
+	public void install(String uri){
+		this.dbURI = uri;
+		this.setDataSource(new HiveBasicDataSource(dbURI));
+		this.dialect = DriverLoader.discernDialect(dbURI);
+		install();
 	}
 
 	public static String addLengthForVarchar(String type)

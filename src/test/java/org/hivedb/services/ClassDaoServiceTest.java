@@ -1,6 +1,8 @@
 package org.hivedb.services;
 
-import static org.testng.AssertJUnit.*;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertTrue;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
@@ -15,6 +17,7 @@ import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hivedb.Hive;
 import org.hivedb.HiveReadOnlyException;
 import org.hivedb.HiveRuntimeException;
+import org.hivedb.Schema;
 import org.hivedb.annotations.AnnotationHelper;
 import org.hivedb.annotations.Index;
 import org.hivedb.configuration.EntityHiveConfig;
@@ -40,11 +43,8 @@ import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.springframework.beans.BeanUtils;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-
-import sun.util.calendar.BaseCalendar;
 
 public class ClassDaoServiceTest extends H2TestCase {
 	private static int INSTANCE_COUNT = 5;
@@ -57,16 +57,7 @@ public class ClassDaoServiceTest extends H2TestCase {
 	@BeforeClass
 	public void initializeDataProvider() {
 		services = new Delay[]{
-			new LazyInitializer(
-					new Delay<ClassDaoService>(){
-						public ClassDaoService f() {
-							return new BaseClassDaoService(
-									ConfigurationReader.readConfiguration(WeatherReportImpl.class),
-									new BaseDataAccessObject(
-											WeatherReportImpl.class,
-											config,
-											hive,
-											factory));}}),
+			new LazyInitializer(WeatherReportImpl.class, new WeatherSchema()),
 			new LazyInitializer(
 					new Delay<ClassDaoService>(){
 						public ClassDaoService f() {
@@ -78,7 +69,7 @@ public class ClassDaoServiceTest extends H2TestCase {
 											config,
 											hive,
 											factory));
-						}}
+						}}, new SimpleBlobjectSchema()
 			)
 		};
 	}
@@ -87,25 +78,6 @@ public class ClassDaoServiceTest extends H2TestCase {
 	@DataProvider(name = "service")
 	private Iterator<?> getServices() {
 		return new ServiceIterator();
-	}
-	
-	@Override
-	protected void beforeMethod() {
-		super.beforeMethod();
-		new HiveInstaller(getConnectString(getHiveDatabaseName())).run();		
-		ConfigurationReader reader = new ConfigurationReader(getEntityClasses());
-		reader.install(getConnectString(getHiveDatabaseName()));
-		hive = getHive();
-		for(String nodeName : getDataNodeNames())
-			try {
-				hive.addNode(new Node(nodeName, nodeName, "" , HiveDbDialect.H2));
-				new WeatherSchema(getConnectString(nodeName)).install();
-				new SimpleBlobjectSchema(getConnectString(nodeName)).install();
-			} catch (HiveReadOnlyException e) {
-				throw new HiveRuntimeException("Hive was read-only", e);
-			}
-		config = reader.getHiveConfiguration(hive);
-		factory = getSessionFactory();
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -252,11 +224,51 @@ public class ClassDaoServiceTest extends H2TestCase {
 	
 	public class LazyInitializer implements Delay<Object> {
 		private Delay<?> delay;
-		public LazyInitializer(Delay<?> delay) {this.delay = delay;}
+		private Schema schema;
+		public LazyInitializer(Delay<?> delay, Schema schema) {
+			this.delay = delay;
+			this.schema = schema;
+		}
+		public LazyInitializer(final Class clazz, Schema schema){
+			this.schema = schema;
+			this.delay = new Delay<ClassDaoService>(){
+				public ClassDaoService f() {
+					return new BaseClassDaoService(
+							ConfigurationReader.readConfiguration(clazz),
+							new BaseDataAccessObject(
+									clazz,
+									config,
+									hive,
+									factory));
+				}};
+		}
 		public Object f() {
-			beforeMethod();
+			beforeMethod(schema);
 			return delay.f();
 		}
 		
+	}
+	
+	
+	
+	@Override
+	protected void beforeMethod() {
+	}
+
+	protected void beforeMethod(Schema schema) {
+		super.beforeMethod();
+		new HiveInstaller(getConnectString(getHiveDatabaseName())).run();		
+		ConfigurationReader reader = new ConfigurationReader(getEntityClasses());
+		reader.install(getConnectString(getHiveDatabaseName()));
+		hive = getHive();
+		for(String nodeName : getDataNodeNames())
+			try {
+				hive.addNode(new Node(nodeName, nodeName, "" , HiveDbDialect.H2));
+				schema.install(getConnectString(nodeName));
+			} catch (HiveReadOnlyException e) {
+				throw new HiveRuntimeException("Hive was read-only", e);
+			}
+		config = reader.getHiveConfiguration(hive);
+		factory = getSessionFactory();
 	}
 }

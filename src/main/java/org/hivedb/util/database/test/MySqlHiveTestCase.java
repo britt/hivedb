@@ -45,7 +45,6 @@ public abstract class MySqlHiveTestCase extends MysqlTestCase {
 	private HiveTestCase createHiveTestCase() {
 		return new HiveTestCase(
 				getEntityClasses(),
-				getNonEntityClasses(),
 				HiveDbDialect.MySql, 
 				new Unary<String,String>() {
 					public String f(String databaseName) {

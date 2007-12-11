@@ -6,6 +6,7 @@ import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertTrue;
 
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Hashtable;
@@ -14,18 +15,21 @@ import java.util.Map;
 import org.hivedb.Hive;
 import org.hivedb.HiveFacade;
 import org.hivedb.HiveReadOnlyException;
+import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.directory.Directory;
 import org.hivedb.meta.directory.DirectoryWrapper;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.AssertUtils;
 import org.hivedb.util.Lists;
+import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.H2TestCase;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Transform;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class DirectoryTest extends H2HiveTestCase {
+public class DirectoryTest extends H2TestCase {
 	private PartitionDimension dimension;
 	private SecondaryIndex nameIndex, numIndex;
 	private String secondaryKeyString = "secondary key";
@@ -34,8 +38,8 @@ public class DirectoryTest extends H2HiveTestCase {
 	
 	@BeforeMethod
 	public void setUp() throws Exception {
-		HiveFacade hive = getHive();
-	
+		new HiveInstaller(getConnectString(H2TestCase.TEST_DB)).run();
+		HiveFacade hive = Hive.create(getConnectString(H2TestCase.TEST_DB), partitionDimensionName(), Types.INTEGER);
 		hive.addResource(createResource());
 		nameIndex = new SecondaryIndex("name", Types.VARCHAR);
 		numIndex = new SecondaryIndex("num", Types.INTEGER);
@@ -44,9 +48,39 @@ public class DirectoryTest extends H2HiveTestCase {
 		hive.addSecondaryIndex(resource, numIndex);
 		resource = hive.getPartitionDimension().getResource(resource.getName());
 		dimension = hive.getPartitionDimension();
+		hive.addNode(new Node("node", getConnectString(H2TestCase.TEST_DB), "",HiveDbDialect.H2));
 	}
 
 	
+	protected Resource createResource() {
+		final Resource resource = new Resource("FOO", Types.INTEGER, false);
+		resource.setPartitionDimension(createEmptyPartitionDimension());
+		return resource;
+	}
+
+
+	
+	protected PartitionDimension createPopulatedPartitionDimension() {
+		return new PartitionDimension(Hive.NEW_OBJECT_ID, partitionDimensionName(), Types.INTEGER,
+				getConnectString(H2TestCase.TEST_DB), createResources());
+	}
+	protected PartitionDimension createEmptyPartitionDimension() {
+		return new PartitionDimension(Hive.NEW_OBJECT_ID, partitionDimensionName(), Types.INTEGER,
+				getConnectString(H2TestCase.TEST_DB), new ArrayList<Resource>());
+	}
+	protected String partitionDimensionName() {
+		return "member";
+	}
+	protected Collection<Resource> createResources() {
+		ArrayList<Resource> resources = new ArrayList<Resource>();
+		resources.add(createResource());
+		return resources;
+	}
+	private Hive getHive() {
+		return Hive.load(getConnectString(H2TestCase.TEST_DB));
+	}
+
+
 	@Test
 	public void testInsertPrimaryIndexKey() throws Exception{
 		Directory d = getDirectory();
@@ -128,7 +162,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	
 	@Test
 	public void testGetKeySemaphoresOfPartitioningResourceIds() throws Exception{
-		HiveFacade hive = Hive.load(getConnectString(getHiveDatabaseName()));
+		HiveFacade hive = Hive.load(getConnectString(H2TestCase.TEST_DB));
 		hive.deleteResource(resource);
 		resource = Atom.getFirstOrNull(dimension.getResources());
 		resource.setIsPartitioningResource(true);
@@ -157,7 +191,7 @@ public class DirectoryTest extends H2HiveTestCase {
 		for(String key :  getPrimaryIndexKeys()) {
 			d.insertPrimaryIndexKey(Atom.getFirstOrThrow(hive.getNodes()), key);
 			d.insertResourceId(resource, key+1, key);
-			assertEquals(key, Atom.getFirstOrThrow(d.getPrimaryIndexKeysOfSecondaryIndexKey(resource.getIdIndex(), key+1)));
+			assertEquals(key, Atom.getFirstOrThrow(d.getPrimaryIndexKeysOfSecondaryIndexKey(resource.getIdIndex(), key+1)).toString());
 		}
 	}
 	
@@ -355,7 +389,7 @@ public class DirectoryTest extends H2HiveTestCase {
 		String firstKey = Atom.getFirst(getPrimaryIndexKeys());
 		for(String key : getPrimaryIndexKeys()) {
 			d.updatePrimaryIndexKeyOfResourceId(resource, key, firstKey);
-			assertEquals(firstKey,d.getPrimaryIndexKeyOfResourceId(resource, key));
+			assertEquals(firstKey,d.getPrimaryIndexKeyOfResourceId(resource, key).toString());
 		}
 	}
 	
@@ -376,7 +410,7 @@ public class DirectoryTest extends H2HiveTestCase {
 	
 	@Override
 	public Collection<String> getDatabaseNames() {
-		return Arrays.asList(new String[] {getHiveDatabaseName(), "data1", "data2"});
+		return Arrays.asList(new String[] {H2TestCase.TEST_DB, "data1", "data2"});
 	}
 	
 	private Collection<String> getPrimaryIndexKeys() {

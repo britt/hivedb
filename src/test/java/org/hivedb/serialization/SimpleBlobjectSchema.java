@@ -7,7 +7,8 @@ import org.hivedb.Schema;
 import org.hivedb.meta.persistence.TableInfo;
 
 public class SimpleBlobjectSchema extends Schema {
-
+	public SimpleBlobjectSchema(){}
+	
 	public SimpleBlobjectSchema(String dbURI) {
 		super(dbURI);
 	}
