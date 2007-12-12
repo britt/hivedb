@@ -30,7 +30,7 @@ public class HiveShardResolverTest extends H2HiveTestCase {
 	public void testShardResolution() throws Exception{
 		Hive hive = getHive();
 		ConfigurationReader reader = new ConfigurationReader(Continent.class, WeatherReport.class);
-		EntityHiveConfig config = reader.getHiveConfiguration(hive);
+		EntityHiveConfig config = reader.getHiveConfiguration();
 		
 		WeatherReport report = WeatherReportImpl.generate();
 		Continent asia = new AsiaticContinent();

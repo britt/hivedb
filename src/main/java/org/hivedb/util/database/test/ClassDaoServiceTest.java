@@ -262,7 +262,7 @@ public class ClassDaoServiceTest extends H2TestCase {
 			} catch (HiveReadOnlyException e) {
 				throw new HiveRuntimeException("Hive was read-only", e);
 			}
-		test.config = reader.getHiveConfiguration(test.hive);
+		test.config = reader.getHiveConfiguration();
 		test.factory = test.getSessionFactory();
 	}
 }

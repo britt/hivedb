@@ -77,7 +77,7 @@ public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
 		Hive hive = getHive();
 		ConfigurationReader reader = new ConfigurationReader(Continent.class, WeatherReport.class);
 		hive.updateHiveReadOnly(true);
-		EntityHiveConfig config = reader.getHiveConfiguration(hive);
+		EntityHiveConfig config = reader.getHiveConfiguration();
 		HiveInterceptorDecorator interceptor = new HiveInterceptorDecorator(config, hive);
 		
 		WeatherReport report = generateInstance();
@@ -117,7 +117,7 @@ public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
 	public void testOnDeleteReadOnlyFailure() throws Exception{
 		Hive hive = getHive();
 		ConfigurationReader reader = new ConfigurationReader(Continent.class, WeatherReport.class);
-		EntityHiveConfig config = reader.getHiveConfiguration(hive);
+		EntityHiveConfig config = reader.getHiveConfiguration();
 		HiveInterceptorDecorator interceptor = new HiveInterceptorDecorator(config, hive);
 		
 		WeatherReport report = generateInstance();

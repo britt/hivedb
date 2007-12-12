@@ -31,6 +31,7 @@ import org.hivedb.util.Lists;
 import org.hivedb.util.PrimitiveUtils;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.JdbcTypeMapper;
+import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Predicate;
 import org.springframework.beans.BeanUtils;
@@ -139,8 +140,9 @@ public class ConfigurationReader {
 		return configs.get(className);
 	}
 
-	public EntityHiveConfig getHiveConfiguration(Hive hive) {
-		return new PluralHiveConfig(configs, hive.getPartitionDimension().getName(), JdbcTypeMapper.jdbcTypeToPrimitiveClass(hive.getPartitionDimension().getColumnType()));
+	public EntityHiveConfig getHiveConfiguration() {
+		EntityConfig prototype = Atom.getFirstOrThrow(configs.values());
+		return new PluralHiveConfig(configs, prototype.getPartitionDimensionName(), prototype.getPrimaryKeyClass());
 	}
 	
 	public void install(String uri) {

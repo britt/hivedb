@@ -124,8 +124,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	}
 	
 	private EntityHiveConfig buildHiveConfiguration(Hive hive, Collection<Class<?>> classes) {
-		ConfigurationReader configReader = new ConfigurationReader(classes);
-		return configReader.getHiveConfiguration(hive);
+		return new ConfigurationReader(classes).getHiveConfiguration();
 	}
 	
 	private ShardStrategyFactory buildShardStrategyFactory() {

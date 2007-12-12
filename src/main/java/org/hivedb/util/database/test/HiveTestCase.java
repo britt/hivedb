@@ -56,9 +56,7 @@ public class HiveTestCase {
 	
 	public EntityHiveConfig getEntityHiveConfig()
 	{
-		final EntityConfig entityConfig = Atom.getFirstOrThrow(configurationReader.getConfigurations());
-		final Hive hive = getOrCreateHive(entityConfig.getPartitionDimensionName(), entityConfig.getPrimaryKeyClass());
-		return configurationReader.getHiveConfiguration(hive);
+		return configurationReader.getHiveConfiguration();
 	}
 	protected void installEntityHiveConfig() {
 		EntityHiveConfig entityHiveConfig = getEntityHiveConfig();
