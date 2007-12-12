@@ -1,22 +1,19 @@
 package org.hivedb.util.database.test;
 
 import java.math.BigDecimal;
-import java.sql.Blob;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Random;
 
 import org.hivedb.annotations.EntityId;
-import org.hivedb.annotations.Ignore;
 import org.hivedb.annotations.Index;
 import org.hivedb.annotations.PartitionIndex;
 import org.hivedb.annotations.Resource;
-import org.hivedb.serialization.Blobject;
 import org.hivedb.util.GeneratePrimitiveCollection;
 import org.hivedb.util.HiveUtils;
 
 @Resource(name="WeatherReport")
-public class WeatherReportImpl extends Blobject implements WeatherReport {
+public class WeatherReportImpl implements WeatherReport {
 	private static final String[] continents = 
 		new String[]{"North America","South America", "Asia", "Europe","Africa","Australia","Antarctica"};
     private Integer reportId;

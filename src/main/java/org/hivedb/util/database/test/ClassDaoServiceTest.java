@@ -27,7 +27,6 @@ import org.hivedb.hibernate.HiveSessionFactory;
 import org.hivedb.hibernate.HiveSessionFactoryBuilderImpl;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.Node;
-import org.hivedb.serialization.XmlXStreamSerializationProvider;
 import org.hivedb.services.BaseClassDaoService;
 import org.hivedb.services.ClassDaoService;
 import org.hivedb.services.ServiceContainer;
