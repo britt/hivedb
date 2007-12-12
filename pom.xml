@@ -34,6 +34,13 @@
     <developerConnection>scm:svn:svn+ssh://svn.hivedb.org/svn/hivedb/trunk</developerConnection>
     <tag>HEAD</tag>
   </scm>
+  <distributionManagement>
+    <repository>
+      <id>HiveDB</id>
+      <name>HiveDB Repository</name>
+      <url>scp://svn.hivedb.org/home/hivedb/public_html/hivedb.org/maven</url>
+    </repository>
+  </distributionManagement>
 	<repositories>
 		<repository>
 			<id>hivedb_repo</id>
