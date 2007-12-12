@@ -47,7 +47,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 public class ClassDaoServiceTest extends H2TestCase {
-	private static int INSTANCE_COUNT = 5;
+	public static int INSTANCE_COUNT = 5;
 	protected EntityHiveConfig config;
 	protected Hive hive;
 	protected static Collection<LazyInitializer> services = Lists.newArrayList();
@@ -127,24 +127,24 @@ public class ClassDaoServiceTest extends H2TestCase {
 		assertFalse(service.exists(getId(Atom.getFirst(deleted.getInstances()))));
 	}
 	
-	private Object getInstance(Class<Object> clazz) throws Exception {
+	protected Object getInstance(Class<Object> clazz) throws Exception {
 		return new GenerateInstance<Object>(clazz).generate();
 	}
 	
-	private ServiceResponse getPersistentInstance(ClassDaoService service) throws Exception {
+	protected ServiceResponse getPersistentInstance(ClassDaoService service) throws Exception {
 		return service.save(getInstance(service.getPersistedClass()));
 	}
 	
-	private Serializable getId(Object instance) {
+	protected Serializable getId(Object instance) {
 		return config.getEntityConfig(instance.getClass()).getId(instance);
 	}
 	
-	private void validateRetrieval(ServiceResponse original, ServiceResponse response) {
+	protected void validateRetrieval(ServiceResponse original, ServiceResponse response) {
 		assertEquals(original.getInstances().size(), response.getInstances().size());
 		validate(original, response);
 	}
 	
-	private void validate(ServiceResponse expected, ServiceResponse actual) {
+	protected void validate(ServiceResponse expected, ServiceResponse actual) {
 		assertEquals(expected.getInstances().size(), actual.getInstances().size());
 		Map<Integer, ServiceContainer> expectedMap = getInstanceHashCodeMap(expected);
 		Map<Integer, ServiceContainer> actualMap = getInstanceHashCodeMap(actual);

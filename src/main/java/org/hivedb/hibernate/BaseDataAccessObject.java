@@ -159,6 +159,19 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	}
 
 	public Collection<Object> findByPropertyRange(String propertyName, java.lang.Object minValue, java.lang.Object maxValue) {
-		throw new UnsupportedOperationException("Not implemented");
+		// Use an AllShardsresolutionStrategy + Criteria
+		EntityConfig entityConfig = config.getEntityConfig(getRespresentedClass());
+		EntityIndexConfig indexConfig = getIndexConfig(propertyName, entityConfig.getEntitySecondaryIndexConfigs());
+		Collection<Object> entities = Lists.newArrayList();
+		Session session = 
+			factory.openAllShardsSession();
+		try {
+			Criteria c = session.createCriteria(entityConfig.getRepresentedInterface());
+			c.add( Restrictions.between(propertyName, minValue, maxValue));
+			return c.list();
+		} finally {
+			if(session != null)
+				session.close();
+		}
 	}
 }
