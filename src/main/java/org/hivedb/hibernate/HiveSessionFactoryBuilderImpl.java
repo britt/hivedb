@@ -49,7 +49,6 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	private Properties overrides = new Properties();
 	private ShardedSessionFactoryImplementor factory = null;
 	private Hive hive;
-	private Collection<Class<?>> nonHiveHibernateClasses = Collections.emptyList();
 	
 	public HiveSessionFactoryBuilderImpl(String hiveUri, List<Class<?>> classes, ShardAccessStrategy strategy) {
 		hive = Hive.load(hiveUri);
@@ -61,14 +60,13 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 		this.overrides = overrides;
 	}
 	
-	public HiveSessionFactoryBuilderImpl(EntityHiveConfig config,Hive hive, ShardAccessStrategy strategy) {
+	public HiveSessionFactoryBuilderImpl(EntityHiveConfig config, Hive hive, ShardAccessStrategy strategy) {
 		this.hive = hive;
 		initialize(config, hive, strategy);
 	}
 	
 	public HiveSessionFactoryBuilderImpl(EntityHiveConfig config,Hive hive, ShardAccessStrategy strategy, List<Class<?>> nonHiveHibernateClasses) {
 		this.hive = hive;
-		this.nonHiveHibernateClasses = nonHiveHibernateClasses;
 		initialize(config, hive, strategy);
 	}
 	
@@ -89,8 +87,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 		
 		for(Map.Entry<Integer,Configuration> entry : hibernateConfigs.entrySet()) {
 			Configuration cfg = entry.getValue();
-			for(EntityConfig c : config.getEntityConfigs())
-			cfg.addClass(EntityResolver.getMappedClass(c.getRepresentedInterface()));
+			addConfigurations(cfg);
 			this.nodeSessionFactories.put(entry.getKey(), cfg.buildSessionFactory());
 		}
 		
@@ -116,11 +113,16 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 
 	private Configuration buildPrototypeConfiguration() {
 		Configuration hibernateConfig = createConfigurationFromNode(Atom.getFirstOrThrow(hive.getNodes()), overrides);
-		
-		for(EntityConfig cfg : config.getEntityConfigs())
-			hibernateConfig.addClass(EntityResolver.getMappedClass(cfg.getRepresentedInterface()));
+		addConfigurations(hibernateConfig);
 		hibernateConfig.setProperty("hibernate.session_factory_name", "factory:prototype");
 		return hibernateConfig;
+	}
+
+	private void addConfigurations(Configuration hibernateConfig) {
+		for(Class<?> clazz : ReflectionTools.getUniqueComplexPropertyTypes(new EntityResolver(config).getEntityClasses())) {
+			final Class<?> mappedClass = EntityResolver.getMappedClass(clazz);
+			hibernateConfig.addClass(mappedClass);
+		}
 	}
 	
 	private EntityHiveConfig buildHiveConfiguration(Hive hive, Collection<Class<?>> classes) {

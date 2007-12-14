@@ -24,6 +24,15 @@ public class EntityResolver {
 	public EntityResolver(EntityHiveConfig entityHiveConfig) {
 		this.entityHiveConfig = entityHiveConfig; 
 	}
+	
+	public Collection<Class<?>> getEntityClasses() {
+		return Transform.map(new Unary<EntityConfig, Class<?>>() {
+			public Class<?> f(EntityConfig entityConfig) {
+				return entityConfig.getRepresentedInterface();
+			}}, 
+		this.entityHiveConfig.getEntityConfigs());
+	}
+	
 	public Class<?> resolveToEntityOrRelatedEntity(Class<?> clazz) {
 		Class<?> entityInterface = resolveEntityInterface(clazz);
 		if (entityInterface != null) 

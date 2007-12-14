@@ -41,14 +41,20 @@ public class ConfigurationReader {
 	
 	public ConfigurationReader(Class<?>... classes) {
 		for(Class<?> clazz : classes)
-			configure(clazz);
+			if (isHiveEntity(clazz))
+				configure(clazz);
 	}
 	
 	public ConfigurationReader(Collection<Class<?>> classes) {
 		for(Class<?> clazz : classes)
-			configure(clazz);
+			if (isHiveEntity(clazz))
+				configure(clazz);
 	}
 	
+	private boolean isHiveEntity(Class<?> clazz) {
+		return clazz.isAnnotationPresent(Resource.class);
+	}
+
 	public EntityConfig configure(Class<?> clazz) {
 		EntityConfig config = readConfiguration(clazz) ;
 		if(dimension == null) 

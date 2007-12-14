@@ -4,16 +4,12 @@ import java.util.Collection;
 
 import org.hivedb.annotations.EntityId;
 import org.hivedb.annotations.GeneratedClass;
-import org.hivedb.annotations.PartitionIndex;
-import org.hivedb.annotations.Resource;
 
 
 @GeneratedClass("WeatherEventGenerated")
-@Resource("WeatherEvent")
 public interface WeatherEvent {
 	@EntityId
 	Integer getEventId();
-	@PartitionIndex
 	String getContinent();
 	String getName();
 	Collection<Integer> getStatistics();
