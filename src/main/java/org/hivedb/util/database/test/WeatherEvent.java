@@ -8,8 +8,8 @@ import org.hivedb.annotations.PartitionIndex;
 import org.hivedb.annotations.Resource;
 
 
-@GeneratedClass(name="WeatherEventGenerated")
-@Resource(name="WeatherEvent")
+@GeneratedClass("WeatherEventGenerated")
+@Resource("WeatherEvent")
 public interface WeatherEvent {
 	@EntityId
 	Integer getEventId();

@@ -152,7 +152,7 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 			// where the key is not equal to the represented interface name. I don't understand
 			// the CGLib implementation yet
 			return representedInterface.getAnnotation(GeneratedClass.class) != null
-						? removeClass(representedInterface.getCanonicalName()) + ((GeneratedClass)  representedInterface.getAnnotation(GeneratedClass.class)).name()
+						? removeClass(representedInterface.getCanonicalName()) + ((GeneratedClass)  representedInterface.getAnnotation(GeneratedClass.class)).value()
 						: super.getClassName(prefix, source, key, names);
 
 		}

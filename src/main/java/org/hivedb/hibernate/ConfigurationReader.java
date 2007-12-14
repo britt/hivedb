@@ -1,6 +1,5 @@
 package org.hivedb.hibernate;
 
-import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
@@ -32,14 +31,9 @@ import org.hivedb.util.PrimitiveUtils;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.functional.Atom;
-import org.hivedb.util.functional.Filter;
-import org.hivedb.util.functional.Predicate;
 import org.springframework.beans.BeanUtils;
 
-import sun.text.Trie.DataManipulate;
-
 public class ConfigurationReader {
-	@SuppressWarnings("unchecked")
 	private Map<String, EntityConfig> configs = new HashMap<String, EntityConfig>();
 	private PartitionDimension dimension = null;
 	
@@ -68,7 +62,6 @@ public class ConfigurationReader {
 		return config;
 	}
 	
-	@SuppressWarnings("unchecked")
 	public static EntityConfig readConfiguration(Class<?> clazz) {
 		Method partitionIndexMethod = AnnotationHelper.getFirstMethodWithAnnotation(clazz, PartitionIndex.class);
 		
@@ -123,6 +116,7 @@ public class ConfigurationReader {
 			!PrimitiveUtils.isPrimitiveClass(ReflectionTools.getCollectionItemType(clazz,ReflectionTools.getPropertyNameOfAccessor(indexMethod)));
 	}
 
+	@SuppressWarnings("unchecked")
 	private static String getIndexPropertyOfCollectionType(Class collectionType) {
 		try {
 			return ReflectionTools.getPropertyNameOfAccessor(AnnotationHelper.getFirstMethodWithAnnotation(collectionType, Index.class));
@@ -132,7 +126,6 @@ public class ConfigurationReader {
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
 	public Collection<EntityConfig> getConfigurations() {
 		 return configs.values();
 	}
@@ -150,7 +143,6 @@ public class ConfigurationReader {
 		install(Hive.load(uri));
 	}
 	
-	@SuppressWarnings("unchecked")
 	public void install(HiveFacade hive) {
 		HiveFacade target = hive;
 		if(hive.getPartitionDimension() == null) {
@@ -178,7 +170,6 @@ public class ConfigurationReader {
 		return new SecondaryIndex(config.getIndexName(), JdbcTypeMapper.primitiveTypeToJdbcType(config.getIndexClass()));
 	}
 	
-	@SuppressWarnings("unchecked")
 	private org.hivedb.meta.Resource createResource(EntityConfig config) {
 		return new org.hivedb.meta.Resource(
 				config.getResourceName(), 
@@ -189,13 +180,13 @@ public class ConfigurationReader {
 	public static String getResourceName(Class<?> clazz) {
 		Resource resource = clazz.getAnnotation(Resource.class);
 		if(resource != null)
-			return resource.name();
+			return resource.value();
 		else
 			return getResourceNameForClass(clazz);
 	}
 
 	private static String getPartitionDimensionName(Class<?> clazz) {
-		String name = AnnotationHelper.getFirstInstanceOfAnnotation(clazz, PartitionIndex.class).name();
+		String name = AnnotationHelper.getFirstInstanceOfAnnotation(clazz, PartitionIndex.class).value();
 		Method m = AnnotationHelper.getFirstMethodWithAnnotation(clazz, PartitionIndex.class);
 		return "".equals(name) ? getIndexNameForMethod(m) : name;
 	}

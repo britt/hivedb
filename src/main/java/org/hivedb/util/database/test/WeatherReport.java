@@ -12,8 +12,8 @@ import org.hivedb.annotations.IndexType;
 import org.hivedb.annotations.PartitionIndex;
 import org.hivedb.annotations.Resource;
 
-@GeneratedClass(name="WeatherReportGenerated")
-@Resource(name="WeatherReport")
+@GeneratedClass("WeatherReportGenerated")
+@Resource("WeatherReport")
 public interface WeatherReport {
 	
 	public static final String REPORT_ID = "reportId";

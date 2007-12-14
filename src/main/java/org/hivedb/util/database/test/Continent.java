@@ -6,11 +6,11 @@ import org.hivedb.annotations.Index;
 import org.hivedb.annotations.PartitionIndex;
 import org.hivedb.annotations.Resource;
 
-@GeneratedClass(name="ContinentGenerated")
-@Resource(name=WeatherReport.CONTINENT)
+@GeneratedClass("ContinentGenerated")
+@Resource(WeatherReport.CONTINENT)
 public interface Continent {
 	@EntityId
-	@PartitionIndex(name=WeatherReport.CONTINENT)
+	@PartitionIndex(WeatherReport.CONTINENT)
 	public String getName();
 	public void setName(String name);
 	@Index

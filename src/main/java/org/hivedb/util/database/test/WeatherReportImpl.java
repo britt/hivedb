@@ -12,7 +12,7 @@ import org.hivedb.annotations.Resource;
 import org.hivedb.util.GeneratePrimitiveCollection;
 import org.hivedb.util.HiveUtils;
 
-@Resource(name="WeatherReport")
+@Resource("WeatherReport")
 public class WeatherReportImpl implements WeatherReport {
 	private static final String[] continents = 
 		new String[]{"North America","South America", "Asia", "Europe","Africa","Australia","Antarctica"};
@@ -25,7 +25,7 @@ public class WeatherReportImpl implements WeatherReport {
 	public static final String TEMPERATURE = "temperature";
 	public static final String CONTINENT = "continent";
 	
-    @PartitionIndex(name=WeatherReport.CONTINENT)
+    @PartitionIndex(WeatherReport.CONTINENT)
 	public String getContinent() {
 		return continent;
 	}
@@ -90,6 +90,7 @@ public class WeatherReportImpl implements WeatherReport {
 		weatherReport.setTemperature((int) Math.rint(Math.random() * 100));
 		return weatherReport;
 	}
+	
 	public void setWeeklyTemperatures(Collection<Integer> values) {
 		
 	}

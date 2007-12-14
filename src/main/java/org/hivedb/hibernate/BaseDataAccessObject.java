@@ -18,11 +18,11 @@ import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.util.Lists;
 
 public class BaseDataAccessObject implements DataAccessObject<Object, Serializable>{
-	private HiveSessionFactory factory;
-	private EntityHiveConfig config;
-	private Class<?> clazz;
-	private Interceptor defaultInterceptor = EmptyInterceptor.INSTANCE;
-	private Hive hive;
+	protected HiveSessionFactory factory;
+	protected EntityHiveConfig config;
+	protected Class<?> clazz;
+	protected Interceptor defaultInterceptor = EmptyInterceptor.INSTANCE;
+	protected Hive hive;
 
 	public Hive getHive() {
 		return hive;
@@ -125,7 +125,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		return (Class<Object>) EntityResolver.getMappedClass(clazz);
 	}
 	
-	private EntityIndexConfig getIndexConfig(String name, Collection<? extends EntityIndexConfig> configs) {
+	protected EntityIndexConfig getIndexConfig(String name, Collection<? extends EntityIndexConfig> configs) {
 		for(EntityIndexConfig cfg : configs)
 			if(cfg.getPropertyName().matches(name))
 				return cfg;
