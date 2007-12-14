@@ -87,6 +87,24 @@ public class ReflectionTools {
 		}
 	}
 	
+	public static boolean hasGetterOfProperty(Class ofInterface, String property) {
+		try {
+			return ofInterface.getMethod("get" + capitalize(property), new Class[] {}) != null;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+	
+	public static Method getSetterOfProperty(Class ofInterface, String property) {
+		try {
+			return ofInterface.getMethod("set" + capitalize(property), new Class[] {
+				getGetterOfProperty(ofInterface, property).getReturnType()
+			});
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
 	public static Collection<Method> getDeclaredPublicMethods(Class subject) {
 		return Filter.grepAgainstList( // get declared in the class and public
 			   Arrays.asList(subject.getMethods()),						   
@@ -400,7 +418,20 @@ public class ReflectionTools {
 			throw new RuntimeException(e);
 		}
 	}
-	public static Class<?> getCollectionItemType(final Class<?> ofThisInterface, String propertyName) {	
+	public static Class<?> getCollectionItemType(final Class<?> clazz, final String propertyName) {	
+		
+		// Extract the owning interface if the class is an implementation in case the implementation
+		// doesn't contain the generic type arguments
+		Class ofThisInterface = null;
+		if (!clazz.isInterface())
+			ofThisInterface = 
+				Filter.grepSingleOrNull(new Predicate<Class>() {
+					public boolean f(Class c) {
+						return ReflectionTools.hasGetterOfProperty(clazz, propertyName);
+					}
+				}, Arrays.asList(clazz.getInterfaces()));
+		if (ofThisInterface == null)
+			ofThisInterface = clazz;
 		
 		Type type;
 		try {
