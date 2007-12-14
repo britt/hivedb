@@ -27,25 +27,50 @@ import org.springframework.jdbc.core.support.JdbcDaoSupport;
  *
  */
 public abstract class Schema extends JdbcDaoSupport {
-	protected String dbURI;
+	protected String uri;
 	protected HiveDbDialect dialect = HiveDbDialect.MySql;
-		
-	public Schema() {}
+	private String name;	
 	
-	public Schema(String dbURI){
-		this.dbURI = dbURI;
+	public String getUri() {
+		return uri;
+	}
+
+	public void setUri(String dbURI) {
+		this.uri = dbURI;
 		this.setDataSource(new HiveBasicDataSource(dbURI));
 		this.dialect = DriverLoader.discernDialect(dbURI);
 	}
+
+	public HiveDbDialect getDialect() {
+		return dialect;
+	}
+
+	public void setDialect(HiveDbDialect dialect) {
+		this.dialect = dialect;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public Schema(String name) {this.name = name;}
 	
+	public Schema(String name, String dbURI){
+		this(name);
+		setUri(dbURI);
+	}
+
 	protected Context getContext() {
 		Context context = new VelocityContext();
 		context.put("dialect", dialect);
-		context.put("mysql", HiveDbDialect.MySql);
-		context.put("derby", HiveDbDialect.Derby);
-		context.put("h2", HiveDbDialect.H2);
+		for(HiveDbDialect d : HiveDbDialect.values())
+			context.put(DialectTools.dialectToString(d).toLowerCase(), d);
 		context.put("booleanType", DialectTools.getBooleanTypeForDialect(dialect));
-		context.put("sequenceModifier", getNumericPrimaryKeySequenceModifier(dialect));
+		context.put("sequenceModifier", DialectTools.getNumericPrimaryKeySequenceModifier(dialect));
 		return context;
 	}
 	
@@ -60,15 +85,14 @@ public abstract class Schema extends JdbcDaoSupport {
 	 * Create the schema in the database.
 	 */
 	public void install() {
-		// Register any new Global tables here
 		for (TableInfo table : getTables())
 			createTable(table);
 	}
 	
 	public void install(String uri){
-		this.dbURI = uri;
-		this.setDataSource(new HiveBasicDataSource(dbURI));
-		this.dialect = DriverLoader.discernDialect(dbURI);
+		this.uri = uri;
+		this.setDataSource(new HiveBasicDataSource(uri));
+		this.dialect = DriverLoader.discernDialect(uri);
 		install();
 	}
 

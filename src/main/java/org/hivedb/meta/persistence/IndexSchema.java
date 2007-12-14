@@ -38,7 +38,7 @@ public class IndexSchema extends Schema{
 	 * @param dialect Data definition language dialect
 	 */
 	public IndexSchema(PartitionDimension partitionDimension) {
-		super(partitionDimension.getIndexUri());
+		super("Hive index schema",partitionDimension.getIndexUri());
 		this.partitionDimension = partitionDimension;
 	}
 	

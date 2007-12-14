@@ -8,8 +8,12 @@ import org.hivedb.meta.persistence.TableInfo;
 
 public class ContinentalSchema extends Schema {
 
+	public ContinentalSchema() {
+		super("Continent");
+	}
+	
 	public ContinentalSchema(String dbURI) {
-		super(dbURI);
+		super("Continent",dbURI);
 	}
 
 	public Collection<TableInfo> getTables() {

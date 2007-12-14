@@ -55,11 +55,11 @@ public class DialectTools {
 	}
 	
 	public static HiveDbDialect stringToDialect(String dialect) {
-		if(dialect.equals(H2))
+		if(dialect.toLowerCase().equals(H2.toLowerCase()))
 			return HiveDbDialect.H2;
-		else if(dialect.equals(DERBY))
+		else if(dialect.toLowerCase().equals(DERBY.toLowerCase()))
 			return HiveDbDialect.Derby;
-		else if(dialect.equals(MYSQL))
+		else if(dialect.toLowerCase().equals(MYSQL.toLowerCase()))
 			return HiveDbDialect.MySql;
 		else
 			throw new UnsupportedDialectException("Unkown database dialect.  HiveDB supports MySQL, H2 and Derby.");

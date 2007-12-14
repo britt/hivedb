@@ -135,6 +135,11 @@
 		<artifactId>hibernate</artifactId>
 		<version>3.2.5ga</version>
 	</dependency>
+		<dependency>
+			<groupId>org.apache.cxf</groupId>
+			<artifactId>cxf-rt-core</artifactId>
+			<version>2.0.3-incubator</version>
+		</dependency>
 	<dependency>
 		<groupId>hibernate</groupId>
 		<artifactId>shards</artifactId>

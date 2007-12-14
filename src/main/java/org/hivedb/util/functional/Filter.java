@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import org.hivedb.HiveKeyNotFoundException;
+
 public abstract class Filter {
 	
 	/**
@@ -37,7 +39,7 @@ public abstract class Filter {
 		T match = grepSingleOrNull(filterer, iterable);
 		if (match != null)
 			return match;
-		throw new RuntimeException("No match found");
+		throw new NoSuchElementException("No match found");
 	}
 	public static<T> T grepSingleOrNull(Predicate<T> filterer, Iterable<? extends T> iterable) throws NoSuchElementException
 	{

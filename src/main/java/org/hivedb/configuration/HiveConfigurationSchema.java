@@ -32,7 +32,7 @@ public class HiveConfigurationSchema extends Schema {
 	 * @param dbURI Empty target database connect string, including username, password & catalog
 	 */
 	public HiveConfigurationSchema(String dbURI){
-		super(dbURI);
+		super("Hive configuration schema",dbURI);
 	}
 	
 	private String getCreateNode() {
@@ -58,7 +58,7 @@ public class HiveConfigurationSchema extends Schema {
 	public void install() {
 		super.install();
 		BasicDataSource ds = new BasicDataSource();
-		ds.setUrl(this.dbURI);
+		ds.setUrl(this.uri);
 	}
 
 	public String[] getCreateStatements() {
