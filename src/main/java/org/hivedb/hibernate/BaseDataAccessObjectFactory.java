@@ -1,6 +1,7 @@
 package org.hivedb.hibernate;
 
 import java.io.Serializable;
+import java.util.Collection;
 
 import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hivedb.Hive;
@@ -10,9 +11,11 @@ public class BaseDataAccessObjectFactory<T, ID extends Serializable> implements 
 	
 	Hive hive;
 	EntityHiveConfig entityHiveConfig;
+	Collection<Class<?>> mappedClasses;
 	Class<T> representedClass;
-	public BaseDataAccessObjectFactory(EntityHiveConfig entityHiveConfig, Class<T> representedClass, Hive hive) {
+	public BaseDataAccessObjectFactory(EntityHiveConfig entityHiveConfig, Collection<Class<?>> mappedClasses, Class<T> representedClass, Hive hive) {
 		this.entityHiveConfig = entityHiveConfig;
+		this.mappedClasses = mappedClasses;
 		this.representedClass = representedClass;
 		this.hive = hive;
 	}
@@ -24,6 +27,7 @@ public class BaseDataAccessObjectFactory<T, ID extends Serializable> implements 
 				hive,
 				new HiveSessionFactoryBuilderImpl(
 					entityHiveConfig, 
+					mappedClasses,
 					hive,
 					new SequentialShardAccessStrategy()));
 	}

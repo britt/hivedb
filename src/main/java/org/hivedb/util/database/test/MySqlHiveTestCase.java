@@ -40,7 +40,7 @@ public abstract class MySqlHiveTestCase extends MysqlTestCase {
 
 	private HiveTestCase createHiveTestCase() {
 		return new HiveTestCase(
-				getEntityClasses(),
+				getMappedClasses(),
 				HiveDbDialect.MySql, 
 				new Unary<String,String>() {
 					public String f(String databaseName) {
@@ -53,7 +53,7 @@ public abstract class MySqlHiveTestCase extends MysqlTestCase {
 	protected HiveTestCase hiveTestCase;
 
 
-	protected List<Class<?>> getEntityClasses() {
+	protected List<Class<?>> getMappedClasses() {
 		return Arrays.asList(getPartitionDimensionClass(), WeatherReport.class, WeatherEvent.class);
 	}
 	protected Class<?> getPartitionDimensionClass() {

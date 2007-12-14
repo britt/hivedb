@@ -44,15 +44,17 @@ import org.hivedb.util.functional.Unary;
 public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder, HiveSessionFactory, Observer, Synchronizeable {	
 	private static Map<HiveDbDialect, Class<?>> dialectMap = buildDialectMap();
 	private Map<Integer, SessionFactory> nodeSessionFactories;
+	private Collection<Class<?>> mappedClasses;
 	private EntityHiveConfig config;
 	private ShardAccessStrategy accessStrategy;
 	private Properties overrides = new Properties();
 	private ShardedSessionFactoryImplementor factory = null;
 	private Hive hive;
 	
-	public HiveSessionFactoryBuilderImpl(String hiveUri, List<Class<?>> classes, ShardAccessStrategy strategy) {
+	public HiveSessionFactoryBuilderImpl(String hiveUri, List<Class<?>> mappedClasses, ShardAccessStrategy strategy) {
 		hive = Hive.load(hiveUri);
-		initialize(buildHiveConfiguration(hive, classes), hive, strategy);
+		this.mappedClasses = mappedClasses;
+		initialize(buildHiveConfiguration(hive, mappedClasses), hive, strategy);
 	}
 	
 	public HiveSessionFactoryBuilderImpl(String hiveUri, List<Class<?>> classes, ShardAccessStrategy strategy, Properties overrides) {
@@ -62,11 +64,13 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	
 	public HiveSessionFactoryBuilderImpl(EntityHiveConfig config, Hive hive, ShardAccessStrategy strategy) {
 		this.hive = hive;
+		this.mappedClasses = new EntityResolver(config).getEntityClasses();
 		initialize(config, hive, strategy);
 	}
 	
-	public HiveSessionFactoryBuilderImpl(EntityHiveConfig config,Hive hive, ShardAccessStrategy strategy, List<Class<?>> nonHiveHibernateClasses) {
+	public HiveSessionFactoryBuilderImpl(EntityHiveConfig config, Collection<Class<?>> mappedClasses, Hive hive, ShardAccessStrategy strategy) {
 		this.hive = hive;
+		this.mappedClasses = mappedClasses;
 		initialize(config, hive, strategy);
 	}
 	
@@ -119,10 +123,8 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	}
 
 	private void addConfigurations(Configuration hibernateConfig) {
-		for(Class<?> clazz : ReflectionTools.getUniqueComplexPropertyTypes(new EntityResolver(config).getEntityClasses())) {
-			final Class<?> mappedClass = EntityResolver.getMappedClass(clazz);
-			hibernateConfig.addClass(mappedClass);
-		}
+		for(Class<?> clazz : mappedClasses) 
+			hibernateConfig.addClass(EntityResolver.getPersistedImplementation(clazz));
 	}
 	
 	private EntityHiveConfig buildHiveConfiguration(Hive hive, Collection<Class<?>> classes) {

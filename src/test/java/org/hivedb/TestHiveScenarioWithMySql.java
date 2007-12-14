@@ -7,6 +7,6 @@ public class TestHiveScenarioWithMySql extends MySqlHiveTestCase {
 	
 	@Test(groups={"mysql"})
 	public void test()  throws Exception {
-		new TestHiveScenario(getEntityHiveConfig(), getHive()).test();
+		new TestHiveScenario(getEntityHiveConfig(), getMappedClasses(), getHive()).test();
 	}
 }

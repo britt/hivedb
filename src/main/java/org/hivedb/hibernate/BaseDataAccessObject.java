@@ -122,7 +122,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 
 	@SuppressWarnings("unchecked")
 	public Class<Object> getRespresentedClass() {
-		return (Class<Object>) EntityResolver.getMappedClass(clazz);
+		return (Class<Object>) EntityResolver.getPersistedImplementation(clazz);
 	}
 	
 	protected EntityIndexConfig getIndexConfig(String name, Collection<? extends EntityIndexConfig> configs) {

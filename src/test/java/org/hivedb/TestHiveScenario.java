@@ -1,6 +1,7 @@
 package org.hivedb;
 
 import java.io.Serializable;
+import java.util.Collection;
 
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
@@ -12,9 +13,11 @@ import org.hivedb.util.scenarioBuilder.HiveScenarioTest;
 public class TestHiveScenario {
 	
 	EntityHiveConfig entityHiveConfig;
+	Collection<Class<?>> mappedClasses;
 	Hive hive;
-	public TestHiveScenario(EntityHiveConfig enitityHiveConfig, Hive hive) {
+	public TestHiveScenario(EntityHiveConfig enitityHiveConfig, Collection<Class<?>> mappedClasses, Hive hive) {
 		this.entityHiveConfig = enitityHiveConfig;
+		this.mappedClasses = mappedClasses;
 		this.hive = hive;
 	}
 	
@@ -37,6 +40,7 @@ public class TestHiveScenario {
 	private DataAccessObject<Object, Serializable> getDao(Class clazz) {	
 		return new BaseDataAccessObjectFactory<Object,Serializable>(
 				this.entityHiveConfig,
+				mappedClasses,
 				clazz,
 				hive).create();
 	}

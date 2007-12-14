@@ -76,7 +76,7 @@ public class EntityResolver {
 				String.format("Class %s cannot be resolved to a Hive enity and does not reference a Hive entity", clazz.getCanonicalName()));
 		return annotatedMethod;
 	}
-	public static Class<?> getMappedClass(Class<?> clazz) {
+	public static Class<?> getPersistedImplementation(Class<?> clazz) {
 		if(generatesImplementation(clazz))
 			return GeneratedInstanceInterceptor.getGeneratedClass(clazz);
 		else

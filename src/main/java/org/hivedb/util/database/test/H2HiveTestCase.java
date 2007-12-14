@@ -41,7 +41,7 @@ public class H2HiveTestCase extends H2TestCase {
 
 	private HiveTestCase createHiveTestCase() {
 		return new HiveTestCase(
-				getEntityClasses(),
+				getMappedClasses(),
 				HiveDbDialect.H2, 
 				new Unary<String,String>() {
 					public String f(String databaseName) {
@@ -55,7 +55,7 @@ public class H2HiveTestCase extends H2TestCase {
 
 
 	@SuppressWarnings("unchecked")
-	protected Collection<Class<?>> getEntityClasses() {
+	protected Collection<Class<?>> getMappedClasses() {
 		return Arrays.asList(
 				getPartitionDimensionClass(),
 				WeatherReport.class, 
