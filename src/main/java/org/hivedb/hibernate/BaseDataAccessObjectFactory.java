@@ -21,9 +21,8 @@ public class BaseDataAccessObjectFactory<T, ID extends Serializable> implements 
 	}
 	@SuppressWarnings("unchecked")
 	public DataAccessObject<T, ID> create() {
-		return (DataAccessObject<T, ID>) new BaseDataAccessObject(
-				representedClass, 
-				entityHiveConfig, 
+		return (DataAccessObject<T, ID>) new BaseDataAccessObject( 
+				entityHiveConfig.getEntityConfig(representedClass), 
 				hive,
 				new HiveSessionFactoryBuilderImpl(
 					entityHiveConfig, 

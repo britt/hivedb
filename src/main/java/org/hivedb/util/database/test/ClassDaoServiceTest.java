@@ -212,8 +212,7 @@ public class ClassDaoServiceTest extends H2TestCase {
 					return new BaseClassDaoService(
 							ConfigurationReader.readConfiguration(clazz),
 							new BaseDataAccessObject(
-									clazz,
-									test.config,
+									test.config.getEntityConfig(clazz),
 									test.hive,
 									test.factory));
 				}};

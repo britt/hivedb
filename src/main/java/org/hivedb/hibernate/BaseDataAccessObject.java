@@ -9,17 +9,16 @@ import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
-import org.hivedb.Hive;
 import org.hibernate.exception.JDBCConnectionException;
+import org.hivedb.Hive;
 import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.configuration.EntityConfig;
-import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.util.Lists;
 
 public class BaseDataAccessObject implements DataAccessObject<Object, Serializable>{
 	protected HiveSessionFactory factory;
-	protected EntityHiveConfig config;
+	protected EntityConfig config;
 	protected Class<?> clazz;
 	protected Interceptor defaultInterceptor = EmptyInterceptor.INSTANCE;
 	protected Hive hive;
@@ -32,16 +31,16 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		this.hive = hive;
 	}
 
-	public BaseDataAccessObject(Class<?> clazz, EntityHiveConfig config, Hive hive, HiveSessionFactory factory) {
-		this.clazz = clazz;
+	public BaseDataAccessObject(EntityConfig config, Hive hive, HiveSessionFactory factory) {
+		this.clazz = config.getRepresentedInterface();
 		this.config = config;
 		this.factory = factory;
 		this.hive = hive;
 		
 	}
 	
-	public BaseDataAccessObject(Class<?> clazz, EntityHiveConfig config, Hive hive, HiveSessionFactory factory, Interceptor interceptor) {
-		this(clazz,config,hive,factory);
+	public BaseDataAccessObject(EntityConfig config, Hive hive, HiveSessionFactory factory, Interceptor interceptor) {
+		this(config,hive,factory);
 		this.defaultInterceptor = interceptor;
 	}
 	
@@ -56,7 +55,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	}
 
 	public Boolean exists(Serializable id) {
-		EntityConfig entityConfig = config.getEntityConfig(getRespresentedClass());
+		EntityConfig entityConfig = config;
 		return hive.directory().doesResourceIdExist(entityConfig.getResourceName(), id);
 	}
 
@@ -79,7 +78,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	
 	@SuppressWarnings("unchecked")
 	public Collection<Object> findByProperty(String propertyName, Object propertyValue) {
-		EntityConfig entityConfig = config.getEntityConfig(getRespresentedClass());
+		EntityConfig entityConfig = config;
 		EntityIndexConfig indexConfig = getIndexConfig(propertyName, entityConfig.getEntitySecondaryIndexConfigs());
 		Collection<Object> entities = Lists.newArrayList();
 		Session session = 
@@ -160,13 +159,12 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 
 	public Collection<Object> findByPropertyRange(String propertyName, java.lang.Object minValue, java.lang.Object maxValue) {
 		// Use an AllShardsresolutionStrategy + Criteria
-		EntityConfig entityConfig = config.getEntityConfig(getRespresentedClass());
-		EntityIndexConfig indexConfig = getIndexConfig(propertyName, entityConfig.getEntitySecondaryIndexConfigs());
+		EntityIndexConfig indexConfig = getIndexConfig(propertyName, config.getEntitySecondaryIndexConfigs());
 		Collection<Object> entities = Lists.newArrayList();
 		Session session = 
 			factory.openAllShardsSession();
 		try {
-			Criteria c = session.createCriteria(entityConfig.getRepresentedInterface());
+			Criteria c = session.createCriteria(config.getRepresentedInterface());
 			c.add( Restrictions.between(propertyName, minValue, maxValue));
 			return c.list();
 		} finally {
