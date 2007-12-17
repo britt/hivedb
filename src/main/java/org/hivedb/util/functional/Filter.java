@@ -62,7 +62,7 @@ public abstract class Filter {
 		Map<R,T> results = new Hashtable<R, T>();
 		for (T item : iterable) {
 			R result = unary.f(item);
-			if (results.containsKey(result))
+			if (!results.containsKey(result))
 				results.put(result, item);
 		}
 		return results.values();

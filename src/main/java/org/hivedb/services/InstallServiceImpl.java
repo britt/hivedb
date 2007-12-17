@@ -80,4 +80,20 @@ public class InstallServiceImpl implements InstallService {
 		return installAll(getOrAddNode(nodeName, dbName, host, dialect).getName());
 	}
 
+	public Boolean addNode(String nodeName, String dbName, String host,String dialect) {
+		try {
+			hive.addNode(new Node(nodeName, dbName, host, DialectTools.stringToDialect(dialect)));
+			return true;
+		} catch (HiveReadOnlyException e) {
+			throw new HiveRuntimeException("hive was locked read-only", e);
+		}
+	}
+
+	public Collection<String> listNodes() {
+		return Transform.map(new Unary<Node, String>(){
+			public String f(Node item) {
+				return item.getName();
+			}}, hive.getNodes());
+	}
+
 }

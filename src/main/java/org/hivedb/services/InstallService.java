@@ -12,6 +12,10 @@ public interface InstallService {
 	@WebMethod
 	public Collection<String> listDialects();
 	@WebMethod
+	public Collection<String> listNodes();
+	@WebMethod
+	public Boolean addNode(String nodeName, String dbName, String host, String dialect);
+	@WebMethod
 	public Boolean install(String schemaName, String nodeName);
 	@WebMethod(operationName="installOnNewNode")
 	public Boolean install(String schemaName, String nodeName, String dbName, String host, String dialect);

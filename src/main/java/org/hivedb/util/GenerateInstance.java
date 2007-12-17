@@ -61,6 +61,12 @@ public class GenerateInstance<T> implements Generator<T> {
 	    				PrimitiveUtils.isPrimitiveClass(collectionItemClass)
 	    					? new GeneratePrimitiveCollection<Object>(collectionItemClass,COLLECTION_SIZE).generate()
 	    					: new GenerateInstanceCollection<Object>(collectionItemClass, COLLECTION_SIZE).generate());
+	    	} else if(returnType.isArray()) {
+	    		Class<Object> arrayItemClass = (Class<Object>) returnType.getComponentType();
+	    		ReflectionTools.invokeSetter(instance, propertyName,
+	    				PrimitiveUtils.isPrimitiveClass(arrayItemClass)
+	    					? new GeneratePrimitiveCollection<Object>(arrayItemClass,COLLECTION_SIZE).generate().toArray()
+	    					: new GenerateInstanceCollection<Object>(arrayItemClass, COLLECTION_SIZE).generate().toArray());
 	    	}
 	    	else 
 	    		ReflectionTools.invokeSetter(instance, propertyName,
