@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.hivedb.HiveKeyNotFoundException;
+import org.hivedb.util.functional.Transform.IdentityFunction;
 
 public abstract class Filter {
 	
@@ -68,6 +69,10 @@ public abstract class Filter {
 		return results.values();
 	}
 
+	public static<T,R> Collection<T> grepUnique(Iterable<? extends T> iterable) 
+	{
+		return grepUnique(new IdentityFunction<T>(), iterable);
+	}
 	
 	public static<T> T getFirst(Iterable<? extends T> iterable) throws NoSuchElementException
 	{
