@@ -51,9 +51,15 @@ public class GenerateInstance<T> implements Generator<T> {
 			
 	    for (Method getter : ReflectionTools.getGetters(clazz))
 	    {
-	    	if (getter.getDeclaringClass().equals(Object.class) || getter.getAnnotation(Ignore.class) != null)
-	    		continue; 
+	    	if (getter.getDeclaringClass().equals(Object.class))
+	    		continue;
 	    	String propertyName = ReflectionTools.getPropertyNameOfAccessor(getter);
+	    	Class methodOwner = ReflectionTools.getOwnerOfMethod(clazz, propertyName);
+	    	Method method = ReflectionTools.getGetterOfProperty(methodOwner, propertyName);
+	    	
+	    	if (method.getAnnotation(Ignore.class) != null)
+	    		continue; 
+	    	
 	    	final Class<Object> returnType = (Class<Object>) getter.getReturnType();
 			if (ReflectionTools.doesImplementOrExtend(returnType, Collection.class)) {
 	    		Class<Object> collectionItemClass = (Class<Object>) ReflectionTools.getCollectionItemType(clazz,propertyName);

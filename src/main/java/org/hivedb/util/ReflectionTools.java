@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 
 import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.Atom;
@@ -81,10 +82,14 @@ public class ReflectionTools {
 	
 	public static Method getGetterOfProperty(Class ofInterface, String property) {
 		try {
-			return ofInterface.getMethod("get" + capitalize(property), new Class[] {});
+			return ofInterface.getMethod(makeGetterName(property), new Class[] {});
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+	}
+	
+	public static String makeGetterName(String property) {
+		return "get" + capitalize(property);
 	}
 	
 	public static boolean hasGetterOfProperty(Class ofInterface, String property) {
@@ -97,12 +102,16 @@ public class ReflectionTools {
 	
 	public static Method getSetterOfProperty(Class ofInterface, String property) {
 		try {
-			return ofInterface.getMethod("set" + capitalize(property), new Class[] {
+			return ofInterface.getMethod(makeSetterName(property), new Class[] {
 				getGetterOfProperty(ofInterface, property).getReturnType()
 			});
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+	}
+	
+	public static String makeSetterName(String property) {
+		return "set" + capitalize(property);
 	}
 	
 	public static Collection<Method> getDeclaredPublicMethods(Class subject) {
@@ -235,7 +244,7 @@ public class ReflectionTools {
 	
 	public static void invokeSetter(Object instance, String propertyName, Object value)
     {
-		final String setterName = "set"+capitalize(propertyName);
+		final String setterName = makeSetterName(propertyName);
 		// try to match on the value's type
     	try {
     		instance.getClass().getMethod(setterName, new Class[] {value.getClass()})
@@ -334,34 +343,39 @@ public class ReflectionTools {
 	}
 	
 	private static <T> DiffCollection compareFields(final T expected, final T actual, Class<T> basedUponThisInterface, final Filter.BinaryPredicate<Object, Object> compare) {
-		return 
-			new DiffCollection(Transform.map(new Unary<Method, Diff>() {
-			public Diff f(Method getter) {
-				try {
-					return new Diff(getter, getter.invoke(expected), getter.invoke((actual)));
-				} catch(Exception e) {
-					throw new RuntimeException(e);
-				}
-			}},
-			new MethodGrepper<T>() {
-				public boolean invokableMemberPredicate(Method getter) {
+		if (expected == null || actual == null)
+			throw new RuntimeException(String.format("Expected and/or actual instance are/is null. Expected null? %s, Actual null? %s", expected==null, actual==null ));
+		
+		return  new DiffCollection(Transform.map(new Unary<Method, Diff>() {
+				public Diff f(Method getter) {
 					try {
-						if (expected == null || actual == null)
-							return !(expected==null ^ actual==null);
-						return compare.f(wrapIfNeeded(getter.invoke(expected)), wrapIfNeeded(getter.invoke((actual))));
+						return new Diff(getter, wrapIfNeeded(getter.invoke(expected)), wrapIfNeeded(getter.invoke(actual)));
 					} catch(Exception e) {
 						throw new RuntimeException(e);
 					}
-				}
-				@SuppressWarnings("unchecked")
-				private Object wrapIfNeeded(Object fieldValue)
-				{
-					if (fieldValue instanceof Collection)
-						return new HashSet((Collection)fieldValue);
-					return fieldValue;
-				}
-			}.grepGetters(basedUponThisInterface)));
-		
+				}},
+				new MethodGrepper<T>() {
+					public boolean invokableMemberPredicate(Method getter) {
+						try {
+							
+							final Object expectedWrapped = wrapIfNeeded(getter.invoke(expected));
+							final Object actualWrapped = wrapIfNeeded(getter.invoke((actual)));
+							if (expectedWrapped == null || actualWrapped == null)
+								return (expectedWrapped==null ^ actualWrapped==null);
+							return compare.f(expectedWrapped, actualWrapped);
+						} catch(Exception e) {
+							throw new RuntimeException(e);
+						}
+					}
+					
+				}.grepGetters(basedUponThisInterface)));
+	}
+	@SuppressWarnings("unchecked")
+	private static Object wrapIfNeeded(Object fieldValue)
+	{
+		if (fieldValue instanceof Collection)
+			return new HashSet((Collection)fieldValue);
+		return fieldValue;
 	}
 	
 	private static class MethodGrepper<T> {
@@ -369,7 +383,9 @@ public class ReflectionTools {
 			return Filter.grep(new Predicate<Method>() {
 					public boolean f(Method method) {
 						try {
-							return isGetter(method) &&
+							return
+								!method.getDeclaringClass().equals(Object.class) &&
+								isGetter(method) &&
 								invokableMemberPredicate(method);
 						} catch (Exception e) {
 							throw new RuntimeException(e);
@@ -420,22 +436,12 @@ public class ReflectionTools {
 	}
 	public static Class<?> getCollectionItemType(final Class<?> clazz, final String propertyName) {	
 		
-		// Extract the owning interface if the class is an implementation in case the implementation
-		// doesn't contain the generic type arguments
-		Class ofThisInterface = null;
-		if (!clazz.isInterface())
-			ofThisInterface = 
-				Filter.grepSingleOrNull(new Predicate<Class>() {
-					public boolean f(Class c) {
-						return ReflectionTools.hasGetterOfProperty(clazz, propertyName);
-					}
-				}, Arrays.asList(clazz.getInterfaces()));
-		if (ofThisInterface == null)
-			ofThisInterface = clazz;
-		
+		Class ofThisInterface = getOwnerOfMethod(clazz, propertyName);
+	
 		Type type;
 		try {
-			type = BeanUtils.getPropertyDescriptor(ofThisInterface, propertyName).getReadMethod().getGenericReturnType();
+			final Method getter = BeanUtils.getPropertyDescriptor(ofThisInterface, propertyName).getReadMethod();
+			type = getter.getGenericReturnType();
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -456,6 +462,47 @@ public class ReflectionTools {
 		else
 			throw new RuntimeException(String.format("For Interface: %s, Property Name %s, expected ParameterizedType or WildcardType but got %s", ofThisInterface, propertyName, type));	
 	}
+	
+	public static Class getOwnerOfMethod(final Class<?> clazz, final String propertyName) {
+		// Java magically erases generic information when referencing a method from a subclass,
+		// extended interface, or implementation (naturally)
+		// Extract the owning interface or superclass of the property if necessary
+		Class ofThisInterface = clazz;
+		try {
+			clazz.getDeclaredMethod(makeGetterName(propertyName), new Class[] {});
+			ofThisInterface = clazz;
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		} catch (NoSuchMethodException e) {
+			final List<Class> classes = new ArrayList(getAncestors(clazz));
+			ofThisInterface = 
+				Filter.grepSingleOrNull(new Predicate<Class>() {
+					public boolean f(Class c) {
+						try {
+							c.getDeclaredMethod(makeGetterName(propertyName), new Class[] {});
+							return true;
+						}
+						catch (Exception e) {
+							return false;
+						}
+					}
+				}, classes);
+			if (ofThisInterface == null)
+				throw new RuntimeException(String.format("Cannot find the owner of property %s of class %s using parent classes %s", propertyName, clazz.getCanonicalName(), classes));
+		}
+		return ofThisInterface;
+	}
+	
+	private static Collection<Class<?>> getAncestors(Class<?> clazz) {
+		return Transform.flatten(new Collection[] {
+				clazz.getSuperclass() != null ? getAncestors(clazz.getSuperclass()) : new ArrayList<Class<?>>(),
+				Transform.flatMap(new Unary<Class<?>, Collection<Class<?>>>() {
+					public Collection<Class<?>> f(Class<?> interfaceClass) {
+						return Transform.flatten(new Collection[] {Collections.singleton(interfaceClass), getAncestors(interfaceClass)});
+					}
+				}, Arrays.asList((Class<?>[])clazz.getInterfaces()))});
+	}
+	
 	/**
 	 *  Returns the given property's return type or the type of item in the collection if its return type 
 	 *  is a collection.

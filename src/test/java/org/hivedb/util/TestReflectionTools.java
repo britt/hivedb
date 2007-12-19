@@ -9,9 +9,17 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class TestReflectionTools  {
+	
+	
 	@Test
-	public void testDoesImplement() {
-		Assert.assertTrue(ReflectionTools.doesImplementOrExtend(new Fooimpimp(){}.getClass(), Coo.class));
+	public void testGetCollectionType() {
+		Assert.assertEquals(ReflectionTools.getCollectionItemType(Foo.class, "coos"), Coo.class);
+		// Assert that extended interfaces can get the generic type
+		Assert.assertEquals(ReflectionTools.getCollectionItemType(Fooer.class, "coos"), Coo.class);
+		// Assert that implementations can get the generic type
+		Assert.assertEquals(ReflectionTools.getCollectionItemType(Fooimp.class, "coos"), Coo.class);
+		// Assert that subclasses can get the generic type
+		Assert.assertEquals(ReflectionTools.getCollectionItemType(Fooimpimp.class, "coos"), Coo.class);
 	}
 	
 	@Test
@@ -32,23 +40,31 @@ public class TestReflectionTools  {
 	private interface Boo {
 		Double getDoo();
 	}
-	private class Fooimp implements Coo {
-
-		public Collection<Boo> getBoos() {
-			return null;
-		}
-
-		public Float getFloo() {
-			return null;
-		}}
-	private class Fooimpimp extends Fooimp {
+	private interface Fooer extends Foo {
+		String getWhatever();
+	}
+	private class Fooimp implements Foo {
 
 		public Collection<Coo> getCoos() {
 			return null;
 		}
 
 		public Integer getIoo() {
-			// TODO Auto-generated method stub
+			return null;
+		}
+
+		public Collection<Short> getShoos() {
+			return null;
+		}
+
+		public String getStroo() {
+			return null;
+		}
+
+	}
+	private class Fooimpimp extends Fooimp {
+
+		public Integer getIoo() {
 			return null;
 		}
 

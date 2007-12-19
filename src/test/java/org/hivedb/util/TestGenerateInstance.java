@@ -2,31 +2,33 @@ package org.hivedb.util;
 
 import java.util.Collection;
 
+import org.hivedb.annotations.GeneratedClass;
+import org.hivedb.annotations.Ignore;
 import org.hivedb.util.functional.Atom;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class TestGenerateInstance {
-	interface Foo {
-		int getInt();
-		Collection<Boo> getBoos();
-	}
-	interface Boo {
+	@GeneratedClass("FooImpl")
+	public interface Foo {
+		@Ignore
 		String getString();
-		Coo getCoo();
+		int getInt();
 	}
-	interface Coo {
+	@GeneratedClass("BooImpl")
+	public interface Boo extends Foo {
+		Collection<Coo> getCoos();
+	}
+	@GeneratedClass("CooImpl")
+	public interface Coo {
 		long getLong();
 	}
 	
 	@Test
 	public void testGenerateInstance() {
-		Foo foo = (Foo)new GenerateInstance<Foo>(Foo.class).generate();
-		Assert.assertTrue(foo.getInt() != 0);
-		Assert.assertTrue(foo.getBoos().size() > 0);
-		Boo boo = Atom.getFirstOrThrow(foo.getBoos());
-		Assert.assertTrue(boo.getString() != "" && boo.getString() != null);
-		Assert.assertTrue(boo.getCoo() != null);
-		Assert.assertTrue(boo.getCoo().getLong() != 0l);
+		Boo boo = (Boo)new GenerateInstance<Boo>(Boo.class).generate();
+		Assert.assertTrue(boo.getInt() != 0);
+		Assert.assertTrue(boo.getCoos().size() > 0);
+		Assert.assertTrue(boo.getString() == null);
 	}
 }
