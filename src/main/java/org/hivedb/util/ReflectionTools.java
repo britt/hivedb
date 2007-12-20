@@ -65,9 +65,27 @@ public class ReflectionTools {
 			method.getReturnType() == void.class &&
 			method.getParameterTypes().length == 1;
 	}
+	public static boolean doesSetterExist(Method getter) {
+		
+		try {
+			getter.getDeclaringClass().getMethod("set" + getter.getName().substring(3), new Class[] {getter.getReturnType()});
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		} catch (NoSuchMethodException e) {
+			return false;
+		}
+		return true;
+	}
 	public static Method getCorrespondingSetter(Object instance, String getterName, Class argumentType) {
 		try {
 			return instance.getClass().getMethod("set" + getterName.substring(3), new Class[] {argumentType});
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	public static Method getCorrespondingSetter(Method getter) {
+		try {
+			return getter.getDeclaringClass().getMethod("set" + getter.getName().substring(3), new Class[] {getter.getReturnType()});
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -466,30 +484,23 @@ public class ReflectionTools {
 	public static Class getOwnerOfMethod(final Class<?> clazz, final String propertyName) {
 		// Java magically erases generic information when referencing a method from a subclass,
 		// extended interface, or implementation (naturally)
-		// Extract the owning interface or superclass of the property if necessary
-		Class ofThisInterface = clazz;
-		try {
-			clazz.getDeclaredMethod(makeGetterName(propertyName), new Class[] {});
-			ofThisInterface = clazz;
-		} catch (SecurityException e) {
-			throw new RuntimeException(e);
-		} catch (NoSuchMethodException e) {
-			final List<Class> classes = new ArrayList(getAncestors(clazz));
-			ofThisInterface = 
-				Filter.grepSingleOrNull(new Predicate<Class>() {
-					public boolean f(Class c) {
-						try {
-							c.getDeclaredMethod(makeGetterName(propertyName), new Class[] {});
-							return true;
-						}
-						catch (Exception e) {
-							return false;
-						}
+		// Extract the first owning interface or superclass if it exists
+		Class ofThisInterface;
+		final List<Class> classes = new ArrayList(getAncestors(clazz));
+		ofThisInterface = 
+			Filter.grepSingleOrNull(new Predicate<Class>() {
+				public boolean f(Class c) {
+					try {
+						c.getDeclaredMethod(makeGetterName(propertyName), new Class[] {});
+						return true;
 					}
-				}, classes);
-			if (ofThisInterface == null)
-				throw new RuntimeException(String.format("Cannot find the owner of property %s of class %s using parent classes %s", propertyName, clazz.getCanonicalName(), classes));
-		}
+					catch (Exception e) {
+						return false;
+					}
+				}
+			}, classes);
+		if (ofThisInterface == null)
+			ofThisInterface = clazz;
 		return ofThisInterface;
 	}
 	
@@ -540,7 +551,7 @@ public class ReflectionTools {
 	public static Collection<Method> getCollectionGetters(final Class<?> ofThisInterface) {
 		return Filter.grep(new Predicate<Method>() {
 			public boolean f(Method getter) {
-				return isCollectionProperty(ofThisInterface, getter.getName());
+				return isCollectionProperty(ofThisInterface, getPropertyNameOfAccessor(getter));
 		}},
 		getGetters(ofThisInterface));
 	}

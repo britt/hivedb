@@ -141,6 +141,20 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 		return Amass.makeHashCode(ReflectionTools.invokeGetters(obj, clazz));
 	}
 	
+	/**
+	 *  Sets the property of an instance by using the setter if it exists or
+	 *  by using the PropertySetter interface for generated classes
+	 * @param instance
+	 * @param property
+	 * @param value
+	 */
+	public static void setProperty(Object instance, String property, Object value) {
+		if (ReflectionTools.doesSetterExist(ReflectionTools.getGetterOfProperty(instance.getClass(), property)))
+			ReflectionTools.invokeSetter(instance, property, value);
+		else
+			((PropertySetter<Object>)instance).set(property, value);
+	}
+	
 	static class ImplNamer extends DefaultNamingPolicy {
 		private Class representedInterface;
 		public ImplNamer(Class representedInterface) {
