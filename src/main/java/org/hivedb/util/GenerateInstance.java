@@ -25,7 +25,7 @@ public class GenerateInstance<T> implements Generator<T> {
 	    		continue;
 			else {
 				String propertyName = BeanUtils.findPropertyForMethod(getter).getName();
-				ReflectionTools.invokeSetter(
+				GeneratedInstanceInterceptor.setProperty(
 						instance, 
 						propertyName, 
 						ReflectionTools.invokeGetter(templateInstance, propertyName));
