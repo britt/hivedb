@@ -20,8 +20,12 @@ public interface DataAccessObject<T, ID> {
      * @return
      */
     public Collection<T> findByProperty(String propertyName, Object value);
+   
+    public Collection<T> findByProperty(String propertyName, Object value, Integer firstResult, Integer maxResults);
     
     public Collection<T> findByPropertyRange(String propertyName, Object minValue, Object maxValue);
+    
+    public Collection<T> findByPropertyRange(String propertyName, Object minValue, Object maxValue, Integer firstResult, Integer maxResults);
     /**
      *  Create or Update this instance.
      * @param entity

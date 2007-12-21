@@ -8,6 +8,7 @@ import org.hibernate.EmptyInterceptor;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hivedb.Hive;
@@ -80,16 +81,57 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	public Collection<Object> findByProperty(String propertyName, Object propertyValue) {
 		EntityConfig entityConfig = config;
 		EntityIndexConfig indexConfig = getIndexConfig(propertyName, entityConfig.getEntitySecondaryIndexConfigs());
-		Collection<Object> entities = Lists.newArrayList();
 		Session session = 
 			factory.openSession(
 				entityConfig.getResourceName(), 
 				indexConfig.getIndexName(), 
 				propertyValue);
+		Criteria criteria = session.createCriteria(entityConfig.getRepresentedInterface());
+		criteria.add( Restrictions.eq(indexConfig.getPropertyName(), propertyValue));
+		
+		return findByProperty(propertyName, session, criteria);
+	}
+	
+	public Collection<Object> findByProperty(String propertyName, Object propertyValue, Integer firstResult, Integer maxResults) {
+		EntityConfig entityConfig = config;
+		EntityIndexConfig indexConfig = getIndexConfig(propertyName, entityConfig.getEntitySecondaryIndexConfigs());
+		Session session = 
+			factory.openSession(
+				entityConfig.getResourceName(), 
+				indexConfig.getIndexName(), 
+				propertyValue);
+		Criteria criteria = session.createCriteria(entityConfig.getRepresentedInterface());
+		criteria.add( Restrictions.eq(indexConfig.getPropertyName(), propertyValue));
+		criteria.setFirstResult(firstResult);
+		criteria.setMaxResults(maxResults);
+		criteria.addOrder(Order.asc(propertyName));
+		return findByProperty(propertyName, session, criteria);
+	}
+	
+	public Collection<Object> findByPropertyRange(String propertyName, java.lang.Object minValue, java.lang.Object maxValue) {
+		// Use an AllShardsresolutionStrategy + Criteria
+		EntityIndexConfig indexConfig = getIndexConfig(propertyName, config.getEntitySecondaryIndexConfigs());
+		Collection<Object> entities = Lists.newArrayList();
+		Session session = factory.openAllShardsSession();
+		Criteria criteria = session.createCriteria(config.getRepresentedInterface());
+		criteria.add( Restrictions.between(propertyName, minValue, maxValue));
+		return findByProperty(propertyName, session, criteria);
+	}
+	
+	public Collection<Object> findByPropertyRange(String propertyName, Object minValue, Object maxValue, Integer firstResult, Integer maxResults) {
+		// Use an AllShardsresolutionStrategy + Criteria
+		Session session = factory.openAllShardsSession();
+		Criteria criteria = session.createCriteria(config.getRepresentedInterface());
+		criteria.add( Restrictions.between(propertyName, minValue, maxValue));
+		criteria.setFirstResult(firstResult);
+		criteria.setMaxResults(maxResults);
+		criteria.addOrder(Order.asc(propertyName));
+		return findByProperty(propertyName, session, criteria);
+	}
+	
+	private Collection<Object> findByProperty(String propertyName, Session session, Criteria criteria) {
 		try {
-			Criteria c = session.createCriteria(entityConfig.getRepresentedInterface());
-			c.add( Restrictions.eq(indexConfig.getPropertyName(), propertyValue));
-			return c.list();
+			return criteria.list();
 		} finally {
 			if(session != null)
 				session.close();
@@ -154,22 +196,6 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			throw e;
 		} finally {
 			session.close();
-		}
-	}
-
-	public Collection<Object> findByPropertyRange(String propertyName, java.lang.Object minValue, java.lang.Object maxValue) {
-		// Use an AllShardsresolutionStrategy + Criteria
-		EntityIndexConfig indexConfig = getIndexConfig(propertyName, config.getEntitySecondaryIndexConfigs());
-		Collection<Object> entities = Lists.newArrayList();
-		Session session = 
-			factory.openAllShardsSession();
-		try {
-			Criteria c = session.createCriteria(config.getRepresentedInterface());
-			c.add( Restrictions.between(propertyName, minValue, maxValue));
-			return c.list();
-		} finally {
-			if(session != null)
-				session.close();
 		}
 	}
 }

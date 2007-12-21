@@ -7,11 +7,11 @@ import org.springframework.jdbc.support.incrementer.DataFieldMaxValueIncrementer
 
 
 /**
- * In Membory key authority for Derby
+ * In Membory key authority for H2
  * @param <T> Type of generated keys (Long or Integer)
  */
-public class DerbyKeyAuthority extends JdbcKeyAuthority {
-	public DerbyKeyAuthority(Class keySpace, Class returnType) {
+public class H2KeyAuthority extends JdbcKeyAuthority {
+	public H2KeyAuthority(Class keySpace, Class returnType) {
 		super(keySpace, returnType);
 		setIncrementer(this.getIncrementer(null));
 	}

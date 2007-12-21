@@ -116,8 +116,8 @@ public class TestNodePersistence extends H2HiveTestCase {
 		Node full = createFullyPopulatedNode();
 		Node minimal = createMinimalNode();
 		
-		System.out.println(new JdbcUriFormatter(full).getUri());
-		System.out.println(new JdbcUriFormatter(minimal).getUri());
+		//System.out.println(new JdbcUriFormatter(full).getUri());
+		//System.out.println(new JdbcUriFormatter(minimal).getUri());
 
 	}
 	
