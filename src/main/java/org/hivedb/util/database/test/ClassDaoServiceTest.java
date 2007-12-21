@@ -62,6 +62,11 @@ public class ClassDaoServiceTest extends H2TestCase {
 		services.add(initializer);
 	}
 	
+	public static void clearEntities() {
+		entityClasses.clear();
+		services.clear();
+	}
+	
 	@SuppressWarnings("unchecked")
 	@BeforeClass
 	public void initializeDataProvider() {
