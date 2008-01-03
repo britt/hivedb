@@ -1,7 +1,9 @@
 package org.hivedb.services;
 
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
+
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -20,8 +22,6 @@ import org.hivedb.hibernate.HiveSessionFactory;
 import org.hivedb.hibernate.HiveSessionFactoryBuilderImpl;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.Node;
-import org.hivedb.util.GenerateInstance;
-import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.Lists;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2TestCase;
@@ -31,10 +31,7 @@ import org.hivedb.util.database.test.WeatherSchema;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Unary;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-
-import static org.testng.AssertJUnit.*;
 
 public class DataGenerationServiceTest extends H2TestCase {
 	private static Hive hive;

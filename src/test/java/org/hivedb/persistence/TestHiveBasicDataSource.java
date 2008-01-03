@@ -1,30 +1,43 @@
 package org.hivedb.persistence;
 
+import static org.testng.AssertJUnit.assertEquals;
+
+import java.util.Iterator;
+
 import org.hivedb.meta.persistence.HiveBasicDataSource;
-import org.hivedb.util.ReflectionTools;
-import org.hivedb.util.database.test.H2HiveTestCase;
-import org.springframework.beans.BeanUtils;
-import static org.testng.AssertJUnit.*;
+import org.hivedb.test.ClassNameContextLoader;
+import org.hivedb.test.ContextAwareTest;
+import org.hivedb.test.DatabaseInitializer;
+import org.hivedb.test.TestNGTools;
+import org.springframework.test.context.ContextConfiguration;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-public class TestHiveBasicDataSource extends H2HiveTestCase{
-
-	@Test
-	public void testPoolSize() {
-		HiveBasicDataSource ds = new HiveBasicDataSource(getConnectString("testDb"));
+@ContextConfiguration(locations="single.db.xml",loader=ClassNameContextLoader.class)
+public class TestHiveBasicDataSource extends ContextAwareTest{
+	public DatabaseInitializer db;
+	
+	@Test(dataProvider="dbs", groups="database")
+	public void testPoolSize(String name) {
+		HiveBasicDataSource ds = new HiveBasicDataSource(db.getConnectString(name));
 		assertEquals(HiveBasicDataSource.DEFAULT_POOL_SIZE, ds.getMaxActive());
 		
 		System.setProperty(HiveBasicDataSource.CONNECTION_POOL_SIZE, "20");
-		HiveBasicDataSource ds20 = new HiveBasicDataSource(getConnectString("testDb"));
+		HiveBasicDataSource ds20 = new HiveBasicDataSource(db.getConnectString(name));
 		assertEquals(20, ds20.getMaxActive());
 	}
 	
-	@Test
-	public void testCloning() throws Exception {
-		HiveBasicDataSource ds = new HiveBasicDataSource(getConnectString(getHiveDatabaseName()));
+	@Test(dataProvider="dbs", groups="database")
+	public void testCloning(String name) throws Exception {
+		HiveBasicDataSource ds = new HiveBasicDataSource(db.getConnectString(name));
 		fiddleProperties(ds);
 		HiveBasicDataSource clone = ds.clone();
 		validateEquality(ds, clone);
+	}
+	
+	@DataProvider(name="dbs")
+	private Iterator<Object[]> getNames() {
+		return TestNGTools.makeObjectArrayIterator(db.getDatabaseNames());
 	}
 	
 	private HiveBasicDataSource fiddleProperties(HiveBasicDataSource ds) {
@@ -73,5 +86,13 @@ public class TestHiveBasicDataSource extends H2HiveTestCase{
 		assertEquals(ds1.getUrl(), ds2.getUrl());
 		assertEquals(ds1.getUsername(), ds2.getUsername());
 		assertEquals(ds1.getValidationQuery(), ds2.getValidationQuery());
+	}
+
+	public DatabaseInitializer getDb() {
+		return db;
+	}
+
+	public void setDb(DatabaseInitializer db) {
+		this.db = db;
 	}
 }

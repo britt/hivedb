@@ -34,14 +34,8 @@ public class Templater {
 		StringWriter writer = new StringWriter();
 		try {
 			template.merge(context, writer);
-		} catch (ResourceNotFoundException e) {
-			throw new HiveRuntimeException("Unable to locate template: " + templateFile);
-		} catch (ParseErrorException e) {
-			throw new HiveRuntimeException("Error parsing template: " + templateFile);
-		} catch (MethodInvocationException e) {
-			throw new RuntimeException(e);
-		} catch (IOException e) {
-			throw new HiveRuntimeException("Error reading template: " + templateFile);
+		} catch (Exception e) {
+			throw new HiveRuntimeException(e);
 		}
 		
 		return writer.toString();

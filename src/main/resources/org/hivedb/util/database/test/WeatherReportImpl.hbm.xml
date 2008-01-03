@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.hivedb.util.database.test">
+	<class name="WeatherReportImpl" table="WEATHER_REPORT">
+		<id name="reportId" column="REPORT_ID"/>
+        	<property name="continent" column="CONTINENT"/>
+        	<property name="latitude" column="LATITUDE"/>
+        	<property name="longitude" column="LONGITUDE"/>
+        	<property name="temperature" column="TEMPERATURE"/>
+        	<property name="reportTime" type="timestamp" column="REPORT_TIME"/>
+    </class>
+</hibernate-mapping>

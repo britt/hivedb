@@ -149,7 +149,7 @@ public class DirectoryTest extends H2TestCase {
 	public void testGetKeySemaphoresOfSecondaryIndexKey() throws Exception{
 		insertKeys(getHive());
 		Directory d = getDirectory();
-		assertEquals(getPrimaryIndexKeys().size(), d.getKeySemaphoresOfSecondaryIndexKey(nameIndex, secondaryKeyString).size());
+		assertEquals(1, d.getKeySemaphoresOfSecondaryIndexKey(nameIndex, secondaryKeyString).size());
 	}
 	
 	@Test
@@ -321,7 +321,7 @@ public class DirectoryTest extends H2TestCase {
 		insertKeys(getHive());
 		Directory d = getDirectory();
 		Collection<KeySemaphore> skeys = d.getKeySemaphoresOfSecondaryIndexKey(nameIndex, secondaryKeyString);
-		assertEquals(getPrimaryIndexKeys().size(), skeys.size());
+		assertEquals(1, skeys.size());
 	}
 	
 	@SuppressWarnings("unchecked")

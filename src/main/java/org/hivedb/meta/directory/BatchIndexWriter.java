@@ -71,15 +71,14 @@ public class BatchIndexWriter extends SimpleJdbcDaoSupport {
 	
 	public Integer deleteAllSecondaryIndexKeysOfResourceId(final Resource resource, Object id) {
 		final Object[] parameters = new Object[] {id};
-		final PreparedStatementCreatorFactory deleteFactory = 
-			Statements.newStmtCreatorFactory(sql.deleteAllSecondaryIndexKeysForResourceId(resource.getIdIndex()), resource.getColumnType());
 		
 		return (Integer) directory.newTransaction().execute(new TransactionCallback(){
 			public Object doInTransaction(TransactionStatus arg0) {
 				Integer rowsAffected = 0;
 				for(SecondaryIndex secondaryIndex : resource.getSecondaryIndexes()){
-					deleteFactory.setSqlToUse(sql.deleteAllSecondaryIndexKeysForResourceId(secondaryIndex));
-					rowsAffected += getJdbcTemplate().update(deleteFactory.newPreparedStatementCreator(parameters));
+					PreparedStatementCreatorFactory deleteIndexFactory = 
+						Statements.newStmtCreatorFactory(sql.deleteAllSecondaryIndexKeysForResourceId(secondaryIndex), resource.getColumnType());
+					rowsAffected += getJdbcTemplate().update(deleteIndexFactory.newPreparedStatementCreator(parameters));
 				}
 				return rowsAffected;
 			}});
