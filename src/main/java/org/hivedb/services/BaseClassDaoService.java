@@ -52,9 +52,8 @@ public class BaseClassDaoService implements ClassDaoService {
 		return new ServiceResponseImpl(config, dao.findByPropertyRange(property, start, end));
 	}
 
-	@SuppressWarnings("unchecked")
-	public Class<Object> getPersistedClass() {
-		return (Class<Object>) config.getRepresentedInterface();
+	public String getPersistedClass() {
+		return config.getRepresentedInterface().getName();
 	}
 
 	public ServiceResponse save(Object obj) {

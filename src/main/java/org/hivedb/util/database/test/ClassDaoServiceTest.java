@@ -104,7 +104,7 @@ public class ClassDaoServiceTest extends H2TestCase {
 	
 	@Test(dataProvider = "service")
 	public void notDetectTheExistenceOfNonPersistentEntities(ClassDaoService service) throws Exception {
-		assertFalse(service.exists(getId(getInstance(service.getPersistedClass()))));
+		assertFalse(service.exists(getId(getInstance(toClass(service.getPersistedClass())))));
 	}
 	
 	@Test(dataProvider = "service")
@@ -116,7 +116,7 @@ public class ClassDaoServiceTest extends H2TestCase {
 	public void saveMultipleInstances(ClassDaoService service) throws Exception {
 		List<Object> instances = Lists.newArrayList();
 		for(int i=0; i<INSTANCE_COUNT; i++)
-			instances.add(getInstance(service.getPersistedClass()));
+			instances.add(getInstance(toClass(service.getPersistedClass())));
 		service.saveAll(instances);
 		for(Object instance : instances)
 			validateRetrieval(
@@ -136,7 +136,7 @@ public class ClassDaoServiceTest extends H2TestCase {
 	}
 	
 	protected ServiceResponse getPersistentInstance(ClassDaoService service) throws Exception {
-		return service.save(getInstance(service.getPersistedClass()));
+		return service.save(getInstance(toClass(service.getPersistedClass())));
 	}
 	
 	protected Serializable getId(Object instance) {
@@ -268,5 +268,13 @@ public class ClassDaoServiceTest extends H2TestCase {
 			}
 		test.config = reader.getHiveConfiguration();
 		test.factory = test.getSessionFactory();
+	}
+	
+	protected Class<Object> toClass(String className) {
+		try {
+			return (Class<Object>) Class.forName(className);
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

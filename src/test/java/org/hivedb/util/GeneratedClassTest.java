@@ -1,15 +1,15 @@
 package org.hivedb.util;
 
+import org.apache.cxf.aegis.databinding.AegisDatabinding;
+import org.apache.cxf.jaxb.JAXBDataBinding;
 import org.hivedb.util.database.test.WeatherReport;
 import org.testng.annotations.Test;
 
-import static org.testng.AssertJUnit.*;
-
 public class GeneratedClassTest {
 	
-//	@Test
-//	public void testGetClass() throws Exception {
-//		WeatherReport instance = new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
-//		assertEquals(WeatherReport.class, instance.getClass());
-//	}
+	@Test
+	public void testGetClass() throws Exception {
+		WeatherReport instance = new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
+		instance.getClass().newInstance();
+	}
 }

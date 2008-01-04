@@ -23,5 +23,5 @@ public interface ClassDaoService {
 	@WebMethod
 	Object delete(Serializable id);
 	@WebMethod
-	Class<Object> getPersistedClass();
+	String getPersistedClass();
 }

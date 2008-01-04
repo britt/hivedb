@@ -12,7 +12,7 @@ public class ExampleDaoServiceTest extends ClassDaoServiceTest {
 	@Override
 	@BeforeClass
 	public void initializeDataProvider() {
-//		addEntity(WeatherReportImpl.class, new WeatherSchema(getConnectString(getHiveDatabaseName())));
+		addEntity(WeatherReportImpl.class, new WeatherSchema(getConnectString(getHiveDatabaseName())));
 	}
 	
 	@Test
