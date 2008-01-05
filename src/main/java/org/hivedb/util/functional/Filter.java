@@ -227,13 +227,13 @@ public abstract class Filter {
 			map.put(accessor.f(item), item);
 		return map.values();
 	}
-	public static class TruePredicate implements Predicate 
+	public static class TruePredicate implements Predicate<Object>
 	{
 		public boolean f(Object item) {
 			return true;
 		}
 	}
-	public static class FalsePredicate implements Predicate 
+	public static class FalsePredicate implements Predicate<Object>
 	{
 		public boolean f(Object item) {
 			return false;
@@ -321,7 +321,17 @@ public abstract class Filter {
 		}
 	}
 
-	
+	public static class ClassPredicate implements Predicate<Class<?>>
+	{
+		Class<?> clazz;
+		public ClassPredicate(Class<?> clazz)
+		{
+			this.clazz = clazz;
+		}
+		public boolean f(Class<?> clazz) {
+			return clazz.equals(this.clazz);
+		}
+	}
 
 }
 

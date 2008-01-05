@@ -40,7 +40,7 @@ public class HiveIndexerTest extends H2HiveTestCase {
 		WeatherReport report = generateIntance();
 		indexer.insert(getWeatherReportConfig(report), report);
 		assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
-		assertTrue(hive.directory().doesSecondaryIndexKeyExist("WeatherReport", "temperature", report.getTemperature(), report.getReportId()));
+		assertTrue(hive.directory().doesResourceIdExist("Temperature", report.getTemperature()));
 		for(Integer temperature : report.getWeeklyTemperatures()) 
 			assertTrue(hive.directory().doesSecondaryIndexKeyExist("WeatherReport", "weeklyTemperatures", temperature, report.getReportId()));
 	}
@@ -54,11 +54,10 @@ public class HiveIndexerTest extends H2HiveTestCase {
 		Integer oldTemp = report.getTemperature();
 		indexer.insert(getWeatherReportConfig(report), report);
 		assertEquals(1, hive.directory().getResourceIdsOfPrimaryIndexKey("WeatherReport", report.getContinent()).size());
-		assertTrue(hive.directory().getSecondaryIndexKeysWithResourceId("WeatherReport", "temperature", report.getReportId()).contains(oldTemp));
-		report.setTemperature(32);
+		assertTrue(hive.directory().getResourceIdsOfPrimaryIndexKey("Temperature", report.getContinent()).contains(oldTemp));
+		GeneratedInstanceInterceptor.setProperty(report, "temperature", 32);
 		indexer.update(getWeatherReportConfig(report), report);
-		assertFalse(hive.directory().getSecondaryIndexKeysWithResourceId("WeatherReport", "temperature", report.getReportId()).contains(oldTemp));
-		assertTrue(hive.directory().getSecondaryIndexKeysWithResourceId("WeatherReport", "temperature", report.getReportId()).contains(report.getTemperature()));
+		assertTrue(hive.directory().getResourceIdsOfPrimaryIndexKey("Temperature", report.getContinent()).contains(report.getTemperature()));
 	}
 	
 	@Test
@@ -66,19 +65,18 @@ public class HiveIndexerTest extends H2HiveTestCase {
 		Hive hive = getHive();
 		HiveIndexer indexer = new HiveIndexer(hive);
 		WeatherReport report = generateIntance();
-		report.setContinent("Asia");
+		GeneratedInstanceInterceptor.setProperty(report, "continent", "Asia");
 		Integer oldTemp = report.getTemperature();
 		indexer.insert(getWeatherReportConfig(report), report);
 		assertEquals(1, hive.directory().getResourceIdsOfPrimaryIndexKey("WeatherReport", report.getContinent()).size());
-		assertTrue(hive.directory().getSecondaryIndexKeysWithResourceId("WeatherReport", "temperature", report.getReportId()).contains(oldTemp));
+		assertTrue(hive.directory().getResourceIdsOfPrimaryIndexKey("Temperature", report.getContinent()).contains(oldTemp));
 		assertEquals("Asia", hive.directory().getPrimaryIndexKeyOfResourceId("WeatherReport", report.getReportId()));
 		
-		report.setTemperature(32);
-		report.setContinent("Europe");
+		GeneratedInstanceInterceptor.setProperty(report, "continent", "Europe");
 		indexer.update(getWeatherReportConfig(report), report);
-		assertFalse(hive.directory().getSecondaryIndexKeysWithResourceId("WeatherReport", "temperature", report.getReportId()).contains(oldTemp));
-		assertTrue(hive.directory().getSecondaryIndexKeysWithResourceId("WeatherReport", "temperature", report.getReportId()).contains(report.getTemperature()));
-		
+		GeneratedInstanceInterceptor.setProperty(report, "temperature", 32);
+		indexer.update(getWeatherReportConfig(report), report);
+		assertTrue(hive.directory().getResourceIdsOfPrimaryIndexKey("Temperature", report.getContinent()).contains(report.getTemperature()));
 		Collection<Object> asiatics = hive.directory().getResourceIdsOfPrimaryIndexKey("WeatherReport", "Asia");
 		Collection<Object> europeans = hive.directory().getResourceIdsOfPrimaryIndexKey("WeatherReport", "Europe");
 		//System.out.println(String.format("There are %s asiatics: %s", asiatics.size(), asiatics));
@@ -100,10 +98,11 @@ public class HiveIndexerTest extends H2HiveTestCase {
 		WeatherReport report = generateIntance();
 		indexer.insert(getWeatherReportConfig(report), report);
 		assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
-		assertTrue(hive.directory().doesSecondaryIndexKeyExist("WeatherReport", "temperature", report.getTemperature(), report.getReportId()));
+		assertTrue(hive.directory().doesResourceIdExist("Temperature", report.getTemperature()));
 		indexer.delete(getWeatherReportConfig(report), report);
 		assertFalse(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
-		assertFalse(hive.directory().doesSecondaryIndexKeyExist("WeatherReport", "temperature", report.getTemperature(), report.getReportId()));
+		// Temperature is an entity so it does not get deleted
+		assertTrue(hive.directory().doesResourceIdExist("Temperature", report.getTemperature()));
 		indexer.delete(getWeatherReportConfig(report), report);
 	}
 	
@@ -119,48 +118,6 @@ public class HiveIndexerTest extends H2HiveTestCase {
 	}
 	
 	private EntityConfig getWeatherReportConfig(final WeatherReport report) {
-		return new EntityConfigImpl(
-				WeatherReport.class,
-				WeatherReport.CONTINENT,
-				"WeatherReport",
-				"continent",
-				"reportId",
-				null,
-				Arrays.asList(
-						new EntityIndexConfigImpl(WeatherReport.class, "temperature"),
-						new EntityIndexConfigImpl(WeatherReport.class, "weeklyTemperatures")),
-				false);	
+		return getEntityHiveConfig().getEntityConfig(WeatherReport.class);
 	}
-
-
-	private EntityIndexConfig dummyIndexConfig(final String name, final Class clazz, final Object value) {
-		return new EntityIndexConfig(){
-
-			public Class<?> getIndexClass() {
-				return clazz;
-			}
-
-			public String getIndexName() {
-				return name;
-			}
-
-			public Collection<Object> getIndexValues(Object entityInstance) {
-				return Arrays.asList(value);
-			}
-
-			public String getPropertyName() {
-				return name;
-			}
-
-			public IndexType getIndexType() {
-				// TODO Auto-generated method stub
-				return null;
-			}
-
-			public Validator getValidator() {
-				// TODO Auto-generated method stub
-				return null;
-			}};   
-	}	
-	
 }

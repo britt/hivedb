@@ -198,8 +198,11 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	}
 
 	public Session openSession(String resource, Object resourceId) {
+		final Collection<Integer> nodeIdsOfResourceId = hive.directory().getNodeIdsOfResourceId(resource, resourceId);
+		if (nodeIdsOfResourceId.size() == 0)
+			throw new UnsupportedOperationException(String.format("No nodes found for resource id %s of resource %s", resourceId, resource));
 		return openSession(
-				hive.directory().getNodeIdsOfResourceId(resource, resourceId),
+				nodeIdsOfResourceId,
 				getDefaultInterceptor());
 	}
 

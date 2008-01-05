@@ -16,6 +16,7 @@ import java.util.Queue;
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
 import org.hivedb.HiveReadOnlyException;
+import org.hivedb.annotations.IndexType;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.EntityIndexConfig;
@@ -118,7 +119,11 @@ public class HiveScenarioTest {
 					actualPrimaryIndexKey, expectedPrimaryIndexKey);
 			}
 			
-			Collection<? extends EntityIndexConfig> secondaryIndexConfigs = entityConfig.getEntitySecondaryIndexConfigs();
+			Collection<? extends EntityIndexConfig> secondaryIndexConfigs =
+				Filter.grep(new Predicate<EntityIndexConfig>() {
+					public boolean f(EntityIndexConfig entityIndexConfig) {
+						return !entityIndexConfig.getIndexType().equals(IndexType.HiveForeignKey);
+					}}, entityConfig.getEntitySecondaryIndexConfigs());
 			for (EntityIndexConfig secondaryIndexConfig : secondaryIndexConfigs) {	
 				final SecondaryIndex secondaryIndex = resource.getSecondaryIndex(secondaryIndexConfig.getIndexName());
 				
@@ -478,7 +483,11 @@ public class HiveScenarioTest {
 					
 					assertFalse(hive.directory().doesResourceIdExist(resource.getName(), entityConfig.getId(resourceInstance)));
 				
-					Collection<? extends EntityIndexConfig> secondaryIndexConfigs = entityConfig.getEntitySecondaryIndexConfigs();
+					Collection<? extends EntityIndexConfig> secondaryIndexConfigs = Filter.grep(new Predicate<EntityIndexConfig>() {
+						public boolean f(EntityIndexConfig entityIndexConfig) {
+							return !entityIndexConfig.getIndexType().equals(IndexType.HiveForeignKey);
+						}}, entityConfig.getEntitySecondaryIndexConfigs());
+					
 					for (final EntityIndexConfig secondaryIndexConfig : secondaryIndexConfigs) {	
 					
 						new Undo() { public void f()  {
@@ -525,7 +534,10 @@ public class HiveScenarioTest {
 						} catch (Exception e) { throw new RuntimeException(e); }
 						assertFalse(hive.directory().doesResourceIdExist(resource.getName(), entityConfig.getId(resourceInstance)));
 						
-						Collection<? extends EntityIndexConfig> secondaryIndexConfigs = entityConfig.getEntitySecondaryIndexConfigs();
+						Collection<? extends EntityIndexConfig> secondaryIndexConfigs = Filter.grep(new Predicate<EntityIndexConfig>() {
+							public boolean f(EntityIndexConfig entityIndexConfig) {
+								return !entityIndexConfig.getIndexType().equals(IndexType.HiveForeignKey);
+							}}, entityConfig.getEntitySecondaryIndexConfigs());
 						for (final EntityIndexConfig secondaryIndexConfig : secondaryIndexConfigs) {	
 							final SecondaryIndex secondaryIndex = resource.getSecondaryIndex(secondaryIndexConfig.getIndexName());
 							Collection<Object> secondaryIndexKeys = secondaryIndexConfig.getIndexValues(resourceInstance);
@@ -561,7 +573,10 @@ public class HiveScenarioTest {
 		
 		for (final Object resourceInstance : resourceInstances) {
 			// Test delete of secondary index keys individually
-			Collection<? extends EntityIndexConfig> secondaryIndexConfigs = entityConfig.getEntitySecondaryIndexConfigs();
+			Collection<? extends EntityIndexConfig> secondaryIndexConfigs = Filter.grep(new Predicate<EntityIndexConfig>() {
+				public boolean f(EntityIndexConfig entityIndexConfig) {
+					return !entityIndexConfig.getIndexType().equals(IndexType.HiveForeignKey);
+				}}, entityConfig.getEntitySecondaryIndexConfigs());
 			for (final EntityIndexConfig secondaryIndexConfig : secondaryIndexConfigs) {	
 				final SecondaryIndex secondaryIndex = resource.getSecondaryIndex(secondaryIndexConfig.getIndexName());
 				

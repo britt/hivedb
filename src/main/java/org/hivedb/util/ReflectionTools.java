@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
+import org.hivedb.services.ClassDaoService;
 import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
@@ -170,7 +171,7 @@ public class ReflectionTools {
 	 * @param implementOneOfTheseInterfaces
 	 * @return
 	 */
-	public static Class whichIsImplemented(final Class doesClassOrInterface, final Collection<Class> implementOneOfTheseInterfaces)
+	public static Class whichIsImplemented(final Class doesClassOrInterface, final Collection<? extends Class> implementOneOfTheseInterfaces)
 	{
 		Class answer = Filter.grepSingleOrNull(new Predicate<Class>() {
 			public boolean f(Class implementThisInterface) {
@@ -256,7 +257,7 @@ public class ReflectionTools {
     			.invoke(instance, new Object[] {});
     	}
     	catch (Exception e) {
-	    	throw new RuntimeException(String.format("Error invoking %s of class %s", getterName, instance), e);
+	    	throw new RuntimeException(String.format("Error invoking %s of class %s", getterName, instance.getClass()), e);
     	}
     }
 	
@@ -485,13 +486,26 @@ public class ReflectionTools {
 		// Java magically erases generic information when referencing a method from a subclass,
 		// extended interface, or implementation (naturally)
 		// Extract the first owning interface or superclass if it exists
-		Class ofThisInterface;
+		
+		final String methodName = makeGetterName(propertyName);
+		return getOwnerOfMethod(clazz, methodName, new Class[] {});
+	}
+	public static Method getMethodOfOwner(Method method) {
+		Class owner = getOwnerOfMethod(method.getDeclaringClass(), method.getName(), method.getParameterTypes());
+		try {
+			return owner.getMethod(method.getName(), method.getParameterTypes());
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	private static Class getOwnerOfMethod(final Class<?> clazz, final String methodName, final Class[] parameterTypes) {
 		final List<Class> classes = new ArrayList(getAncestors(clazz));
+		Class ofThisInterface;
 		ofThisInterface = 
 			Filter.grepSingleOrNull(new Predicate<Class>() {
 				public boolean f(Class c) {
 					try {
-						c.getDeclaredMethod(makeGetterName(propertyName), new Class[] {});
+						c.getDeclaredMethod(methodName, parameterTypes);
 						return true;
 					}
 					catch (Exception e) {
@@ -503,6 +517,7 @@ public class ReflectionTools {
 			ofThisInterface = clazz;
 		return ofThisInterface;
 	}
+	
 	
 	private static Collection<Class<?>> getAncestors(Class<?> clazz) {
 		return Transform.flatten(new Collection[] {
@@ -531,9 +546,6 @@ public class ReflectionTools {
 	}
 	
 	public static Collection<String> getPropertiesOfScalarGetters(final Class<?> ofThisInterface) {
-		return getScalarGetters(ofThisInterface);
-	}
-	public static Collection<String> getScalarGetters(final Class<?> ofThisInterface) {
 		return Filter.grep(new Predicate<String>() {
 			public boolean f(String propertyName) {
 				return !isCollectionProperty(ofThisInterface, propertyName);
@@ -628,5 +640,12 @@ public class ReflectionTools {
 					}
 				},
 				ReflectionTools.getPropertiesOfComplexGetters(representedInterface))));
+	}
+	
+	public static Collection<Method> getOwnedMethods(final Class<?> clazz) {
+		return Filter.grep(new Predicate<Method>() {
+			public boolean f(Method method) {
+				return method.getDeclaringClass().equals(clazz);
+		}}, Arrays.asList(clazz.getMethods()));
 	}
 }

@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.hivedb.util.database.test">
+	<class name="TemperatureGenerated" table="TEMPERATURE">
+		<id name="temperatureId" column="TEMPERATURE_ID" unsaved-value="0" access="org.hivedb.hibernate.GeneratedAccessor"/>
+    	<property name="continent" column="CONTINENT" access="org.hivedb.hibernate.GeneratedAccessor"/>
+    </class>
+</hibernate-mapping>

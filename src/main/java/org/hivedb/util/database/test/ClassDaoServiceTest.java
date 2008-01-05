@@ -5,6 +5,8 @@ import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertTrue;
 
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
@@ -20,7 +22,10 @@ import org.hivedb.HiveRuntimeException;
 import org.hivedb.Schema;
 import org.hivedb.annotations.AnnotationHelper;
 import org.hivedb.annotations.Index;
+import org.hivedb.annotations.IndexParam;
+import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
+import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.hibernate.BaseDataAccessObject;
 import org.hivedb.hibernate.ConfigurationReader;
 import org.hivedb.hibernate.HiveSessionFactory;
@@ -33,11 +38,14 @@ import org.hivedb.services.ServiceContainer;
 import org.hivedb.services.ServiceResponse;
 import org.hivedb.services.ServiceResponseImpl;
 import org.hivedb.util.GenerateInstance;
+import org.hivedb.util.GeneratePrimitiveValue;
 import org.hivedb.util.Lists;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Delay;
+import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Predicate;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.springframework.beans.BeanUtils;
@@ -98,6 +106,55 @@ public class ClassDaoServiceTest extends H2TestCase {
 		for(Method index : indexes) {
 			String indexPropertyName = BeanUtils.findPropertyForMethod(index).getName();
 			ServiceResponse response = service.getByReference(indexPropertyName, ReflectionTools.invokeGetter(original, indexPropertyName));
+			validateRetrieval(original, response);
+		}
+	}
+	
+	@Test(dataProvider = "service")
+	public void retrieveInstancesUsingSubclassFinders(ClassDaoService service) throws Exception {
+		if (service.getClass().equals(BaseClassDaoService.class))
+			return;
+		final ServiceResponse original = getPersistentInstance(service);
+		// Any method returning a ServiceResponse will be tested
+		Collection<Method> finders =
+			Transform.map(new Unary<Method, Method>() {
+				public Method f(Method method) {
+					return ReflectionTools.getMethodOfOwner(method);
+				}},
+				Filter.grep(new Predicate<Method>() {
+					public boolean f(Method method) {
+						return method.getReturnType().equals(ServiceResponse.class);
+					}},
+					ReflectionTools.getOwnedMethods(service.getClass())));
+		final Object storedInstance = Atom.getFirst(original.getInstances());
+		final EntityConfig entityConfig = config.getEntityConfig(storedInstance.getClass());
+		for(final Method finder : finders) {
+			Collection<Object> argumentValues = Transform.map(new Unary<Annotation[], Object>() {
+				public Object f(Annotation[] annotations) {
+					final Annotation annotation = Filter.grepSingleOrNull(
+						new Predicate<Annotation>() {
+							public boolean f(Annotation annotation) {
+								return annotation.annotationType().equals(IndexParam.class);
+							}
+						},
+						Arrays.asList(annotations));
+					if (annotation == null) {
+						throw new RuntimeException(
+							String.format("Cannot resolve the index of parameter(s) of method %s, add an IndexParam annotation to each parameter", finder.getName()));
+					}
+					EntityIndexConfig entityIndexConfig = Atom.getFirstOrNull(Filter.grep(new Predicate<EntityIndexConfig>() {
+						public boolean f(EntityIndexConfig entityIndexConfig) {
+							return entityIndexConfig.getIndexName().equals(((IndexParam)annotation).value());
+						}}, entityConfig.getEntitySecondaryIndexConfigs()));
+					// For EntityIndexConfig indexes
+					if (entityIndexConfig != null)
+						return Atom.getFirstOrThrow(entityIndexConfig.getIndexValues(storedInstance));
+					// For DataIndex indexes
+					else
+						return ReflectionTools.invokeGetter(storedInstance, ((IndexParam)annotation).value());
+				}},
+				(Iterable<? extends Annotation[]>)Arrays.asList(finder.getParameterAnnotations()));
+			ServiceResponse response = (ServiceResponse) finder.invoke(service, argumentValues.toArray());
 			validateRetrieval(original, response);
 		}
 	}

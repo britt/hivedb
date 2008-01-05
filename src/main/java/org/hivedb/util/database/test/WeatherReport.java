@@ -7,6 +7,7 @@ import java.util.Date;
 
 import org.hivedb.annotations.EntityId;
 import org.hivedb.annotations.GeneratedClass;
+import org.hivedb.annotations.HiveForeignKey;
 import org.hivedb.annotations.Index;
 import org.hivedb.annotations.IndexType;
 import org.hivedb.annotations.PartitionIndex;
@@ -31,6 +32,7 @@ public interface WeatherReport {
 	Date getReportTime();
 
 	@Index
+	@HiveForeignKey(Temperature.class)
 	int getTemperature();
 	
 	@Index
@@ -38,13 +40,4 @@ public interface WeatherReport {
 	
 	@Index(type=IndexType.Data)
 	Collection<WeatherEvent> getWeatherEvents();
-	
-	void setContinent(String value);
-	void setLatitude(BigDecimal value);
-	void setLongitude(BigDecimal value);
-	void setReportId(Integer value);
-	void setReportTime(Date value);
-	void setTemperature(int value);
-	void setWeeklyTemperatures(Collection<Integer> values);
-	void setWeatherEvents(Collection<WeatherEvent> weatherEvents);
 }

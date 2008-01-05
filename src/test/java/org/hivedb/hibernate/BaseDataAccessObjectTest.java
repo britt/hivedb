@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.util.GenerateInstance;
@@ -30,6 +31,7 @@ import org.testng.annotations.Test;
 public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	private EntityHiveConfig config;
 
+	private static Random random = new Random();
 	@BeforeMethod
 	public void setup() throws Exception {
 		this.cleanupAfterEachTest = true;
@@ -48,9 +50,10 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	public void testFindByProperty() throws Exception {
 		DataAccessObject<WeatherReport, Integer> dao = getDao(getGeneratedClass());
 		WeatherReport report = getPersistentInstance(dao);
-		report.setTemperature(101);
+		int temperature = random.nextInt();
+		GeneratedInstanceInterceptor.setProperty(report, "temperature", temperature);
 		dao.save(report);
-		WeatherReport found = Atom.getFirstOrThrow(dao.findByProperty("temperature", 101));
+		WeatherReport found = Atom.getFirstOrThrow(dao.findByProperty("temperature", temperature));
 		assertEquals(report, found);
 	}
 	
@@ -61,8 +64,8 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		Collection<WeatherReport> set = new HashSet<WeatherReport>();
 		for (int i=0; i<INSTANCE_COUNT; i++) {
 			WeatherReport report = new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
-			report.setContinent("Derkaderkastan");
-			report.setTemperature(101);
+			GeneratedInstanceInterceptor.setProperty(report, "continent", "Derkaderkastan");
+			GeneratedInstanceInterceptor.setProperty(report, "temperature", 101);
 			set.add(dao.save(report));
 		}
 		
@@ -83,7 +86,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		List<WeatherReport> reports = new ArrayList<WeatherReport>();
 		for(int i=0; i<5; i++) {
 			WeatherReport report = new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
-			report.setReportId(i);
+			GeneratedInstanceInterceptor.setProperty(report, "reportId", i);
 			reports.add(report);
 		}
 		DataAccessObject<WeatherReport,Integer> dao = getDao(getGeneratedClass());
@@ -112,16 +115,23 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		final DataAccessObject<WeatherReport, Integer> dao = getDao(getGeneratedClass());
 		final int INSTANCE_COUNT = 12;
 		Collection<WeatherReport> set = new HashSet<WeatherReport>();
+		int min=0, max=0;
 		for (int i=0; i<INSTANCE_COUNT; i++) {
+			int temperature = random.nextInt();
+			min = Math.min(min, temperature);
+			max = Math.max(max, temperature);
 			WeatherReport report = new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
-			report.setTemperature(101);
+			GeneratedInstanceInterceptor.setProperty(report, "temperature", temperature);
 			dao.save(report);
+			set.add(report);
 		}
-		
+		final int finalMin = min;
+		final int finalMax = max;
 		Assert.assertEquals(
 				new HashSet<WeatherReport>(Transform.flatten(Transform.map(new Unary<Integer, Collection<WeatherReport>>() {
 					public Collection<WeatherReport> f(Integer i) {
-						return dao.findByPropertyRange("temperature", 0, INSTANCE_COUNT, i*4, 4);
+						final Collection<WeatherReport> value = dao.findByPropertyRange("temperature", finalMin, finalMax, (i-1)*4, 4);
+						return value;
 					}
 				}, new NumberIterator(3)))).hashCode(),
 				set.hashCode());
@@ -170,8 +180,8 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		DataAccessObject<WeatherReport, Integer> dao = getDao(getGeneratedClass());
 		WeatherReport original = getPersistentInstance(dao);
 		WeatherReport updated = dao.get(original.getReportId());
-		updated.setLatitude(new BigDecimal(30));
-		updated.setLongitude(new BigDecimal(30));
+		GeneratedInstanceInterceptor.setProperty(updated, "latitude", new BigDecimal(30));
+		GeneratedInstanceInterceptor.setProperty(updated, "longitude", new BigDecimal(30));
 		dao.save(updated);
 		WeatherReport persisted = dao.get(updated.getReportId());
 		assertEquals(updated, persisted);
@@ -183,7 +193,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		Collection<WeatherReport> reports = new ArrayList<WeatherReport>();
 		for(int i=0; i<5; i++) {
 			WeatherReport report = new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
-			report.setReportId(i);
+			GeneratedInstanceInterceptor.setProperty(report, "reportId", i);
 			reports.add(report);
 		}
 		DataAccessObject<WeatherReport,Integer> dao = getDao(getGeneratedClass());
@@ -198,7 +208,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		Collection<WeatherReport> reports = new ArrayList<WeatherReport>();
 		for(int i=0; i<5; i++) {
 			WeatherReport report = new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
-			report.setReportId(i);
+			GeneratedInstanceInterceptor.setProperty(report, "reportId", i);
 			reports.add(report);
 		}
 		DataAccessObject<WeatherReport,Integer> dao = getDao(getGeneratedClass());
@@ -207,7 +217,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 
 		Collection<WeatherReport> updated = new ArrayList<WeatherReport>();
 		for(WeatherReport report : reports){
-			report.setTemperature(100);
+			GeneratedInstanceInterceptor.setProperty(report, "temperature", 100);
 			updated.add(report);
 		}
 		dao.saveAll(updated);	

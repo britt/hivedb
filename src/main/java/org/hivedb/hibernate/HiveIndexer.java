@@ -7,11 +7,15 @@ import java.util.Map.Entry;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveReadOnlyException;
+import org.hivedb.annotations.IndexType;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityIndexConfig;
+import org.hivedb.configuration.EntityIndexConfigDelegator;
 import org.hivedb.util.functional.Collect;
+import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Maps;
 import org.hivedb.util.functional.Pair;
+import org.hivedb.util.functional.Predicate;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 
@@ -26,6 +30,7 @@ public class HiveIndexer {
 		try {
 			conditionallyInsertPrimaryIndexKey(config, entity);
 			hive.directory().insertResourceId(config.getResourceName(), config.getId(entity), config.getPrimaryIndexKey(entity));
+			conditionallyInsertDelegatedResourceIndexes(config, entity);
 			insertSecondaryIndexes(config, entity);
 		} catch(RuntimeException e) {
 			hive.directory().deleteResourceId(config.getResourceName(), config.getId(entity));
@@ -39,6 +44,18 @@ public class HiveIndexer {
 			hive.directory().insertPrimaryIndexKey(config.getPrimaryIndexKey(entity));
 	}
 	
+	private void conditionallyInsertDelegatedResourceIndexes(EntityConfig config, Object entity) throws HiveReadOnlyException {
+		for (EntityIndexConfig entityIndexConfig : config.getEntitySecondaryIndexConfigs())
+			if (entityIndexConfig.getIndexType().equals(IndexType.HiveForeignKey)) {
+				final EntityIndexConfigDelegator delegateEntityConfig = ((EntityIndexConfigDelegator)entityIndexConfig);
+				for (Object value: entityIndexConfig.getIndexValues(entity))
+					if (!hive.directory().doesResourceIdExist(delegateEntityConfig.getDelegateEntityConfig().getResourceName(), value))
+							insert(
+									delegateEntityConfig.getDelegateEntityConfig(),
+									delegateEntityConfig.stubEntityInstance(value, config.getPrimaryIndexKey(entity)));
+		}
+	}
+	
 	@SuppressWarnings("unchecked")
 	private void insertSecondaryIndexes(final EntityConfig config, final Object entity) throws HiveReadOnlyException {
 		Map<String, Collection<Object>> secondaryIndexMap = Transform.toMap(
@@ -47,15 +64,24 @@ public class HiveIndexer {
 					public Entry<String, Collection<Object>> f(EntityIndexConfig item) {
 						return new Pair<String, Collection<Object>>(item.getIndexName(), item.getIndexValues(entity));
 					}
-				}, config.getEntitySecondaryIndexConfigs())
+				}, getNonDelegatingSecondaryIndexConfigs(config))
 		);
 		hive.directory().insertSecondaryIndexKeys(config.getResourceName(), secondaryIndexMap, config.getId(entity));
+	}
+
+	private Collection<EntityIndexConfig> getNonDelegatingSecondaryIndexConfigs(
+			final EntityConfig config) {
+		return Filter.grep(new Predicate<EntityIndexConfig>() {
+			public boolean f(EntityIndexConfig entityIndexConfig) {
+				return !entityIndexConfig.getIndexType().equals(IndexType.HiveForeignKey);
+			}}, config.getEntitySecondaryIndexConfigs());
 	}
 	
 	@SuppressWarnings("unchecked")
 	private Map<String, Collection<Object>> getAllSecondaryIndexValues(EntityConfig config, Object entity) {
 		Map<String, Collection<Object>> secondaryIndexMap = new HashMap<String, Collection<Object>>();
-		for(EntityIndexConfig indexConfig : (Collection<EntityIndexConfig>)config.getEntitySecondaryIndexConfigs())
+		for(EntityIndexConfig indexConfig : 
+			getNonDelegatingSecondaryIndexConfigs(config))
 			secondaryIndexMap.put(
 					indexConfig.getIndexName(), 
 					hive.directory().getSecondaryIndexKeysWithResourceId(
@@ -71,7 +97,8 @@ public class HiveIndexer {
 		Map<String, Collection<Object>> toDelete = Maps.newHashMap();
 		Map<String, Collection<Object>> toInsert = Maps.newHashMap();
 		
-		for(EntityIndexConfig indexConfig : (Collection<EntityIndexConfig>)config.getEntitySecondaryIndexConfigs()) {
+		conditionallyInsertDelegatedResourceIndexes(config, entity);
+		for(EntityIndexConfig indexConfig : getNonDelegatingSecondaryIndexConfigs(config)) {
 			Pair<Collection<Object>, Collection<Object>> diff = 
 				Collect.diff(secondaryIndexValues.get(indexConfig.getIndexName()), indexConfig.getIndexValues(entity));
 			toDelete.put(indexConfig.getIndexName(), diff.getKey());

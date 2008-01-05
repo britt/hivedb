@@ -12,6 +12,7 @@ import org.hivedb.HiveReadOnlyException;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.meta.Node;
 import org.hivedb.util.GenerateInstance;
+import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.Continent;
 import org.hivedb.util.database.test.H2HiveTestCase;
@@ -65,7 +66,7 @@ public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
 		
 		assertTrue(hive.directory().doesPrimaryIndexKeyExist(report.getContinent()));
 		assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
-		assertTrue(hive.directory().doesSecondaryIndexKeyExist("WeatherReport", "temperature", report.getTemperature(), report.getReportId()));
+		assertTrue(hive.directory().doesResourceIdExist("Temperature", report.getTemperature()));
 		
 		assertTrue(hive.directory().doesPrimaryIndexKeyExist(asia.getName()));
 		assertTrue(hive.directory().doesSecondaryIndexKeyExist("Continent", "population", asia.getPopulation(), asia.getName()));
@@ -102,7 +103,7 @@ public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
 		
 		assertTrue(hive.directory().doesPrimaryIndexKeyExist(report.getContinent()));
 		assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
-		assertTrue(hive.directory().doesSecondaryIndexKeyExist("WeatherReport", "temperature", report.getTemperature(), report.getReportId()));
+		assertTrue(hive.directory().doesResourceIdExist("Temperature", report.getTemperature()));
 		
 		hive.updateHiveReadOnly(true);
 		try {
@@ -127,7 +128,7 @@ public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
 		
 		assertTrue(hive.directory().doesPrimaryIndexKeyExist(report.getContinent()));
 		assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
-		assertTrue(hive.directory().doesSecondaryIndexKeyExist("WeatherReport", "temperature", report.getTemperature(), report.getReportId()));
+		assertTrue(hive.directory().doesResourceIdExist("Temperature", report.getTemperature()));
 		
 		assertTrue(hive.directory().doesPrimaryIndexKeyExist(asia.getName()));
 		assertTrue(hive.directory().doesSecondaryIndexKeyExist("Continent", "population", asia.getPopulation(), asia.getName()));
@@ -136,7 +137,8 @@ public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
 		interceptor.onDelete(asia, null, null, null, null);
 		
 		assertFalse(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
-		assertFalse(hive.directory().doesSecondaryIndexKeyExist("WeatherReport", "temperature", report.getTemperature(), report.getReportId()));
+		// Referenced entity does not get deleted
+		assertTrue(hive.directory().doesResourceIdExist("Temperature", report.getTemperature()));
 		
 		assertFalse(hive.directory().doesPrimaryIndexKeyExist(asia.getName()));
 		assertFalse(hive.directory().doesSecondaryIndexKeyExist("Continent", "population", asia.getPopulation(), asia.getName()));
@@ -154,12 +156,11 @@ public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
 		
 		assertTrue(hive.directory().doesPrimaryIndexKeyExist(report.getContinent()));
 		assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
-		assertTrue(hive.directory().doesSecondaryIndexKeyExist("WeatherReport", "temperature", report.getTemperature(), report.getReportId()));
+		assertTrue(hive.directory().doesResourceIdExist("Temperature", report.getTemperature()));
 		
 		int oldTemperature = report.getTemperature();
-		report.setTemperature(72);
+		GeneratedInstanceInterceptor.setProperty(report, "temperature", 72);
 		interceptor.onFlushDirty(report, null, null, null, null,null);
-		assertTrue(hive.directory().doesSecondaryIndexKeyExist("WeatherReport", "temperature", 72, report.getReportId()));
-		assertFalse(hive.directory().doesSecondaryIndexKeyExist("WeatherReport", "temperature", oldTemperature, report.getReportId()));
+		assertTrue(hive.directory().doesResourceIdExist("Temperature", 72));
 	}
 }

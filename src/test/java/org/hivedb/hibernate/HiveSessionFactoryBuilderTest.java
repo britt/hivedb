@@ -27,6 +27,7 @@ import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.WeatherEvent;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.database.test.WeatherSchema;
+import org.hivedb.util.functional.Atom;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -119,7 +120,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 			}};
 		doInTransaction(callback, session);
 		
-		factoryBuilder.openSession("WeatherReport", "temperature", report.getTemperature());
+		factoryBuilder.openSession("WeatherReport", "weeklyTemperatures", Atom.getFirstOrThrow(report.getWeeklyTemperatures()));
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -191,10 +192,10 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 		
 		final WeatherReport mutated = newInstance();
 		
-		mutated.setReportId(report.getReportId());
-		mutated.setContinent(report.getContinent());
-		mutated.setTemperature(report.getTemperature() + 1);
-		mutated.setReportTime(new Date(System.currentTimeMillis()));
+		GeneratedInstanceInterceptor.setProperty(mutated, "reportId", report.getReportId());
+		GeneratedInstanceInterceptor.setProperty(mutated, "continent", report.getContinent());
+		GeneratedInstanceInterceptor.setProperty(mutated, "temperature", report.getTemperature());
+		GeneratedInstanceInterceptor.setProperty(mutated, "reportTime", new Date(System.currentTimeMillis()));
 		
 		assertFalse("You have to change something if you want to test update.", mutated.equals(report));
 		
@@ -207,7 +208,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 		WeatherReport fetched = (WeatherReport) factoryBuilder.openSession().get(getGeneratedClass(WeatherReport.class), report.getReportId());
 		assertNotNull(fetched);
 		assertFalse(report.equals(fetched));
-		assertEquals(mutated, fetched);
+		Assert.assertEquals(mutated, fetched);
 	}
 	
 	public static void doInTransaction(SessionCallback callback, Session session) {

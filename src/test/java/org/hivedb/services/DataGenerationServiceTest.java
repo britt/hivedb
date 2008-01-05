@@ -25,6 +25,7 @@ import org.hivedb.meta.Node;
 import org.hivedb.util.Lists;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2TestCase;
+import org.hivedb.util.database.test.Temperature;
 import org.hivedb.util.database.test.WeatherEvent;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.database.test.WeatherSchema;
@@ -94,7 +95,7 @@ public class DataGenerationServiceTest extends H2TestCase {
 	}
 	
 	private Class<?>[] getEntityClasses() {
-		return new Class<?>[]{WeatherReport.class, WeatherEvent.class};
+		return new Class<?>[]{WeatherReport.class, WeatherEvent.class, Temperature.class};
 	}
 
 	@Override

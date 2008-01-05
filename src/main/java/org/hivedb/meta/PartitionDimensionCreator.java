@@ -3,12 +3,15 @@ package org.hivedb.meta;
 import java.util.Collection;
 
 import org.hivedb.Hive;
+import org.hivedb.annotations.IndexType;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.functional.Atom;
+import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Predicate;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 
@@ -70,7 +73,11 @@ public class PartitionDimensionCreator {
 								throw new RuntimeException(e);
 							}
 					}}, 
-					entityConfig.getEntitySecondaryIndexConfigs());
+					Filter.grep(new Predicate<EntityIndexConfig>() {
+						public boolean f(EntityIndexConfig entityIndexConfig) {
+							return !entityIndexConfig.getIndexType().equals(IndexType.HiveForeignKey);
+						}}, entityConfig.getEntitySecondaryIndexConfigs()));
+					
 					
 		} catch (Exception e) {
 			throw new RuntimeException(e);

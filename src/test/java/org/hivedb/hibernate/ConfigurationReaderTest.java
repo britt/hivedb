@@ -100,9 +100,9 @@ public class ConfigurationReaderTest extends H2TestCase {
 		reader.install(hive);
 		EntityConfig config = reader.getEntityConfig(WeatherReport.class.getName());
 		assertNotNull(hive.getPartitionDimension().getResource(config.getResourceName()));
-		assertEquals(2,hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes().size());
+		assertEquals(1,hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes().size());
 		assertEquals(Types.INTEGER,Atom.getFirst(hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes()).getColumnInfo().getColumnType());
-		assertEquals("temperature", Atom.getFirst(hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes()).getName());
+		assertEquals("weeklyTemperatures", Atom.getFirst(hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes()).getName());
 	}
 	@SuppressWarnings("unchecked")
 	@Test
@@ -126,9 +126,9 @@ public class ConfigurationReaderTest extends H2TestCase {
 		EntityConfig config = reader.getEntityConfig(WeatherReport.class.getName());
 		Hive hive = Hive.load(getConnectString(H2HiveTestCase.TEST_DB));
 		assertNotNull(hive.getPartitionDimension().getResource(config.getResourceName()));
-		assertEquals(2,hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes().size());
+		assertEquals(1,hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes().size());
 		assertEquals(Types.INTEGER,Atom.getFirst(hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes()).getColumnInfo().getColumnType());
-		assertEquals("temperature", Atom.getFirst(hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes()).getName());
+		assertEquals("weeklyTemperatures", Atom.getFirst(hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes()).getName());
 	}
 	@SuppressWarnings("unchecked")
 	@Test
@@ -153,9 +153,9 @@ public class ConfigurationReaderTest extends H2TestCase {
 		EntityConfig config = reader.getEntityConfig(WeatherReport.class.getName());
 		Hive hive = Hive.load(getConnectString(H2HiveTestCase.TEST_DB));
 		assertNotNull(hive.getPartitionDimension().getResource(config.getResourceName()));
-		assertEquals(2,hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes().size());
+		assertEquals(1,hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes().size());
 		assertEquals(Types.INTEGER,Atom.getFirst(hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes()).getColumnInfo().getColumnType());
-		assertEquals("temperature", Atom.getFirst(hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes()).getName());
+		assertEquals("weeklyTemperatures", Atom.getFirst(hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes()).getName());
 	}
 	@SuppressWarnings("unchecked")
 	@Test

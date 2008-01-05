@@ -2,6 +2,7 @@ package org.hivedb.util.functional;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -147,7 +148,7 @@ public class Amass {
 					public String f(Object item) {
 						int hash;
 						if(ReflectionTools.doesImplementOrExtend(item.getClass(), Collection.class))
-							hash = makeHashCode((Collection<Object>) item);
+							hash = new HashSet<Object>((Collection<Object>) item).hashCode();
 						else
 							hash = item.hashCode();
 						return new Integer(hash).toString();

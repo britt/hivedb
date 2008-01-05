@@ -13,6 +13,7 @@ import org.hivedb.HiveRuntimeException;
 import org.hivedb.annotations.AnnotationHelper;
 import org.hivedb.annotations.EntityId;
 import org.hivedb.annotations.EntityVersion;
+import org.hivedb.annotations.HiveForeignKey;
 import org.hivedb.annotations.Index;
 import org.hivedb.annotations.IndexType;
 import org.hivedb.annotations.PartitionIndex;
@@ -22,6 +23,7 @@ import org.hivedb.configuration.EntityConfigImpl;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.configuration.EntityIndexConfigImpl;
+import org.hivedb.configuration.EntityIndexConfigProxy;
 import org.hivedb.configuration.PluralHiveConfig;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.PartitionDimension;
@@ -87,7 +89,10 @@ public class ConfigurationReader {
 			if (isCollectionPropertyOfAComplexType(clazz, indexMethod))
 				indexes.add(new EntityIndexConfigImpl(clazz, getSecondaryIndexName(indexMethod), getIndexPropertyOfCollectionType(ReflectionTools.getCollectionItemType(clazz, ReflectionTools.getPropertyNameOfAccessor(indexMethod)))));
 			else
-				indexes.add(new EntityIndexConfigImpl(clazz, getSecondaryIndexName(indexMethod)));
+				if (isHiveForeignKeyIndex(indexMethod))
+					indexes.add(new EntityIndexConfigProxy(clazz, getSecondaryIndexName(indexMethod), readConfiguration(getHiveForeignKeyIndexClass(indexMethod))));
+				else
+					indexes.add(new EntityIndexConfigImpl(clazz, getSecondaryIndexName(indexMethod)));
 		
 		EntityConfig config = new EntityConfigImpl(
 				clazz,
@@ -101,7 +106,15 @@ public class ConfigurationReader {
 		);	
 		return config;
 	}
+	
+	private static boolean isHiveForeignKeyIndex(Method indexMethod) {
+		return indexMethod.getAnnotation(HiveForeignKey.class) != null;
+	}
+	private static Class<?> getHiveForeignKeyIndexClass(Method indexMethod) {
+		return indexMethod.getAnnotation(HiveForeignKey.class).value();
+	}
 
+	
 	private static List<Method> getHiveIndexMethods(Class<?> clazz, Method resourceIdMethod) {
 		List<Method> indexMethods = AnnotationHelper.getAllMethodsWithAnnotation(clazz, Index.class);
 		if(indexMethods.contains(resourceIdMethod))
@@ -166,7 +179,8 @@ public class ConfigurationReader {
 				hive.addResource(createResource(config));
 					
 			for(EntityIndexConfig indexConfig : (Collection<EntityIndexConfig>) config.getEntitySecondaryIndexConfigs())
-				hive.addSecondaryIndex(resource, createSecondaryIndex(indexConfig));
+				if (!indexConfig.getIndexType().equals(IndexType.HiveForeignKey))
+					hive.addSecondaryIndex(resource, createSecondaryIndex(indexConfig));
 		} catch (HiveReadOnlyException e) {
 			throw new HiveRuntimeException(e.getMessage(),e);
 		}

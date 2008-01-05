@@ -13,8 +13,10 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hivedb.Hive;
 import org.hivedb.HiveKeyNotFoundException;
+import org.hivedb.annotations.IndexType;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityIndexConfig;
+import org.hivedb.configuration.EntityIndexConfigDelegator;
 import org.hivedb.util.Lists;
 
 public class BaseDataAccessObject implements DataAccessObject<Object, Serializable>{
@@ -81,11 +83,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	public Collection<Object> findByProperty(String propertyName, Object propertyValue) {
 		EntityConfig entityConfig = config;
 		EntityIndexConfig indexConfig = getIndexConfig(propertyName, entityConfig.getEntitySecondaryIndexConfigs());
-		Session session = 
-			factory.openSession(
-				entityConfig.getResourceName(), 
-				indexConfig.getIndexName(), 
-				propertyValue);
+		Session session = createSessionForIndex(entityConfig, indexConfig, propertyValue);
 		Criteria criteria = session.createCriteria(entityConfig.getRepresentedInterface());
 		criteria.add( Restrictions.eq(indexConfig.getPropertyName(), propertyValue));
 		
@@ -95,17 +93,24 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	public Collection<Object> findByProperty(String propertyName, Object propertyValue, Integer firstResult, Integer maxResults) {
 		EntityConfig entityConfig = config;
 		EntityIndexConfig indexConfig = getIndexConfig(propertyName, entityConfig.getEntitySecondaryIndexConfigs());
-		Session session = 
-			factory.openSession(
-				entityConfig.getResourceName(), 
-				indexConfig.getIndexName(), 
-				propertyValue);
+		Session session = createSessionForIndex(entityConfig, indexConfig, propertyValue);
 		Criteria criteria = session.createCriteria(entityConfig.getRepresentedInterface());
 		criteria.add( Restrictions.eq(indexConfig.getPropertyName(), propertyValue));
 		criteria.setFirstResult(firstResult);
 		criteria.setMaxResults(maxResults);
 		criteria.addOrder(Order.asc(propertyName));
 		return findByProperty(propertyName, session, criteria);
+	}
+	
+	private Session createSessionForIndex(EntityConfig entityConfig, EntityIndexConfig indexConfig, Object propertyValue) {
+		return indexConfig.getIndexType().equals(IndexType.HiveForeignKey)
+		? factory.openSession(
+			((EntityIndexConfigDelegator)indexConfig).getDelegateEntityConfig().getResourceName(),
+			propertyValue)
+		: factory.openSession(
+			entityConfig.getResourceName(), 
+			indexConfig.getIndexName(), 
+			propertyValue);
 	}
 	
 	public Collection<Object> findByPropertyRange(String propertyName, java.lang.Object minValue, java.lang.Object maxValue) {
