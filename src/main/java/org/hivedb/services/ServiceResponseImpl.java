@@ -9,38 +9,38 @@ import org.hivedb.util.Lists;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 
-public class ServiceResponseImpl implements ServiceResponse, Serializable {
+public class ServiceResponseImpl<T> implements ServiceResponse<T>, Serializable {
 	private static final long serialVersionUID = 1L;
-	private Collection<ServiceContainer> containers = Lists.newArrayList();
+	private Collection<ServiceContainer<T>> containers = Lists.newArrayList();
 	
 	public ServiceResponseImpl() {}
 
-	public ServiceResponseImpl(final EntityConfig config, Collection<Object> instances) {
-		this.containers = Transform.map(new Unary<Object, ServiceContainer>(){
-			public ServiceContainer f(Object item) {
-				return new ServiceContainerImpl(item, config.getVersion(item));
+	public ServiceResponseImpl(final EntityConfig config, Collection<T> instances) {
+		this.containers = Transform.map(new Unary<T, ServiceContainer<T>>(){
+			public ServiceContainer<T> f(T item) {
+				return new ServiceContainerImpl<T>(item, config.getVersion(item));
 			}}, instances);
 	}
 	
-	public ServiceResponseImpl(final EntityConfig config, Object... instances) {
+	public ServiceResponseImpl(final EntityConfig config, T... instances) {
 		this(config, Arrays.asList(instances));
 	}
 	
-	public ServiceResponseImpl(Collection<ServiceContainer> containers) {
+	public ServiceResponseImpl(Collection<ServiceContainer<T>> containers) {
 		this.containers = containers;
 	}
 
-	public Collection<ServiceContainer> getContainers() {
+	public Collection<ServiceContainer<T>> getContainers() {
 		return containers;
 	}
 
-	public void setContainers(Collection<ServiceContainer> containers) {
+	public void setContainers(Collection<ServiceContainer<T>> containers) {
 		this.containers = containers;
 	}
 
-	public Collection<Object> getInstances() {
-		return Transform.map(new Unary<ServiceContainer, Object>(){
-			public Object f(ServiceContainer item) {
+	public Collection<T> getInstances() {
+		return Transform.map(new Unary<ServiceContainer<T>, T>(){
+			public T f(ServiceContainer<T> item) {
 				return item.getInstance();
 			}}, containers);
 	}

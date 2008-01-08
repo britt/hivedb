@@ -1,6 +1,6 @@
 package org.hivedb.services;
 
-public interface ServiceContainer {
-	Object getInstance();
+public interface ServiceContainer<T> {
+	T getInstance();
 	int getVersion();
 }

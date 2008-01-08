@@ -14,7 +14,7 @@ import org.hivedb.hibernate.DataAccessObject;
 import org.hivedb.hibernate.HiveSessionFactory;
 import org.hivedb.hibernate.HiveSessionFactoryBuilderImpl;
 
-public class BaseClassDaoService implements ClassDaoService {
+public class BaseClassDaoService<T,ID extends Serializable> implements ClassDaoService<T,ID> {
 	protected EntityConfig config;
 	protected DataAccessObject<Object, Serializable> dao;
 	
@@ -32,15 +32,15 @@ public class BaseClassDaoService implements ClassDaoService {
 		this.dao = dao;
 	}
 
-	public Object delete(Serializable id) {
+	public Object delete(ID id) {
 		return dao.delete(id);
 	}
 
-	public boolean exists(Serializable id) {
+	public boolean exists(ID id) {
 		return dao.exists(id);
 	}
 
-	public ServiceResponse get(Serializable id) {
+	public ServiceResponse get(ID id) {
 		return new ServiceResponseImpl(config, dao.get(id));
 	}
 
@@ -56,12 +56,12 @@ public class BaseClassDaoService implements ClassDaoService {
 		return config.getRepresentedInterface().getName();
 	}
 
-	public ServiceResponse save(Object obj) {
+	public ServiceResponse save(T obj) {
 		return new ServiceResponseImpl(config, dao.save(obj));
 	}
 
-	public ServiceResponse saveAll(Collection<Object> instances) {
-		return new ServiceResponseImpl(config, dao.saveAll(instances));
+	public ServiceResponse saveAll(Collection<T> instances) {
+		return new ServiceResponseImpl(config, dao.saveAll((Collection<Object>)instances));
 	}
 
 }

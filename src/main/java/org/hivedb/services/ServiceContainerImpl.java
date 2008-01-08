@@ -2,23 +2,23 @@ package org.hivedb.services;
 
 import java.io.Serializable;
 
-public class ServiceContainerImpl implements ServiceContainer, Serializable {
+public class ServiceContainerImpl<T> implements ServiceContainer<T>, Serializable {
 	private static final long serialVersionUID = 1L;
-	private Object instance;
+	private T instance;
 	private int version;
 
 	public ServiceContainerImpl() {}
 	
-	public ServiceContainerImpl(Object instance, int version) {
+	public ServiceContainerImpl(T instance, int version) {
 		this.instance = instance;
 		this.version = version;
 	}
 
-	public Object getInstance() {
+	public T getInstance() {
 		return instance;
 	}
 
-	public void setInstance(Object instance) {
+	public void setInstance(T instance) {
 		this.instance = instance;
 	}
 

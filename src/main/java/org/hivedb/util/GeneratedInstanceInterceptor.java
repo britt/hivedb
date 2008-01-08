@@ -55,7 +55,7 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 		e.setSuperclass(Mapper.class);
 		GeneratedInstanceInterceptor interceptor = new GeneratedInstanceInterceptor(clazz);	
 		if (clazz.isInterface())
-			e.setInterfaces(new Class[] {clazz, PropertySetter.class});
+			e.setInterfaces(new Class[] {clazz, PropertySetter.class, MapBacked.class});
 		else {
 			List list = new ArrayList(Arrays.asList(clazz.getInterfaces()));
 			list.add(PropertySetter.class);

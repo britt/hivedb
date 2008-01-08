@@ -2,7 +2,7 @@ package org.hivedb.services;
 
 import java.util.Collection;
 
-public interface ServiceResponse {
-	Collection<ServiceContainer> getContainers();
-	Collection<Object> getInstances();
+public interface ServiceResponse<T> {
+	Collection<ServiceContainer<T>> getContainers();
+	Collection<T> getInstances();
 }
