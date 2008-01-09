@@ -31,13 +31,12 @@ import org.hivedb.util.functional.Generator;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 
-@WebService
-public class DataGenerationService {
+public class DataGenerationServiceImpl implements DataGenerationService {
 	private ConfigurationReader config;
 	private Map<Class, DataAccessObject<Object, Serializable>> daos = Maps.newHashMap();
-	private Log log = LogFactory.getLog(DataGenerationService.class);
+	private Log log = LogFactory.getLog(DataGenerationServiceImpl.class);
 
-	public DataGenerationService(Collection<Class<?>> classes, Hive hive) {
+	public DataGenerationServiceImpl(Collection<Class<?>> classes, Hive hive) {
 		config = new ConfigurationReader(classes);
 		HiveSessionFactory factory = new HiveSessionFactoryBuilderImpl(config.getHiveConfiguration(), classes, hive, new SequentialShardAccessStrategy());
 		for(Class clazz : classes)
@@ -45,7 +44,9 @@ public class DataGenerationService {
 				daos.put(clazz, new BaseDataAccessObject(config.getEntityConfig(clazz.getName()),hive,factory));
 	}
 	
-	@WebMethod
+	/* (non-Javadoc)
+	 * @see org.hivedb.services.DataGenerationService#listClasses()
+	 */
 	public Collection<String> listClasses() {
 		return Transform.map(new Unary<EntityConfig, String>(){
 			public String f(EntityConfig item) {
@@ -53,20 +54,16 @@ public class DataGenerationService {
 			}}, config.getConfigurations());
 	}
 	
-	@WebMethod
-	public String echo(@WebParam String msg) {
-		log.debug("Message: " + msg);
-		return msg;
-	}
-	
-	@WebMethod
+	/* (non-Javadoc)
+	 * @see org.hivedb.services.DataGenerationService#generate(java.lang.String, java.lang.Integer, java.lang.Integer)
+	 */
 	public Collection<Serializable> generate(String clazz, Integer partitionKeyCount, Integer instanceCount) {
 		log.debug(String.format("Parameters: %s %s %s", clazz, partitionKeyCount, instanceCount));
 		Collection<Serializable> ids = Lists.newArrayList();
 		try {
 		EntityConfig entityConfig = config.getEntityConfig(clazz);
 		
-		log.debug(String.format("EntityConfig %s %s", entityConfig == null, entityConfig.getRepresentedInterface()));
+		log.debug(String.format("EntityConfig %s %s", entityConfig == null, entityConfig != null ? entityConfig.getRepresentedInterface() : "null"));
 		
 		Generator<Object> pKeyGenerator;
 		if(PrimitiveUtils.isPrimitiveClass(entityConfig.getPrimaryKeyClass()))
