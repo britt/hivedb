@@ -45,8 +45,8 @@ public class HiveIndexer {
 	}
 	
 	private void conditionallyInsertDelegatedResourceIndexes(EntityConfig config, Object entity) throws HiveReadOnlyException {
-		for (EntityIndexConfig entityIndexConfig : config.getEntitySecondaryIndexConfigs())
-			if (entityIndexConfig.getIndexType().equals(IndexType.HiveForeignKey)) {
+		for (EntityIndexConfig entityIndexConfig : config.getEntityIndexConfigs())
+			if (entityIndexConfig.getIndexType().equals(IndexType.Delegates)) {
 				final EntityIndexConfigDelegator delegateEntityConfig = ((EntityIndexConfigDelegator)entityIndexConfig);
 				for (Object value: entityIndexConfig.getIndexValues(entity))
 					if (!hive.directory().doesResourceIdExist(delegateEntityConfig.getDelegateEntityConfig().getResourceName(), value))
@@ -64,24 +64,24 @@ public class HiveIndexer {
 					public Entry<String, Collection<Object>> f(EntityIndexConfig item) {
 						return new Pair<String, Collection<Object>>(item.getIndexName(), item.getIndexValues(entity));
 					}
-				}, getNonDelegatingSecondaryIndexConfigs(config))
+				}, getHiveIndexConfigs(config))
 		);
 		hive.directory().insertSecondaryIndexKeys(config.getResourceName(), secondaryIndexMap, config.getId(entity));
 	}
 
-	private Collection<EntityIndexConfig> getNonDelegatingSecondaryIndexConfigs(
+	private Collection<EntityIndexConfig> getHiveIndexConfigs(
 			final EntityConfig config) {
 		return Filter.grep(new Predicate<EntityIndexConfig>() {
 			public boolean f(EntityIndexConfig entityIndexConfig) {
-				return !entityIndexConfig.getIndexType().equals(IndexType.HiveForeignKey);
-			}}, config.getEntitySecondaryIndexConfigs());
+				return entityIndexConfig.getIndexType().equals(IndexType.Hive);
+			}}, config.getEntityIndexConfigs());
 	}
 	
 	@SuppressWarnings("unchecked")
 	private Map<String, Collection<Object>> getAllSecondaryIndexValues(EntityConfig config, Object entity) {
 		Map<String, Collection<Object>> secondaryIndexMap = new HashMap<String, Collection<Object>>();
 		for(EntityIndexConfig indexConfig : 
-			getNonDelegatingSecondaryIndexConfigs(config))
+			getHiveIndexConfigs(config))
 			secondaryIndexMap.put(
 					indexConfig.getIndexName(), 
 					hive.directory().getSecondaryIndexKeysWithResourceId(
@@ -98,7 +98,7 @@ public class HiveIndexer {
 		Map<String, Collection<Object>> toInsert = Maps.newHashMap();
 		
 		conditionallyInsertDelegatedResourceIndexes(config, entity);
-		for(EntityIndexConfig indexConfig : getNonDelegatingSecondaryIndexConfigs(config)) {
+		for(EntityIndexConfig indexConfig : getHiveIndexConfigs(config)) {
 			Pair<Collection<Object>, Collection<Object>> diff = 
 				Collect.diff(secondaryIndexValues.get(indexConfig.getIndexName()), indexConfig.getIndexValues(entity));
 			toDelete.put(indexConfig.getIndexName(), diff.getKey());

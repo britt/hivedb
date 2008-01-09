@@ -2,6 +2,7 @@ package org.hivedb.hibernate;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +14,7 @@ import org.hivedb.HiveRuntimeException;
 import org.hivedb.annotations.AnnotationHelper;
 import org.hivedb.annotations.EntityId;
 import org.hivedb.annotations.EntityVersion;
-import org.hivedb.annotations.HiveForeignKey;
+import org.hivedb.annotations.IndexDelegate;
 import org.hivedb.annotations.Index;
 import org.hivedb.annotations.IndexType;
 import org.hivedb.annotations.PartitionIndex;
@@ -22,6 +23,7 @@ import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityConfigImpl;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.EntityIndexConfig;
+import org.hivedb.configuration.EntityIndexConfigDelegator;
 import org.hivedb.configuration.EntityIndexConfigImpl;
 import org.hivedb.configuration.EntityIndexConfigProxy;
 import org.hivedb.configuration.PluralHiveConfig;
@@ -33,6 +35,8 @@ import org.hivedb.util.PrimitiveUtils;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.functional.Atom;
+import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Predicate;
 import org.springframework.beans.BeanUtils;
 
 public class ConfigurationReader {
@@ -77,22 +81,12 @@ public class ConfigurationReader {
 		
 		Method versionMethod = AnnotationHelper.getFirstMethodWithAnnotation(clazz, EntityVersion.class);
 		Method resourceIdMethod = AnnotationHelper.getFirstMethodWithAnnotation(clazz, EntityId.class);
-
-		List<Method> indexMethods = getHiveIndexMethods(clazz,resourceIdMethod);	
+		
 		String primaryIndexPropertyName = getIndexNameForMethod(partitionIndexMethod);
 		String idPropertyName = getIndexNameForMethod(resourceIdMethod);
 		String versionPropertyName = versionMethod == null ? null : getIndexNameForMethod(versionMethod);
 		
-		List<EntityIndexConfig> indexes = Lists.newArrayList();
-		
-		for(Method indexMethod : indexMethods)
-			if (isCollectionPropertyOfAComplexType(clazz, indexMethod))
-				indexes.add(new EntityIndexConfigImpl(clazz, getSecondaryIndexName(indexMethod), getIndexPropertyOfCollectionType(ReflectionTools.getCollectionItemType(clazz, ReflectionTools.getPropertyNameOfAccessor(indexMethod)))));
-			else
-				if (isHiveForeignKeyIndex(indexMethod))
-					indexes.add(new EntityIndexConfigProxy(clazz, getSecondaryIndexName(indexMethod), readConfiguration(getHiveForeignKeyIndexClass(indexMethod))));
-				else
-					indexes.add(new EntityIndexConfigImpl(clazz, getSecondaryIndexName(indexMethod)));
+		List<EntityIndexConfig> indexes = createIndexMethods(clazz, resourceIdMethod);
 		
 		EntityConfig config = new EntityConfigImpl(
 				clazz,
@@ -106,29 +100,43 @@ public class ConfigurationReader {
 		);	
 		return config;
 	}
+
+	private static List<EntityIndexConfig> createIndexMethods(Class<?> clazz,
+			Method resourceIdMethod) {
+		Collection<Method> indexMethods = getIndexMethods(clazz,resourceIdMethod);	
+		List<EntityIndexConfig> indexes = Lists.newArrayList();
+		
+		for(Method indexMethod : indexMethods)
+			if (isCollectionPropertyOfAComplexType(clazz, indexMethod))
+				if (isIndexDelegate(indexMethod))
+					indexes.add(new EntityIndexConfigProxy(clazz, getSecondaryIndexName(indexMethod), getIndexPropertyOfCollectionType(ReflectionTools.getCollectionItemType(clazz, ReflectionTools.getPropertyNameOfAccessor(indexMethod))), readConfiguration(getHiveForeignKeyIndexClass(indexMethod))));
+				else
+					indexes.add(new EntityIndexConfigImpl(clazz, getSecondaryIndexName(indexMethod), getIndexPropertyOfCollectionType(ReflectionTools.getCollectionItemType(clazz, ReflectionTools.getPropertyNameOfAccessor(indexMethod)))));
+			else
+				if (isIndexDelegate(indexMethod))
+					indexes.add(new EntityIndexConfigProxy(clazz, getSecondaryIndexName(indexMethod), readConfiguration(getHiveForeignKeyIndexClass(indexMethod))));
+				else
+					indexes.add(new EntityIndexConfigImpl(clazz, getSecondaryIndexName(indexMethod)));
+		return indexes;
+	}
 	
-	private static boolean isHiveForeignKeyIndex(Method indexMethod) {
-		return indexMethod.getAnnotation(HiveForeignKey.class) != null;
+	private static Collection<Method> getIndexMethods(Class<?> clazz, final Method resourceIdMethod) {
+		return Filter.grep(new Predicate<Method>() {
+			public boolean f(Method method) {
+				return !method.equals(resourceIdMethod);
+				//&& method.getAnnotation(Index.class).type() != IndexType.Data;
+		}}, AnnotationHelper.getAllMethodsWithAnnotation(clazz, Index.class));
+	}
+	
+	private static boolean isIndexDelegate(Method indexMethod) {
+		return indexMethod.getAnnotation(IndexDelegate.class) != null;
 	}
 	private static Class<?> getHiveForeignKeyIndexClass(Method indexMethod) {
-		return indexMethod.getAnnotation(HiveForeignKey.class).value();
+		return indexMethod.getAnnotation(IndexDelegate.class).value();
 	}
 
 	
-	private static List<Method> getHiveIndexMethods(Class<?> clazz, Method resourceIdMethod) {
-		List<Method> indexMethods = AnnotationHelper.getAllMethodsWithAnnotation(clazz, Index.class);
-		if(indexMethods.contains(resourceIdMethod))
-			indexMethods.remove(resourceIdMethod);
-		
-		List<Method> dataIndexes = Lists.newArrayList();
-		for(Method indexMethod : indexMethods) {
-			Index annotation = indexMethod.getAnnotation(Index.class);
-			if(annotation.type() == IndexType.Data)
-				dataIndexes.add(indexMethod);
-		}
-		indexMethods.removeAll(dataIndexes);
-		return indexMethods;
-	}
+	
 
 	private static boolean isCollectionPropertyOfAComplexType(Class<?> clazz, Method indexMethod) {
 		return ReflectionTools.isCollectionProperty(clazz, ReflectionTools.getPropertyNameOfAccessor(indexMethod)) &&
@@ -175,12 +183,20 @@ public class ConfigurationReader {
 	@SuppressWarnings("unchecked")
 	public void installConfiguration(EntityConfig config, HiveFacade hive) {
 		try {
+			// Duplicate installations are possible due to delegated indexes
+			if (hive.doesResourceExist(config.getResourceName()))
+				return;
+			
 			org.hivedb.meta.Resource resource = 
 				hive.addResource(createResource(config));
 					
-			for(EntityIndexConfig indexConfig : (Collection<EntityIndexConfig>) config.getEntitySecondaryIndexConfigs())
-				if (!indexConfig.getIndexType().equals(IndexType.HiveForeignKey))
+			for(EntityIndexConfig indexConfig : (Collection<EntityIndexConfig>) config.getEntityIndexConfigs())
+				if (indexConfig.getIndexType().equals(IndexType.Delegates))
+					installConfiguration(((EntityIndexConfigDelegator)indexConfig).getDelegateEntityConfig(), hive);					
+				else if (indexConfig.getIndexType().equals(IndexType.Hive)) {
 					hive.addSecondaryIndex(resource, createSecondaryIndex(indexConfig));
+				}
+					
 		} catch (HiveReadOnlyException e) {
 			throw new HiveRuntimeException(e.getMessage(),e);
 		}

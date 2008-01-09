@@ -636,10 +636,15 @@ public class ReflectionTools {
 				Filter.grep(new Predicate<String>() {
 					public boolean f(String property) {
 						return !(ReflectionTools.isCollectionProperty(representedInterface, property)) ||
-							 !PrimitiveUtils.isPrimitiveClass(ReflectionTools.getCollectionItemType(representedInterface, property));
+						 !PrimitiveUtils.isPrimitiveClass(ReflectionTools.getCollectionItemType(representedInterface, property));
 					}
 				},
 				ReflectionTools.getPropertiesOfComplexGetters(representedInterface))));
+	}
+	
+	public static boolean isComplexCollectionItemProperty(final Class representedInterface, String property) {
+		return ReflectionTools.isCollectionProperty(representedInterface, property) &&
+			 !PrimitiveUtils.isPrimitiveClass(ReflectionTools.getCollectionItemType(representedInterface, property));
 	}
 	
 	public static Collection<Method> getOwnedMethods(final Class<?> clazz) {

@@ -6,6 +6,7 @@ import java.util.Collections;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveFacade;
+import org.hivedb.annotations.IndexType;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.management.HiveInstaller;
@@ -43,8 +44,7 @@ public class ConfigurationReaderTest extends H2TestCase {
 		assertEquals(WeatherReport.class, config.getRepresentedInterface());
 		assertEquals(Integer.class, config.getIdClass());
 		
-		Collection<EntityIndexConfig> indexes = (Collection<EntityIndexConfig>) config.getEntitySecondaryIndexConfigs();
-		assertEquals(2, indexes.size());
+		Collection<EntityIndexConfig> indexes = (Collection<EntityIndexConfig>) config.getEntityIndexConfigs();
 		
 		EntityIndexConfig temperature = null;
 		for(EntityIndexConfig icfg : indexes)
@@ -58,13 +58,13 @@ public class ConfigurationReaderTest extends H2TestCase {
 		
 		EntityIndexConfig collection = null;
 		for(EntityIndexConfig icfg : indexes) {
-			if("weeklyTemperatures".equals(icfg.getIndexName())){
+			if("sources".equals(icfg.getIndexName())){
 				collection = icfg;
 				break;
 			}
 		}
 		assertNotNull(collection);
-		assertEquals(report.getWeeklyTemperatures(), collection.getIndexValues(report));
+		assertEquals(report.getSources(), collection.getIndexValues(report));
 	}
 
 	private WeatherReport generateInstance() {
@@ -85,7 +85,7 @@ public class ConfigurationReaderTest extends H2TestCase {
 		assertEquals(Continent.class, config.getRepresentedInterface());
 		assertEquals(String.class, config.getIdClass());
 		
-		Collection<EntityIndexConfig> indexes = (Collection<EntityIndexConfig>) config.getEntitySecondaryIndexConfigs();
+		Collection<EntityIndexConfig> indexes = (Collection<EntityIndexConfig>) config.getEntityIndexConfigs();
 		assertEquals(1, indexes.size());
 		assertEquals("population", Atom.getFirst(indexes).getIndexName());
 		assertEquals(Integer.class, Atom.getFirst(indexes).getIndexClass());
@@ -100,9 +100,9 @@ public class ConfigurationReaderTest extends H2TestCase {
 		reader.install(hive);
 		EntityConfig config = reader.getEntityConfig(WeatherReport.class.getName());
 		assertNotNull(hive.getPartitionDimension().getResource(config.getResourceName()));
-		assertEquals(1,hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes().size());
+		int hiveEntityIndexConfigCount = config.getEntityIndexConfigs(IndexType.Hive).size();
+		assertEquals(hiveEntityIndexConfigCount,hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes().size());
 		assertEquals(Types.INTEGER,Atom.getFirst(hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes()).getColumnInfo().getColumnType());
-		assertEquals("weeklyTemperatures", Atom.getFirst(hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes()).getName());
 	}
 	@SuppressWarnings("unchecked")
 	@Test
@@ -126,9 +126,9 @@ public class ConfigurationReaderTest extends H2TestCase {
 		EntityConfig config = reader.getEntityConfig(WeatherReport.class.getName());
 		Hive hive = Hive.load(getConnectString(H2HiveTestCase.TEST_DB));
 		assertNotNull(hive.getPartitionDimension().getResource(config.getResourceName()));
-		assertEquals(1,hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes().size());
+		int hiveEntityIndexConfigCount = config.getEntityIndexConfigs(IndexType.Hive).size();
+		assertEquals(hiveEntityIndexConfigCount,hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes().size());
 		assertEquals(Types.INTEGER,Atom.getFirst(hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes()).getColumnInfo().getColumnType());
-		assertEquals("weeklyTemperatures", Atom.getFirst(hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes()).getName());
 	}
 	@SuppressWarnings("unchecked")
 	@Test
@@ -153,9 +153,9 @@ public class ConfigurationReaderTest extends H2TestCase {
 		EntityConfig config = reader.getEntityConfig(WeatherReport.class.getName());
 		Hive hive = Hive.load(getConnectString(H2HiveTestCase.TEST_DB));
 		assertNotNull(hive.getPartitionDimension().getResource(config.getResourceName()));
-		assertEquals(1,hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes().size());
+		int hiveEntityIndexConfigCount = config.getEntityIndexConfigs(IndexType.Hive).size();
+		assertEquals(hiveEntityIndexConfigCount,hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes().size());
 		assertEquals(Types.INTEGER,Atom.getFirst(hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes()).getColumnInfo().getColumnType());
-		assertEquals("weeklyTemperatures", Atom.getFirst(hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes()).getName());
 	}
 	@SuppressWarnings("unchecked")
 	@Test

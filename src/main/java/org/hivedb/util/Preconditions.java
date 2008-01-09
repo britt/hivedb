@@ -10,6 +10,12 @@ import org.hivedb.meta.IdAndNameIdentifiable;
 import org.hivedb.meta.Identifiable;
 
 public class Preconditions {
+	
+	@SuppressWarnings("unchecked")
+	public static<T extends IdAndNameIdentifiable> boolean isNameUnique(Collection<T> collection, String name) {
+		return IdentifiableUtils.isNameUnique((Collection<IdAndNameIdentifiable>) collection, name);
+	}
+	
 	@SuppressWarnings("unchecked")
 	public static<T extends IdAndNameIdentifiable> void nameIsUnique(Collection<T> collection, T item) {
 		if(!IdentifiableUtils.isNameUnique((Collection<IdAndNameIdentifiable>) collection, item))

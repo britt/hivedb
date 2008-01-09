@@ -2,6 +2,8 @@ package org.hivedb.configuration;
 
 import java.util.Collection;
 
+import org.hivedb.annotations.AnnotationHelper;
+import org.hivedb.annotations.Index;
 import org.hivedb.annotations.IndexType;
 import org.hivedb.util.InstanceCollectionValueGetter;
 import org.hivedb.util.ReflectionTools;
@@ -15,14 +17,13 @@ public class EntityIndexConfigImpl implements EntityIndexConfig {
 		
 	/**
 	 *  Constructor for a primitive type property or collection or primitive types
-	 * @param secondaryIndexKeyPropertyName
-	 * @param isManyToMultiplicity - is the property a collection
 	 */
 	public EntityIndexConfigImpl(
 			final Class entityInterface,
 			final String propertyName) {
 		this.propertyName = propertyName;
 		this.indexName = propertyName;
+		this.indexType = ReflectionTools.getGetterOfProperty(entityInterface, propertyName).getAnnotation(Index.class).type();
 		this.secondaryIndexCollectionGetter = new InstanceCollectionValueGetter() {
 			public Collection<Object> get(Object instance) {
 				return Actor.forceCollection(ReflectionTools.invokeGetter(instance, propertyName));
@@ -42,10 +43,9 @@ public class EntityIndexConfigImpl implements EntityIndexConfig {
 			final String propertyName,
 			final String innerClassPropertyName) {
 		this.propertyName = propertyName;
-		this.indexName = (ReflectionTools.isCollectionProperty(entityInterface,propertyName)
-			? SqlUtils.singularize(propertyName)
-			: propertyName)  
-				+ ReflectionTools.capitalize(innerClassPropertyName); 
+		this.innerClassPropertyName = innerClassPropertyName;
+		this.indexName = SqlUtils.singularize(propertyName) + ReflectionTools.capitalize(innerClassPropertyName); 
+		this.indexType = ReflectionTools.getGetterOfProperty(entityInterface, propertyName).getAnnotation(Index.class).type();
 		this.secondaryIndexCollectionGetter = new InstanceCollectionValueGetter() {
 			public Collection<Object> get(Object instance) {
 				return Transform.map(new Unary<Object, Object>() {
@@ -68,6 +68,13 @@ public class EntityIndexConfigImpl implements EntityIndexConfig {
 		return propertyName;
 	}
 	
+	private String innerClassPropertyName;
+	public String getInnerClassPropertyName() {
+		if (innerClassPropertyName == null)
+			throw new RuntimeException(String.format("EntityIndexConfig's property %s is not a collection property, but is being treated like one", propertyName));
+		return innerClassPropertyName;
+	}
+	
 	private InstanceCollectionValueGetter secondaryIndexCollectionGetter;
 	public Collection<Object> getIndexValues(Object instance) {
 		return secondaryIndexCollectionGetter.get(instance);
@@ -77,8 +84,9 @@ public class EntityIndexConfigImpl implements EntityIndexConfig {
 	public Class<?> getIndexClass() {
 		return indexClass;
 	}
+	private IndexType indexType;
 	public IndexType getIndexType() {
-		return IndexType.Hive;
+		return indexType;
 	}
 	public Validator getValidator() {
 		// TODO Auto-generated method stub

@@ -49,11 +49,18 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	@Test
 	public void testFindByProperty() throws Exception {
 		DataAccessObject<WeatherReport, Integer> dao = getDao(getGeneratedClass());
-		WeatherReport report = getPersistentInstance(dao);
+		WeatherReport report = new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
+		dao.save(report);
 		int temperature = random.nextInt();
 		GeneratedInstanceInterceptor.setProperty(report, "temperature", temperature);
 		dao.save(report);
 		WeatherReport found = Atom.getFirstOrThrow(dao.findByProperty("temperature", temperature));
+		assertEquals(report, found);
+		found = Atom.getFirstOrThrow(dao.findByProperty("regionCode", report.getRegionCode()));
+		assertEquals(report, found);
+		found = Atom.getFirstOrThrow(dao.findByProperty("sources", Atom.getFirstOrThrow(report.getSources())));
+		assertEquals(report, found);
+		found = Atom.getFirstOrThrow(dao.findByProperty("weatherEvents", Atom.getFirstOrThrow(report.getWeatherEvents()).getEventId()));
 		assertEquals(report, found);
 	}
 	

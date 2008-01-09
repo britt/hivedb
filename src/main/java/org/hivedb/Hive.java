@@ -285,11 +285,15 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		return nodes;
 	}
 
+	public boolean doesResourceExist(String resourceName) {
+		return !Preconditions.isNameUnique(dimension.getResources(), resourceName);
+	}
+	
 	public Resource addResource(Resource resource) throws HiveReadOnlyException{
 		resource.setPartitionDimension(dimension);
 		
 		Preconditions.isWritable(this);
-		Preconditions.nameIsUnique(dimension.getResources(), resource);
+		Preconditions.isNameUnique(dimension.getResources(), resource.getName());
 
 		ResourceDao resourceDao = new ResourceDao(hiveDataSource);
 		resourceDao.create(resource);

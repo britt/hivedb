@@ -7,7 +7,7 @@ import java.util.Map;
 
 import org.hivedb.annotations.AnnotationHelper;
 import org.hivedb.annotations.GeneratedClass;
-import org.hivedb.annotations.HiveForeignKey;
+import org.hivedb.annotations.IndexDelegate;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.util.GeneratedInstanceInterceptor;
@@ -37,7 +37,7 @@ public class EntityResolver {
 		Class<?> entityInterface = resolveEntityInterface(clazz);
 		if (entityInterface != null) 
 			return  entityInterface;
-		return getHiveForeignKeyAnnotatedMethod(clazz).getAnnotation(HiveForeignKey.class).value();
+		return getHiveForeignKeyAnnotatedMethod(clazz).getAnnotation(IndexDelegate.class).value();
 	}
 	@SuppressWarnings("unchecked")
 	public Map.Entry<Class<?>, Object>  resolveToEntityOrRelatedEntiyInterfaceAndId(Object entity) {
@@ -48,7 +48,7 @@ public class EntityResolver {
 		Method method = getHiveForeignKeyAnnotatedMethod(clazz);
 		try {
 			return  new Pair<Class<?>, Object>(
-					method.getAnnotation(HiveForeignKey.class).value(),
+					method.getAnnotation(IndexDelegate.class).value(),
 					method.invoke(entity, new Object[]{}));
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -66,7 +66,7 @@ public class EntityResolver {
 	private Method getHiveForeignKeyAnnotatedMethod(Class clazz) {
 		Method annotatedMethod = Filter.grepSingleOrNull(new Predicate<Method>() {
 			public boolean f(Method method) {
-				return method.getAnnotation(HiveForeignKey.class) != null;
+				return method.getAnnotation(IndexDelegate.class) != null;
 		}}, Transform.flatMap(new Unary<Class, Collection<Method>>() {
 			public Collection<Method> f(Class interfase) {
 				return Arrays.asList(interfase.getMethods());

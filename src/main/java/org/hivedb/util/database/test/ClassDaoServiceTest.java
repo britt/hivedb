@@ -145,7 +145,7 @@ public class ClassDaoServiceTest extends H2TestCase {
 					EntityIndexConfig entityIndexConfig = Atom.getFirstOrNull(Filter.grep(new Predicate<EntityIndexConfig>() {
 						public boolean f(EntityIndexConfig entityIndexConfig) {
 							return entityIndexConfig.getIndexName().equals(((IndexParam)annotation).value());
-						}}, entityConfig.getEntitySecondaryIndexConfigs()));
+						}}, entityConfig.getEntityIndexConfigs()));
 					// For EntityIndexConfig indexes
 					if (entityIndexConfig != null)
 						return Atom.getFirstOrThrow(entityIndexConfig.getIndexValues(storedInstance));

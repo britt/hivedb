@@ -4,11 +4,12 @@ import java.util.Collection;
 
 import org.hivedb.annotations.EntityId;
 import org.hivedb.annotations.GeneratedClass;
+import org.hivedb.annotations.Index;
 
 
 @GeneratedClass("WeatherEventGenerated")
 public interface WeatherEvent {
-	@EntityId
+	@Index
 	Integer getEventId();
 	String getContinent();
 	String getName();

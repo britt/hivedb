@@ -18,6 +18,7 @@ import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.configuration.EntityIndexConfigDelegator;
 import org.hivedb.util.Lists;
+import org.hivedb.util.ReflectionTools;
 
 public class BaseDataAccessObject implements DataAccessObject<Object, Serializable>{
 	protected HiveSessionFactory factory;
@@ -81,46 +82,57 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	
 	@SuppressWarnings("unchecked")
 	public Collection<Object> findByProperty(String propertyName, Object propertyValue) {
-		EntityConfig entityConfig = config;
-		EntityIndexConfig indexConfig = getIndexConfig(propertyName, entityConfig.getEntitySecondaryIndexConfigs());
-		Session session = createSessionForIndex(entityConfig, indexConfig, propertyValue);
-		Criteria criteria = session.createCriteria(entityConfig.getRepresentedInterface());
-		criteria.add( Restrictions.eq(indexConfig.getPropertyName(), propertyValue));
+		EntityIndexConfig indexConfig = config.getEntityIndexConfig(propertyName);
+		Session session = createSessionForIndex(config, indexConfig, propertyValue);
+		Criteria criteria = session.createCriteria(config.getRepresentedInterface());
 		
-		return findByProperty(propertyName, session, criteria);
+		if (ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName))
+			if (ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName)) {
+				criteria.createAlias(propertyName, "x")
+					.add( Restrictions.eq("x." + indexConfig.getInnerClassPropertyName(), propertyValue));
+			}
+			else
+				criteria.add(Restrictions.eq(propertyName, propertyValue));
+		else
+			criteria.add( Restrictions.eq(propertyName, propertyValue)); 
+		return findByProperty(session, criteria);
 	}
 	
 	public Collection<Object> findByProperty(String propertyName, Object propertyValue, Integer firstResult, Integer maxResults) {
 		EntityConfig entityConfig = config;
-		EntityIndexConfig indexConfig = getIndexConfig(propertyName, entityConfig.getEntitySecondaryIndexConfigs());
+		EntityIndexConfig indexConfig = entityConfig.getEntityIndexConfig(propertyName);
 		Session session = createSessionForIndex(entityConfig, indexConfig, propertyValue);
 		Criteria criteria = session.createCriteria(entityConfig.getRepresentedInterface());
 		criteria.add( Restrictions.eq(indexConfig.getPropertyName(), propertyValue));
 		criteria.setFirstResult(firstResult);
 		criteria.setMaxResults(maxResults);
 		criteria.addOrder(Order.asc(propertyName));
-		return findByProperty(propertyName, session, criteria);
+		return findByProperty(session, criteria);
 	}
 	
 	private Session createSessionForIndex(EntityConfig entityConfig, EntityIndexConfig indexConfig, Object propertyValue) {
-		return indexConfig.getIndexType().equals(IndexType.HiveForeignKey)
-		? factory.openSession(
-			((EntityIndexConfigDelegator)indexConfig).getDelegateEntityConfig().getResourceName(),
-			propertyValue)
-		: factory.openSession(
-			entityConfig.getResourceName(), 
-			indexConfig.getIndexName(), 
-			propertyValue);
+		if (indexConfig.getIndexType().equals(IndexType.Delegates))
+			return factory.openSession(
+					((EntityIndexConfigDelegator)indexConfig).getDelegateEntityConfig().getResourceName(),
+					propertyValue);
+		else if (indexConfig.getIndexType().equals(IndexType.Hive))
+			return factory.openSession(
+					entityConfig.getResourceName(), 
+					indexConfig.getIndexName(), 
+					propertyValue);
+		else if (indexConfig.getIndexType().equals(IndexType.Data))
+			return factory.openAllShardsSession();
+		throw new RuntimeException(String.format("Unknown IndexType: %s", indexConfig.getIndexType()));
 	}
 	
 	public Collection<Object> findByPropertyRange(String propertyName, java.lang.Object minValue, java.lang.Object maxValue) {
 		// Use an AllShardsresolutionStrategy + Criteria
-		EntityIndexConfig indexConfig = getIndexConfig(propertyName, config.getEntitySecondaryIndexConfigs());
+		EntityIndexConfig indexConfig = config.getEntityIndexConfig(propertyName);
 		Collection<Object> entities = Lists.newArrayList();
 		Session session = factory.openAllShardsSession();
 		Criteria criteria = session.createCriteria(config.getRepresentedInterface());
 		criteria.add( Restrictions.between(propertyName, minValue, maxValue));
-		return findByProperty(propertyName, session, criteria);
+		return findByProperty(session, criteria);
 	}
 	
 	public Collection<Object> findByPropertyRange(String propertyName, Object minValue, Object maxValue, Integer firstResult, Integer maxResults) {
@@ -131,10 +143,10 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		criteria.setFirstResult(firstResult);
 		criteria.setMaxResults(maxResults);
 		criteria.addOrder(Order.asc(propertyName));
-		return findByProperty(propertyName, session, criteria);
+		return findByProperty(session, criteria);
 	}
 	
-	private Collection<Object> findByProperty(String propertyName, Session session, Criteria criteria) {
+	private Collection<Object> findByProperty(Session session, Criteria criteria) {
 		try {
 			return criteria.list();
 		} finally {
@@ -169,13 +181,6 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	@SuppressWarnings("unchecked")
 	public Class<Object> getRespresentedClass() {
 		return (Class<Object>) EntityResolver.getPersistedImplementation(clazz);
-	}
-	
-	protected EntityIndexConfig getIndexConfig(String name, Collection<? extends EntityIndexConfig> configs) {
-		for(EntityIndexConfig cfg : configs)
-			if(cfg.getPropertyName().matches(name))
-				return cfg;
-		throw new HiveKeyNotFoundException(String.format("Could not find index configuration for %s", name), name);
 	}
 	
 	public Interceptor getInterceptor() {return this.defaultInterceptor;}

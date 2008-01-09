@@ -59,8 +59,7 @@ public class H2HiveTestCase extends H2TestCase {
 		return Arrays.asList(
 				getPartitionDimensionClass(),
 				WeatherReport.class, 
-				WeatherEvent.class,
-				Temperature.class);
+				WeatherEvent.class);
 	}
 	protected Class<?> getPartitionDimensionClass() {
 		return Continent.class;
@@ -74,7 +73,6 @@ public class H2HiveTestCase extends H2TestCase {
 		for (String dataNodeName : getDataNodeNames()) {
 			new ContinentalSchema(getConnectString(dataNodeName)).install();
 			new WeatherSchema(getConnectString(dataNodeName)).install();
-			new TemperatureSchema(getConnectString(dataNodeName)).install();
 		}
 	}
 	

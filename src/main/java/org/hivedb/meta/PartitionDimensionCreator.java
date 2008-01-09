@@ -1,6 +1,7 @@
 package org.hivedb.meta;
 
 import java.util.Collection;
+import java.util.EnumSet;
 
 import org.hivedb.Hive;
 import org.hivedb.annotations.IndexType;
@@ -75,8 +76,8 @@ public class PartitionDimensionCreator {
 					}}, 
 					Filter.grep(new Predicate<EntityIndexConfig>() {
 						public boolean f(EntityIndexConfig entityIndexConfig) {
-							return !entityIndexConfig.getIndexType().equals(IndexType.HiveForeignKey);
-						}}, entityConfig.getEntitySecondaryIndexConfigs()));
+							return entityIndexConfig.getIndexType().equals(IndexType.Hive);	
+						}}, entityConfig.getEntityIndexConfigs()));
 					
 					
 		} catch (Exception e) {

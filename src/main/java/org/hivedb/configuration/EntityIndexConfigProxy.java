@@ -1,17 +1,7 @@
 package org.hivedb.configuration;
 
-import java.util.Collection;
-
 import org.hivedb.annotations.IndexType;
-import org.hivedb.util.GenerateInstance;
 import org.hivedb.util.GeneratedInstanceInterceptor;
-import org.hivedb.util.InstanceCollectionValueGetter;
-import org.hivedb.util.ReflectionTools;
-import org.hivedb.util.database.SqlUtils;
-import org.hivedb.util.functional.Actor;
-import org.hivedb.util.functional.Transform;
-import org.hivedb.util.functional.Unary;
-import org.hivedb.util.functional.Validator;
 
 public class EntityIndexConfigProxy extends EntityIndexConfigImpl implements EntityIndexConfigDelegator {
 		
@@ -39,12 +29,14 @@ public class EntityIndexConfigProxy extends EntityIndexConfigImpl implements Ent
 	public EntityIndexConfigProxy(
 			final Class<?> entityInterface,
 			final String propertyName,
-			final String innerClassPropertyName) {
+			final String innerClassPropertyName,
+			final EntityConfig delegateEntityConfig) {
 		super(entityInterface, propertyName, innerClassPropertyName);
+		this.delegateEntityConfig = delegateEntityConfig;
 	}
 
 	public IndexType getIndexType() {
-		return IndexType.HiveForeignKey;
+		return IndexType.Delegates;
 	}
 	public EntityConfig getDelegateEntityConfig() {
 		return delegateEntityConfig;

@@ -66,9 +66,13 @@ public class WeatherReportImpl implements WeatherReport {
 		this.temperature = temperature;
 	}
 	
+	private Collection<Integer> sources = new GeneratePrimitiveCollection<Integer>(Integer.class,7).generate();
 	@Index
-	public Collection<Integer> getWeeklyTemperatures() {
-		return new GeneratePrimitiveCollection<Integer>(Integer.class,7).generate();
+	public Collection<Integer> getSources() {
+		return sources;
+	}
+	public void setSources(Collection<Integer> sources) {
+		this.sources = sources;
 	}
 	
 	@Override
@@ -91,15 +95,18 @@ public class WeatherReportImpl implements WeatherReport {
 		return weatherReport;
 	}
 	
-	public void setWeeklyTemperatures(Collection<Integer> values) {
-		
-	}
-	
 	private Collection<WeatherEvent> weatherEvents;
 	public Collection<WeatherEvent> getWeatherEvents() {
 		return weatherEvents;
 	}
 	public void setWeatherEvents(Collection<WeatherEvent> weatherEvents) {
 		this.weatherEvents = weatherEvents;
+	}
+	private int regionCode;
+	public Integer getRegionCode() {
+		return regionCode; 
+	}
+	public void setRegionCode(int regionCode) {
+		this.regionCode = regionCode;
 	}
 }

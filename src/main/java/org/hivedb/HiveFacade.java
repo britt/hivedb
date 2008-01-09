@@ -34,6 +34,7 @@ public interface HiveFacade {
 	public Collection<Node> addNodes(Collection<Node> nodes)
 			throws HiveReadOnlyException;
 
+	boolean doesResourceExist(String resourceName);
 	public Resource addResource(Resource resource)
 			throws HiveReadOnlyException;
 

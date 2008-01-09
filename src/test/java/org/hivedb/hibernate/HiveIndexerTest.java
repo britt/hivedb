@@ -41,8 +41,8 @@ public class HiveIndexerTest extends H2HiveTestCase {
 		indexer.insert(getWeatherReportConfig(report), report);
 		assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
 		assertTrue(hive.directory().doesResourceIdExist("Temperature", report.getTemperature()));
-		for(Integer temperature : report.getWeeklyTemperatures()) 
-			assertTrue(hive.directory().doesSecondaryIndexKeyExist("WeatherReport", "weeklyTemperatures", temperature, report.getReportId()));
+		for(Integer temperature : report.getSources()) 
+			assertTrue(hive.directory().doesSecondaryIndexKeyExist("WeatherReport", "sources", temperature, report.getReportId()));
 	}
 	
 	// Test for HiveIndexer.update(EntityIndexConfiguration config, Object entity)

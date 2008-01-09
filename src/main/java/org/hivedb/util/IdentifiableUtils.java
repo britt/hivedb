@@ -5,6 +5,14 @@ import java.util.Collection;
 import org.hivedb.meta.IdAndNameIdentifiable;
 
 public class IdentifiableUtils {
+	
+	public static boolean isNameUnique(Collection<IdAndNameIdentifiable> collection, String itemName) {
+		for (IdAndNameIdentifiable collectionItem : collection)
+			if (itemName.equals(collectionItem.getName()))
+				return false;
+		return true;
+	}
+	
 	/**
 	 * Checks if a name is unique in a collection of IdAndNameIdentifiables.  Objects sith the 
 	 * same name and id as the filter item are skipped.

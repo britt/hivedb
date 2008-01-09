@@ -3,6 +3,7 @@ package org.hivedb.util;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -12,6 +13,7 @@ import org.hivedb.HiveFacade;
 import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.HiveReadOnlyException;
 import org.hivedb.HiveRuntimeException;
+import org.hivedb.annotations.IndexType;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.EntityIndexConfig;
@@ -27,6 +29,7 @@ import org.hivedb.util.functional.Binary;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Maps;
 import org.hivedb.util.functional.Pair;
+import org.hivedb.util.functional.Predicate;
 import org.hivedb.util.functional.Ternary;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
@@ -81,7 +84,7 @@ public class HiveSyncer {
 		for(EntityConfig config : updater.getEntityConfigs()) {
 			try {
 				Resource resource = hive.getPartitionDimension().getResource(config.getResourceName());
-				for(EntityIndexConfig indexConfig : config.getEntitySecondaryIndexConfigs()) {
+				for(EntityIndexConfig indexConfig : getHiveIndexes(config)) {
 					try {
 						resource.getSecondaryIndex(indexConfig.getIndexName());
 					} catch(HiveKeyNotFoundException ex) {
@@ -96,7 +99,7 @@ public class HiveSyncer {
 						JdbcTypeMapper.primitiveTypeToJdbcType(config.getIdClass()),
 						config.isPartitioningResource());
 				missingResources.add(resource);
-				indexMap.put(resource, Transform.map(configToIndex(), config.getEntitySecondaryIndexConfigs()));
+				indexMap.put(resource, Transform.map(configToIndex(), config.getEntityIndexConfigs()));
 			}
 		}
 		return new HiveDiff(missingResources, indexMap);
@@ -106,5 +109,11 @@ public class HiveSyncer {
 			public SecondaryIndex f(EntityIndexConfig item) {
 				return new SecondaryIndex(item.getIndexName(), JdbcTypeMapper.primitiveTypeToJdbcType(item.getIndexClass()));
 			}};
+	}
+	private static Collection<? extends EntityIndexConfig> getHiveIndexes(final EntityConfig entityConfig) {
+		return Filter.grep(new Predicate<EntityIndexConfig>() {
+			public boolean f(EntityIndexConfig entityIndexConfig) {
+				return entityIndexConfig.getIndexType().equals(IndexType.Hive);	
+			}}, entityConfig.getEntityIndexConfigs());
 	}
 }

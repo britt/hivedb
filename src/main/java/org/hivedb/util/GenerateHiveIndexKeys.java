@@ -1,16 +1,20 @@
 package org.hivedb.util;
 
 import java.util.Collection;
+import java.util.EnumSet;
 
+import org.hivedb.annotations.IndexType;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.meta.EntityGenerator;
 import org.hivedb.meta.EntityGeneratorImpl;
 import org.hivedb.util.functional.Delay;
+import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Generate;
 import org.hivedb.util.functional.Generator;
 import org.hivedb.util.functional.NumberIterator;
+import org.hivedb.util.functional.Predicate;
 import org.hivedb.util.functional.RingIteratorable;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
@@ -53,13 +57,19 @@ public class GenerateHiveIndexKeys {
 		for (Object resourceInstance : resourceInstances) {
 			// reassign to the result. The returned instance need not be that passed in.
 			resourceInstance = persister.persistResourceInstance(entityHiveConfig, representedInterface, resourceInstance);
-			Collection<? extends EntityIndexConfig> entitySecondaryIndexConfigs = entityConfig.getEntitySecondaryIndexConfigs();
+			Collection<? extends EntityIndexConfig> entitySecondaryIndexConfigs = getHiveIndexes(entityConfig);
 			for (EntityIndexConfig entitySecondaryIndexConfig : entitySecondaryIndexConfigs) {
 				persister.persistSecondaryIndexKey(entityHiveConfig, representedInterface, entitySecondaryIndexConfig, resourceInstance);
 			}
 		}
 		
 		return resourceInstances;
+	}
+	private static Collection<? extends EntityIndexConfig> getHiveIndexes(final EntityConfig entityConfig) {
+		return Filter.grep(new Predicate<EntityIndexConfig>() {
+			public boolean f(EntityIndexConfig entityIndexConfig) {
+				return entityIndexConfig.getIndexType().equals(IndexType.Hive);	
+			}}, entityConfig.getEntityIndexConfigs());
 	}
 	
 

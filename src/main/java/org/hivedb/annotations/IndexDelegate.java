@@ -7,7 +7,6 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface Index {
-	IndexType type() default IndexType.Hive;
-	String name() default "";
+public @interface IndexDelegate {
+	Class<?> value();
 }

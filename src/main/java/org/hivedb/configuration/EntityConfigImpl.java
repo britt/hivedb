@@ -84,7 +84,7 @@ public class EntityConfigImpl implements EntityConfig {
 		return resourceName;
 	}
 	
-	public Collection<? extends EntityIndexConfig> getEntitySecondaryIndexConfigs() {
+	public Collection<? extends EntityIndexConfig> getEntityIndexConfigs() {
 		return entityIndexConfigs;
 	}
 	
@@ -123,10 +123,17 @@ public class EntityConfigImpl implements EntityConfig {
 	public Class<?> getIdClass() {
 		return ReflectionTools.getPropertyType(getRepresentedInterface(), getIdPropertyName());
 	}
-	public Collection<? extends EntityIndexConfig> getIndexConfigs(final IndexType indexType) {
+	public Collection<? extends EntityIndexConfig> getEntityIndexConfigs(final IndexType indexType) {
 		return Filter.grep(new Predicate<EntityIndexConfig>() {
 			public boolean f(EntityIndexConfig entityIndexConfig) {
 				return entityIndexConfig.getIndexType().equals(indexType);
+			}},
+			entityIndexConfigs);
+	}
+	public EntityIndexConfig getEntityIndexConfig(final String propertyName) {
+		return Filter.grepSingle(new Predicate<EntityIndexConfig>() {
+			public boolean f(EntityIndexConfig entityIndexConfig) {
+				return entityIndexConfig.getPropertyName().equals(propertyName);
 			}},
 			entityIndexConfigs);
 	}
@@ -136,4 +143,5 @@ public class EntityConfigImpl implements EntityConfig {
 				0 : 
 				((Integer) ReflectionTools.invokeGetter(instance, versionPropertyName));
 	}
+	
 }

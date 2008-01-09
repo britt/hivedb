@@ -120,7 +120,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 			}};
 		doInTransaction(callback, session);
 		
-		factoryBuilder.openSession("WeatherReport", "weeklyTemperatures", Atom.getFirstOrThrow(report.getWeeklyTemperatures()));
+		factoryBuilder.openSession("WeatherReport", "sources", Atom.getFirstOrThrow(report.getSources()));
 	}
 	
 	@SuppressWarnings("unchecked")

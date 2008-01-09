@@ -14,9 +14,10 @@ public interface EntityConfig {
 	String getIdPropertyName();
 	Serializable getId(Object instance);
 
-	Collection<? extends EntityIndexConfig> getEntitySecondaryIndexConfigs();
+	Collection<? extends EntityIndexConfig> getEntityIndexConfigs();
+	EntityIndexConfig getEntityIndexConfig(String propertyName);
 	
-	Collection<? extends EntityIndexConfig> getIndexConfigs(IndexType indexType);
+	Collection<? extends EntityIndexConfig> getEntityIndexConfigs(IndexType indexType);
 	String getResourceName();
 	
 	boolean isPartitioningResource();
