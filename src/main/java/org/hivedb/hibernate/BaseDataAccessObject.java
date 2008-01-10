@@ -5,7 +5,9 @@ import java.util.Collection;
 
 import org.hibernate.Criteria;
 import org.hibernate.EmptyInterceptor;
+import org.hibernate.Hibernate;
 import org.hibernate.Interceptor;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Order;
@@ -17,8 +19,13 @@ import org.hivedb.annotations.IndexType;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.configuration.EntityIndexConfigDelegator;
+import org.hivedb.configuration.EntityIndexConfigImpl;
+import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.Lists;
 import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Predicate;
+import org.hivedb.util.functional.QuickCache;
 
 public class BaseDataAccessObject implements DataAccessObject<Object, Serializable>{
 	protected HiveSessionFactory factory;
@@ -82,32 +89,69 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	
 	@SuppressWarnings("unchecked")
 	public Collection<Object> findByProperty(String propertyName, Object propertyValue) {
-		EntityIndexConfig indexConfig = config.getEntityIndexConfig(propertyName);
+		EntityIndexConfig indexConfig = config.getPrimaryIndexKeyPropertyName().equals(propertyName)
+			? createEntityIndexConfigForPartitionIndex(config)
+			: config.getEntityIndexConfig(propertyName);
 		Session session = createSessionForIndex(config, indexConfig, propertyValue);
-		Criteria criteria = session.createCriteria(config.getRepresentedInterface());
+		if (ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName)
+				&& !ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName)) {
+					Query query = session.createQuery(String.format("from %s as x where :value in elements (x.%s)",
+						GeneratedInstanceInterceptor.getGeneratedClass(config.getRepresentedInterface()).getSimpleName(),
+						indexConfig.getIndexName())
+						).setParameter("value", propertyValue);
+					return query.list();
+				}
+		else {
+			Criteria criteria = session.createCriteria(config.getRepresentedInterface());
+			addPropertyRestriction(indexConfig, criteria, propertyName, propertyValue); 
+			return findByProperty(session, criteria);
+		}
+	}
+
+	private EntityIndexConfig partitionIndexEntityIndexConfig;
+	private EntityIndexConfig createEntityIndexConfigForPartitionIndex(EntityConfig entityConfig) {
+		if (partitionIndexEntityIndexConfig == null)
+			partitionIndexEntityIndexConfig = new EntityIndexConfigImpl(entityConfig.getRepresentedInterface(), entityConfig.getPrimaryIndexKeyPropertyName());
+		return partitionIndexEntityIndexConfig;
+	}
+
+	public Collection<Object> findByProperty(String propertyName, Object propertyValue, Integer firstResult, Integer maxResults) {
+		EntityConfig entityConfig = config;
+		EntityIndexConfig indexConfig = entityConfig.getEntityIndexConfig(propertyName);
+		Session session = createSessionForIndex(entityConfig, indexConfig, propertyValue);
 		
+		if (ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName)
+				&& !ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName)) {
+			Query query = session.createQuery(String.format("from %s as x where :value in elements (x.%s) order by x.%s asc limit %s, %s",
+				entityConfig.getRepresentedInterface(),
+				indexConfig.getIndexName(),
+				entityConfig.getIdPropertyName(),
+				firstResult,
+				maxResults)
+				).setEntity("value", propertyValue);
+			return query.list();
+		}
+		else {
+			Criteria criteria = session.createCriteria(entityConfig.getRepresentedInterface());
+			addPropertyRestriction(indexConfig, criteria, propertyName, propertyValue);
+			criteria.setFirstResult(firstResult);
+			criteria.setMaxResults(maxResults);
+			criteria.addOrder(Order.asc(entityConfig.getIdPropertyName()));
+			return findByProperty(session, criteria);
+		}
+	}
+	
+	private void addPropertyRestriction(EntityIndexConfig indexConfig,
+			Criteria criteria, String propertyName, Object propertyValue) {
 		if (ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName))
 			if (ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName)) {
 				criteria.createAlias(propertyName, "x")
 					.add( Restrictions.eq("x." + indexConfig.getInnerClassPropertyName(), propertyValue));
 			}
 			else
-				criteria.add(Restrictions.eq(propertyName, propertyValue));
+				throw new UnsupportedOperationException("This isn't working yet");
 		else
-			criteria.add( Restrictions.eq(propertyName, propertyValue)); 
-		return findByProperty(session, criteria);
-	}
-	
-	public Collection<Object> findByProperty(String propertyName, Object propertyValue, Integer firstResult, Integer maxResults) {
-		EntityConfig entityConfig = config;
-		EntityIndexConfig indexConfig = entityConfig.getEntityIndexConfig(propertyName);
-		Session session = createSessionForIndex(entityConfig, indexConfig, propertyValue);
-		Criteria criteria = session.createCriteria(entityConfig.getRepresentedInterface());
-		criteria.add( Restrictions.eq(indexConfig.getPropertyName(), propertyValue));
-		criteria.setFirstResult(firstResult);
-		criteria.setMaxResults(maxResults);
-		criteria.addOrder(Order.asc(propertyName));
-		return findByProperty(session, criteria);
+			criteria.add( Restrictions.eq(propertyName, propertyValue));
 	}
 	
 	private Session createSessionForIndex(EntityConfig entityConfig, EntityIndexConfig indexConfig, Object propertyValue) {
@@ -122,28 +166,44 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 					propertyValue);
 		else if (indexConfig.getIndexType().equals(IndexType.Data))
 			return factory.openAllShardsSession();
+		else if (indexConfig.getIndexType().equals(IndexType.Partition))
+			return factory.openSession(propertyValue);
 		throw new RuntimeException(String.format("Unknown IndexType: %s", indexConfig.getIndexType()));
 	}
 	
 	public Collection<Object> findByPropertyRange(String propertyName, java.lang.Object minValue, java.lang.Object maxValue) {
 		// Use an AllShardsresolutionStrategy + Criteria
 		EntityIndexConfig indexConfig = config.getEntityIndexConfig(propertyName);
-		Collection<Object> entities = Lists.newArrayList();
 		Session session = factory.openAllShardsSession();
 		Criteria criteria = session.createCriteria(config.getRepresentedInterface());
-		criteria.add( Restrictions.between(propertyName, minValue, maxValue));
+		addPropertyRangeRestriction(indexConfig, criteria, propertyName, minValue, maxValue);
 		return findByProperty(session, criteria);
 	}
 	
 	public Collection<Object> findByPropertyRange(String propertyName, Object minValue, Object maxValue, Integer firstResult, Integer maxResults) {
 		// Use an AllShardsresolutionStrategy + Criteria
+		EntityIndexConfig indexConfig = config.getEntityIndexConfig(propertyName);
 		Session session = factory.openAllShardsSession();
 		Criteria criteria = session.createCriteria(config.getRepresentedInterface());
+		addPropertyRangeRestriction(indexConfig, criteria, propertyName, minValue, maxValue);
 		criteria.add( Restrictions.between(propertyName, minValue, maxValue));
 		criteria.setFirstResult(firstResult);
 		criteria.setMaxResults(maxResults);
 		criteria.addOrder(Order.asc(propertyName));
 		return findByProperty(session, criteria);
+	}
+	
+	private void addPropertyRangeRestriction(EntityIndexConfig indexConfig,
+			Criteria criteria, String propertyName, Object minValue, Object maxValue) {
+		if (ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName))
+			if (ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName)) {
+				criteria.createAlias(propertyName, "x")
+					.add(  Restrictions.between("x." + propertyName, minValue, maxValue));
+			}
+			else
+				throw new UnsupportedOperationException("This isn't working yet");
+		else
+			criteria.add( Restrictions.between(propertyName, minValue, maxValue));
 	}
 	
 	private Collection<Object> findByProperty(Session session, Criteria criteria) {
@@ -154,10 +214,21 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 				session.close();
 		}
 	}
+	
+	private Collection<Object> findByProperty(Session session, Query query) {
+		try {
+			return query.list();
+		} finally {
+			if(session != null)
+				session.close();
+		}
+	}
 
 	public Object save(final Object entity) {
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
+				// Compensates for Hibernate's inability to delete items orphaned by updates
+				deleteOrphanedCollectionItems(entity, session);
 				session.saveOrUpdate(getRespresentedClass().getName(),entity);
 			}};
 		doInTransaction(callback, getSession());
@@ -167,11 +238,27 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	public Collection<Object> saveAll(final Collection<Object> collection) {
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
-				for(Object entity : collection) 
+				for(Object entity : collection) {
+					// Compensates for Hibernate's inability to delete items orphaned by updates
+					deleteOrphanedCollectionItems(entity,  session);
 					session.saveOrUpdate(getRespresentedClass().getName(), entity);
+				}
 			}};
 		doInTransaction(callback, getSession());
 		return collection;
+	}
+	
+	private void deleteOrphanedCollectionItems(final Object entity, Session session) {
+		Object loadedEntity = get(config.getId(entity), session);
+		for (EntityIndexConfig entityIndexConfig : Filter.grep(new Predicate<EntityIndexConfig>() {
+			public boolean f(EntityIndexConfig entityIndexConfig) {
+				return ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), entityIndexConfig.getPropertyName());						
+			}}, config.getEntityIndexConfigs())) {
+			Collection set = (Collection)ReflectionTools.invokeGetter(entity, entityIndexConfig.getPropertyName());
+			for (Object instance : (Collection)ReflectionTools.invokeGetter(entity, entityIndexConfig.getPropertyName()))
+				if (!set.contains(instance))
+					session.delete(instance);
+		}
 	}
 	
 	protected Session getSession() {

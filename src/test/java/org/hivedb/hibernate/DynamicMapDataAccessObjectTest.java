@@ -79,8 +79,8 @@ public class DynamicMapDataAccessObjectTest extends H2HiveTestCase {
 //		Integer id = testInsert();
 //		DataAccessObject<WeatherReport, Integer> dao = getDao();
 //		WeatherReport updated = dao.get(id);
-//		updated.setLatitude(new BigDecimal(30));
-//		updated.setLongitude(new BigDecimal(30));
+//		updated.setLatitude(new Double(30));
+//		updated.setLongitude(new Double(30));
 //		dao.save(updated);
 //		WeatherReport persisted = dao.get(id);
 //		assertEquals(updated, persisted);

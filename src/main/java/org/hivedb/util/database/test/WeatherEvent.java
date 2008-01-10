@@ -1,5 +1,6 @@
 package org.hivedb.util.database.test;
 
+import java.io.Serializable;
 import java.util.Collection;
 
 import org.hivedb.annotations.EntityId;
@@ -8,7 +9,7 @@ import org.hivedb.annotations.Index;
 
 
 @GeneratedClass("WeatherEventGenerated")
-public interface WeatherEvent {
+public interface WeatherEvent extends Serializable {
 	@Index
 	Integer getEventId();
 	String getContinent();

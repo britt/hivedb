@@ -1,6 +1,5 @@
 package org.hivedb.util.database.test;
 
-import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Random;
@@ -9,6 +8,8 @@ import org.hivedb.annotations.EntityId;
 import org.hivedb.annotations.Index;
 import org.hivedb.annotations.PartitionIndex;
 import org.hivedb.annotations.Resource;
+import org.hivedb.util.GenerateInstance;
+import org.hivedb.util.GenerateInstanceCollection;
 import org.hivedb.util.GeneratePrimitiveCollection;
 import org.hivedb.util.HiveUtils;
 
@@ -18,7 +19,7 @@ public class WeatherReportImpl implements WeatherReport {
 		new String[]{"North America","South America", "Asia", "Europe","Africa","Australia","Antarctica"};
     private Integer reportId;
     private String continent;
-    private BigDecimal latitude,longitude;
+    private Double latitude,longitude;
     private int temperature;
     private Date reportTime;
 	public static final String REPORT_ID = "reportId";
@@ -32,16 +33,16 @@ public class WeatherReportImpl implements WeatherReport {
 	public void setContinent(String continent) {
 		this.continent = continent;
 	}
-	public BigDecimal getLatitude() {
+	public Double getLatitude() {
 		return latitude;
 	}
-	public void setLatitude(BigDecimal latitude) {
+	public void setLatitude(Double latitude) {
 		this.latitude = latitude;
 	}
-	public BigDecimal getLongitude() {
+	public Double getLongitude() {
 		return longitude;
 	}
-	public void setLongitude(BigDecimal longitude) {
+	public void setLongitude(Double longitude) {
 		this.longitude = longitude;
 	}
 	@EntityId
@@ -87,15 +88,15 @@ public class WeatherReportImpl implements WeatherReport {
 		Random r = new Random(System.currentTimeMillis());
 		WeatherReportImpl weatherReport = new WeatherReportImpl();
 		weatherReport.setContinent(continents[r.nextInt(continents.length)]);
-		weatherReport.setLatitude(new BigDecimal(360*r.nextDouble()));
-		weatherReport.setLongitude(new BigDecimal(360*r.nextDouble()));
+		weatherReport.setLatitude(new Double(360*r.nextDouble()));
+		weatherReport.setLongitude(new Double(360*r.nextDouble()));
 		weatherReport.setReportId(r.nextInt());
 		weatherReport.setReportTime(new Date(System.currentTimeMillis()));
 		weatherReport.setTemperature((int) Math.rint(Math.random() * 100));
 		return weatherReport;
 	}
 	
-	private Collection<WeatherEvent> weatherEvents;
+	private Collection<WeatherEvent> weatherEvents = new GenerateInstanceCollection<WeatherEvent>(WeatherEvent.class,3).generate();
 	public Collection<WeatherEvent> getWeatherEvents() {
 		return weatherEvents;
 	}

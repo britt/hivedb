@@ -5,6 +5,7 @@ import java.util.Collection;
 import org.hivedb.annotations.AnnotationHelper;
 import org.hivedb.annotations.Index;
 import org.hivedb.annotations.IndexType;
+import org.hivedb.annotations.PartitionIndex;
 import org.hivedb.util.InstanceCollectionValueGetter;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.SqlUtils;
@@ -23,12 +24,21 @@ public class EntityIndexConfigImpl implements EntityIndexConfig {
 			final String propertyName) {
 		this.propertyName = propertyName;
 		this.indexName = propertyName;
-		this.indexType = ReflectionTools.getGetterOfProperty(entityInterface, propertyName).getAnnotation(Index.class).type();
+		this.indexType = resolveIndexType(entityInterface, propertyName);
 		this.secondaryIndexCollectionGetter = new InstanceCollectionValueGetter() {
 			public Collection<Object> get(Object instance) {
 				return Actor.forceCollection(ReflectionTools.invokeGetter(instance, propertyName));
 		}};
 		this.indexClass = ReflectionTools.getPropertyTypeOrPropertyCollectionItemType(entityInterface, propertyName);
+	}
+	
+	private IndexType resolveIndexType(final Class entityInterface, final String propertyName) {
+		Index annotation = ReflectionTools.getGetterOfProperty(entityInterface, propertyName).getAnnotation(Index.class);
+		if (annotation != null)
+			return annotation.type();
+		if (ReflectionTools.getGetterOfProperty(entityInterface, propertyName).getAnnotation(PartitionIndex.class) != null)
+			return IndexType.Partition;
+		return IndexType.None;
 	}
 	/**
 	 *  Constructor for a property of a collection of complex types. This assumes the complex type's

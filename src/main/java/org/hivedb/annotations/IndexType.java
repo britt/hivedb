@@ -1,5 +1,5 @@
 package org.hivedb.annotations;
 
 public enum IndexType {
-	Hive, Delegates, Data
+	Hive, Delegates, Data, Partition, None
 }

@@ -19,6 +19,7 @@ import org.hivedb.util.GenerateInstance;
 import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.WeatherEvent;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.functional.Validator;
 import org.testng.annotations.BeforeMethod;
@@ -41,8 +42,8 @@ public class HiveIndexerTest extends H2HiveTestCase {
 		indexer.insert(getWeatherReportConfig(report), report);
 		assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
 		assertTrue(hive.directory().doesResourceIdExist("Temperature", report.getTemperature()));
-		for(Integer temperature : report.getSources()) 
-			assertTrue(hive.directory().doesSecondaryIndexKeyExist("WeatherReport", "sources", temperature, report.getReportId()));
+		for(WeatherEvent weatherEvent : report.getWeatherEvents()) 
+			assertTrue(hive.directory().doesSecondaryIndexKeyExist("WeatherReport", "weatherEventEventId", weatherEvent.getEventId(), report.getReportId()));
 	}
 	
 	// Test for HiveIndexer.update(EntityIndexConfiguration config, Object entity)

@@ -1,14 +1,13 @@
 package org.hivedb.util.database.test;
 
 
-import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Date;
 
 import org.hivedb.annotations.EntityId;
 import org.hivedb.annotations.GeneratedClass;
-import org.hivedb.annotations.IndexDelegate;
 import org.hivedb.annotations.Index;
+import org.hivedb.annotations.IndexDelegate;
 import org.hivedb.annotations.IndexType;
 import org.hivedb.annotations.PartitionIndex;
 import org.hivedb.annotations.Resource;
@@ -57,14 +56,14 @@ public interface WeatherReport {
      * @return
      */
     @Index(type=IndexType.Data)
-	BigDecimal getLatitude();
+	Double getLatitude();
     
     /**
      *  Demonstrates an unindexed property. Although this property may be represented by a column in the data table
      *  (depending on its Hibernate mapping) there is no hint to indicate that it can be queried upon.
      * @return
      */
-	BigDecimal getLongitude();
+    Double getLongitude();
 	
 	/**
 	 *  A property that delegates to another entity. The Hive has the values of temperature indexed

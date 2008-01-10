@@ -18,9 +18,12 @@ import java.util.Random;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.util.GenerateInstance;
 import org.hivedb.util.GeneratedInstanceInterceptor;
+import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.MySqlHiveTestCase;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.functional.Atom;
+import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.NumberIterator;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
@@ -55,12 +58,14 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		GeneratedInstanceInterceptor.setProperty(report, "temperature", temperature);
 		dao.save(report);
 		WeatherReport found = Atom.getFirstOrThrow(dao.findByProperty("temperature", temperature));
-		assertEquals(report, found);
+		Assert.assertEquals(report, found, ReflectionTools.getDifferingFields(report, found, WeatherReport.class).toString());
 		found = Atom.getFirstOrThrow(dao.findByProperty("regionCode", report.getRegionCode()));
 		assertEquals(report, found);
-		found = Atom.getFirstOrThrow(dao.findByProperty("sources", Atom.getFirstOrThrow(report.getSources())));
-		assertEquals(report, found);
 		found = Atom.getFirstOrThrow(dao.findByProperty("weatherEvents", Atom.getFirstOrThrow(report.getWeatherEvents()).getEventId()));
+		assertEquals(report, found);
+		found = Atom.getFirstOrThrow(dao.findByProperty("continent", report.getContinent()));
+		assertEquals(report, found);	
+		found = Atom.getFirstOrThrow(dao.findByProperty("sources", Atom.getFirstOrThrow(report.getSources())));
 		assertEquals(report, found);
 	}
 	
@@ -76,12 +81,18 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 			set.add(dao.save(report));
 		}
 		
-		final HashSet<WeatherReport> retrievedSet = new HashSet<WeatherReport>(Transform.flatten(Transform.map(new Unary<Integer, Collection<WeatherReport>>() {
+		final Collection<WeatherReport> flatten = Filter.grepUnique(Transform.flatten(Transform.map(new Unary<Integer, Collection<WeatherReport>>() {
 			public Collection<WeatherReport> f(Integer i) {
-				return dao.findByProperty("temperature", 101 ,(i-1)*4, 4);
+				final Collection<WeatherReport> findByProperty = dao.findByProperty("temperature", 101 ,(i-1)*4, 4);
+				return findByProperty;
 			}
 		}, new NumberIterator(3))));
+		final HashSet<WeatherReport> retrievedSet = new HashSet<WeatherReport>(flatten);
 	
+		Assert.assertEquals(
+				retrievedSet.size(),
+				set.size());
+		
 		Assert.assertEquals(
 				retrievedSet.hashCode(),
 				set.hashCode());
@@ -187,8 +198,8 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		DataAccessObject<WeatherReport, Integer> dao = getDao(getGeneratedClass());
 		WeatherReport original = getPersistentInstance(dao);
 		WeatherReport updated = dao.get(original.getReportId());
-		GeneratedInstanceInterceptor.setProperty(updated, "latitude", new BigDecimal(30));
-		GeneratedInstanceInterceptor.setProperty(updated, "longitude", new BigDecimal(30));
+		GeneratedInstanceInterceptor.setProperty(updated, "latitude", new Double(30));
+		GeneratedInstanceInterceptor.setProperty(updated, "longitude", new Double(30));
 		dao.save(updated);
 		WeatherReport persisted = dao.get(updated.getReportId());
 		assertEquals(updated, persisted);

@@ -18,6 +18,8 @@ import org.hivedb.util.database.test.H2TestCase;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.functional.Atom;
+import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Predicate;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -56,15 +58,10 @@ public class ConfigurationReaderTest extends H2TestCase {
 		assertEquals(int.class, temperature.getIndexClass());
 		assertEquals(report.getTemperature(), Atom.getFirst(temperature.getIndexValues(report)));
 		
-		EntityIndexConfig collection = null;
-		for(EntityIndexConfig icfg : indexes) {
-			if("sources".equals(icfg.getIndexName())){
-				collection = icfg;
-				break;
-			}
-		}
-		assertNotNull(collection);
-		assertEquals(report.getSources(), collection.getIndexValues(report));
+		Filter.grepSingleOrNull(new Predicate<EntityIndexConfig>() {
+			public boolean f(EntityIndexConfig entityIndexConfig) {
+				return "weatherEventEventId".equals(entityIndexConfig.getIndexName());
+			}}, indexes);
 	}
 
 	private WeatherReport generateInstance() {

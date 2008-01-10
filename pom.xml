@@ -159,6 +159,11 @@
 		<artifactId>hibernate</artifactId>
 		<version>3.2.5ga</version>
 	</dependency>
+	<dependency>
+		<groupId>antlr</groupId>
+		<artifactId>antlr</artifactId>
+		<version>2.7.7</version>
+	</dependency>
 		<dependency>
 			<groupId>org.apache.cxf</groupId>
 			<artifactId>cxf-rt-core</artifactId>

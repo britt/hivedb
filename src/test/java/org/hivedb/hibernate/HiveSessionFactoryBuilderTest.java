@@ -120,7 +120,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 			}};
 		doInTransaction(callback, session);
 		
-		factoryBuilder.openSession("WeatherReport", "sources", Atom.getFirstOrThrow(report.getSources()));
+		factoryBuilder.openSession("WeatherReport", "weatherEventEventId", Atom.getFirstOrThrow(report.getWeatherEvents()));
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -191,11 +191,16 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 		doInTransaction(callback, factoryBuilder.openSession());
 		
 		final WeatherReport mutated = newInstance();
+		System.err.println(((WeatherReport) factoryBuilder.openSession().get(getGeneratedClass(WeatherReport.class), report.getReportId())).getWeatherEvents().size());
 		
 		GeneratedInstanceInterceptor.setProperty(mutated, "reportId", report.getReportId());
 		GeneratedInstanceInterceptor.setProperty(mutated, "continent", report.getContinent());
 		GeneratedInstanceInterceptor.setProperty(mutated, "temperature", report.getTemperature());
 		GeneratedInstanceInterceptor.setProperty(mutated, "reportTime", new Date(System.currentTimeMillis()));
+		// Updating collection items requires more advanced persistence login (see BaseDataAccessObject)
+		// so we leave these values identical
+		GeneratedInstanceInterceptor.setProperty(mutated, "weatherEvents", report.getWeatherEvents());
+		GeneratedInstanceInterceptor.setProperty(mutated, "sources", report.getSources());
 		
 		assertFalse("You have to change something if you want to test update.", mutated.equals(report));
 		
@@ -203,12 +208,12 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 			public void execute(Session session) {
 				session.saveOrUpdate(mutated);
 			}};
-		
 		doInTransaction(updateCallback, factoryBuilder.openSession());
 		WeatherReport fetched = (WeatherReport) factoryBuilder.openSession().get(getGeneratedClass(WeatherReport.class), report.getReportId());
 		assertNotNull(fetched);
 		assertFalse(report.equals(fetched));
-		Assert.assertEquals(mutated, fetched);
+		Assert.assertEquals(fetched.getWeatherEvents().size(), mutated.getWeatherEvents().size());
+		Assert.assertEquals(mutated, fetched, ReflectionTools.getDifferingFields(mutated, fetched, WeatherReport.class).toString());
 	}
 	
 	public static void doInTransaction(SessionCallback callback, Session session) {
