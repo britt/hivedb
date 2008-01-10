@@ -51,12 +51,13 @@ public class ReflectionTools {
 	 */
 	public static String getPropertyNameOfAccessor(Method accessor)
 	{
-		return accessor.getName().substring(3,4).toLowerCase()
-			+ accessor.getName().substring(4);
+		return BeanUtils.findPropertyForMethod(accessor).getName();
+//		return accessor.getName().substring(3,4).toLowerCase()
+//			+ accessor.getName().substring(4);
 	}
 	public static boolean isGetter(Method method) {
 		return 
-			method.getName().startsWith("get") &&
+			(method.getName().startsWith("is") || method.getName().startsWith("get")) &&
 			method.getReturnType() != void.class &&
 			method.getParameterTypes().length == 0;
 	}

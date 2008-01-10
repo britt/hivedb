@@ -5,32 +5,24 @@ package org.hivedb.util;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
 import net.sf.cglib.core.DefaultNamingPolicy;
-import net.sf.cglib.core.KeyFactory;
-import net.sf.cglib.core.NamingPolicy;
 import net.sf.cglib.core.Predicate;
 import net.sf.cglib.proxy.Callback;
 import net.sf.cglib.proxy.Enhancer;
-import net.sf.cglib.proxy.LazyLoader;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
 import org.hivedb.annotations.GeneratedClass;
 import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.DebugMap;
-import org.hivedb.util.functional.Delay;
-
-import sun.reflect.ReflectionFactory.GetReflectionFactoryAction;
 
 public class GeneratedInstanceInterceptor implements MethodInterceptor {
 	
@@ -48,7 +40,7 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 		propertySupport.removePropertyChangeListener(listener);
 	}
 	
-	public static<T> Class<?> getGeneratedClass(final Class<T> clazz ) {
+	public static<T> Class<? extends T> getGeneratedClass(final Class<T> clazz ) {
 		Enhancer e = new Enhancer();
 		e.setCallbackType(GeneratedInstanceInterceptor.class);
 		e.setNamingPolicy(new ImplNamer(clazz));
@@ -64,7 +56,7 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 			list.toArray(copy);
 			e.setInterfaces(copy);
 		}
-		Class<?> generatedClass = e.createClass();
+		Class<? extends T> generatedClass = e.createClass();
 		Enhancer.registerCallbacks(generatedClass, new Callback[] {interceptor});
 		return generatedClass;
 	}

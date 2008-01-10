@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import javax.jws.WebService;
+
 import org.hivedb.Hive;
 import org.hivedb.HiveReadOnlyException;
 import org.hivedb.HiveRuntimeException;
@@ -16,6 +18,7 @@ import org.hivedb.util.functional.Maps;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 
+@WebService(endpointInterface = "org.hivedb.services.InstallService")
 public class InstallServiceImpl implements InstallService {
 	private Map<String, Schema> schemata = Maps.newHashMap();
 	private Hive hive;

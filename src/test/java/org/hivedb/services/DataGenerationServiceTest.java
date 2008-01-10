@@ -42,7 +42,7 @@ public class DataGenerationServiceTest extends H2TestCase {
 	@Test
 	public void testGeneration() throws Exception {
 		Collection<Class<?>> classes = Arrays.asList(getEntityClasses());
-		DataGenerationService service = new DataGenerationService(classes, hive);
+		DataGenerationService service = new DataGenerationServiceImpl(classes, hive);
 		int partitionKeyCount = 2;
 		int instanceCount = 4;
 		

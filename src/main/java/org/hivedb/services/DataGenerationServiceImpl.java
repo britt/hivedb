@@ -31,7 +31,9 @@ import org.hivedb.util.functional.Generator;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 
-public class DataGenerationServiceImpl  {
+@WebService(endpointInterface = "org.hivedb.services.DataGenerationService")
+public class DataGenerationServiceImpl implements DataGenerationService {
+
 	private ConfigurationReader config;
 	private Map<Class, DataAccessObject<Object, Serializable>> daos = Maps.newHashMap();
 	private Log log = LogFactory.getLog(DataGenerationServiceImpl.class);
