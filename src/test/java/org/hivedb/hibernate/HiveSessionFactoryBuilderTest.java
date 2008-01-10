@@ -191,7 +191,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 		doInTransaction(callback, factoryBuilder.openSession());
 		
 		final WeatherReport mutated = newInstance();
-		System.err.println(((WeatherReport) factoryBuilder.openSession().get(getGeneratedClass(WeatherReport.class), report.getReportId())).getWeatherEvents().size());
+		//System.err.println(((WeatherReport) factoryBuilder.openSession().get(getGeneratedClass(WeatherReport.class), report.getReportId())).getWeatherEvents().size());
 		
 		GeneratedInstanceInterceptor.setProperty(mutated, "reportId", report.getReportId());
 		GeneratedInstanceInterceptor.setProperty(mutated, "continent", report.getContinent());

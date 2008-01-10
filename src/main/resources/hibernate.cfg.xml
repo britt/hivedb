@@ -7,6 +7,6 @@
     <session-factory
         name="java:hibernate/SessionFactory">
 		<property name="connection.pool_size">8</property>
-		 <property name="hibernate.show_sql">true</property> 
+		<!--   <property name="hibernate.show_sql">true</property> -->
     </session-factory>
 </hibernate-configuration>
