@@ -20,6 +20,7 @@ import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.hivedb.util.functional.Joiner.ConcatStrings;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.BeansException;
 
 public class ReflectionTools {
 	
@@ -68,15 +69,11 @@ public class ReflectionTools {
 			method.getParameterTypes().length == 1;
 	}
 	public static boolean doesSetterExist(Method getter) {
-		
 		try {
-			getter.getDeclaringClass().getMethod("set" + getter.getName().substring(3), new Class[] {getter.getReturnType()});
+			return BeanUtils.findPropertyForMethod(getter).getWriteMethod() != null;
 		} catch (SecurityException e) {
 			throw new RuntimeException(e);
-		} catch (NoSuchMethodException e) {
-			return false;
 		}
-		return true;
 	}
 	public static Method getCorrespondingSetter(Object instance, String getterName, Class argumentType) {
 		try {
@@ -102,19 +99,15 @@ public class ReflectionTools {
 	
 	public static Method getGetterOfProperty(Class ofInterface, String property) {
 		try {
-			return ofInterface.getMethod(makeGetterName(property), new Class[] {});
+			return BeanUtils.getPropertyDescriptor(ofInterface, property).getReadMethod();
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 	
-	public static String makeGetterName(String property) {
-		return "get" + capitalize(property);
-	}
-	
 	public static boolean hasGetterOfProperty(Class ofInterface, String property) {
 		try {
-			return ofInterface.getMethod("get" + capitalize(property), new Class[] {}) != null;
+			return BeanUtils.getPropertyDescriptor(ofInterface, property).getReadMethod() != null;
 		} catch (Exception e) {
 			return false;
 		}
@@ -488,8 +481,7 @@ public class ReflectionTools {
 		// extended interface, or implementation (naturally)
 		// Extract the first owning interface or superclass if it exists
 		
-		final String methodName = makeGetterName(propertyName);
-		return getOwnerOfMethod(clazz, methodName, new Class[] {});
+		return getOwnerOfProperty(clazz, propertyName, new Class[] {});
 	}
 	public static Method getMethodOfOwner(Method method) {
 		Class owner = getOwnerOfMethod(method.getDeclaringClass(), method.getName(), method.getParameterTypes());
@@ -507,6 +499,26 @@ public class ReflectionTools {
 				public boolean f(Class c) {
 					try {
 						c.getDeclaredMethod(methodName, parameterTypes);
+						return true;
+					}
+					catch (Exception e) {
+						return false;
+					}
+				}
+			}, classes);
+		if (ofThisInterface == null)
+			ofThisInterface = clazz;
+		return ofThisInterface;
+	}
+	
+	private static Class getOwnerOfProperty(final Class<?> clazz, final String propertyName, final Class[] parameterTypes) {
+		final List<Class> classes = new ArrayList(getAncestors(clazz));
+		Class ofThisInterface;
+		ofThisInterface = 
+			Filter.grepSingleOrNull(new Predicate<Class>() {
+				public boolean f(Class c) {
+					try {
+						c.getDeclaredMethod(BeanUtils.getPropertyDescriptor(c, propertyName).getReadMethod().getName(), parameterTypes);
 						return true;
 					}
 					catch (Exception e) {
