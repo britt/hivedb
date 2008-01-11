@@ -7,6 +7,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import org.hivedb.util.functional.Binary;
+
 
 public class PrimitiveUtils {
 	
@@ -40,6 +42,66 @@ public class PrimitiveUtils {
 		}
 			 
 		throw new RuntimeException(String.format("Class %s not supported", clazz.getSimpleName()));
+	}
+	
+	public static<T> T getMinValue(Class<T> clazz) {
+		if (isInteger(clazz))
+			return (T)new Integer(Integer.MIN_VALUE);
+		if (isLong(clazz))
+			return (T)new Long(Long.MIN_VALUE);
+		if (isShort(clazz))
+			return (T)new Short(Short.MIN_VALUE);
+		if (isDouble(clazz))
+			return (T)new Double(Double.MIN_VALUE);
+		if (isFloat(clazz))
+			return (T)new Float(Float.MIN_VALUE);
+			 
+		throw new RuntimeException(String.format("Class %s not supported", clazz.getSimpleName()));
+	}
+	public static<T> T getMaxValue(Class<T> clazz) {
+		if (isInteger(clazz))
+			return (T)new Integer(Integer.MAX_VALUE);
+		if (isLong(clazz))
+			return (T)new Long(Long.MAX_VALUE);
+		if (isShort(clazz))
+			return (T)new Short(Short.MAX_VALUE);
+		if (isDouble(clazz))
+			return (T)new Double(Double.MAX_VALUE);
+		if (isFloat(clazz))
+			return (T)new Float(Float.MAX_VALUE);
+			 
+		throw new RuntimeException(String.format("Class %s not supported", clazz.getSimpleName()));
+	}
+	
+	public static Binary getMinFunction(final Class<?> clazz) {
+		
+		return new Binary() {
+			public Object f(Object t1, Object t2) {
+				if (isInteger(clazz))
+					return Math.min((Integer)t1, (Integer)t2);
+				if (isLong(clazz))
+					return Math.min((Long)t1, (Long)t2);
+				if (isFloat(clazz))
+					return Math.min((Float)t1, (Float)t2);
+				if (isDouble(clazz))
+					return Math.min((Double)t1, (Double)t2);
+				throw new RuntimeException(String.format("Class %s not supported", clazz.getSimpleName()));
+		}};
+	}
+	public static Binary getMaxFunction(final Class<?> clazz) {
+		
+		return new Binary() {
+			public Object f(Object t1, Object t2) {
+				if (isInteger(clazz))
+					return Math.max((Integer)t1, (Integer)t2);
+				if (isLong(clazz))
+					return Math.max((Long)t1, (Long)t2);
+				if (isFloat(clazz))
+					return Math.max((Float)t1, (Float)t2);
+				if (isDouble(clazz))
+					return Math.max((Double)t1, (Double)t2);
+				throw new RuntimeException(String.format("Class %s not supported", clazz.getSimpleName()));
+		}};
 	}
 	
 	

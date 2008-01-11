@@ -21,7 +21,7 @@
 		</bag>
 		
 		
-		<bag name="sources" cascade="save-update" fetch="join"  table="WEATHER_REPORT_SOURCE" lazy="false" access="org.hivedb.hibernate.GeneratedAccessor">
+		<bag name="sources" cascade="save-update" table="WEATHER_REPORT_SOURCE" lazy="false" access="org.hivedb.hibernate.GeneratedAccessor">
     	 	<key column="REPORT_ID" />
 			<element type="integer" column="SOURCE"/> 
 		</bag>

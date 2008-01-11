@@ -22,8 +22,12 @@ import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.MySqlHiveTestCase;
 import org.hivedb.util.database.test.WeatherReport;
+import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Generate;
+import org.hivedb.util.functional.Generator;
+import org.hivedb.util.functional.Joiner;
 import org.hivedb.util.functional.NumberIterator;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
@@ -72,15 +76,16 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	@Test
 	public void testFindByPropertyPaged() throws Exception {
 		final DataAccessObject<WeatherReport, Integer> dao = getDao(getGeneratedClass());
-		final int INSTANCE_COUNT = 12;
-		Collection<WeatherReport> set = new HashSet<WeatherReport>();
-		for (int i=0; i<INSTANCE_COUNT; i++) {
-			WeatherReport report = new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
-			GeneratedInstanceInterceptor.setProperty(report, "continent", "Derkaderkastan");
-			GeneratedInstanceInterceptor.setProperty(report, "temperature", 101);
-			set.add(dao.save(report));
-		}
+		Collection<WeatherReport> reports =
+			Generate.create(new Generator<WeatherReport>() {
+				public WeatherReport generate() {
+					WeatherReport report =  new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
+					GeneratedInstanceInterceptor.setProperty(report, "continent", "Derkaderkastan");
+					GeneratedInstanceInterceptor.setProperty(report, "temperature", 101);
+					return dao.save(report);
+				}}, new NumberIterator(12));	
 		
+		Assert.assertEquals(dao.findByProperty("temperature", 101).size(), 12);
 		final Collection<WeatherReport> flatten = Filter.grepUnique(Transform.flatten(Transform.map(new Unary<Integer, Collection<WeatherReport>>() {
 			public Collection<WeatherReport> f(Integer i) {
 				final Collection<WeatherReport> findByProperty = dao.findByProperty("temperature", 101 ,(i-1)*4, 4);
@@ -91,41 +96,46 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	
 		Assert.assertEquals(
 				retrievedSet.size(),
-				set.size());
+				reports.size());
 		
 		Assert.assertEquals(
 				retrievedSet.hashCode(),
-				set.hashCode());
+				new HashSet(reports).hashCode());
 	}
 	
 
 	@Test
 	public void testFindByPropertyRange() throws Exception {
-		List<WeatherReport> reports = new ArrayList<WeatherReport>();
-		for(int i=0; i<5; i++) {
-			WeatherReport report = new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
-			GeneratedInstanceInterceptor.setProperty(report, "reportId", i);
-			reports.add(report);
-		}
+		
+		Collection<WeatherReport> reports =
+			Generate.create(new Generator<WeatherReport>() {
+				public WeatherReport generate() {
+					return new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
+				}}, new NumberIterator(5));
+		
 		DataAccessObject<WeatherReport,Integer> dao = getDao(getGeneratedClass());
 		dao.saveAll(reports);
-		
-		Collections.sort(reports, new Comparator<WeatherReport>(){
-			public int compare(WeatherReport o1, WeatherReport o2) {
-				return o1.getTemperature() - o2.getTemperature();
-			}});
-		
-		Collection<WeatherReport> range = 
-			dao.findByPropertyRange(
-					"temperature", 
-					Atom.getFirst(reports).getTemperature(), Atom.getLast(reports).getTemperature());
+		Collection<WeatherReport> x = dao.findByProperty("temperature", Atom.getFirst(reports).getTemperature());
+		Integer min = Amass.min(
+				new Unary<WeatherReport, Integer>() {
+					public Integer f(WeatherReport weatherReport) {
+						return weatherReport.getTemperature();
+					}},
+				reports,
+				Integer.class);
+		Integer max = Amass.max(
+				new Unary<WeatherReport, Integer>() {
+					public Integer f(WeatherReport weatherReport) {
+						return weatherReport.getTemperature();
+					}},
+				reports,
+				Integer.class);
+		Collection<WeatherReport> range = dao.findByPropertyRange("temperature",  min, max);
 		assertEquals(reports.size(), range.size());
 		
 		Collection<WeatherReport> smallerRange =
-			dao.findByPropertyRange("temperature", reports.get(1).getTemperature(), reports.get(reports.size()-2).getTemperature());	
-		assertEquals(reports.size()-2, smallerRange.size());
-		assertFalse(smallerRange.contains(Atom.getFirst(reports)));
-		assertFalse(smallerRange.contains(Atom.getLast(reports)));
+			dao.findByPropertyRange("temperature", Atom.getFirst(reports).getTemperature(), Atom.getFirst(reports).getTemperature());	
+		assertEquals(1, smallerRange.size());
 	}
 	
 	@Test

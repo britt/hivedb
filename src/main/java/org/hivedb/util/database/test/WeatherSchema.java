@@ -27,7 +27,7 @@ public class WeatherSchema extends Schema {
     "TEMPERATURE INT," +
     "REPORT_TIME TIMESTAMP);"),
     	// Demonstrates a primitive indexed collection
-    	new TableInfo("SOURCE", "CREATE TABLE WEATHER_REPORT_SOURCE (" + 
+    	new TableInfo("WEATHER_REPORT_SOURCE", "CREATE TABLE WEATHER_REPORT_SOURCE (" + 
     	    "REPORT_ID INT NOT NULL ," +
     	    "SOURCE INT);"),
     	// Demonstrates a complex indexed collection (one-to-many)

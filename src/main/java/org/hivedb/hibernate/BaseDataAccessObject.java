@@ -2,6 +2,7 @@ package org.hivedb.hibernate;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Collections;
 
 import org.hibernate.Criteria;
 import org.hibernate.EmptyInterceptor;
@@ -102,7 +103,8 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 					return query.list();
 				}
 		else {
-			Criteria criteria = session.createCriteria(config.getRepresentedInterface());
+			// setResultTransformer fixes a Hibernate bug of returning duplicates when joins exist
+			Criteria criteria = session.createCriteria(config.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
 			addPropertyRestriction(indexConfig, criteria, propertyName, propertyValue); 
 			return findByProperty(session, criteria);
 		}
@@ -132,7 +134,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			return query.list();
 		}
 		else {
-			Criteria criteria = session.createCriteria(entityConfig.getRepresentedInterface());
+			Criteria criteria = session.createCriteria(entityConfig.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
 			addPropertyRestriction(indexConfig, criteria, propertyName, propertyValue);
 			criteria.setFirstResult(firstResult);
 			criteria.setMaxResults(maxResults);
@@ -175,7 +177,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		// Use an AllShardsresolutionStrategy + Criteria
 		EntityIndexConfig indexConfig = config.getEntityIndexConfig(propertyName);
 		Session session = factory.openAllShardsSession();
-		Criteria criteria = session.createCriteria(config.getRepresentedInterface());
+		Criteria criteria = session.createCriteria(config.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
 		addPropertyRangeRestriction(indexConfig, criteria, propertyName, minValue, maxValue);
 		return findByProperty(session, criteria);
 	}
@@ -184,7 +186,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		// Use an AllShardsresolutionStrategy + Criteria
 		EntityIndexConfig indexConfig = config.getEntityIndexConfig(propertyName);
 		Session session = factory.openAllShardsSession();
-		Criteria criteria = session.createCriteria(config.getRepresentedInterface());
+		Criteria criteria = session.createCriteria(config.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
 		addPropertyRangeRestriction(indexConfig, criteria, propertyName, minValue, maxValue);
 		criteria.add( Restrictions.between(propertyName, minValue, maxValue));
 		criteria.setFirstResult(firstResult);
@@ -225,10 +227,10 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	}
 
 	public Object save(final Object entity) {
+		// Compensates for Hibernate's inability to delete items orphaned by updates
+		deleteOrphanedCollectionItems(Collections.singletonList(entity));
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
-				// Compensates for Hibernate's inability to delete items orphaned by updates
-				deleteOrphanedCollectionItems(entity, session);
 				session.saveOrUpdate(getRespresentedClass().getName(),entity);
 			}};
 		doInTransaction(callback, getSession());
@@ -236,11 +238,11 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	}
 
 	public Collection<Object> saveAll(final Collection<Object> collection) {
+		// Compensates for Hibernate's inability to delete items orphaned by updates
+		deleteOrphanedCollectionItems(collection);
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
 				for(Object entity : collection) {
-					// Compensates for Hibernate's inability to delete items orphaned by updates
-					deleteOrphanedCollectionItems(entity,  session);
 					session.saveOrUpdate(getRespresentedClass().getName(), entity);
 				}
 			}};
@@ -248,17 +250,25 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		return collection;
 	}
 	
-	private void deleteOrphanedCollectionItems(final Object entity, Session session) {
-		Object loadedEntity = get(config.getId(entity), session);
-		for (EntityIndexConfig entityIndexConfig : Filter.grep(new Predicate<EntityIndexConfig>() {
-			public boolean f(EntityIndexConfig entityIndexConfig) {
-				return ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), entityIndexConfig.getPropertyName());						
-			}}, config.getEntityIndexConfigs())) {
-			Collection set = (Collection)ReflectionTools.invokeGetter(entity, entityIndexConfig.getPropertyName());
-			for (Object instance : (Collection)ReflectionTools.invokeGetter(entity, entityIndexConfig.getPropertyName()))
-				if (!set.contains(instance))
-					session.delete(instance);
-		}
+	private void deleteOrphanedCollectionItems(final Collection entities) {
+		
+		final Session session = getSession();
+		SessionCallback callback = new SessionCallback(){
+			public void execute(Session session) {	
+				for (Object entity : entities ) {
+					Object loadedEntity = get(config.getId(entity), session);
+					for (EntityIndexConfig entityIndexConfig : Filter.grep(new Predicate<EntityIndexConfig>() {
+						public boolean f(EntityIndexConfig entityIndexConfig) {
+							return ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), entityIndexConfig.getPropertyName());						
+						}}, config.getEntityIndexConfigs())) {
+						Collection set = (Collection)ReflectionTools.invokeGetter(entity, entityIndexConfig.getPropertyName());
+						for (Object instance : (Collection)ReflectionTools.invokeGetter(entity, entityIndexConfig.getPropertyName()))
+							if (!set.contains(instance))
+								session.delete(instance);
+					}
+				}
+			}};
+		doInTransaction(callback, session);
 	}
 	
 	protected Session getSession() {

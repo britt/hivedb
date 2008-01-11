@@ -6,7 +6,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.hivedb.util.PrimitiveUtils;
 import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.database.test.WeatherReport;
 
 public class Amass {
 	public static<C,R> R join(Joiner<C,R> joiner, Iterable<C> iterable, R initialValue)
@@ -18,6 +20,28 @@ public class Amass {
 			result = joiner.f(item,result);
 		}					
 		return result;
+	}
+	
+	public static<C,R> R min(final Unary<C,R> unary, Iterable<C> iterable, final Class<R> primitiveType)
+	{
+		return Amass.join(
+				new Joiner<C, R>() {
+					public R f(C c, R result) {
+						return (R) PrimitiveUtils.getMinFunction(primitiveType).f(result, unary.f(c));
+					}},
+				iterable,
+				PrimitiveUtils.getMinValue(primitiveType));
+	}
+	
+	public static<C,R> R max(final Unary<C,R> unary, Iterable<C> iterable, final Class<R> primitiveType)
+	{
+		return Amass.join(
+				new Joiner<C, R>() {
+					public R f(C c, R result) {
+						return (R) PrimitiveUtils.getMaxFunction(primitiveType).f(result, unary.f(c));
+					}},
+				iterable,
+				PrimitiveUtils.getMaxValue(primitiveType));
 	}
 	
 	/**
