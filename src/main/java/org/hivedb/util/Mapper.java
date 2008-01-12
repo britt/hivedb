@@ -5,7 +5,7 @@ import java.util.Map;
 import org.hivedb.hibernate.Blobbed;
 import org.hivedb.util.functional.Maps;
 
-public class Mapper extends Blobbed implements MapBacked {
+public class Mapper implements MapBacked {
 	private Map map;
 	public Map getMap() {
 		if(map == null)
