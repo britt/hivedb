@@ -1,8 +1,9 @@
-package org.hivedb;
+package org.hivedb.util.database.test;
 
 import java.io.Serializable;
 import java.util.Collection;
 
+import org.hivedb.Hive;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.hibernate.DataAccessObject;
