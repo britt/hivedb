@@ -57,8 +57,8 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 		initialize(buildHiveConfiguration(hive, mappedClasses), hive, strategy);
 	}
 	
-	public HiveSessionFactoryBuilderImpl(String hiveUri, List<Class<?>> classes, ShardAccessStrategy strategy, Properties overrides) {
-		this(hiveUri, classes, strategy);
+	public HiveSessionFactoryBuilderImpl(String hiveUri, List<Class<?>> mappedClasses, ShardAccessStrategy strategy, Properties overrides) {
+		this(hiveUri, mappedClasses, strategy);
 		this.overrides = overrides;
 	}
 	

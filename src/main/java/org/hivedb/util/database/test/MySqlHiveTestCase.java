@@ -53,7 +53,7 @@ public abstract class MySqlHiveTestCase extends MysqlTestCase {
 	protected HiveTestCase hiveTestCase;
 
 
-	protected List<Class<?>> getMappedClasses() {
+	protected Collection<Class<?>> getMappedClasses() {
 		return Arrays.asList(getPartitionDimensionClass(), WeatherReport.class, WeatherEvent.class);
 	}
 	protected Class<?> getPartitionDimensionClass() {

@@ -2,6 +2,7 @@ package org.hivedb.util;
 
 import java.math.BigDecimal;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Random;
 
@@ -36,8 +37,11 @@ public class GeneratePrimitiveValue<F> implements Generator<F> {
 			return (F)new BigDecimal(Math.floor(Math.abs(random.nextFloat()))+.1);	
 		else if (PrimitiveUtils.isString(clazz))
 			return (F)new String("String"+Math.abs(random.nextInt()));
-		else if (PrimitiveUtils.isDate(clazz))
+		else if (PrimitiveUtils.isDate(clazz)) {
+			final long min = maxTime + random.nextInt();
+			calendar.setTimeInMillis(min); 
 			return (F)calendar.getTime();
+		}
 		else if (PrimitiveUtils.isBoolean(clazz))
 			return (F)new Boolean(random.nextInt() % 2 == 0 ? true : false);
 		else if (PrimitiveUtils.isObject(clazz))
@@ -45,9 +49,10 @@ public class GeneratePrimitiveValue<F> implements Generator<F> {
 		throw new RuntimeException(String.format("Class %s not supported", clazz.getSimpleName()));
 	}
 	static Calendar calendar;
+	static long maxTime;
 	static {
 		calendar = GregorianCalendar.getInstance();
-		calendar.clear();
+		maxTime = calendar.getTimeInMillis();
 		random = new Random(System.currentTimeMillis());
 	}
 
