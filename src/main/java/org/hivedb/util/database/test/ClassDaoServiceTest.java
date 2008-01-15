@@ -101,12 +101,14 @@ public class ClassDaoServiceTest extends H2TestCase {
 	@Test(dataProvider = "service")
 	public void retrieveInstancesUsingAllIndexedProperties(ClassDaoService service) throws Exception {
 		ServiceResponse original = getPersistentInstance(service);
-		List<Method> indexes = AnnotationHelper.getAllMethodsWithAnnotation(original.getClass(), Index.class);
-		
-		for(Method index : indexes) {
-			String indexPropertyName = BeanUtils.findPropertyForMethod(index).getName();
-			ServiceResponse response = service.getByReference(indexPropertyName, ReflectionTools.invokeGetter(original, indexPropertyName));
-			validateRetrieval(original, response);
+		if (! original.getInstances().isEmpty()) {
+			List<Method> indexes = AnnotationHelper.getAllMethodsWithAnnotation(Atom.getFirst(original.getInstances()).getClass(), Index.class);
+			
+			for(Method index : indexes) {
+				String indexPropertyName = BeanUtils.findPropertyForMethod(index).getName();
+				ServiceResponse response = service.getByReference(indexPropertyName, ReflectionTools.invokeGetter(original, indexPropertyName));
+				validateRetrieval(original, response);
+			}
 		}
 	}
 	
