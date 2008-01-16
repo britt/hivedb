@@ -1,6 +1,7 @@
 package org.hivedb.util.database.test;
 
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
 

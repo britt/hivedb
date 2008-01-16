@@ -139,9 +139,11 @@ public class EntityConfigImpl implements EntityConfig {
 	}
 	
 	public int getVersion(Object instance) {
-		return versionPropertyName == null ? 
-				0 : 
-				((Integer) ReflectionTools.invokeGetter(instance, versionPropertyName));
+		Integer version = null;
+		if(versionPropertyName != null)
+			version = ((Integer) ReflectionTools.invokeGetter(instance, versionPropertyName));
+		return version == null ? 0 : version;
+		
 	}
 	
 }

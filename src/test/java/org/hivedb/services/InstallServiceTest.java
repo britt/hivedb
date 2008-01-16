@@ -33,7 +33,7 @@ public class InstallServiceTest extends H2TestCase {
 	public void installANewNodeWithSchema() throws Exception {
 		Schema schema = new WeatherSchema();
 		String nodeName = "aNewNode";
-		getService().install(schema.getName(), nodeName, H2TestCase.TEST_DB, "unecessary for H2", "H2");
+		getService().install(schema.getName(), nodeName, H2TestCase.TEST_DB, "unecessary for H2", "H2", "na", "na");
 		validateSchema(schema, Hive.load(uri()).getNode(nodeName));
 	}
 	
@@ -52,7 +52,7 @@ public class InstallServiceTest extends H2TestCase {
 	public void tryToInstallToAReadOnlyHive() throws Exception {
 		Hive hive = Hive.load(uri());
 		hive.updateHiveReadOnly(true);
-		getService().install(new WeatherSchema().getName(), "aNewNode", H2TestCase.TEST_DB, "unecessary for H2", "H2");
+		getService().install(new WeatherSchema().getName(), "aNewNode", H2TestCase.TEST_DB, "unecessary for H2", "H2", "na", "na");
 	}
 	
 	private void validateSchema(Schema schema, Node node) {

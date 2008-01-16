@@ -2,7 +2,6 @@ package org.hivedb.util;
 
 import java.util.Map;
 
-import org.hivedb.hibernate.Blobbed;
 import org.hivedb.util.functional.Maps;
 
 public class Mapper implements MapBacked {

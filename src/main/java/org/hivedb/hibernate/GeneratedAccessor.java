@@ -10,7 +10,7 @@ import org.hibernate.property.Setter;
 import org.hivedb.util.GeneratedInstanceInterceptor;
 
 public class GeneratedAccessor extends BasicPropertyAccessor {
-
+	
 	@Override
 	public Setter getSetter(Class theClass, String propertyName) throws PropertyNotFoundException {
 		return new GeneratedInstanceSetter(propertyName);

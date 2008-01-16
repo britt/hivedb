@@ -1,21 +1,25 @@
 package org.hivedb.util;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Collection;
 
+import net.sf.cglib.proxy.Factory;
 
 import org.hivedb.annotations.Ignore;
-import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Delay;
+import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Generator;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.springframework.beans.BeanUtils;
 
+
 public class GenerateInstance<T> implements Generator<T> {
-	
 	private final int COLLECTION_SIZE = 3;
 	private Class<T> clazz;
+	private Collection<Class<?>> excludedClasses = defaultExcludedClasses();
+	
 	public GenerateInstance(Class<T> clazz)
 	{
 		this.clazz = clazz;
@@ -25,20 +29,23 @@ public class GenerateInstance<T> implements Generator<T> {
 		T instance = generate();
 		for( Method getter : ReflectionTools.getGetters(clazz)) {
 			
-			if (getter.getDeclaringClass().equals(Object.class))
+			if (belongsToExcludedClass(getter))
 	    		continue;
 			else {
 				String propertyName = BeanUtils.findPropertyForMethod(getter).getName();
-				Object value = ReflectionTools.invokeGetter(templateInstance, propertyName);
+				final Object value = ReflectionTools.invokeGetter(templateInstance, propertyName);
 				if (ReflectionTools.isCollectionProperty(clazz, propertyName)) {
 					Collection<Object> collection = (Collection<Object>)value;
-					final GenerateInstance<Object> generateInstance = new GenerateInstance<Object>((Class<Object>) Atom.getClassFirstOrDefault(collection, Object.class));
+					
+					final GenerateInstance<Object> generateInstance = new GenerateInstance<Object>((Class<Object>) ReflectionTools.getCollectionItemType(clazz, propertyName));
 					GeneratedInstanceInterceptor.setProperty(
 						instance,
 						propertyName,
 						Transform.map(new Unary<Object,Object>() {
 							public Object f(Object item) {
-								return generateInstance.generateAndCopyProperties(item);
+								return PrimitiveUtils.isPrimitiveClass(item.getClass())
+								 	? value
+									: generateInstance.generateAndCopyProperties(item);
 							}}, collection));
 				}
 				else
@@ -101,5 +108,13 @@ public class GenerateInstance<T> implements Generator<T> {
 	    					: new GenerateInstance<Object>(returnType).generate());
 	    }
 	    return instance;
+	}
+	
+	public boolean belongsToExcludedClass(Method m) {
+		return Filter.grepItemAgainstList(ReflectionTools.getMethodOfOwner(m).getDeclaringClass(), excludedClasses);
+	}
+	
+	public static Collection<Class<?>> defaultExcludedClasses() {
+		return Arrays.asList(new Class<?>[]{Object.class, Factory.class, MapBacked.class});
 	}
 }

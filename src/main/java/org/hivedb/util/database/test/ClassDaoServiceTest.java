@@ -6,14 +6,12 @@ import static org.testng.AssertJUnit.assertTrue;
 
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hivedb.Hive;
@@ -34,11 +32,9 @@ import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.Node;
 import org.hivedb.services.BaseClassDaoService;
 import org.hivedb.services.ClassDaoService;
-import org.hivedb.services.ServiceContainer;
 import org.hivedb.services.ServiceResponse;
 import org.hivedb.services.ServiceResponseImpl;
 import org.hivedb.util.GenerateInstance;
-import org.hivedb.util.GeneratePrimitiveValue;
 import org.hivedb.util.Lists;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.HiveDbDialect;
@@ -93,21 +89,21 @@ public class ClassDaoServiceTest extends H2TestCase {
 
 	@Test(dataProvider = "service")
 	public void saveAndRetrieveInstance(ClassDaoService service) throws Exception {
-		ServiceResponse original = getPersistentInstance(service);
-		ServiceResponse response = service.get(getId(Atom.getFirst(original.getInstances())));
+		Object original = getPersistentInstance(service);
+		Object response = service.get(getId(original));
 		validateRetrieval(original, response);
 	}
 
-	@Test(dataProvider = "service")
+//	@Test(dataProvider = "service")
 	public void retrieveInstancesUsingAllIndexedProperties(ClassDaoService service) throws Exception {
-		ServiceResponse original = getPersistentInstance(service);
-		if (! original.getInstances().isEmpty()) {
-			List<Method> indexes = AnnotationHelper.getAllMethodsWithAnnotation(Atom.getFirst(original.getInstances()).getClass(), Index.class);
+		Object original = getPersistentInstance(service);
+		if (original != null) {
+			List<Method> indexes = AnnotationHelper.getAllMethodsWithAnnotation(original.getClass(), Index.class);
 			
 			for(Method index : indexes) {
 				String indexPropertyName = BeanUtils.findPropertyForMethod(index).getName();
-				ServiceResponse response = service.getByReference(indexPropertyName, ReflectionTools.invokeGetter(original, indexPropertyName));
-				validateRetrieval(original, response);
+				Object response = service.getByReference(indexPropertyName, ReflectionTools.invokeGetter(original, indexPropertyName));
+				validateRetrieval(Collections.singletonList(original), response);
 			}
 		}
 	}
@@ -116,7 +112,7 @@ public class ClassDaoServiceTest extends H2TestCase {
 	public void retrieveInstancesUsingSubclassFinders(ClassDaoService service) throws Exception {
 		if (service.getClass().equals(BaseClassDaoService.class))
 			return;
-		final ServiceResponse original = getPersistentInstance(service);
+		final Object original = getPersistentInstance(service);
 		// Any method returning a ServiceResponse will be tested
 		Collection<Method> finders =
 			Transform.map(new Unary<Method, Method>() {
@@ -128,7 +124,7 @@ public class ClassDaoServiceTest extends H2TestCase {
 						return method.getReturnType().equals(ServiceResponse.class);
 					}},
 					ReflectionTools.getOwnedMethods(service.getClass())));
-		final Object storedInstance = Atom.getFirst(original.getInstances());
+		final Object storedInstance = original;
 		final EntityConfig entityConfig = config.getEntityConfig(storedInstance.getClass());
 		for(final Method finder : finders) {
 			Collection<Object> argumentValues = Transform.map(new Unary<Annotation[], Object>() {
@@ -168,7 +164,7 @@ public class ClassDaoServiceTest extends H2TestCase {
 	
 	@Test(dataProvider = "service")
 	public void detectTheExistenceOfPersistentEntities(ClassDaoService service) throws Exception {
-		assertTrue(service.exists(getId(Atom.getFirst(getPersistentInstance(service).getInstances()))));
+		assertTrue(service.exists(getId(getPersistentInstance(service))));
 	}
 	
 	@Test(dataProvider = "service")
@@ -179,22 +175,22 @@ public class ClassDaoServiceTest extends H2TestCase {
 		service.saveAll(instances);
 		for(Object instance : instances)
 			validateRetrieval(
-					new ServiceResponseImpl(config.getEntityConfig(instance.getClass()), Collections.singletonList(instance)), 
+					instance, 
 					service.get(getId(instance)));
 	}
 	
 	@Test(dataProvider = "service")
 	public void deleteAnInstance(ClassDaoService service) throws Exception {
-		ServiceResponse deleted = getPersistentInstance(service);
-		service.delete(getId(Atom.getFirst(deleted.getInstances())));
-		assertFalse(service.exists(getId(Atom.getFirst(deleted.getInstances()))));
+		Object deleted = getPersistentInstance(service);
+		service.delete(getId(deleted));
+		assertFalse(service.exists(getId(deleted)));
 	}
 	
 	protected Object getInstance(Class<Object> clazz) throws Exception {
 		return new GenerateInstance<Object>(clazz).generate();
 	}
 	
-	protected ServiceResponse getPersistentInstance(ClassDaoService service) throws Exception {
+	protected Object getPersistentInstance(ClassDaoService service) throws Exception {
 		return service.save(getInstance(toClass(service.getPersistedClass())));
 	}
 	
@@ -202,35 +198,8 @@ public class ClassDaoServiceTest extends H2TestCase {
 		return config.getEntityConfig(instance.getClass()).getId(instance);
 	}
 	
-	protected void validateRetrieval(ServiceResponse original, ServiceResponse response) {
-		assertEquals(original.getInstances().size(), response.getInstances().size());
-		validate(original, response);
-	}
-	
-	protected void validate(ServiceResponse expected, ServiceResponse actual) {
-		assertEquals(expected.getInstances().size(), actual.getInstances().size());
-		Map<Integer, ServiceContainer> expectedMap = getInstanceHashCodeMap(expected);
-		Map<Integer, ServiceContainer> actualMap = getInstanceHashCodeMap(actual);
-		
-		for(Integer key : actualMap.keySet()) {
-			assertTrue(
-					String.format("Expected results did not contian a ServiceContainer with hashCode %s", key), 
-					expectedMap.containsKey(key));
-			validate(expectedMap.get(key), actualMap.get(key));
-		}
-	}
-
-	private Map<Integer, ServiceContainer> getInstanceHashCodeMap(
-			ServiceResponse expected) {
-		return Transform.toMap(new Unary<ServiceContainer, Integer>(){
-			public Integer f(ServiceContainer item) {
-				return item.getInstance().hashCode();
-			}}, new Transform.IdentityFunction<ServiceContainer>(), expected.getContainers());
-	}
-	
-	private void validate(ServiceContainer expected, ServiceContainer actual) {
-		assertEquals(expected.getVersion(), actual.getVersion());
-		assertEquals(expected.getInstance(), actual.getInstance());
+	protected void validateRetrieval(Object original, Object response) {
+		assertEquals(original, response);
 	}
 	
 	@Override

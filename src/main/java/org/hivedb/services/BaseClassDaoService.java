@@ -32,36 +32,42 @@ public class BaseClassDaoService<T,ID extends Serializable> implements ClassDaoS
 		this.dao = dao;
 	}
 
-	public Object delete(ID id) {
-		return dao.delete(id);
+	@SuppressWarnings("unchecked")
+	public ID delete(ID id) {
+		return (ID) dao.delete(id);
 	}
 
 	public boolean exists(ID id) {
 		return dao.exists(id);
 	}
 
-	public ServiceResponse get(ID id) {
-		return new ServiceResponseImpl(config, dao.get(id));
+	@SuppressWarnings("unchecked")
+	public T get(ID id) {
+		return (T) dao.get(id);
 	}
 
-	public ServiceResponse getByReference(String property, Object referenceKey) {
-		return new ServiceResponseImpl(config, dao.findByProperty(property, referenceKey));
+	@SuppressWarnings("unchecked")
+	public Collection<T> getByReference(String property, Object referenceKey) {
+		return (Collection<T>) dao.findByProperty(property, referenceKey);
 	}
 
-	public ServiceResponse getByReferenceRange(String property, Object start, Object end) {
-		return new ServiceResponseImpl(config, dao.findByPropertyRange(property, start, end));
+	@SuppressWarnings("unchecked")
+	public Collection<T> getByReferenceRange(String property, Object start, Object end) {
+		return (Collection<T>) dao.findByPropertyRange(property, start, end);
 	}
 
 	public String getPersistedClass() {
 		return config.getRepresentedInterface().getName();
 	}
 
-	public ServiceResponse save(T obj) {
-		return new ServiceResponseImpl(config, dao.save(obj));
+	@SuppressWarnings("unchecked")
+	public T save(T obj) {
+		return (T) dao.save(obj);
 	}
 
-	public ServiceResponse saveAll(Collection<T> instances) {
-		return new ServiceResponseImpl(config, dao.saveAll((Collection<Object>)instances));
+	@SuppressWarnings("unchecked")
+	public Collection<T> saveAll(Collection<T> instances) {
+		return (Collection<T>) dao.saveAll((Collection<Object>)instances);
 	}
 
 }

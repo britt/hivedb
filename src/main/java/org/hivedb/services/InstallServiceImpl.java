@@ -33,17 +33,19 @@ public class InstallServiceImpl implements InstallService {
 	
 	public Collection<Schema> getSchemata() {return schemata.values();}
 	
-	public Boolean install(String schemaName, String nodeName, String dbName,String host, String dialect) {
-		return install(schemaName, getOrAddNode(nodeName, dbName, host, dialect).getName());
+	public Boolean install(String schemaName, String nodeName, String dbName,String host, String dialect , String user, String password) {
+		return install(schemaName, getOrAddNode(nodeName, dbName, host, dialect, user, password).getName());
 	}
 
 	private Node getOrAddNode(String nodeName, String dbName, String host,
-			String dialect) {
+			String dialect, String user, String password) {
 		Node node;
 		try {
 			node = hive.getNode(nodeName);
 		} catch( NoSuchElementException e) {
 			node = new Node(nodeName, dbName, host, DialectTools.stringToDialect(dialect));
+			node.setUsername(user);
+			node.setPassword(password);
 			try {
 				hive.addNode(node);
 			} catch (HiveReadOnlyException e1) {
@@ -79,13 +81,16 @@ public class InstallServiceImpl implements InstallService {
 	}
 
 	public Boolean installAll(String nodeName, String dbName, String host,
-			String dialect) {
-		return installAll(getOrAddNode(nodeName, dbName, host, dialect).getName());
+			String dialect, String user, String password) {
+		return installAll(getOrAddNode(nodeName, dbName, host, dialect, user, password).getName());
 	}
 
-	public Boolean addNode(String nodeName, String dbName, String host,String dialect) {
+	public Boolean addNode(String nodeName, String dbName, String host,String dialect, String user, String password) {
 		try {
-			hive.addNode(new Node(nodeName, dbName, host, DialectTools.stringToDialect(dialect)));
+			Node node = new Node(nodeName, dbName, host, DialectTools.stringToDialect(dialect));
+			node.setUsername(user);
+			node.setPassword(password);
+			hive.addNode(node);
 			return true;
 		} catch (HiveReadOnlyException e) {
 			throw new HiveRuntimeException("hive was locked read-only", e);
@@ -98,5 +103,4 @@ public class InstallServiceImpl implements InstallService {
 				return item.getName();
 			}}, hive.getNodes());
 	}
-
 }
