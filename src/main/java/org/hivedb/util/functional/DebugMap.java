@@ -8,6 +8,8 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
 
+import org.hivedb.util.ReflectionTools;
+
 public class DebugMap<K,V> implements Map<K,V>
 {
 	protected Map<K,V> map;
@@ -85,9 +87,17 @@ public class DebugMap<K,V> implements Map<K,V>
 			new Joiner.ConcatStrings<String>("\n"),
 			Transform.map(new Unary<Entry<K,V>, String>() {
 					public String f(Entry entry) {
-						return entry.getKey().toString() + " -> " + entry.getValue().toString() + (showHashes ? "(Hash: " + entry.getValue().hashCode() + ")" : "");
+						return entry.getKey().toString() + " -> " + entry.getValue().toString() + 
+						(showHashes ? "(Hash: " + makeHashCode(entry) + ")" : "");
 				}},
 				map.entrySet()),
 			"");
+	}
+	private int makeHashCode(Entry entry) {
+		if (entry.getValue() == null)
+			return 0;
+		return ReflectionTools.doesImplementOrExtend(entry.getValue().getClass(), Collection.class) 
+			? Amass.makeHashCode((Collection)entry.getValue()) 
+			: entry.getValue().hashCode();
 	}
 }

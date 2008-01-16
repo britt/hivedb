@@ -24,6 +24,18 @@ public class Atom {
 			return item;
 		return null;
 	}
+	public static Object getFirstOrDefault(Iterable<?> iterable, Object defaultItem)
+	{
+		for (Object item : iterable)
+			return item;
+		return defaultItem;
+	}
+	public static Class<?> getClassFirstOrDefault(Iterable<?> iterable, Class<?> defaultClass)
+	{
+		for (Object item : iterable)
+			return item.getClass();
+		return defaultClass;
+	}
 	
 	public static<T> Collection<T> getRest(Iterable<? extends T> iterable) throws Exception
 	{

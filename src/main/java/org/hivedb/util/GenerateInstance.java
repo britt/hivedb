@@ -5,8 +5,11 @@ import java.util.Collection;
 
 
 import org.hivedb.annotations.Ignore;
+import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Delay;
 import org.hivedb.util.functional.Generator;
+import org.hivedb.util.functional.Transform;
+import org.hivedb.util.functional.Unary;
 import org.springframework.beans.BeanUtils;
 
 public class GenerateInstance<T> implements Generator<T> {
@@ -21,14 +24,28 @@ public class GenerateInstance<T> implements Generator<T> {
 	public T generateAndCopyProperties(Object templateInstance) {
 		T instance = generate();
 		for( Method getter : ReflectionTools.getGetters(clazz)) {
+			
 			if (getter.getDeclaringClass().equals(Object.class))
 	    		continue;
 			else {
 				String propertyName = BeanUtils.findPropertyForMethod(getter).getName();
-				GeneratedInstanceInterceptor.setProperty(
+				Object value = ReflectionTools.invokeGetter(templateInstance, propertyName);
+				if (ReflectionTools.isCollectionProperty(clazz, propertyName)) {
+					Collection<Object> collection = (Collection<Object>)value;
+					final GenerateInstance<Object> generateInstance = new GenerateInstance<Object>((Class<Object>) Atom.getClassFirstOrDefault(collection, Object.class));
+					GeneratedInstanceInterceptor.setProperty(
+						instance,
+						propertyName,
+						Transform.map(new Unary<Object,Object>() {
+							public Object f(Object item) {
+								return generateInstance.generateAndCopyProperties(item);
+							}}, collection));
+				}
+				else
+					GeneratedInstanceInterceptor.setProperty(
 						instance, 
 						propertyName, 
-						ReflectionTools.invokeGetter(templateInstance, propertyName));
+						value);
 			}
 			
 		}

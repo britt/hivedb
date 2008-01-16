@@ -104,6 +104,27 @@ public class PrimitiveUtils {
 		}};
 	}
 	
+	public static <T> T copyInstance(T instance) {
+		if (isInteger(instance.getClass()))
+			return (T) new Integer(((Integer)instance).intValue());
+		if (isLong(instance.getClass()))
+			return (T) new Long(((Long)instance).longValue());
+		if (isShort(instance.getClass()))
+			return (T) new Short(((Short)instance).shortValue());
+		if (isDouble(instance.getClass()))
+			return (T) new Double(((Double)instance).doubleValue());
+		if (isFloat(instance.getClass()))
+			return (T) new Float(((Float)instance).floatValue());
+		if (isBigDecimal(instance.getClass())) {		
+			return (T) ((BigDecimal)instance).multiply(new BigDecimal(new Integer(1)));
+		}
+		if (isString(instance.getClass()))
+			return (T)new String((String)instance); // copy so we can tell that it changed (even though Strings are immutable)
+		if (isDate(instance.getClass())) {		
+			return (T) ((Date)instance).clone();
+		}
+		throw new RuntimeException(String.format("Class %s not supported", instance.getClass().getSimpleName()));
+	}
 	
 	/**
 	 *  Is this class representable as one our supported noncomplex types

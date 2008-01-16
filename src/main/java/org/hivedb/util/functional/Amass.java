@@ -166,7 +166,7 @@ public class Amass {
 		return makeHashCode(Arrays.asList(objects));
 	}
 	public static int makeHashCode(Collection<Object> objects) {
-		return Amass.join(
+		final String join = Amass.join(
 				new Joiner.ConcatHashCodesOfValues(),
 				new Unary<Object, String>() {
 					public String f(Object item) {
@@ -178,7 +178,8 @@ public class Amass {
 						return new Integer(hash).toString();
 					}
 				},
-				objects).hashCode();
+				objects);
+		return join != null ? join.hashCode() : 0;
 	}
 
 	@SuppressWarnings("unchecked")

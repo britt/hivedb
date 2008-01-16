@@ -1,14 +1,14 @@
 package org.hivedb.util.scenarioBuilder;
 
+import java.io.Serializable;
 import java.util.Collection;
 
 import org.hivedb.HiveException;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.HiveConfig;
-import org.hivedb.configuration.SingularHiveConfig;
+import org.hivedb.hibernate.DataAccessObject;
 import org.hivedb.util.GenerateHiveIndexKeys;
-import org.hivedb.util.Persister;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
@@ -36,19 +36,19 @@ public class HiveScenario {
 	 * that represent each row inserted in the Hive indexes.
 	 * @throws HiveException
 	 */
-	public static HiveScenario run(EntityHiveConfig entityHiveConifg, Class representedInterface, int primaryIndexInstanceCount, int resourceInstanceCount, Persister persister) {
-		HiveScenario hiveScenario = new HiveScenario(entityHiveConifg, representedInterface, primaryIndexInstanceCount, resourceInstanceCount, persister);
+	public static HiveScenario run(EntityHiveConfig entityHiveConifg, Class representedInterface, int primaryIndexInstanceCount, int resourceInstanceCount, DataAccessObject<Object,Serializable> dataAccessObject) {
+		HiveScenario hiveScenario = new HiveScenario(entityHiveConifg, representedInterface, primaryIndexInstanceCount, resourceInstanceCount, dataAccessObject);
 		return hiveScenario;
 	}
 
 	private final  HiveConfig hiveConfig;
 	Collection<Object> primaryIndexKeys;
 	Collection<Object> resourceinstances;
-	protected HiveScenario(final EntityHiveConfig entityHiveConfig, Class representedInterface, int primaryIndexInstanceCount, int resourceInstanceCount, final Persister persister)
+	protected HiveScenario(final EntityHiveConfig entityHiveConfig, Class representedInterface, int primaryIndexInstanceCount, int resourceInstanceCount, final DataAccessObject<Object,Serializable> dataAccessObject)
 	{
 		this.hiveConfig = entityHiveConfig; 
 		GenerateHiveIndexKeys generateHiveIndexKeys = new GenerateHiveIndexKeys(
-				persister, 
+				dataAccessObject, 
 				primaryIndexInstanceCount,
 				resourceInstanceCount);
 		

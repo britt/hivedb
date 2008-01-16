@@ -6,9 +6,8 @@ import java.util.Collection;
 import org.hivedb.Hive;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
-import org.hivedb.hibernate.DataAccessObject;
 import org.hivedb.hibernate.BaseDataAccessObjectFactory;
-import org.hivedb.util.DataPersister;
+import org.hivedb.hibernate.DataAccessObject;
 import org.hivedb.util.scenarioBuilder.HiveScenarioTest;
 
 public class TestHiveScenario {
@@ -35,12 +34,9 @@ public class TestHiveScenario {
 			new HiveScenarioTest(
 					entityHiveConfig, 
 					hive, 
-					entityConfig.getRepresentedInterface()).performTest(2,resourceInstanceCount, 
-					new DataPersister(
-							entityHiveConfig, 
-							entityConfig.getRepresentedInterface(),
-							getDao(entityConfig.getRepresentedInterface()),
-							hive));
+					entityConfig.getRepresentedInterface(),
+					getDao(entityConfig.getRepresentedInterface()))
+				.performTest(2,resourceInstanceCount);
 		}
 	}
 	private DataAccessObject<Object, Serializable> getDao(Class clazz) {	

@@ -286,7 +286,7 @@ public class ReflectionTools {
 			new Predicate<Method>() {	public boolean f(Method m) {
 				return m.getName().equals(setterName);						
 			}},
-			Arrays.asList(instance.getClass().getMethods()));
+			getDeepMethods(instance.getClass()));
 	}
 	
 	public static<T> Collection<Method> getGetters(final Class<T> ofThisInterface) {
@@ -331,7 +331,7 @@ public class ReflectionTools {
 		}
 	
 		public String toString() {			
-			return String.format("Method: %s, FieldValue1: %s, FieldValue2: %s", method, fieldValueOfInstance1, fieldValueOfInstance2);
+			return String.format("Method: %s, FieldValue1: %s (hash: %s), FieldValue2: %s (hash: %s)", method, fieldValueOfInstance1, fieldValueOfInstance1.hashCode(), fieldValueOfInstance2, fieldValueOfInstance2.hashCode());
 		}
 	}
 	public static class DiffCollection extends ArrayList<Diff>
@@ -405,14 +405,32 @@ public class ReflectionTools {
 						}
 					}
 				},
-				Arrays.asList(basedUponThisInterface.getMethods()));
+				getDeepMethods(basedUponThisInterface));
 		}
+		
+		
 		/**
 		 *  Override this to filter for specific methods
 		 * @param getter
 		 * @return
 		 */
 		public boolean invokableMemberPredicate(Method getter) { return true; }
+	}
+	
+	// Returns uniquely named methods belong to the given class and its ancestors.
+	public static Collection<Method> getDeepMethods(Class<?> clazz) {
+		return Filter.grepUnique(
+			new Unary<Method, String>() {
+				public String f(Method method) {
+					return method.getName();
+				}
+			},
+			Transform.flatMap(new Unary<Class<?>, Collection<Method>>() {
+
+				public Collection<Method> f(Class<?> clazz) {
+					return Arrays.asList(clazz.getMethods());
+				}
+			}, Transform.flatten(Arrays.asList((Class<?>[])new Class[] { clazz }), getAncestors(clazz))));
 	}
 
 	public static class AccessorGrepper<T> {
@@ -429,7 +447,7 @@ public class ReflectionTools {
 						}
 					}
 				},
-				Arrays.asList(basedUponThisInterface.getMethods()));
+				getDeepMethods(basedUponThisInterface));
 		}
 		/**
 		 *  Override this to filter for specific methods
@@ -660,6 +678,11 @@ public class ReflectionTools {
 			 !PrimitiveUtils.isPrimitiveClass(ReflectionTools.getCollectionItemType(representedInterface, property));
 	}
 	
+	/**
+	 *  I'm not sure if this done any good since getMethods should only return the owned methods
+	 * @param clazz
+	 * @return
+	 */
 	public static Collection<Method> getOwnedMethods(final Class<?> clazz) {
 		return Filter.grep(new Predicate<Method>() {
 			public boolean f(Method method) {

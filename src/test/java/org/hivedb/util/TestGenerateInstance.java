@@ -1,6 +1,7 @@
 package org.hivedb.util;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.hivedb.annotations.GeneratedClass;
 import org.hivedb.annotations.Ignore;
@@ -30,5 +31,16 @@ public class TestGenerateInstance {
 		Assert.assertTrue(boo.getInt() != 0);
 		Assert.assertTrue(boo.getCoos().size() > 0);
 		Assert.assertTrue(boo.getString() == null);
+	}
+	@Test
+	public void testGenerateAndCopyProperties() {
+		Boo boo = (Boo)new GenerateInstance<Boo>(Boo.class).generate();
+		Boo boohoo = new GenerateInstance<Boo>(Boo.class).generateAndCopyProperties(boo);
+		Assert.assertEquals(boo, boohoo);
+		Assert.assertNotSame(boo.getString(), boohoo.getString());
+		Assert.assertNotSame(boo.getCoos(), boohoo.getCoos());
+		Assert.assertEquals(new HashSet(boo.getCoos()), new HashSet(boohoo.getCoos()));
+		Assert.assertNotSame(Atom.getFirstOrThrow(boo.getCoos()), Atom.getFirstOrThrow(boohoo.getCoos()));
+		Assert.assertEquals(Atom.getFirstOrThrow(boo.getCoos()), Atom.getFirstOrThrow(boohoo.getCoos()));
 	}
 }
