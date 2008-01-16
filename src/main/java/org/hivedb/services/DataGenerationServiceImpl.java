@@ -60,13 +60,9 @@ public class DataGenerationServiceImpl implements DataGenerationService {
 	 * @see org.hivedb.services.DataGenerationService#generate(java.lang.String, java.lang.Integer, java.lang.Integer)
 	 */
 	public Collection<Serializable> generate(String clazz, Integer partitionKeyCount, Integer instanceCount) {
-		log.debug(String.format("Parameters: %s %s %s", clazz, partitionKeyCount, instanceCount));
 		Collection<Serializable> ids = Lists.newArrayList();
 		try {
-		EntityConfig entityConfig = config.getEntityConfig(clazz);
-		
-		log.debug(String.format("EntityConfig %s %s", entityConfig == null, entityConfig != null ? entityConfig.getRepresentedInterface() : "null"));
-		
+		EntityConfig entityConfig = config.getEntityConfig(clazz);		
 		Generator<Object> pKeyGenerator;
 		if(PrimitiveUtils.isPrimitiveClass(entityConfig.getPrimaryKeyClass()))
 			pKeyGenerator = new GeneratePrimitiveValue<Object>((Class<Object>) entityConfig.getPrimaryKeyClass());
