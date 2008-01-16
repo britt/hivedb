@@ -32,15 +32,29 @@ public class TestGenerateInstance {
 		Assert.assertTrue(boo.getCoos().size() > 0);
 		Assert.assertTrue(boo.getString() == null);
 	}
+	
+	@GeneratedClass("FaaImpl")
+	public interface Faa {
+		String getString();
+		int getInt();
+	}
+	@GeneratedClass("BaaImpl")
+	public interface Baa extends Faa {
+		Collection<Caa> getCaas();
+	}
+	@GeneratedClass("CaaImpl")
+	public interface Caa {
+		long getLong();
+	}
 	@Test
 	public void testGenerateAndCopyProperties() {
-		Boo boo = (Boo)new GenerateInstance<Boo>(Boo.class).generate();
-		Boo boohoo = new GenerateInstance<Boo>(Boo.class).generateAndCopyProperties(boo);
-		Assert.assertEquals(boo, boohoo);
-		Assert.assertNotSame(boo.getString(), boohoo.getString());
-		Assert.assertNotSame(boo.getCoos(), boohoo.getCoos());
-		Assert.assertEquals(new HashSet(boo.getCoos()), new HashSet(boohoo.getCoos()));
-		Assert.assertNotSame(Atom.getFirstOrThrow(boo.getCoos()), Atom.getFirstOrThrow(boohoo.getCoos()));
-		Assert.assertEquals(Atom.getFirstOrThrow(boo.getCoos()), Atom.getFirstOrThrow(boohoo.getCoos()));
+		Baa baa = (Baa)new GenerateInstance<Baa>(Baa.class).generate();
+		Baa boohaa = new GenerateInstance<Baa>(Baa.class).generateAndCopyProperties(baa);
+		Assert.assertEquals(baa, boohaa);
+		Assert.assertSame(baa.getString(), boohaa.getString()); // "primitives" are not cloned
+		Assert.assertNotSame(baa.getCaas(), boohaa.getCaas()); // collections are
+		Assert.assertEquals(new HashSet(baa.getCaas()), new HashSet(boohaa.getCaas())); // should still equal
+		Assert.assertNotSame(Atom.getFirstOrThrow(baa.getCaas()), Atom.getFirstOrThrow(boohaa.getCaas())); // complex items clone
+		Assert.assertEquals(Atom.getFirstOrThrow(baa.getCaas()), Atom.getFirstOrThrow(boohaa.getCaas())); // should still equal
 	}
 }

@@ -77,17 +77,12 @@ public class HiveScenarioTest {
 		}
 		public void run() {
 			try {
-				System.out.println("Validating Metadata");
 				validateHiveMetadata();		
 				// Validate CRUD operations. Read at the beginning and after updates
-				// to verify that the update restored the data to its original state.
-				System.out.println("Validating Reads");
+				// to verify that the update restored the data to its original state
 				validateReadsFromPersistence();
-				//System.out.println("Validating Updates");
 				validateUpdatesToPersistence();
-				System.out.println("Validating Reads");
 				validateReadsFromPersistence();
-				System.out.println("Validating Deletes");
 				validateDeletesToPersistence();
 				// data is reinserted after deletes but nodes can change so we can't validate equality again
 			}
@@ -252,19 +247,12 @@ public class HiveScenarioTest {
 						}};	
 					}	
 				}
-				/*private void updatePrimaryIndexKeyOfResourceId(final Hive hive, final PartitionDimension partitionDimension, final Resource resource, final Object resourceId, final Object newPrimaryIndexKey, final Object originalPrimaryIndexKey) throws HiveException, SQLException {
-					hive.directory().updatePrimaryIndexKeyOfResourceId(resource.getName(), resourceId, newPrimaryIndexKey);
-					assertEquals(
-							newPrimaryIndexKey, 
-							hive.directory().getPrimaryIndexKeyOfResourceId(resource.getName(), resourceId));
-				}*/
 
 				private void updatePrimaryIndexKeyOfResourceInstance(
 						final EntityConfig entityConfig,
 						final Object resourceInstance,
 						final Object newPrimaryIndexKey) {
-					// TODO temporary work around to moving between nodes
-				
+					// TODO temporary work around to moving between nodes	
 					final Serializable id = entityConfig.getId(resourceInstance);
 					Object mutableResourceInstance = dataAccessObject.get(id);
 					dataAccessObject.delete(id);
@@ -473,7 +461,7 @@ public class HiveScenarioTest {
 		
 		private void validateDeletesToPersistence() throws HiveException, SQLException
 		{	
-			validateDeletePrimaryIndexKey(entityHiveConfig, hive,  representedInterface, resourceInstances);	
+			//validateDeletePrimaryIndexKey(entityHiveConfig, hive,  representedInterface, resourceInstances);	
 			validateDeleteResourceInstances(entityHiveConfig, hive, representedInterface, resourceInstances);
 			validateDeleteSecondaryIndexKeys(entityHiveConfig, hive, representedInterface, resourceInstances);
 		}
@@ -545,7 +533,6 @@ public class HiveScenarioTest {
 						public void f() {
 							try {
 								if (dataAccessObject.get(entityConfig.getId(resourceInstance)) == null) {
-									dataAccessObject.get(entityConfig.getId(resourceInstance));
 									throw new RuntimeException(String.format("Entity with id %s not found", entityConfig.getId(resourceInstance)));
 								}
 								dataAccessObject.delete(entityConfig.getId(resourceInstance));
