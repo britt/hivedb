@@ -26,7 +26,7 @@ public class GenerateInstance<T> implements Generator<T> {
 	}
 	
 	public T generateAndCopyProperties(Object templateInstance) {
-		T instance = generate();
+		T instance = newInstance();
 		for( Method getter : ReflectionTools.getGetters(clazz)) {
 			
 			if (belongsToExcludedClass(getter))
@@ -34,25 +34,31 @@ public class GenerateInstance<T> implements Generator<T> {
 			else {
 				String propertyName = BeanUtils.findPropertyForMethod(getter).getName();
 				final Object value = ReflectionTools.invokeGetter(templateInstance, propertyName);
+				
 				if (ReflectionTools.isCollectionProperty(clazz, propertyName)) {
-					Collection<Object> collection = (Collection<Object>)value;
+					Collection<Object> collection = value == null ? Lists.newArrayList() : (Collection<Object>)value;
 					
-					final GenerateInstance<Object> generateInstance = new GenerateInstance<Object>((Class<Object>) ReflectionTools.getCollectionItemType(clazz, propertyName));
+					final Class<?> itemClass = ReflectionTools.getCollectionItemType(clazz, propertyName);
+					final GenerateInstance<Object> generateInstance = new GenerateInstance<Object>((Class<Object>) itemClass);
 					GeneratedInstanceInterceptor.setProperty(
 						instance,
 						propertyName,
 						Transform.map(new Unary<Object,Object>() {
 							public Object f(Object item) {
-								return PrimitiveUtils.isPrimitiveClass(item.getClass())
-								 	? value
+								return PrimitiveUtils.isPrimitiveClass(itemClass)
+								 	? item
 									: generateInstance.generateAndCopyProperties(item);
 							}}, collection));
 				}
-				else
+				else if(value == null)
+					continue;
+				else if(PrimitiveUtils.isPrimitiveClass(value.getClass()))
 					GeneratedInstanceInterceptor.setProperty(
 						instance, 
 						propertyName, 
 						value);
+				else
+					new GenerateInstance<Object>((Class<Object>) getter.getReturnType()).generateAndCopyProperties(value);
 			}
 			
 		}
@@ -62,16 +68,7 @@ public class GenerateInstance<T> implements Generator<T> {
 	static QuickCache primitiveGenerators = new QuickCache(); // cache generators for sequential randomness
 	@SuppressWarnings("unchecked")
 	public T generate() {
-		T instance;
-		try {
-			instance = clazz.isInterface() 
-				? (T)GeneratedInstanceInterceptor.newInstance( clazz )
-				: clazz.newInstance();
-		} catch (InstantiationException e) {
-			throw new RuntimeException(e);
-		} catch (IllegalAccessException e) {
-			throw new RuntimeException(e);
-		}
+		T instance = newInstance();
 			
 	    for (Method getter : ReflectionTools.getGetters(clazz))
 	    {
@@ -108,6 +105,20 @@ public class GenerateInstance<T> implements Generator<T> {
 	    					: new GenerateInstance<Object>(returnType).generate());
 	    }
 	    return instance;
+	}
+
+	private T newInstance() {
+		T instance;
+		try {
+			instance = clazz.isInterface() 
+				? (T)GeneratedInstanceInterceptor.newInstance( clazz )
+				: clazz.newInstance();
+		} catch (InstantiationException e) {
+			throw new RuntimeException(e);
+		} catch (IllegalAccessException e) {
+			throw new RuntimeException(e);
+		}
+		return instance;
 	}
 	
 	public boolean belongsToExcludedClass(Method m) {
