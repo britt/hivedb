@@ -94,7 +94,7 @@ public class ClassDaoServiceTest extends H2TestCase {
 		validateRetrieval(original, response);
 	}
 
-//	@Test(dataProvider = "service")
+	@Test(dataProvider = "service")
 	public void retrieveInstancesUsingAllIndexedProperties(ClassDaoService service) throws Exception {
 		Object original = getPersistentInstance(service);
 		if (original != null) {

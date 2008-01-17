@@ -5,7 +5,10 @@ import java.util.Map;
 import org.hivedb.util.functional.Maps;
 
 public class Mapper implements MapBacked {
-	private Map map;
+	public Mapper() {
+		this.map = Maps.newHashMap();
+	}
+	private Map map = Maps.newHashMap();
 	public Map getMap() {
 		if(map == null)
 			map = Maps.newHashMap();

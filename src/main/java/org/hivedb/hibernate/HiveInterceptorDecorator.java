@@ -1,23 +1,68 @@
 package org.hivedb.hibernate;
 
 import java.io.Serializable;
-import java.util.Map;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Collection;
 
 import org.hibernate.CallbackException;
 import org.hibernate.EmptyInterceptor;
+import org.hibernate.EntityMode;
 import org.hibernate.Interceptor;
 import org.hibernate.shards.util.InterceptorDecorator;
 import org.hibernate.type.Type;
 import org.hivedb.Hive;
-import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.HiveReadOnlyException;
+import org.hivedb.annotations.AnnotationHelper;
+import org.hivedb.annotations.EntityId;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
+import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Predicate;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
+import org.springframework.beans.BeanUtils;
 
 public class HiveInterceptorDecorator extends InterceptorDecorator implements Interceptor {
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public Object instantiate(String entityName, EntityMode entityMode, Serializable id) throws CallbackException {
+		Class<?> clazz;
+		try {
+			clazz = Class.forName(entityName);
+		} catch (ClassNotFoundException e) {
+			throw new CallbackException(String.format("Unable to load class for %s", entityName), e);
+		}
+		if(EntityResolver.generatesImplementation(clazz))
+			return getInstance(GeneratedInstanceInterceptor.getGeneratedClass(clazz));
+		else if(EntityResolver.isGeneratedImplementation(clazz)){
+			Class generatingClass = Filter.grepSingle(new Predicate<Class>(){
+				public boolean f(Class item) {
+					return EntityResolver.generatesImplementation(item);
+				}}, Arrays.asList(clazz.getInterfaces()));
+			Object instance = getInstance(GeneratedInstanceInterceptor.getGeneratedClass(generatingClass));
+			Method idMethod = AnnotationHelper.getFirstMethodWithAnnotation(generatingClass, EntityId.class);
+			if(idMethod != null)
+				GeneratedInstanceInterceptor.setProperty(instance, BeanUtils.findPropertyForMethod(idMethod).getName(), id);
+			return instance;
+		}
+		else
+			return super.instantiate(entityName, entityMode, id);
+	}
+	
+	private Object getInstance(Class<?> clazz) {
+		try {
+			return clazz.newInstance();
+		} catch (InstantiationException e) {
+			throw new CallbackException(e);
+		} catch (IllegalAccessException e) {
+			throw new CallbackException(e);
+		} 
+	}
+
 	private EntityHiveConfig hiveConfig;
 	private HiveIndexer indexer;
 	

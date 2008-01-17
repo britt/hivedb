@@ -47,10 +47,11 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 		e.setSuperclass(Mapper.class);
 		GeneratedInstanceInterceptor interceptor = new GeneratedInstanceInterceptor(clazz);	
 		if (clazz.isInterface())
-			e.setInterfaces(new Class[] {clazz, PropertySetter.class});
+			e.setInterfaces(new Class[] {clazz, PropertySetter.class, GeneratedImplementation.class});
 		else {
 			List list = new ArrayList(Arrays.asList(clazz.getInterfaces()));
 			list.add(PropertySetter.class);
+			list.add(GeneratedImplementation.class);
 			Class[] copy = new Class[list.size()];
 			list.toArray(copy);
 			e.setInterfaces(copy);
@@ -69,7 +70,7 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 		}
 	}
 	public static<T> T newInstance( Class<T> clazz, Map<String, Object> prototype ){
-		PropertySetter<T> instance = (PropertySetter<T>) newInstance(clazz);
+		PropertySetter instance = (PropertySetter) newInstance(clazz);
 		for (String propertyName : ReflectionTools.getPropertiesOfGetters((Class<?>)clazz))
 			instance.set(propertyName, prototype.get(propertyName));
 		return (T) instance;
@@ -100,6 +101,7 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 			String propName = (String) args[0];
 			dictionary.put(new String( propName ), args[1]);
 		}
+		
 		else if( name.startsWith("set") && args.length == 1 && method.getReturnType() == Void.TYPE ) {
 			char propName[] = name.substring("set".length()).toCharArray();
 			propName[0] = Character.toLowerCase( propName[0] );
@@ -143,7 +145,7 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 		if (ReflectionTools.doesSetterExist(ReflectionTools.getGetterOfProperty(instance.getClass(), property)))
 			ReflectionTools.invokeSetter(instance, property, value);
 		else
-			((PropertySetter<Object>)instance).set(property, value);
+			((PropertySetter)instance).set(property, value);
 	}
 	
 	static class ImplNamer extends DefaultNamingPolicy {

@@ -7,6 +7,7 @@ import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.AssertJUnit.fail;
 
 import org.hibernate.CallbackException;
+import org.hibernate.EntityMode;
 import org.hivedb.Hive;
 import org.hivedb.HiveReadOnlyException;
 import org.hivedb.configuration.EntityHiveConfig;
@@ -25,6 +26,17 @@ public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
 	@BeforeMethod
 	public void setUp() throws Exception {
 		getHive().addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", HiveDbDialect.H2));
+	}
+	
+	@Test
+	public void testInstantiate() throws Exception {
+		EntityHiveConfig config = getEntityHiveConfig();
+		Hive hive = getHive();
+		HiveInterceptorDecorator interceptor = new HiveInterceptorDecorator(config, hive);
+		Object o = interceptor.instantiate("org.hivedb.util.database.test.WeatherReport", EntityMode.POJO, 7);
+		assertEquals(GeneratedInstanceInterceptor.getGeneratedClass(WeatherReport.class), o.getClass());
+		Object s = interceptor.instantiate("java.lang.String", EntityMode.POJO, 7);
+		assertEquals(String.class, s.getClass());
 	}
 	
 	@Test
