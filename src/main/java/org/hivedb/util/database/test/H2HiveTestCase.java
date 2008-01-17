@@ -41,6 +41,7 @@ public class H2HiveTestCase extends H2TestCase {
 
 	private HiveTestCase createHiveTestCase() {
 		return new HiveTestCase(
+				getHiveDatabaseName(),
 				getMappedClasses(),
 				HiveDbDialect.H2, 
 				new Unary<String,String>() {
@@ -96,8 +97,8 @@ public class H2HiveTestCase extends H2TestCase {
 		return hiveTestCase.getEntityHiveConfig();
 	}
 	
-	public String getHiveDatabaseName() {
-		return hiveTestCase.getHiveDatabaseName();
+	protected String getHiveDatabaseName() {
+		return "hive";
 	}
 	
 	// Sample data

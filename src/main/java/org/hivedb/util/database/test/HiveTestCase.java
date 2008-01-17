@@ -27,12 +27,15 @@ public class HiveTestCase {
 	private HiveDbDialect hiveDbDialect;
 	private ConfigurationReader configurationReader;
 	private Collection<String> dataNodeNames;
+	private String hiveDatabaseName;
 	HiveTestCase(
+			String hiveDatabaseName,
 			Collection<Class<?>> entityClasses,
 			HiveDbDialect hiveDbDialect, 
 			Unary<String,String> getConnectString,
 			Collection<String> dataNodeNames)
 	{
+		this.hiveDatabaseName = hiveDatabaseName;
 		this.getConnectString = getConnectString;
 		this.hiveDbDialect = hiveDbDialect;
 		this.configurationReader = new ConfigurationReader(entityClasses);
@@ -117,6 +120,6 @@ public class HiveTestCase {
 	}
 	
 	public String getHiveDatabaseName() {
-		return "hive";
+		return hiveDatabaseName;
 	}
 }

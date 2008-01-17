@@ -40,6 +40,7 @@ public abstract class MySqlHiveTestCase extends MysqlTestCase {
 
 	private HiveTestCase createHiveTestCase() {
 		return new HiveTestCase(
+				getHiveDatabaseName(),
 				getMappedClasses(),
 				HiveDbDialect.MySql, 
 				new Unary<String,String>() {
@@ -85,11 +86,9 @@ public abstract class MySqlHiveTestCase extends MysqlTestCase {
 	{
 		return hiveTestCase.getEntityHiveConfig();
 	}
-	
-	public String getHiveDatabaseName() {
-		return hiveTestCase.getHiveDatabaseName();
+	protected String getHiveDatabaseName() {
+		return "hive";
 	}
-	
 	// Sample data
 	protected Collection<Resource> createResources() {
 		return hiveTestCase.createResources();
@@ -118,4 +117,5 @@ public abstract class MySqlHiveTestCase extends MysqlTestCase {
 	protected HiveSemaphore createHiveSemaphore() {
 		return hiveTestCase.createHiveSemaphore();
 	}
+	
 }

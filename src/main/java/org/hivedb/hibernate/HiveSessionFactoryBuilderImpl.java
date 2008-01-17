@@ -27,7 +27,9 @@ import org.hibernate.shards.strategy.access.ShardAccessStrategy;
 import org.hibernate.shards.util.Lists;
 import org.hibernate.shards.util.Maps;
 import org.hivedb.Hive;
+import org.hivedb.HiveException;
 import org.hivedb.HiveFacade;
+import org.hivedb.HiveRuntimeException;
 import org.hivedb.Synchronizeable;
 import org.hivedb.annotations.GeneratedClass;
 import org.hivedb.configuration.EntityConfig;
@@ -116,7 +118,13 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	}
 
 	private Configuration buildPrototypeConfiguration() {
-		Configuration hibernateConfig = createConfigurationFromNode(Atom.getFirstOrThrow(hive.getNodes()), overrides);
+		Configuration hibernateConfig = null;
+		try {
+			hibernateConfig = createConfigurationFromNode(Atom.getFirstOrThrow(hive.getNodes()), overrides);
+		}
+		catch (Exception e) {
+			throw new RuntimeException("The hive has no nodes, so it is impossible to build a prototype configuration");
+		}
 		addConfigurations(hibernateConfig);
 		hibernateConfig.setProperty("hibernate.session_factory_name", "factory:prototype");
 		return hibernateConfig;
