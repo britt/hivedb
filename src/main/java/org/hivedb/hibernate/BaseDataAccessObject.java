@@ -12,6 +12,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hivedb.Hive;
@@ -24,6 +25,7 @@ import org.hivedb.configuration.EntityIndexConfigImpl;
 import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.Lists;
 import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Predicate;
 import org.hivedb.util.functional.QuickCache;
@@ -90,24 +92,58 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	
 	@SuppressWarnings("unchecked")
 	public Collection<Object> findByProperty(String propertyName, Object propertyValue) {
-		EntityIndexConfig indexConfig = config.getPrimaryIndexKeyPropertyName().equals(propertyName)
-			? createEntityIndexConfigForPartitionIndex(config)
-			: config.getEntityIndexConfig(propertyName);
+		EntityIndexConfig indexConfig = resolveEntityIndexConfig(propertyName);
 		Session session = createSessionForIndex(config, indexConfig, propertyValue);
 		if (ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName)
-				&& !ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName)) {
-					Query query = session.createQuery(String.format("from %s as x where :value in elements (x.%s)",
-						GeneratedInstanceInterceptor.getGeneratedClass(config.getRepresentedInterface()).getSimpleName(),
-						indexConfig.getIndexName())
-						).setParameter("value", propertyValue);
-					return query.list();
-				}
+			&& !ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName)) {
+				return queryWithHQL(indexConfig, session, propertyValue);
+		}
 		else {
 			// setResultTransformer fixes a Hibernate bug of returning duplicates when joins exist
 			Criteria criteria = session.createCriteria(config.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
 			addPropertyRestriction(indexConfig, criteria, propertyName, propertyValue); 
-			return findByProperty(session, criteria);
+			return listCriteria(session, criteria);
 		}
+	}
+	
+	private Collection<Object> queryWithHQL(EntityIndexConfig indexConfig, Session session, Object propertyValue) {
+		Query query = session.createQuery(String.format("from %s as x where :value in elements (x.%s)",
+			GeneratedInstanceInterceptor.getGeneratedClass(config.getRepresentedInterface()).getSimpleName(),
+			indexConfig.getIndexName())
+			).setParameter("value", propertyValue);
+		return query.list();
+	}
+
+	public Integer getCount(String propertyName, Object propertyValue) {
+		EntityIndexConfig indexConfig = resolveEntityIndexConfig(propertyName);
+		Session session = createSessionForIndex(config, indexConfig, propertyValue);
+		if (ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName)
+			&& !ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName)) {
+				return queryWithHQLRowCount(indexConfig, session, propertyValue);
+		}
+		else {
+			// setResultTransformer fixes a Hibernate bug of returning duplicates when joins exist
+			Criteria criteria = session.createCriteria(config.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+			addPropertyRestriction(indexConfig, criteria, propertyName, propertyValue); 
+			criteria.setProjection( Projections.rowCount() );
+			return (Integer)Atom.getFirstOrThrow(listCriteria(session, criteria));
+		}
+	}
+	
+	private Integer queryWithHQLRowCount(EntityIndexConfig indexConfig, Session session, Object propertyValue) {
+		Query query = session.createQuery(String.format("select count(%s) from %s as x where :value in elements (x.%s)",
+			config.getIdPropertyName(),
+			GeneratedInstanceInterceptor.getGeneratedClass(config.getRepresentedInterface()).getSimpleName(),
+			indexConfig.getIndexName())
+			).setParameter("value", propertyValue);
+		return (Integer) Atom.getFirstOrThrow(query.list());
+	}
+	
+	private EntityIndexConfig resolveEntityIndexConfig(String propertyName) {
+		EntityIndexConfig indexConfig = config.getPrimaryIndexKeyPropertyName().equals(propertyName)
+			? createEntityIndexConfigForPartitionIndex(config)
+			: config.getEntityIndexConfig(propertyName);
+		return indexConfig;
 	}
 
 	private EntityIndexConfig partitionIndexEntityIndexConfig;
@@ -125,7 +161,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		if (ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName)
 				&& !ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName)) {
 			Query query = session.createQuery(String.format("from %s as x where :value in elements (x.%s) order by x.%s asc limit %s, %s",
-				entityConfig.getRepresentedInterface(),
+				GeneratedInstanceInterceptor.getGeneratedClass(entityConfig.getRepresentedInterface()).getSimpleName(),
 				indexConfig.getIndexName(),
 				entityConfig.getIdPropertyName(),
 				firstResult,
@@ -139,19 +175,18 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			criteria.setFirstResult(firstResult);
 			criteria.setMaxResults(maxResults);
 			criteria.addOrder(Order.asc(entityConfig.getIdPropertyName()));
-			return findByProperty(session, criteria);
+			return listCriteria(session, criteria);
 		}
 	}
 	
-	private void addPropertyRestriction(EntityIndexConfig indexConfig,
-			Criteria criteria, String propertyName, Object propertyValue) {
+	private void addPropertyRestriction(EntityIndexConfig indexConfig, Criteria criteria, String propertyName, Object propertyValue) {
 		if (ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName))
 			if (ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName)) {
 				criteria.createAlias(propertyName, "x")
 					.add( Restrictions.eq("x." + indexConfig.getInnerClassPropertyName(), propertyValue));
 			}
 			else
-				throw new UnsupportedOperationException("This isn't working yet");
+				throw new UnsupportedOperationException("This call should have used HQL, not Criteria");
 		else
 			criteria.add( Restrictions.eq(propertyName, propertyValue));
 	}
@@ -173,30 +208,63 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		throw new RuntimeException(String.format("Unknown IndexType: %s", indexConfig.getIndexType()));
 	}
 	
-	public Collection<Object> findByPropertyRange(String propertyName, java.lang.Object minValue, java.lang.Object maxValue) {
+	public Collection<Object> findByPropertyRange(String propertyName, Object minValue, Object maxValue) {
+		// Use an AllShardsresolutionStrategy + Criteria
+		EntityConfig entityConfig = config;
+		EntityIndexConfig indexConfig = config.getEntityIndexConfig(propertyName);
+		Session session = factory.openAllShardsSession();
+		if (ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName)
+				&& !ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName)) {
+			Query query = session.createQuery(String.format("from %s as x where x.%s between (:minValue, :maxValue)",
+				entityConfig.getRepresentedInterface().getSimpleName(),
+				indexConfig.getIndexName())
+				).setEntity("minValue", minValue).setEntity("maxValue", maxValue);
+			return query.list();
+		}
+		else {
+			Criteria criteria = session.createCriteria(config.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+			addPropertyRangeRestriction(indexConfig, criteria, propertyName, minValue, maxValue);
+			return listCriteria(session, criteria);
+		}
+	}
+	public Integer getCountByRange(String propertyName, Object minValue, Object maxValue) {
 		// Use an AllShardsresolutionStrategy + Criteria
 		EntityIndexConfig indexConfig = config.getEntityIndexConfig(propertyName);
 		Session session = factory.openAllShardsSession();
 		Criteria criteria = session.createCriteria(config.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
 		addPropertyRangeRestriction(indexConfig, criteria, propertyName, minValue, maxValue);
-		return findByProperty(session, criteria);
+		criteria.setProjection( Projections.rowCount() );
+		return (Integer)Atom.getFirstOrThrow(listCriteria(session, criteria));
 	}
 	
 	public Collection<Object> findByPropertyRange(String propertyName, Object minValue, Object maxValue, Integer firstResult, Integer maxResults) {
 		// Use an AllShardsresolutionStrategy + Criteria
+		EntityConfig entityConfig = config;
 		EntityIndexConfig indexConfig = config.getEntityIndexConfig(propertyName);
 		Session session = factory.openAllShardsSession();
-		Criteria criteria = session.createCriteria(config.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-		addPropertyRangeRestriction(indexConfig, criteria, propertyName, minValue, maxValue);
-		criteria.add( Restrictions.between(propertyName, minValue, maxValue));
-		criteria.setFirstResult(firstResult);
-		criteria.setMaxResults(maxResults);
-		criteria.addOrder(Order.asc(propertyName));
-		return findByProperty(session, criteria);
+		if (ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName)
+				&& !ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName)) {
+			Query query = session.createQuery(String.format("from %s as x where %s between (:minValue, :maxValue) order by x.%s asc limit %s, %s",
+				entityConfig.getRepresentedInterface().getSimpleName(),
+				indexConfig.getIndexName(),
+				entityConfig.getIdPropertyName(),
+				firstResult,
+				maxResults)
+				).setEntity("minValue", minValue).setEntity("maxValue", maxValue);
+			return query.list();
+		}
+		else {
+			Criteria criteria = session.createCriteria(config.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+			addPropertyRangeRestriction(indexConfig, criteria, propertyName, minValue, maxValue);
+			criteria.add( Restrictions.between(propertyName, minValue, maxValue));
+			criteria.setFirstResult(firstResult);
+			criteria.setMaxResults(maxResults);
+			criteria.addOrder(Order.asc(propertyName));
+			return listCriteria(session, criteria);
+		}
 	}
 	
-	private void addPropertyRangeRestriction(EntityIndexConfig indexConfig,
-			Criteria criteria, String propertyName, Object minValue, Object maxValue) {
+	private void addPropertyRangeRestriction(EntityIndexConfig indexConfig, Criteria criteria, String propertyName, Object minValue, Object maxValue) {
 		if (ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName))
 			if (ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName)) {
 				criteria.createAlias(propertyName, "x")
@@ -208,7 +276,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			criteria.add( Restrictions.between(propertyName, minValue, maxValue));
 	}
 	
-	private Collection<Object> findByProperty(Session session, Criteria criteria) {
+	private Collection<Object> listCriteria(Session session, Criteria criteria) {
 		try {
 			return criteria.list();
 		} finally {

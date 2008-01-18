@@ -26,6 +26,10 @@ public interface DataAccessObject<T, ID> {
     public Collection<T> findByPropertyRange(String propertyName, Object minValue, Object maxValue);
     
     public Collection<T> findByPropertyRange(String propertyName, Object minValue, Object maxValue, Integer firstResult, Integer maxResults);
+    
+    public Integer getCount(String propertyName, Object propertyValue);
+    public Integer getCountByRange(String propertyName, Object minValue, Object maxValue);
+    
     /**
      *  Create or Update this instance.
      * @param entity

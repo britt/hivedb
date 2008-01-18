@@ -8,6 +8,7 @@ import static org.testng.AssertJUnit.assertTrue;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -82,25 +83,30 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 					WeatherReport report =  new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
 					GeneratedInstanceInterceptor.setProperty(report, "continent", "Derkaderkastan");
 					GeneratedInstanceInterceptor.setProperty(report, "temperature", 101);
+					GeneratedInstanceInterceptor.setProperty(report, "sources", Arrays.asList(new Integer[] {101, 102,103}));
 					return dao.save(report);
 				}}, new NumberIterator(12));	
 		
-		Assert.assertEquals(dao.findByProperty("temperature", 101).size(), 12);
-		final Collection<WeatherReport> flatten = Filter.grepUnique(Transform.flatten(Transform.map(new Unary<Integer, Collection<WeatherReport>>() {
-			public Collection<WeatherReport> f(Integer i) {
-				final Collection<WeatherReport> findByProperty = dao.findByProperty("temperature", 101 ,(i-1)*4, 4);
-				return findByProperty;
-			}
-		}, new NumberIterator(3))));
-		final HashSet<WeatherReport> retrievedSet = new HashSet<WeatherReport>(flatten);
-	
-		Assert.assertEquals(
-				retrievedSet.size(),
-				reports.size());
+		// Test a scalar property
+		// TODO get this working with a collection primitive "sources"
+		for (final String property : new String[] {"temperature"}) {
+			Assert.assertEquals(dao.findByProperty(property, 101).size(), 12);
+			final Collection<WeatherReport> results = Filter.grepUnique(Transform.flatten(Transform.map(new Unary<Integer, Collection<WeatherReport>>() {
+				public Collection<WeatherReport> f(Integer i) {
+					final Collection<WeatherReport> findByProperty = dao.findByProperty(property, 101 ,(i-1)*4, 4);
+					return findByProperty;
+				}
+			}, new NumberIterator(3))));
+			final HashSet<WeatherReport> retrievedSet = new HashSet<WeatherReport>(results);
+			Assert.assertEquals(
+					retrievedSet.size(),
+					reports.size());
+			Assert.assertEquals(
+					retrievedSet.hashCode(),
+					new HashSet(reports).hashCode());
+		}
 		
-		Assert.assertEquals(
-				retrievedSet.hashCode(),
-				new HashSet(reports).hashCode());
+		
 	}
 	
 
@@ -163,6 +169,27 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 					}
 				}, new NumberIterator(3)))).hashCode(),
 				set.hashCode());
+	}
+		
+	@Test
+	public void testGetCount() throws Exception {
+		
+		final int temperature = random.nextInt();
+		final List<String> partitionDimensionKeys = Arrays.asList(new String[] {"Asia", "Andromida"});
+		Collection<WeatherReport> reports =
+			Generate.create(new Generator<WeatherReport>() {
+				public WeatherReport generate() {
+					WeatherReport weatherReport =  new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
+					// Set the same temperature for each partition dimension id. The partition dimension id will be calculated from the report id
+					GeneratedInstanceInterceptor.setProperty(weatherReport, "temperature", temperature + weatherReport.getReportId() % 2);
+					GeneratedInstanceInterceptor.setProperty(weatherReport, "continent", partitionDimensionKeys.get(weatherReport.getReportId() % 2));
+					return weatherReport;
+				}}, new NumberIterator(5));
+		
+		DataAccessObject<WeatherReport,Integer> dao = getDao(getGeneratedClass());
+		dao.saveAll(reports);
+		Assert.assertEquals(dao.getCount("temperature", temperature) + dao.getCount("temperature", temperature+1), 5);
+		Assert.assertEquals(dao.getCountByRange("temperature", temperature, temperature+1), (Integer)5);
 	}
 		
 	@Test
