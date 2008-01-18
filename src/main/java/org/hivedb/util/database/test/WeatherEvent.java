@@ -11,6 +11,7 @@ import org.hivedb.annotations.Index;
 @GeneratedClass("WeatherEventGenerated")
 public interface WeatherEvent extends Serializable {
 	@Index
+	@EntityId
 	Integer getEventId();
 	String getContinent();
 	String getName();

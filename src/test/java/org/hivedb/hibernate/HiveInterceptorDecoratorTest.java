@@ -35,8 +35,6 @@ public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
 		HiveInterceptorDecorator interceptor = new HiveInterceptorDecorator(config, hive);
 		Object o = interceptor.instantiate("org.hivedb.util.database.test.WeatherReport", EntityMode.POJO, 7);
 		assertEquals(GeneratedInstanceInterceptor.getGeneratedClass(WeatherReport.class), o.getClass());
-		Object s = interceptor.instantiate("java.lang.String", EntityMode.POJO, 7);
-		assertEquals(String.class, s.getClass());
 	}
 	
 	@Test

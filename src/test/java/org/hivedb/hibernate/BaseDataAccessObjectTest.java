@@ -50,7 +50,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		DataAccessObject<WeatherReport, Integer> dao = getDao(getGeneratedClass());
 		WeatherReport original = getPersistentInstance(dao);
 		WeatherReport report = dao.get(original.getReportId());
-		assertEquals(original, report);
+		assertEquals(ReflectionTools.getDifferingFields(original, report, WeatherReport.class).toString(), original, report);
 	}
 	
 	@Test
