@@ -74,7 +74,7 @@ public interface WeatherReport {
 	 * @return
 	 */
 	@Index(type=IndexType.Delegates)
-	@IndexDelegate(Temperature.class)
+	@IndexDelegate("org.hivedb.util.database.test.Temperature")
 	int getTemperature();
 	
 	/**

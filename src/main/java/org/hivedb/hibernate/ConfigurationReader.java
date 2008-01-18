@@ -132,7 +132,11 @@ public class ConfigurationReader {
 		return indexMethod.getAnnotation(IndexDelegate.class) != null;
 	}
 	private static Class<?> getHiveForeignKeyIndexClass(Method indexMethod) {
-		return indexMethod.getAnnotation(IndexDelegate.class).value();
+		try {
+			return Class.forName(indexMethod.getAnnotation(IndexDelegate.class).value());
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException("Class not found " + indexMethod.getAnnotation(IndexDelegate.class).value());
+		}
 	}
 
 	

@@ -38,8 +38,12 @@ public class EntityResolver {
 	public Class<?> resolveToEntityOrRelatedEntity(Class<?> clazz) {
 		Class<?> entityInterface = resolveEntityInterface(clazz);
 		if (entityInterface != null) 
-			return  entityInterface;
-		return getHiveForeignKeyAnnotatedMethod(clazz).getAnnotation(IndexDelegate.class).value();
+			return  entityInterface; 
+		try {
+			return Class.forName(getHiveForeignKeyAnnotatedMethod(clazz).getAnnotation(IndexDelegate.class).value());
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException("Class not found " + getHiveForeignKeyAnnotatedMethod(clazz).getAnnotation(IndexDelegate.class).value());
+		}
 	}
 	@SuppressWarnings("unchecked")
 	public Map.Entry<Class<?>, Object>  resolveToEntityOrRelatedEntiyInterfaceAndId(Object entity) {
@@ -49,8 +53,9 @@ public class EntityResolver {
 			return  new Pair<Class<?>, Object>(entityInterface,entityHiveConfig.getEntityConfig(entityInterface).getId(entity));
 		Method method = getHiveForeignKeyAnnotatedMethod(clazz);
 		try {
+			
 			return  new Pair<Class<?>, Object>(
-					method.getAnnotation(IndexDelegate.class).value(),
+					Class.forName(method.getAnnotation(IndexDelegate.class).value()),
 					method.invoke(entity, new Object[]{}));
 		} catch (Exception e) {
 			throw new RuntimeException(e);
