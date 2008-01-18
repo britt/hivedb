@@ -1,7 +1,6 @@
 package org.hivedb.hibernate;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Observable;
@@ -27,21 +26,13 @@ import org.hibernate.shards.strategy.access.ShardAccessStrategy;
 import org.hibernate.shards.util.Lists;
 import org.hibernate.shards.util.Maps;
 import org.hivedb.Hive;
-import org.hivedb.HiveException;
 import org.hivedb.HiveFacade;
-import org.hivedb.HiveRuntimeException;
 import org.hivedb.Synchronizeable;
-import org.hivedb.annotations.GeneratedClass;
-import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.meta.Node;
-import org.hivedb.util.GeneratedInstanceInterceptor;
-import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.DriverLoader;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.functional.Atom;
-import org.hivedb.util.functional.Transform;
-import org.hivedb.util.functional.Unary;
 
 public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder, HiveSessionFactory, Observer, Synchronizeable {	
 	private static Map<HiveDbDialect, Class<?>> dialectMap = buildDialectMap();
@@ -233,7 +224,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	}
 	
 	public Session openAllShardsSession() {
-		return factory.openSession();
+		return factory.openSession(getDefaultInterceptor());
 	}
 	
 	private Session openSession(Collection<Integer> nodeIds, Interceptor interceptor) {
