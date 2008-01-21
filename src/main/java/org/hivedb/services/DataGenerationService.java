@@ -1,6 +1,5 @@
 package org.hivedb.services;
 
-import java.io.Serializable;
 import java.util.Collection;
 
 import javax.jws.WebMethod;
@@ -16,5 +15,5 @@ public interface DataGenerationService {
 
 	@WebMethod
 	@WebResult
-	public Collection<Serializable> generate(String clazz, Integer partitionKeyCount, Integer instanceCount);
+	public Collection<Long> generate(String clazz, Integer partitionKeyCount, Integer instanceCount);
 }

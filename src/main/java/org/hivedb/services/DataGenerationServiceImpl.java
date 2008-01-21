@@ -4,11 +4,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
-import javax.jws.WebMethod;
-import javax.jws.WebParam;
-import javax.jws.WebResult;
 import javax.jws.WebService;
-import javax.jws.soap.SOAPBinding;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -59,8 +55,8 @@ public class DataGenerationServiceImpl implements DataGenerationService {
 	/* (non-Javadoc)
 	 * @see org.hivedb.services.DataGenerationService#generate(java.lang.String, java.lang.Integer, java.lang.Integer)
 	 */
-	public Collection<Serializable> generate(String clazz, Integer partitionKeyCount, Integer instanceCount) {
-		Collection<Serializable> ids = Lists.newArrayList();
+	public Collection<Long> generate(String clazz, Integer partitionKeyCount, Integer instanceCount) {
+		Collection<Long> ids = Lists.newArrayList();
 		try {
 		EntityConfig entityConfig = config.getEntityConfig(clazz);		
 		Generator<Object> pKeyGenerator;
@@ -76,7 +72,11 @@ public class DataGenerationServiceImpl implements DataGenerationService {
 				Object instance = instanceGenerator.generate();
 				ReflectionTools.invokeSetter(instance, entityConfig.getPrimaryIndexKeyPropertyName(), pkey);
 				dao.save(instance);
-				ids.add(entityConfig.getId(instance));
+				Serializable id = entityConfig.getId(instance);
+				if(Number.class.isAssignableFrom(id.getClass())) {
+					ids.add(Long.parseLong(id.toString()));
+				} else
+					throw new UnsupportedOperationException("This implementation can only generate classes with numeric ids.");
 			}
 		}
 		} catch(RuntimeException e) {
