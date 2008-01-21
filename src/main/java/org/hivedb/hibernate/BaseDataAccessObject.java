@@ -334,6 +334,8 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 							if (!set.contains(instance))
 								session.delete(instance);
 					}
+					// Prevents NonUniqueObjectException on collection items during save-update cascades
+					session.evict(loadedEntity);
 				}
 			}};
 		doInTransaction(callback, session);
