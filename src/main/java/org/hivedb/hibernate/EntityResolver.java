@@ -40,9 +40,15 @@ public class EntityResolver {
 		if (entityInterface != null) 
 			return  entityInterface; 
 		try {
-			return Class.forName(getHiveForeignKeyAnnotatedMethod(clazz).getAnnotation(IndexDelegate.class).value());
+			final Method indexDelegateAnnotatedMethod = getIndexDelegateAnnotatedMethod(clazz);
+			if (indexDelegateAnnotatedMethod != null) {
+				final IndexDelegate annotation = indexDelegateAnnotatedMethod.getAnnotation(IndexDelegate.class);
+				if (annotation != null)
+					return Class.forName(annotation.value());
+			}
+			return null;
 		} catch (ClassNotFoundException e) {
-			throw new RuntimeException("Class not found " + getHiveForeignKeyAnnotatedMethod(clazz).getAnnotation(IndexDelegate.class).value());
+			throw new RuntimeException("Class not found " + getIndexDelegateAnnotatedMethod(clazz).getAnnotation(IndexDelegate.class).value());
 		}
 	}
 	@SuppressWarnings("unchecked")
@@ -51,7 +57,7 @@ public class EntityResolver {
 		Class entityInterface = resolveEntityInterface(clazz);
 		if (entityInterface != null) 
 			return  new Pair<Class<?>, Object>(entityInterface,entityHiveConfig.getEntityConfig(entityInterface).getId(entity));
-		Method method = getHiveForeignKeyAnnotatedMethod(clazz);
+		Method method = getIndexDelegateAnnotatedMethod(clazz);
 		try {
 			
 			return  new Pair<Class<?>, Object>(
@@ -70,7 +76,7 @@ public class EntityResolver {
 					}},
 					entityHiveConfig.getEntityConfigs()));
 	}
-	private Method getHiveForeignKeyAnnotatedMethod(Class clazz) {
+	private Method getIndexDelegateAnnotatedMethod(Class clazz) {
 		Method annotatedMethod = Filter.grepSingleOrNull(new Predicate<Method>() {
 			public boolean f(Method method) {
 				return method.getAnnotation(IndexDelegate.class) != null;
@@ -78,9 +84,6 @@ public class EntityResolver {
 			public Collection<Method> f(Class interfase) {
 				return Arrays.asList(interfase.getMethods());
 			}}, Arrays.asList(clazz.getInterfaces())));
-		if (annotatedMethod == null)
-			throw new RuntimeException(
-				String.format("Class %s cannot be resolved to a Hive enity and does not reference a Hive entity", clazz.getCanonicalName()));
 		return annotatedMethod;
 	}
 	public static Class<?> getPersistedImplementation(Class<?> clazz) {

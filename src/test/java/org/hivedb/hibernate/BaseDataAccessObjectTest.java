@@ -22,6 +22,7 @@ import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.MySqlHiveTestCase;
+import org.hivedb.util.database.test.WeatherEvent;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.Atom;
@@ -237,10 +238,32 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		WeatherReport updated = dao.get(original.getReportId());
 		GeneratedInstanceInterceptor.setProperty(updated, "latitude", new Double(30));
 		GeneratedInstanceInterceptor.setProperty(updated, "longitude", new Double(30));
+		
+		// Test collection item updates
+		List<WeatherEvent> weatherEvents = new ArrayList<WeatherEvent>(original.getWeatherEvents());
+		// Delete the first
+		weatherEvents.remove(0);
+		// Update the second
+		weatherEvents.get(0).setName("foobar");
+		// Add a third
+		weatherEvents.add(new GenerateInstance<WeatherEvent>(WeatherEvent.class).generate());
+		GeneratedInstanceInterceptor.setProperty(updated, "weatherEvents", weatherEvents);
 		dao.save(updated);
-		WeatherReport persisted = dao.get(updated.getReportId());
-		assertEquals(updated, persisted);
+		final WeatherReport persisted = dao.get(updated.getReportId());
 		assertFalse(updated.equals(original));
+		// Check the updated collection
+			// size should be equal
+		assertEquals(original.getWeatherEvents().size(), persisted.getWeatherEvents().size());
+			// first item should be removed
+		assertFalse(Filter.grepItemAgainstList(Atom.getFirst(original.getWeatherEvents()), persisted.getWeatherEvents()));
+			// should be an updated item named foobar
+		assertTrue(Filter.grepItemAgainstList("foobar", 
+				Transform.map(new Unary<WeatherEvent,String>() {
+					public String f(WeatherEvent weatherEvent) {
+						return weatherEvent.getName();
+				}}, persisted.getWeatherEvents())));
+			// new item should exist
+		assertTrue(Filter.grepItemAgainstList(Atom.getLast(weatherEvents), persisted.getWeatherEvents()));
 	}
 
 	@Test

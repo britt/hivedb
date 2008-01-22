@@ -45,6 +45,18 @@ public class Transform {
 			map.put(keyMapper.f(item),valueMapper.f(item));
 		return map;
 	}
+	public static<K,V,I> Map<K,V> toMap(Unary<I,K> keyMapper, Unary<I,V> valueMapper, Iterable<I> iterable, Predicate<Entry<K,V>> onNull)
+	{
+		Map<K,V> map = new DebugMap<K,V>();
+		for (I item : iterable) {
+			final K key = keyMapper.f(item);
+			final V value = valueMapper.f(item);
+			if ((key == null || value == null) && !onNull.f(new Pair<K,V>(key,value)))
+				continue;
+			map.put(key,value);		
+		}
+		return map;
+	}
 	public static<K,V> Map<K,V> toMap(Entry<K,V>[] entries)
 	{
 		return toMap(Arrays.asList(entries));

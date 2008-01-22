@@ -658,7 +658,7 @@ public class ReflectionTools {
 	}
 
 	// Get the return types of getters or the underlying type of a collection getter for types that are not primitive
-	private static Collection<Class<?>> getInterfacesOfComplexGetters(final Class representedInterface) {
+	public static Collection<Class<?>> getInterfacesOfComplexGetters(final Class representedInterface) {
 		return Filter.getUnique(
 			Transform.map(new Unary<String,Class<?>>() {
 				public Class<?> f(String propertyName) {

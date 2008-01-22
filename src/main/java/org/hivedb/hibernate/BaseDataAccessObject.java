@@ -3,10 +3,11 @@ package org.hivedb.hibernate;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.hibernate.Criteria;
 import org.hibernate.EmptyInterceptor;
-import org.hibernate.Hibernate;
 import org.hibernate.Interceptor;
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -16,19 +17,19 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hivedb.Hive;
-import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.annotations.IndexType;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.configuration.EntityIndexConfigDelegator;
 import org.hivedb.configuration.EntityIndexConfigImpl;
 import org.hivedb.util.GeneratedInstanceInterceptor;
-import org.hivedb.util.Lists;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Predicate;
-import org.hivedb.util.functional.QuickCache;
+import org.hivedb.util.functional.Transform;
+import org.hivedb.util.functional.Unary;
+import org.hivedb.util.functional.Transform.IdentityFunction;
 
 public class BaseDataAccessObject implements DataAccessObject<Object, Serializable>{
 	protected HiveSessionFactory factory;
@@ -320,19 +321,40 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	
 	private void deleteOrphanedCollectionItems(final Collection entities) {
 		
+		final Session getSession = getSession();
+		final Map<Object, Object> entityToLoadedEntity = Transform.toMap(
+				new IdentityFunction<Object>(),
+				new Unary<Object,Object>() {
+					public Object f(Object entity) {
+						return get(config.getId(entity), getSession);
+					}
+				},
+				entities,
+				new Predicate<Map.Entry<Object,Object>>() {
+					 public boolean f(Entry<Object, Object> entry) {
+						return entry.getValue() != null;
+				}});
+		getSession.close();
+				
 		final Session session = getSession();
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {	
 				for (Object entity : entities ) {
-					Object loadedEntity = get(config.getId(entity), session);
+					if (!entityToLoadedEntity.containsKey(entity))
+						continue;
+					Object loadedEntity = entityToLoadedEntity.get(entity);
 					for (EntityIndexConfig entityIndexConfig : Filter.grep(new Predicate<EntityIndexConfig>() {
 						public boolean f(EntityIndexConfig entityIndexConfig) {
 							return ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), entityIndexConfig.getPropertyName());						
 						}}, config.getEntityIndexConfigs())) {
-						Collection set = (Collection)ReflectionTools.invokeGetter(entity, entityIndexConfig.getPropertyName());
-						for (Object instance : (Collection)ReflectionTools.invokeGetter(entity, entityIndexConfig.getPropertyName()))
-							if (!set.contains(instance))
-								session.delete(instance);
+						Collection<Object> newIds = entityIndexConfig.getIndexValues(entity);
+						String indexItemIdProperty = entityIndexConfig.getInnerClassPropertyName();
+						for (Object item : (Collection<Object>)ReflectionTools.invokeGetter(loadedEntity, entityIndexConfig.getPropertyName())) {
+							Object itemId = ReflectionTools.invokeGetter(item, indexItemIdProperty);
+							if (!newIds.contains(itemId)) {
+								session.delete(item);
+							}
+						}
 					}
 					// Prevents NonUniqueObjectException on collection items during save-update cascades
 					session.evict(loadedEntity);
