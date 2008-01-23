@@ -1,7 +1,11 @@
 package org.hivedb.util.functional;
 
+import java.sql.Timestamp;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
+
+import org.hivedb.util.ReflectionTools;
 
 public abstract class Joiner<C,R> {
 	public abstract R f(C item, R result);
@@ -26,13 +30,21 @@ public abstract class Joiner<C,R> {
 	public static class ConcatHashCodesOfValues extends Joiner<Object, String>
 	{
 		public String f(Object item, String result) {
-			return result + (item != null ? getSafeHashCode(item).toString() : "");
+			return (result != null ? result : "") + hashItem(item);
 		}
-
-		private Integer getSafeHashCode(Object item) {
-			if (item instanceof Collection) 
-				return new HashSet((Collection)item).hashCode();
-			return new Integer(item.hashCode());
-		}
+	}
+	public static String hashItem(Object item) {
+		int hash;
+		if (item == null)
+			return "";
+		else if(ReflectionTools.doesImplementOrExtend(item.getClass(), Collection.class))
+			hash = new HashSet<Object>((Collection<Object>) item).hashCode();
+		else if (item instanceof Date)
+			hash = new Long(((Date)item).getTime()).hashCode(); // fixes format hashing problems
+		else if (item instanceof Timestamp)
+			hash = new Long(((Timestamp)item).getTime()).hashCode(); // fixes format hashing problems
+		else
+			hash = item.hashCode();
+		return new Integer(hash).toString();
 	}
 }

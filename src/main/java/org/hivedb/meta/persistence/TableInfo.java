@@ -15,6 +15,10 @@ public class TableInfo {
 		return createStatement;
 	}
 
+	public String getDeleteAllStatement() {
+		return String.format("delete from %s", name);
+	}
+	
 	public void setCreateStatement(String createStatement) {
 		this.createStatement = createStatement;
 	}

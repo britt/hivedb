@@ -97,17 +97,29 @@ public class ReflectionTools {
 		}
 	}
 	
-	public static Method getGetterOfProperty(Class ofInterface, String property) {
+	public static Method getGetterOfProperty(Class ofInterface, final String property) {
 		try {
-			return BeanUtils.getPropertyDescriptor(ofInterface, property).getReadMethod();
+			return Filter.grepSingle(new Predicate<Method>() {
+				public boolean f(Method method) {
+					return getPropertyNameOfAccessor(method).equals(property);
+				}
+			},
+			getGetters((Class<Object>)ofInterface));
+			//return BeanUtils.getPropertyDescriptor(ofInterface, property).getReadMethod();
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 	
-	public static boolean hasGetterOfProperty(Class ofInterface, String property) {
+	public static boolean hasGetterOfProperty(Class ofInterface, final String property) {
 		try {
-			return BeanUtils.getPropertyDescriptor(ofInterface, property).getReadMethod() != null;
+			return Filter.isMatch(new Predicate<Method>() {
+				public boolean f(Method method) {
+					return getPropertyNameOfAccessor(method).equals(property);
+				}
+			},
+			getGetters((Class<Object>)ofInterface));
+			//return BeanUtils.getPropertyDescriptor(ofInterface, property).getReadMethod() != null;
 		} catch (Exception e) {
 			return false;
 		}

@@ -172,16 +172,7 @@ public class Amass {
 				new Joiner.ConcatHashCodesOfValues(),
 				new Unary<Object, String>() {
 					public String f(Object item) {
-						int hash;
-						if(ReflectionTools.doesImplementOrExtend(item.getClass(), Collection.class))
-							hash = new HashSet<Object>((Collection<Object>) item).hashCode();
-						else if (item instanceof Date)
-							hash = new Long(((Date)item).getTime()).hashCode(); // fixes format hashing problems
-						else if (item instanceof Timestamp)
-							hash = new Long(((Timestamp)item).getTime()).hashCode(); // fixes format hashing problems
-						else
-							hash = item.hashCode();
-						return new Integer(hash).toString();
+						return Joiner.hashItem(item);
 					}
 				},
 				objects);

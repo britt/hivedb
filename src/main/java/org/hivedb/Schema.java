@@ -95,6 +95,14 @@ public abstract class Schema extends JdbcDaoSupport {
 		this.dialect = DriverLoader.discernDialect(uri);
 		install();
 	}
+	
+	public void emptyTables(String uri) {
+		this.uri = uri;
+		this.setDataSource(new HiveBasicDataSource(uri));
+		this.dialect = DriverLoader.discernDialect(uri);
+		for (TableInfo table : getTables())
+			emptyTable(table);
+	}
 
 	public static String addLengthForVarchar(String type)
 	{
@@ -134,6 +142,17 @@ public abstract class Schema extends JdbcDaoSupport {
 		JdbcTemplate j = getJdbcTemplate();
 		if(!tableExists(table.getName())) {
 			final String createStatement = table.getCreateStatement();
+			PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
+					createStatement);
+			j.update(creatorFactory.newPreparedStatementCreator(new Object[] {}));
+			//System.err.println("Table " + table.getName() + " created for for database " + dbURI);
+		}
+	}
+	
+	private void emptyTable(TableInfo table) {
+		JdbcTemplate j = getJdbcTemplate();
+		if(tableExists(table.getName())) {
+			final String createStatement = table.getDeleteAllStatement();
 			PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
 					createStatement);
 			j.update(creatorFactory.newPreparedStatementCreator(new Object[] {}));
