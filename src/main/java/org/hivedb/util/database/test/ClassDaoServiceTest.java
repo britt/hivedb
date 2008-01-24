@@ -33,8 +33,8 @@ import org.hivedb.meta.Node;
 import org.hivedb.services.BaseClassDaoService;
 import org.hivedb.services.ClassDaoService;
 import org.hivedb.services.ServiceResponse;
-import org.hivedb.services.ServiceResponseImpl;
 import org.hivedb.util.GenerateInstance;
+import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.Lists;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.HiveDbDialect;
@@ -90,6 +90,13 @@ public class ClassDaoServiceTest extends H2TestCase {
 	@Test(dataProvider = "service")
 	public void saveAndRetrieveInstance(ClassDaoService service) throws Exception {
 		Object original = getPersistentInstance(service);
+		Object response = service.get(getId(original));
+		validateRetrieval(original, response);
+	}
+	
+	@Test(dataProvider = "service")
+	public void saveAndRetrieveInstanceWithNullProperties(ClassDaoService service) throws Exception {
+		Object original = getPersistentInstanceWithNullProperties(service);
 		Object response = service.get(getId(original));
 		validateRetrieval(original, response);
 	}
@@ -189,10 +196,23 @@ public class ClassDaoServiceTest extends H2TestCase {
 	protected Object getInstance(Class<Object> clazz) throws Exception {
 		return new GenerateInstance<Object>(clazz).generate();
 	}
-	
 	protected Object getPersistentInstance(ClassDaoService service) throws Exception {
 		return service.save(getInstance(toClass(service.getPersistedClass())));
 	}
+	
+	protected Object getInstanceWithNullProperties(Class<Object> clazz) throws Exception {
+		Object instance = new GenerateInstance<Object>(clazz).generate();
+		for (Method getter : ReflectionTools.getComplexGetters(clazz))
+			GeneratedInstanceInterceptor.setProperty(
+					instance,
+					ReflectionTools.getPropertyNameOfAccessor(getter),
+					null);
+		return instance;
+	}
+	protected Object getPersistentInstanceWithNullProperties(ClassDaoService service) throws Exception {
+		return service.save(getInstanceWithNullProperties(toClass(service.getPersistedClass())));
+	}
+	
 	
 	protected Serializable getId(Object instance) {
 		return config.getEntityConfig(instance.getClass()).getId(instance);

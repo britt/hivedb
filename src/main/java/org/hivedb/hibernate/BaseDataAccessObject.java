@@ -338,9 +338,15 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 				
 		final Session session = getSession();
 		SessionCallback callback = new SessionCallback(){
-			public void execute(Session session) {	
+			public void execute(Session session) {
+				Collection<Object> existingKeys = Transform.map(new Unary<Object, Object>() {
+					public Object f(Object entity) {
+						return config.getId(entity);
+					}
+				},
+				entityToLoadedEntity.keySet());
 				for (Object entity : entities ) {
-					if (!entityToLoadedEntity.containsKey(entity))
+					if (!existingKeys.contains(config.getId(entity)))
 						continue;
 					Object loadedEntity = entityToLoadedEntity.get(entity);
 					for (EntityIndexConfig entityIndexConfig : Filter.grep(new Predicate<EntityIndexConfig>() {

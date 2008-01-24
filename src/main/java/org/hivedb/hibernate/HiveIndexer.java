@@ -59,13 +59,16 @@ public class HiveIndexer {
 	@SuppressWarnings("unchecked")
 	private void insertSecondaryIndexes(final EntityConfig config, final Object entity) throws HiveReadOnlyException {
 		Map<String, Collection<Object>> secondaryIndexMap = Transform.toMap(
-			Transform.map(
-				new Unary<EntityIndexConfig, Entry<String, Collection<Object>>>(){
-					public Entry<String, Collection<Object>> f(EntityIndexConfig item) {
-						return new Pair<String, Collection<Object>>(item.getIndexName(), item.getIndexValues(entity));
-					}
-				}, getHiveIndexConfigs(config))
-		);
+			Filter.grep(
+				new Filter.NotNullPredicate<Entry<String, Collection<Object>>>(), 
+				Transform.map(
+					new Unary<EntityIndexConfig, Entry<String, Collection<Object>>>(){
+						public Entry<String, Collection<Object>> f(EntityIndexConfig entityIndexConfig) {
+							if (entityIndexConfig.getIndexValues(entity) == null) // Protect against null properties
+								return null;
+							return new Pair<String, Collection<Object>>(entityIndexConfig.getIndexName(), entityIndexConfig.getIndexValues(entity));
+						}
+					}, getHiveIndexConfigs(config))));
 		hive.directory().insertSecondaryIndexKeys(config.getResourceName(), secondaryIndexMap, config.getId(entity));
 	}
 

@@ -28,10 +28,11 @@ public abstract class Actor<T>{
 	
 	@SuppressWarnings("unchecked")
 	public static Collection<Object> forceCollection(Object obj) {
+		if (obj == null)
+			return Collections.emptyList();
 		if (obj instanceof Collection)
 			return (Collection<Object>)obj;
-		else
-			return Collections.singletonList(obj);
+		return Collections.singletonList(obj);
 	}
 
 }
