@@ -64,16 +64,6 @@ public class NodeDao extends JdbcDaoSupport {
 		return results;
 	}
 
-	public List<Node> findByPartitionDimension(int id) {
-		JdbcTemplate t = getJdbcTemplate();
-		ArrayList<Node> results = new ArrayList<Node>();
-		for (Object result : t.query("SELECT * FROM node_metadata WHERE partition_dimension_id = ?", new Object[] { id },
-				new NodeRowMapper())) {
-			results.add((Node)result);
-		}
-		return results;
-	}
-
 	public Node findById(int id) {
 		JdbcTemplate t = getJdbcTemplate();
 		return (Node) t.queryForObject("SELECT * FROM node_metadata WHERE id = ?", new Object[] { id }, new NodeRowMapper());

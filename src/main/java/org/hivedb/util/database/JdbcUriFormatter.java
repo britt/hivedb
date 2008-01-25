@@ -57,6 +57,7 @@ public class JdbcUriFormatter {
 		addIf(!empty(node.getUsername()), USERNAME, node.getUsername(), p);
 		addIf(!empty(node.getPassword()),PASSWORD, node.getPassword(), p);
 		addIf(!empty(node.getOptions()), OPTIONS, node.getOptions(), p);
+		addIf(node.getDialect() == HiveDbDialect.MySql, OPTIONS, "&autoReconnect=true&autoReconnectForPools=true", p);
 		return p;
 	}
 	
