@@ -41,21 +41,16 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 	}
 	
 	public static<T> Class<? extends T> getGeneratedClass(final Class<T> clazz ) {
+		// Only generate for interfaces.
+		// Implementations can add whatever functionality they need, and so don't warrant a generated class
+		if (!clazz.isInterface())	
+			return clazz;
 		Enhancer e = new Enhancer();
 		e.setCallbackType(GeneratedInstanceInterceptor.class);
 		e.setNamingPolicy(new ImplNamer(clazz));
 		e.setSuperclass(Mapper.class);
 		GeneratedInstanceInterceptor interceptor = new GeneratedInstanceInterceptor(clazz);	
-		if (clazz.isInterface())
-			e.setInterfaces(new Class[] {clazz, PropertySetter.class, GeneratedImplementation.class});
-		else {
-			List list = new ArrayList(Arrays.asList(clazz.getInterfaces()));
-			list.add(PropertySetter.class);
-			list.add(GeneratedImplementation.class);
-			Class[] copy = new Class[list.size()];
-			list.toArray(copy);
-			e.setInterfaces(copy);
-		}
+		e.setInterfaces(new Class[] {clazz, PropertySetter.class, GeneratedImplementation.class});
 		Class<? extends T> generatedClass = e.createClass();
 		Enhancer.registerCallbacks(generatedClass, new Callback[] {interceptor});
 		return generatedClass;

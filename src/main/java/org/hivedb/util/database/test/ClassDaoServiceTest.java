@@ -38,6 +38,7 @@ import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.Lists;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.HiveDbDialect;
+import org.hivedb.util.functional.Actor;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Delay;
 import org.hivedb.util.functional.Filter;
@@ -59,6 +60,10 @@ public class ClassDaoServiceTest extends H2TestCase {
 	
 	public static void addEntity(Class clazz, Schema schema) {
 		addEntity(clazz, new LazyInitializer(clazz, schema));
+	}
+	
+	public static void addEntity(Class clazz) {
+		entityClasses.add(clazz);
 	}
 	
 	public static void addEntity(Class clazz, LazyInitializer initializer) {
@@ -102,15 +107,21 @@ public class ClassDaoServiceTest extends H2TestCase {
 	}
 
 	@Test(dataProvider = "service")
-	public void retrieveInstancesUsingAllIndexedProperties(ClassDaoService service) throws Exception {
-		Object original = getPersistentInstance(service);
+	public void retrieveInstancesUsingAllIndexedProperties(final ClassDaoService service) throws Exception {
+		final Object original = getPersistentInstance(service);
 		if (original != null) {
 			List<Method> indexes = AnnotationHelper.getAllMethodsWithAnnotation(original.getClass(), Index.class);
 			
 			for(Method index : indexes) {
-				String indexPropertyName = BeanUtils.findPropertyForMethod(index).getName();
-				Object response = service.getByReference(indexPropertyName, ReflectionTools.invokeGetter(original, indexPropertyName));
-				validateRetrieval(Collections.singletonList(original), response);
+				final String indexPropertyName = BeanUtils.findPropertyForMethod(index).getName();
+				// test retrieval with the single value or each item of the list of values
+				new Actor<Object>(ReflectionTools.invokeGetter(original, indexPropertyName)) {
+					@Override
+					public void f(Object indexValue) {
+						Object response = service.getByReference(indexPropertyName, indexValue);
+						validateRetrieval(Collections.singletonList(original), response);
+					}
+				}.perform();
 			}
 		}
 	}
