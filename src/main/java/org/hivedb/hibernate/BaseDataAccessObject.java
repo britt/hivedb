@@ -80,6 +80,11 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		try {
 			session = getSession();
 			return get(id, session);
+		}
+		catch (RuntimeException e) {
+			if (!exists(id))
+				return null;
+			else throw e;
 		} finally {
 			if(session != null)
 				session.close();
