@@ -10,6 +10,7 @@ import org.hivedb.util.InstanceCollectionValueGetter;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.SqlUtils;
 import org.hivedb.util.functional.Actor;
+import org.hivedb.util.functional.NonNullValidator;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.hivedb.util.functional.Validator;
@@ -27,9 +28,12 @@ public class EntityIndexConfigImpl implements EntityIndexConfig {
 		this.indexType = resolveIndexType(entityInterface, propertyName);
 		this.secondaryIndexCollectionGetter = new InstanceCollectionValueGetter() {
 			public Collection<Object> get(Object instance) {
+				if (!getValidator().isValid(instance, propertyName))
+					getValidator().throwInvalid(instance, propertyName);
 				return Actor.forceCollection(ReflectionTools.invokeGetter(instance, propertyName));
 		}};
 		this.indexClass = ReflectionTools.getPropertyTypeOrPropertyCollectionItemType(entityInterface, propertyName);
+		this.validator = new NonNullValidator();
 	}
 	
 	private IndexType resolveIndexType(final Class entityInterface, final String propertyName) {
@@ -58,6 +62,8 @@ public class EntityIndexConfigImpl implements EntityIndexConfig {
 		this.indexType = ReflectionTools.getGetterOfProperty(entityInterface, propertyName).getAnnotation(Index.class).type();
 		this.secondaryIndexCollectionGetter = new InstanceCollectionValueGetter() {
 			public Collection<Object> get(Object instance) {
+				if (!getValidator().isValid(instance, propertyName))
+					getValidator().throwInvalid(instance, propertyName);
 				return Transform.map(new Unary<Object, Object>() {
 					public Object f(Object collectionItem) {
 						return ReflectionTools.invokeGetter(collectionItem, innerClassPropertyName);
@@ -67,6 +73,7 @@ public class EntityIndexConfigImpl implements EntityIndexConfig {
 		this.indexClass = ReflectionTools.getPropertyType(
 			ReflectionTools.getCollectionItemType(entityInterface, propertyName),
 			innerClassPropertyName);
+		this.validator = new NonNullValidator();
 	}
 
 	private String indexName;
@@ -98,9 +105,9 @@ public class EntityIndexConfigImpl implements EntityIndexConfig {
 	public IndexType getIndexType() {
 		return indexType;
 	}
+	private Validator validator;
 	public Validator getValidator() {
-		// TODO Auto-generated method stub
-		return null;
+		return validator;
 	}
 	
 }

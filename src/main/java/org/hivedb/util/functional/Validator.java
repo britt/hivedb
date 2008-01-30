@@ -1,5 +1,6 @@
 package org.hivedb.util.functional;
 
-public interface Validator<T> {
-	public boolean isValid(T obj);
+public interface Validator {
+	public boolean isValid(Object instance, String propertyName);
+	public void throwInvalid(Object instance, String propertyName);
 }

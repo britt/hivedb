@@ -17,6 +17,7 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hivedb.Hive;
+import org.hivedb.HiveRuntimeException;
 import org.hivedb.annotations.IndexType;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityIndexConfig;
@@ -24,8 +25,10 @@ import org.hivedb.configuration.EntityIndexConfigDelegator;
 import org.hivedb.configuration.EntityIndexConfigImpl;
 import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Joiner;
 import org.hivedb.util.functional.Predicate;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
@@ -312,6 +315,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	}
 
 	public Collection<Object> saveAll(final Collection<Object> collection) {
+		validateNonNull(collection);
 		// Compensates for Hibernate's inability to delete items orphaned by updates
 		deleteOrphanedCollectionItems(collection);
 		SessionCallback callback = new SessionCallback(){
@@ -322,6 +326,16 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			}};
 		doInTransaction(callback, getSession());
 		return collection;
+	}
+
+	private void validateNonNull(final Collection<Object> collection) {
+		if (Filter.isMatch(new Filter.NullPredicate<Object>(), collection)) {
+			String ids = Amass.joinByToString(new Joiner.ConcatStrings<String>(", "), 
+				Transform.map(new Unary<Object, String>() {
+					public String f(Object item) {
+						return item != null ? config.getId(item).toString() : "null"; }}, collection));
+			throw new HiveRuntimeException(String.format("Encountered null items in collection: %s", ids));
+		}
 	}
 	
 	private void deleteOrphanedCollectionItems(final Collection entities) {

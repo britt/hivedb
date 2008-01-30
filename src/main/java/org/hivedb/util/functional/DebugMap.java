@@ -87,7 +87,9 @@ public class DebugMap<K,V> implements Map<K,V>
 			new Joiner.ConcatStrings<String>("\n"),
 			Transform.map(new Unary<Entry<K,V>, String>() {
 					public String f(Entry entry) {
-						return entry.getKey().toString() + " -> " + entry.getValue().toString() + 
+						final Object key = entry.getKey();
+						final Object value = entry.getValue();
+						return (key != null ? key.toString() : "null") + " -> " + (value != null ? value.toString() : "null") + 
 						(showHashes ? "(Hash: " + makeHashCode(entry) + ")" : "");
 				}},
 				map.entrySet()),

@@ -9,8 +9,10 @@ import java.util.Map;
 import org.hivedb.annotations.AnnotationHelper;
 import org.hivedb.annotations.GeneratedClass;
 import org.hivedb.annotations.IndexDelegate;
+import org.hivedb.annotations.IndexType;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
+import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.util.GeneratedImplementation;
 import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.ReflectionTools;
@@ -35,16 +37,37 @@ public class EntityResolver {
 		this.entityHiveConfig.getEntityConfigs());
 	}
 	
+	// The given class may or may not be a Hive entity class. If it is return it's interface, otherwise
+	// search throught the EntityHiveConfigs for an IndexDelegate whose type matches the type given.
+	// This method grabs to first match, so it fill be inaccurate if two EntityHiveConfigs share a delegated
+	// property type, or if two methods within And EntityConfig have the same delegated property type
 	public Class<?> resolveToEntityOrRelatedEntity(Class<?> clazz) {
 		Class<?> entityInterface = resolveEntityInterface(clazz);
 		if (entityInterface != null) 
 			return  entityInterface; 
 		try {
-			final Method indexDelegateAnnotatedMethod = getIndexDelegateAnnotatedMethod(clazz);
-			if (indexDelegateAnnotatedMethod != null) {
-				final IndexDelegate annotation = indexDelegateAnnotatedMethod.getAnnotation(IndexDelegate.class);
-				if (annotation != null)
-					return Class.forName(annotation.value());
+			for (EntityConfig entityConfig : entityHiveConfig.getEntityConfigs()) {
+				for (EntityIndexConfig entityIndexConfig : entityConfig.getEntityIndexConfigs()) {
+					if (entityIndexConfig.getIndexType().equals(IndexType.Delegates)) {
+						final String propertyName = entityIndexConfig.getPropertyName();
+						final Class<?> representedInterface = entityConfig.getRepresentedInterface();
+						if (ReflectionTools.isCollectionProperty(representedInterface, propertyName)) {
+							if (ReflectionTools.doesImplementOrExtend(
+									clazz,
+									ReflectionTools.getCollectionItemType(representedInterface, propertyName))) {
+								Method method = ReflectionTools.getGetterOfProperty(representedInterface, propertyName);
+								return Class.forName(method.getAnnotation(IndexDelegate.class).value());
+							}
+						}
+						else
+							if (ReflectionTools.doesImplementOrExtend(
+									clazz,
+									ReflectionTools.getPropertyType(representedInterface, propertyName))) {
+								Method method = ReflectionTools.getGetterOfProperty(representedInterface, propertyName);
+								return Class.forName(method.getAnnotation(IndexDelegate.class).value());
+							}			
+					}
+				}
 			}
 			return null;
 		} catch (ClassNotFoundException e) {
@@ -76,6 +99,9 @@ public class EntityResolver {
 					}},
 					entityHiveConfig.getEntityConfigs()));
 	}
+	
+	// Given a class that is not an entity itself, see it is the type of
+	// of a delegated index of an entity
 	private Method getIndexDelegateAnnotatedMethod(Class clazz) {
 		Method annotatedMethod = Filter.grepSingleOrNull(new Predicate<Method>() {
 			public boolean f(Method method) {

@@ -33,6 +33,7 @@ import org.hivedb.meta.Node;
 import org.hivedb.services.BaseClassDaoService;
 import org.hivedb.services.ClassDaoService;
 import org.hivedb.services.ServiceResponse;
+import org.hivedb.util.AssertUtils;
 import org.hivedb.util.GenerateInstance;
 import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.Lists;
@@ -43,9 +44,11 @@ import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Delay;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Predicate;
+import org.hivedb.util.functional.Toss;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.springframework.beans.BeanUtils;
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -100,10 +103,26 @@ public class ClassDaoServiceTest extends H2TestCase {
 	}
 	
 	@Test(dataProvider = "service")
-	public void saveAndRetrieveInstanceWithNullProperties(ClassDaoService service) throws Exception {
-		Object original = getPersistentInstanceWithNullProperties(service);
-		Object response = service.get(getId(original));
-		validateRetrieval(original, response);
+	public void saveAndRetrieveInstanceWithNullProperties(final ClassDaoService service) throws Exception {
+		AssertUtils.assertThrows(new Toss() {
+			public void f() throws Exception {
+				Object original = getPersistentInstanceWithNullProperties(service);	
+			}
+		}, HiveRuntimeException.class);
+	}
+	
+	@Test(dataProvider = "service")
+	public void saveAndUpdateToEmptyCollectionProperties(final ClassDaoService service) throws Exception {
+		Object original = getPersistentInstance(service);
+		final EntityConfig entityConfig = config.getEntityConfig(toClass(service.getPersistedClass()));
+		Object update = new GenerateInstance<Object>((Class<Object>) entityConfig.getRepresentedInterface()).generateAndCopyProperties(original);
+		for (Method getter : ReflectionTools.getCollectionGetters(entityConfig.getRepresentedInterface())) {
+			String property = ReflectionTools.getPropertyNameOfAccessor(getter);
+			GeneratedInstanceInterceptor.setProperty(update, property, Collections.emptyList());
+		}
+		service.save(update);
+		Assert.assertEquals(service.get(getId(original)), update);
+		
 	}
 
 	@Test(dataProvider = "service")

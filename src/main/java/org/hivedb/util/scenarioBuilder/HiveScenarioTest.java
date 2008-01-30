@@ -186,6 +186,7 @@ public class HiveScenarioTest {
 			updatePrimaryIndexKeyOfResource(new Filter.AllowAllFilter());			
 			// TODO something mysterious fails here during the H2 test. I can't figure it out after extensive
 			//updateMetaData(hiveConfig, resourceInstances);
+			updatePropertiesDelegatedToOtherResources();
 			commitReadonlyViolations(entityHiveConfig,hive,representedInterface, resourceInstances);
 		}
 		
@@ -264,6 +265,10 @@ public class HiveScenarioTest {
 							hive.directory().getPrimaryIndexKeyOfResourceId(resource.getName(), id));
 				}
 			}.cycle();	
+		}
+		
+		private void updatePropertiesDelegatedToOtherResources() {
+			
 		}
 		
 		private void updateMetaData()

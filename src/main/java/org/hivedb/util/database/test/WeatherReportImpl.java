@@ -107,7 +107,7 @@ public class WeatherReportImpl implements WeatherReport {
 	public Integer getRegionCode() {
 		return regionCode; 
 	}
-	public void setRegionCode(int regionCode) {
+	public void setRegionCode(Integer regionCode) {
 		this.regionCode = regionCode;
 	}
 }

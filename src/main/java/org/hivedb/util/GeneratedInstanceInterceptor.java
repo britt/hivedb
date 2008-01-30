@@ -20,6 +20,7 @@ import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
+import org.hivedb.HiveRuntimeException;
 import org.hivedb.annotations.GeneratedClass;
 import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.DebugMap;
@@ -139,8 +140,10 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 	public static void setProperty(Object instance, String property, Object value) {
 		if (ReflectionTools.doesSetterExist(ReflectionTools.getGetterOfProperty(instance.getClass(), property)))
 			ReflectionTools.invokeSetter(instance, property, value);
-		else
+		else if (instance instanceof PropertySetter)
 			((PropertySetter)instance).set(property, value);
+		else
+			throw new HiveRuntimeException(String.format("No way to inoke setter of class %s, property %s", instance.getClass(), property));
 	}
 	
 	static class ImplNamer extends DefaultNamingPolicy {
