@@ -1,4 +1,4 @@
-package org.hivedb.util.functional;
+package org.hivedb.util.validators;
 
 public interface Validator {
 	public boolean isValid(Object instance, String propertyName);

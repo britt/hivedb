@@ -2,18 +2,19 @@ package org.hivedb.configuration;
 
 import java.util.Collection;
 
-import org.hivedb.annotations.AnnotationHelper;
+import org.hivedb.HiveRuntimeException;
 import org.hivedb.annotations.Index;
 import org.hivedb.annotations.IndexType;
 import org.hivedb.annotations.PartitionIndex;
+import org.hivedb.annotations.Validate;
 import org.hivedb.util.InstanceCollectionValueGetter;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.SqlUtils;
 import org.hivedb.util.functional.Actor;
-import org.hivedb.util.functional.NonNullValidator;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
-import org.hivedb.util.functional.Validator;
+import org.hivedb.util.validators.NonNullValidator;
+import org.hivedb.util.validators.Validator;
 
 public class EntityIndexConfigImpl implements EntityIndexConfig {
 		
@@ -33,17 +34,9 @@ public class EntityIndexConfigImpl implements EntityIndexConfig {
 				return Actor.forceCollection(ReflectionTools.invokeGetter(instance, propertyName));
 		}};
 		this.indexClass = ReflectionTools.getPropertyTypeOrPropertyCollectionItemType(entityInterface, propertyName);
-		this.validator = new NonNullValidator();
+		this.validator = resolveValidator(entityInterface, propertyName);
 	}
 	
-	private IndexType resolveIndexType(final Class entityInterface, final String propertyName) {
-		Index annotation = ReflectionTools.getGetterOfProperty(entityInterface, propertyName).getAnnotation(Index.class);
-		if (annotation != null)
-			return annotation.type();
-		if (ReflectionTools.getGetterOfProperty(entityInterface, propertyName).getAnnotation(PartitionIndex.class) != null)
-			return IndexType.Partition;
-		return IndexType.None;
-	}
 	/**
 	 *  Constructor for a property of a collection of complex types. This assumes the complex type's
 	 *  indexed property is a primitive value, though this could be refactored to support a property
@@ -73,8 +66,30 @@ public class EntityIndexConfigImpl implements EntityIndexConfig {
 		this.indexClass = ReflectionTools.getPropertyType(
 			ReflectionTools.getCollectionItemType(entityInterface, propertyName),
 			innerClassPropertyName);
-		this.validator = new NonNullValidator();
+		this.validator = resolveValidator(entityInterface, propertyName);
 	}
+	
+	private IndexType resolveIndexType(final Class entityInterface, final String propertyName) {
+		Index annotation = ReflectionTools.getGetterOfProperty(entityInterface, propertyName).getAnnotation(Index.class);
+		if (annotation != null)
+			return annotation.type();
+		if (ReflectionTools.getGetterOfProperty(entityInterface, propertyName).getAnnotation(PartitionIndex.class) != null)
+			return IndexType.Partition;
+		return IndexType.None;
+	}
+	
+	private Validator resolveValidator(final Class entityInterface, final String propertyName) {
+		Validate annotation = (Validate) ReflectionTools.getGetterOfProperty(entityInterface, propertyName).getAnnotation(Validate.class);
+		if (annotation != null)
+			try {
+				return (Validator) Class.forName(annotation.value()).newInstance();
+			} catch (Exception e) {
+				throw new HiveRuntimeException(e);
+			}
+		return nonNullValidator;
+	}
+	private static Validator nonNullValidator = new NonNullValidator();
+	
 
 	private String indexName;
 	public String getIndexName() {

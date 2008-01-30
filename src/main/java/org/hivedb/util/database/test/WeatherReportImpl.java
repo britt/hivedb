@@ -1,5 +1,6 @@
 package org.hivedb.util.database.test;
 
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Random;
@@ -12,6 +13,8 @@ import org.hivedb.util.GenerateInstance;
 import org.hivedb.util.GenerateInstanceCollection;
 import org.hivedb.util.GeneratePrimitiveCollection;
 import org.hivedb.util.HiveUtils;
+import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.functional.Amass;
 
 @Resource("WeatherReport")
 public class WeatherReportImpl implements WeatherReport {
@@ -80,9 +83,10 @@ public class WeatherReportImpl implements WeatherReport {
 	public boolean equals(Object obj) {
 		return this.hashCode() == obj.hashCode();
 	}
+	static final Collection<Method> getters = ReflectionTools.getGetters(WeatherReport.class);
 	@Override
 	public int hashCode() {
-		return HiveUtils.makeHashCode(new Object[]{getContinent(),getLatitude(), getLongitude(), getReportId(), getReportTime()});
+		return Amass.makeHashCode(ReflectionTools.invokeGetters(this, getters));
 	}
 	public static WeatherReportImpl generate() {
 		Random r = new Random(System.currentTimeMillis());
@@ -97,6 +101,7 @@ public class WeatherReportImpl implements WeatherReport {
 	}
 	
 	private Collection<WeatherEvent> weatherEvents = new GenerateInstanceCollection<WeatherEvent>(WeatherEvent.class,3).generate();
+	@Index
 	public Collection<WeatherEvent> getWeatherEvents() {
 		return weatherEvents;
 	}

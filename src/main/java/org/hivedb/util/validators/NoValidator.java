@@ -1,4 +1,4 @@
-package org.hivedb.util.functional;
+package org.hivedb.util.validators;
 
 import org.hivedb.HiveRuntimeException;
 
@@ -7,7 +7,7 @@ import org.hivedb.HiveRuntimeException;
  * @author bcrawford
  *
  */
-public class TrueValidator implements Validator {
+public class NoValidator implements Validator {
 	public boolean isValid(Object instance, String propertyName) {return true;}
 	
 	public void throwInvalid(Object instance, String propertyName) {

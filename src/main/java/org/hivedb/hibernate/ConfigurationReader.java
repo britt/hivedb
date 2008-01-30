@@ -124,7 +124,6 @@ public class ConfigurationReader {
 		return Filter.grep(new Predicate<Method>() {
 			public boolean f(Method method) {
 				return !method.equals(resourceIdMethod);
-				//&& method.getAnnotation(Index.class).type() != IndexType.Data;
 		}}, AnnotationHelper.getAllMethodsWithAnnotation(clazz, Index.class));
 	}
 	

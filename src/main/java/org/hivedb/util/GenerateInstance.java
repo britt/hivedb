@@ -72,7 +72,7 @@ public class GenerateInstance<T> implements Generator<T> {
 			
 	    for (Method getter : ReflectionTools.getGetters(clazz))
 	    {
-	    	if (getter.getDeclaringClass().equals(Object.class))
+	    	if (belongsToExcludedClass(getter))
 	    		continue;
 	    	String propertyName = ReflectionTools.getPropertyNameOfAccessor(getter);
 	    	Class methodOwner = ReflectionTools.getOwnerOfMethod(clazz, propertyName);

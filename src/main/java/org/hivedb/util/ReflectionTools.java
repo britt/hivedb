@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
+import org.hivedb.annotations.Validate;
 import org.hivedb.services.ClassDaoService;
 import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.Atom;
@@ -244,6 +245,9 @@ public class ReflectionTools {
 			}.grepGetters(basedUponThisInterface);
 	}
 	public static<T> Collection<Object> invokeGetters(final T instance, Class<T> basedUponThisInterface) {
+		return invokeGetters(instance, getGetters(basedUponThisInterface));	
+	}
+	public static<T> Collection<Object> invokeGetters(final T instance, Collection<Method> getters) {
 		return Transform.map(new Unary<Method, Object>() {
 			public Object f(Method method) {
 				try {
@@ -252,7 +256,7 @@ public class ReflectionTools {
 					throw new RuntimeException(e);
 				}
 			}},
-			getGetters(basedUponThisInterface));	
+			getters);	
 	}
 	public static Object invokeGetter(Object instance, String propertyName)
     {
@@ -700,5 +704,14 @@ public class ReflectionTools {
 			public boolean f(Method method) {
 				return method.getDeclaringClass().equals(clazz);
 		}}, Arrays.asList(clazz.getMethods()));
+	}
+	public static Object getAnnotationDeeply(Class clazz, String property, Class annotationClass) {
+		final Method getter = getGetterOfProperty(clazz, property);
+		if (getter.getAnnotation(annotationClass) != null)
+			return getter.getAnnotation(annotationClass);
+		Class owner = getOwnerOfMethod(clazz, property);
+		if (!owner.equals(clazz))
+			return getGetterOfProperty(owner, property).getAnnotation(annotationClass);
+		return null;
 	}
 }

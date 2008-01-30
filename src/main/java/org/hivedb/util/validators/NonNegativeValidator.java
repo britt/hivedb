@@ -1,4 +1,4 @@
-package org.hivedb.util.functional;
+package org.hivedb.util.validators;
 
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.util.ReflectionTools;

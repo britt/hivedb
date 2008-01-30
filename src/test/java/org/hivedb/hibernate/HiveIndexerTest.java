@@ -21,7 +21,7 @@ import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.WeatherEvent;
 import org.hivedb.util.database.test.WeatherReport;
-import org.hivedb.util.functional.Validator;
+import org.hivedb.util.validators.Validator;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 

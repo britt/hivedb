@@ -12,6 +12,7 @@ import org.hivedb.annotations.IndexDelegate;
 import org.hivedb.annotations.IndexType;
 import org.hivedb.annotations.PartitionIndex;
 import org.hivedb.annotations.Resource;
+import org.hivedb.annotations.Validate;
 
 /**
  *
@@ -96,5 +97,6 @@ public interface WeatherReport {
 	@Index
 	Collection<WeatherEvent> getWeatherEvents();
 	
+	@Validate("org.hivedb.util.validators.NoValidator")
 	Date getReportTime();
 }
