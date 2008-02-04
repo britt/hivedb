@@ -347,7 +347,7 @@ public class ReflectionTools {
 		}
 	
 		public String toString() {			
-			return String.format("Method: %s, FieldValue1: %s (hash: %s), FieldValue2: %s (hash: %s)", method, fieldValueOfInstance1, fieldValueOfInstance1.hashCode(), fieldValueOfInstance2, fieldValueOfInstance2.hashCode());
+			return String.format("Method: %s, FieldValue1: %s (hash: %s), FieldValue2: %s (hash: %s)", method, fieldValueOfInstance1!=null?fieldValueOfInstance1:"null", fieldValueOfInstance1!=null?fieldValueOfInstance1.hashCode():0, fieldValueOfInstance2!=null?fieldValueOfInstance2:"null", fieldValueOfInstance2!=null?fieldValueOfInstance2.hashCode():0);
 		}
 	}
 	public static class DiffCollection extends ArrayList<Diff>

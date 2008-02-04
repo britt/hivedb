@@ -58,7 +58,10 @@ public class GenerateInstance<T> implements Generator<T> {
 						propertyName, 
 						value);
 				else
-					new GenerateInstance<Object>((Class<Object>) getter.getReturnType()).generateAndCopyProperties(value);
+					GeneratedInstanceInterceptor.setProperty(
+						instance, 
+						propertyName, 
+						new GenerateInstance<Object>((Class<Object>) getter.getReturnType()).generateAndCopyProperties(value));
 			}
 			
 		}
