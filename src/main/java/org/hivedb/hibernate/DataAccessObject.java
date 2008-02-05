@@ -30,6 +30,8 @@ public interface DataAccessObject<T, ID> {
     public Integer getCount(String propertyName, Object propertyValue);
     public Integer getCountByRange(String propertyName, Object minValue, Object maxValue);
     
+    Collection<Object> getProperty(String propertyName, int firstResult, int maxResults);
+    
     /**
      *  Create or Update this instance.
      * @param entity

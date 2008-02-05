@@ -115,6 +115,17 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		}
 	}
 	
+	public Collection<Object> getProperty(String propertyName, int firstResult, int maxResults) {
+		Session session = factory.openAllShardsSession();
+		Query query = getSession().createQuery("select " + propertyName + " from " +
+		GeneratedInstanceInterceptor.getGeneratedClass(config.getRepresentedInterface()).getSimpleName());
+		if (maxResults > 0) {
+			query.setFirstResult(firstResult);
+			query.setMaxResults(maxResults);
+		}
+		return query.list();
+	}
+	
 	private Collection<Object> queryWithHQL(EntityIndexConfig indexConfig, Session session, Object propertyValue) {
 		Query query = session.createQuery(String.format("from %s as x where :value in elements (x.%s)",
 			GeneratedInstanceInterceptor.getGeneratedClass(config.getRepresentedInterface()).getSimpleName(),
