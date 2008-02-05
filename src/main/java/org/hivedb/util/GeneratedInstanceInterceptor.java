@@ -5,6 +5,7 @@ package org.hivedb.util;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -21,8 +22,11 @@ import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
 import org.hivedb.HiveRuntimeException;
+import org.hivedb.annotations.AnnotationHelper;
+import org.hivedb.annotations.EntityId;
 import org.hivedb.annotations.GeneratedClass;
 import org.hivedb.util.functional.Amass;
+import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.DebugMap;
 
 public class GeneratedInstanceInterceptor implements MethodInterceptor {
@@ -127,6 +131,14 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 	}
 
 	private Object hashCode(Object obj) {
+		Method idGetter = Atom.getFirstOrNull(AnnotationHelper.getAllMethodsWithAnnotation(clazz, EntityId.class));
+		if (idGetter != null)
+			try {
+				return idGetter.invoke(obj, new Object[] {}).hashCode();
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		
 		return Amass.makeHashCode(ReflectionTools.invokeGetters(obj, clazz));
 	}
 	

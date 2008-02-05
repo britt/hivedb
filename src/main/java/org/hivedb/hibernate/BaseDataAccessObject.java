@@ -103,8 +103,11 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	public Collection<Object> findByProperty(String propertyName, Object propertyValue) {
 		EntityIndexConfig indexConfig = resolveEntityIndexConfig(propertyName);
 		Session session = createSessionForIndex(config, indexConfig, propertyValue);
+		// We use HQL to query for collection properties. Technically this is only needed
+		// for primitive collections, but since we sometimes trick Hibernate into thinking our non-primitive collections
+		// are primtives, we'll use this for everything for now.
 		if (ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName)
-			&& !ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName)) {
+			&& ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName)) {
 				return queryWithHQL(indexConfig, session, propertyValue);
 		}
 		else {
@@ -129,7 +132,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	private Collection<Object> queryWithHQL(EntityIndexConfig indexConfig, Session session, Object propertyValue) {
 		Query query = session.createQuery(String.format("from %s as x where :value in elements (x.%s)",
 			GeneratedInstanceInterceptor.getGeneratedClass(config.getRepresentedInterface()).getSimpleName(),
-			indexConfig.getIndexName())
+			indexConfig.getPropertyName())
 			).setParameter("value", propertyValue);
 		return query.list();
 	}
