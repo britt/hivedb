@@ -319,7 +319,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 
 	public Object save(final Object entity) {
 		// Compensates for Hibernate's inability to delete items orphaned by updates
-		deleteOrphanedCollectionItems(Collections.singletonList(entity));
+		//deleteOrphanedCollectionItems(Collections.singletonList(entity));
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
 				session.saveOrUpdate(getRespresentedClass().getName(),entity);
@@ -331,7 +331,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	public Collection<Object> saveAll(final Collection<Object> collection) {
 		validateNonNull(collection);
 		// Compensates for Hibernate's inability to delete items orphaned by updates
-		deleteOrphanedCollectionItems(collection);
+		//deleteOrphanedCollectionItems(collection);
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
 				for(Object entity : collection) {
