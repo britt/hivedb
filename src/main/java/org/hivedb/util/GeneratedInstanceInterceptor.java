@@ -117,7 +117,7 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 			return hashCode(obj);
 		}
 		else if ( name.equals("equals")) {
-			return obj.hashCode() == args[0].hashCode();
+			return hashCode(obj) == hashCode(args[0]);
 		}
 		else if ( name.equals("toString")) {
 			return new DebugMap<Object, Object>(dictionary, true).toString() + "###("+dictionary.hashCode()+")";
