@@ -69,6 +69,9 @@ public class ClassDaoServiceTest extends H2TestCase {
 	public static void addEntity(Class clazz, Schema schema) {
 		addEntity(clazz, new LazyInitializer(clazz, schema));
 	}
+	public static void addEntity(Class clazz, Collection<Schema> schemaList) {
+		addEntity(clazz, new LazyInitializer(clazz, schemaList));
+	}
 	
 	public static void addEntity(Class clazz) {
 		entityClasses.add(clazz);
@@ -125,9 +128,16 @@ public class ClassDaoServiceTest extends H2TestCase {
 			String property = ReflectionTools.getPropertyNameOfAccessor(getter);
 			GeneratedInstanceInterceptor.setProperty(update, property, Collections.emptyList());
 		}
-		service.save(update);
+		save(service, update);
 		Assert.assertEquals(service.get(getId(original)), update);
 		
+	}
+
+	protected Object save(final ClassDaoService service, Object update) {
+		return service.save(update);
+	}
+	protected Collection saveAll(ClassDaoService service, Collection<? extends Object> instances) {
+		return service.saveAll(instances);
 	}
 	
 	@Test(dataProvider = "service")
@@ -143,7 +153,7 @@ public class ClassDaoServiceTest extends H2TestCase {
 				ReflectionTools.invokeSetter(instance, property, null);
 			}
 		}
-		service.save(instance);
+		save(service, instance);
 		Assert.assertEquals(instance, service.get(config.getEntityConfig(clazz).getId(instance)));
 	}
 
@@ -227,12 +237,14 @@ public class ClassDaoServiceTest extends H2TestCase {
 		List<Object> instances = Lists.newArrayList();
 		for(int i=0; i<INSTANCE_COUNT; i++)
 			instances.add(getInstance(toClass(service.getPersistedClass())));
-		service.saveAll(instances);
+		saveAll(service, instances);
 		for(Object instance : instances)
 			validateRetrieval(
 					instance, 
 					service.get(getId(instance)));
 	}
+
+	
 	
 	@Test(dataProvider = "service")
 	public void testUpdateComplexCollectionItems(ClassDaoService service) throws Exception {
@@ -262,7 +274,7 @@ public class ClassDaoServiceTest extends H2TestCase {
 				updatedItems.add(new GenerateInstance<Object>((Class<Object>) updateItem.getClass()).generate());
 				
 				GeneratedInstanceInterceptor.setProperty(updated, propertyName, updatedItems);
-				service.save(updated);
+				save(service, updated);
 				final Object persisted = service.get(entityConfig.getId(updated));
 				assertFalse(updated.equals(original));
 				// Check the updated collection
@@ -300,7 +312,7 @@ public class ClassDaoServiceTest extends H2TestCase {
 		return new GenerateInstance<Object>(clazz).generate();
 	}
 	protected Object getPersistentInstance(ClassDaoService service) throws Exception {
-		return service.save(getInstance(toClass(service.getPersistedClass())));
+		return save(service, getInstance(toClass(service.getPersistedClass())));
 	}
 	
 	protected Object getInstanceWithNullProperties(Class<Object> clazz) throws Exception {
@@ -313,7 +325,7 @@ public class ClassDaoServiceTest extends H2TestCase {
 		return instance;
 	}
 	protected Object getPersistentInstanceWithNullProperties(ClassDaoService service) throws Exception {
-		return service.save(getInstanceWithNullProperties(toClass(service.getPersistedClass())));
+		return save(service, getInstanceWithNullProperties(toClass(service.getPersistedClass())));
 	}
 	
 	
@@ -355,14 +367,18 @@ public class ClassDaoServiceTest extends H2TestCase {
 	
 	public static class LazyInitializer implements Delay<Object> {
 		private Delay<?> delay;
-		private Schema schema;
+		private Collection<Schema> schemaList;
 		private ClassDaoServiceTest test;
 		public LazyInitializer(Delay<?> delay, Schema schema) {
 			this.delay = delay;
-			this.schema = schema;
+			this.schemaList = Collections.singletonList(schema);
 		}
-		public LazyInitializer(final Class clazz, Schema schema){
-			this.schema = schema;
+		public LazyInitializer(Delay<?> delay, Collection<Schema> schemaList) {
+			this.delay = delay;
+			this.schemaList = schemaList;
+		}
+		public LazyInitializer(final Class clazz, Collection<Schema> schemaList){
+			this.schemaList = schemaList;
 			this.delay = new Delay<ClassDaoService>(){
 				public ClassDaoService f() {
 					return new BaseClassDaoService(
@@ -373,8 +389,11 @@ public class ClassDaoServiceTest extends H2TestCase {
 									test.factory));
 				}};
 		}
+		public LazyInitializer(final Class clazz, Schema schema){
+			new LazyInitializer(clazz, Collections.singletonList(schema));
+		}
 		public Object f() {
-			initialize(schema, test);
+			initialize(schemaList, test);
 			return delay.f();
 		}
 		public LazyInitializer setTest(ClassDaoServiceTest test) {this.test = test; return this;}
@@ -404,7 +423,7 @@ public class ClassDaoServiceTest extends H2TestCase {
 		super.beforeMethod();
 	}
 	
-	protected static void initialize(Schema schema, ClassDaoServiceTest test) {
+	protected static void initialize(Collection<Schema> schemaList, ClassDaoServiceTest test) {
 		test.superClassBeforeMethod();
 		new HiveInstaller(test.getConnectString(test.getHiveDatabaseName())).run();		
 		ConfigurationReader reader = new ConfigurationReader(test.getEntityClasses());
@@ -413,7 +432,8 @@ public class ClassDaoServiceTest extends H2TestCase {
 		for(String nodeName : test.getDataNodeNames())
 			try {
 				test.hive.addNode(new Node(nodeName, nodeName, "" , HiveDbDialect.H2));
-				schema.install(test.getConnectString(nodeName));
+				for (Schema schema : schemaList)
+					schema.install(test.getConnectString(nodeName));
 			} catch (HiveReadOnlyException e) {
 				throw new HiveRuntimeException("Hive was read-only", e);
 			}

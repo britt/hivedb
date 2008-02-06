@@ -32,16 +32,20 @@ public class HiveShardResolver implements ShardResolutionStrategy {
 	}
 	
 	public List<ShardId> selectShardIdsFromShardResolutionStrategyData(ShardResolutionStrategyData data) {
+		
 		final Class clazz;
 		try {
 			clazz = Class.forName(data.getEntityName());
 		} catch (ClassNotFoundException e) {
 			throw new RuntimeException(e);
 		}
-		
 		final Class<?> resolvedEntityInterface = new EntityResolver(hiveConfig).resolveToEntityOrRelatedEntity(clazz);
 		if (resolvedEntityInterface != null) {
 			EntityConfig config = hiveConfig.getEntityConfig(resolvedEntityInterface);
+			Object id =  PrimitiveUtils.isPrimitiveClass(data.getId().getClass())
+					? data.getId()
+					: config.getId(data.getId());
+			
 			Collection<Integer> ids = (config.isPartitioningResource())
 				? hive.directory().getNodeIdsOfPrimaryIndexKey(data.getId())
 				: hive.directory().getNodeIdsOfResourceId(config.getResourceName(), data.getId());

@@ -2,6 +2,7 @@ package org.hivedb.services;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import javax.jws.WebService;
@@ -17,6 +18,7 @@ import org.hivedb.configuration.EntityConfig;
 import org.hivedb.hibernate.BaseDataAccessObject;
 import org.hivedb.hibernate.ConfigurationReader;
 import org.hivedb.hibernate.DataAccessObject;
+import org.hivedb.hibernate.EntityResolver;
 import org.hivedb.hibernate.HiveSessionFactory;
 import org.hivedb.hibernate.HiveSessionFactoryBuilderImpl;
 import org.hivedb.util.GenerateInstance;
@@ -36,7 +38,9 @@ public class DataGenerationServiceImpl implements DataGenerationService {
 
 	public DataGenerationServiceImpl(Collection<Class<?>> classes, Hive hive) {
 		config = new ConfigurationReader(classes);
-		HiveSessionFactory factory = new HiveSessionFactoryBuilderImpl(config.getHiveConfiguration(), classes, hive, new SequentialShardAccessStrategy());
+		List<Class<?>> hiveSessionClasses = Lists.newArrayList();
+		classes.addAll(new EntityResolver(config.getHiveConfiguration()).getEntityClasses());
+		HiveSessionFactory factory = new HiveSessionFactoryBuilderImpl(config.getHiveConfiguration(), hiveSessionClasses, hive, new SequentialShardAccessStrategy());
 		for(Class clazz : classes)
 			if(clazz.getAnnotation(Resource.class) != null)
 				daos.put(clazz, new BaseDataAccessObject(config.getEntityConfig(clazz.getName()),hive,factory));

@@ -107,7 +107,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		// for primitive collections, but since we sometimes trick Hibernate into thinking our non-primitive collections
 		// are primtives, we'll use this for everything for now.
 		if (ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName)
-			&& ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName)) {
+			&& !ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName)) {
 				return queryWithHQL(indexConfig, session, propertyValue);
 		}
 		else {
@@ -396,7 +396,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 						}
 					}
 					// Prevents NonUniqueObjectException on collection items during save-update cascades
-					session.evict(loadedEntity);
+					//session.evict(loadedEntity);
 				}
 			}};
 		doInTransaction(callback, session);
