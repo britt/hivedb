@@ -130,7 +130,7 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 		Method idGetter = Atom.getFirstOrNull(AnnotationHelper.getAllMethodsWithAnnotation(clazz, EntityId.class));
 		if (idGetter != null)
 			try {
-				return idGetter.invoke(obj, new Object[] {}).hashCode();
+				return Amass.makeHashCode(new Object[]{idGetter.invoke(obj, new Object[] {})});
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}

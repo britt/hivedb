@@ -6,6 +6,8 @@ import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.AssertJUnit.fail;
 
+import java.util.Arrays;
+
 import org.hibernate.CallbackException;
 import org.hibernate.EntityMode;
 import org.hivedb.Hive;
@@ -71,10 +73,10 @@ public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
 		
 		WeatherReport report = generateInstance();
 		Continent asia = new AsiaticContinent();
-		interceptor.onSave(report, null, null, null, null);
-		interceptor.onSave(asia, null, null, null, null);
+		hive.directory().insertPrimaryIndexKey(asia.getName());
+		hive.directory().insertPrimaryIndexKey(report.getContinent());
+		interceptor.postFlush(Arrays.asList(new Object[]{report,asia}).iterator());
 		
-		assertTrue(hive.directory().doesPrimaryIndexKeyExist(report.getContinent()));
 		assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
 		assertTrue(hive.directory().doesResourceIdExist("Temperature", report.getTemperature()));
 		
@@ -87,14 +89,14 @@ public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
 	public void testOnSaveInsertReadOnlyFailure() throws Exception {
 		Hive hive = getHive();
 		ConfigurationReader reader = new ConfigurationReader(Continent.class, WeatherReport.class);
-		hive.updateHiveReadOnly(true);
 		EntityHiveConfig config = reader.getHiveConfiguration();
 		HiveInterceptorDecorator interceptor = new HiveInterceptorDecorator(config, hive);
 		
 		WeatherReport report = generateInstance();
-		
+		hive.directory().insertPrimaryIndexKey(report.getContinent());
+		hive.updateHiveReadOnly(true);
 		try {
-			interceptor.onSave(report, null, null, null, null);
+			interceptor.postFlush(Arrays.asList(new Object[]{report}).iterator());
 			fail("No exception thrown");
 		} catch(CallbackException e ) {
 			assertEquals(HiveReadOnlyException.class, e.getCause().getClass());
@@ -102,14 +104,15 @@ public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
 	}
 	
 	@Test
-	public void testOnDelete() throws Exception{
+	public void testOnDeleteReadOnlyFailure() throws Exception{
 		EntityHiveConfig config = getEntityHiveConfig();
 		Hive hive = getHive();
 
 		HiveInterceptorDecorator interceptor = new HiveInterceptorDecorator(config, hive);
 		
 		WeatherReport report = generateInstance();
-		interceptor.onSave(report, null, null, null, null);
+		hive.directory().insertPrimaryIndexKey(report.getContinent());
+		interceptor.postFlush(Arrays.asList(new WeatherReport[]{report}).iterator());
 		
 		assertTrue(hive.directory().doesPrimaryIndexKeyExist(report.getContinent()));
 		assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
@@ -125,7 +128,7 @@ public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
 	}
 	
 	@Test
-	public void testOnDeleteReadOnlyFailure() throws Exception{
+	public void testOnDelete() throws Exception{
 		Hive hive = getHive();
 		ConfigurationReader reader = new ConfigurationReader(Continent.class, WeatherReport.class);
 		EntityHiveConfig config = reader.getHiveConfiguration();
@@ -133,8 +136,9 @@ public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
 		
 		WeatherReport report = generateInstance();
 		Continent asia = new AsiaticContinent();
-		interceptor.onSave(report, null, null, null, null);
-		interceptor.onSave(asia, null, null, null, null);
+		hive.directory().insertPrimaryIndexKey(report.getContinent());
+		hive.directory().insertPrimaryIndexKey(asia.getName());
+		interceptor.postFlush(Arrays.asList(new Object[]{report,asia}).iterator());
 		
 		assertTrue(hive.directory().doesPrimaryIndexKeyExist(report.getContinent()));
 		assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
@@ -162,7 +166,8 @@ public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
 		HiveInterceptorDecorator interceptor = new HiveInterceptorDecorator(config, hive);
 		
 		WeatherReport report = generateInstance();
-		interceptor.onSave(report, null, null, null, null);
+		hive.directory().insertPrimaryIndexKey(report.getContinent());
+		interceptor.postFlush(Arrays.asList(new WeatherReport[]{report}).iterator());
 		
 		assertTrue(hive.directory().doesPrimaryIndexKeyExist(report.getContinent()));
 		assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
@@ -170,7 +175,8 @@ public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
 		
 		int oldTemperature = report.getTemperature();
 		GeneratedInstanceInterceptor.setProperty(report, "temperature", 72);
-		interceptor.onFlushDirty(report, null, null, null, null,null);
+		assertFalse(oldTemperature == 72);
+		interceptor.postFlush(Arrays.asList(new WeatherReport[]{report}).iterator());
 		assertTrue(hive.directory().doesResourceIdExist("Temperature", 72));
 	}
 }

@@ -45,9 +45,13 @@
 		</repository>
 	</distributionManagement>
 	<repositories>
+	<repository>
+		<id>Default</id>
+		<url>http://mirrors.ibiblio.org/pub/mirrors/maven2</url>
+	</repository>
 		<repository>
 			<id>hivedb_repo</id>
-			<url>http://www.hivedb.org/maven/</url>
+			<url>http://www.hivedb.org/maven</url>
 		</repository>
 		<repository>
 			<id>Apache</id>

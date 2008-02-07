@@ -3,7 +3,7 @@ package org.hivedb.hibernate;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.Iterator;
 
 import org.hibernate.CallbackException;
 import org.hibernate.EmptyInterceptor;
@@ -97,10 +97,8 @@ public class HiveInterceptorDecorator extends InterceptorDecorator implements In
 
 	@Override
 	public void onDelete(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) throws CallbackException {
-		//Read-only checks are implicit in the delete calls
-		//We just need to wrap the exception
 		try {
-			final Class resolvedEntityClass = resolveEntityClass(entity.getClass());
+			final Class<?> resolvedEntityClass = resolveEntityClass(entity.getClass());
 			if (resolvedEntityClass != null)
 				indexer.delete(hiveConfig.getEntityConfig(entity.getClass()), entity);
 		} catch (HiveReadOnlyException e) {
@@ -109,24 +107,25 @@ public class HiveInterceptorDecorator extends InterceptorDecorator implements In
 		super.onDelete(entity, id, state, propertyNames, types);
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
-	public boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) throws CallbackException {
-		insertIndexes(entity, id);
-		return super.onSave(entity, id, state, propertyNames, types);
+	public void postFlush(Iterator entities) throws CallbackException {
+		while(entities.hasNext()) {
+			Object entity = entities.next();
+			Class<?> resolvedClass = resolveEntityClass(entity.getClass());
+			if(resolvedClass != null) {
+				if(indexer.exists(hiveConfig.getEntityConfig(resolvedClass), entity))
+					updateIndexes(entity);
+				else
+					insertIndexes(entity);
+			}
+		}
+		super.postFlush(entities);
 	}
-	
-	@Override
-	public boolean onFlushDirty(Object entity, Serializable id,
-			Object[] currentState, Object[] previousState,
-			String[] propertyNames, Type[] types) throws CallbackException {
-		updateIndexes(entity);
-		return super.onFlushDirty(entity, id, currentState, previousState,
-				propertyNames, types);
-	}
-	
+
 	private void updateIndexes(Object entity) {
 		try {
-			final Class resolvedEntityClass = resolveEntityClass(entity.getClass());
+			final Class<?> resolvedEntityClass = resolveEntityClass(entity.getClass());
 			if (resolvedEntityClass != null)
 				indexer.update(hiveConfig.getEntityConfig(entity.getClass()), entity);
 		} catch (HiveReadOnlyException e) {
@@ -134,9 +133,9 @@ public class HiveInterceptorDecorator extends InterceptorDecorator implements In
 		}
 	}
 
-	private void insertIndexes(Object entity, Serializable id) {
+	private void insertIndexes(Object entity) {
 		try {
-			final Class resolvedEntityClass = resolveEntityClass(entity.getClass());
+			final Class<?> resolvedEntityClass = resolveEntityClass(entity.getClass());
 			if (resolvedEntityClass != null)
 				indexer.insert(hiveConfig.getEntityConfig(resolvedEntityClass), entity);
 		} catch (HiveReadOnlyException e) {

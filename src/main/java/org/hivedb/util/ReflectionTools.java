@@ -705,13 +705,4 @@ public class ReflectionTools {
 				return method.getDeclaringClass().equals(clazz);
 		}}, Arrays.asList(clazz.getMethods()));
 	}
-	public static Object getAnnotationDeeply(Class clazz, String property, Class annotationClass) {
-		final Method getter = getGetterOfProperty(clazz, property);
-		if (getter.getAnnotation(annotationClass) != null)
-			return getter.getAnnotation(annotationClass);
-		Class owner = getOwnerOfMethod(clazz, property);
-		if (!owner.equals(clazz))
-			return getGetterOfProperty(owner, property).getAnnotation(annotationClass);
-		return null;
-	}
 }

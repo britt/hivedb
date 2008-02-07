@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hivedb.util.Lists;
+import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Maps;
 
@@ -23,9 +24,20 @@ public class AnnotationHelper {
 	
 	public static<T extends Annotation> List<Method> getAllMethodsWithAnnotation(Class entityClass, Class<T> annotationClass) {
 		List<Method> methods = Lists.newArrayList();
-		for(Method method : entityClass.getMethods())
-			if(method.getAnnotation(annotationClass) != null)
+		for(Method method : entityClass.getMethods()) {
+			Method targetMethod = method;
+			if( !method.getDeclaringClass().equals(entityClass)) {
+				try {
+					method.getDeclaringClass().getMethod(method.getName(), method.getParameterTypes());
+				} catch (SecurityException e) {
+					throw new RuntimeException(e);
+				} catch (NoSuchMethodException e) {
+					throw new RuntimeException(e);
+				}
+			}
+			if(targetMethod.getAnnotation(annotationClass) != null)
 				methods.add(method);
+		}
 		return methods;
 	}
 	
@@ -61,5 +73,15 @@ public class AnnotationHelper {
 			for(Annotation a : f.getAnnotations())
 				elements.put(a, f);
 		return elements;
+	}
+	
+	public static Object getAnnotationDeeply(Class clazz, String property, Class annotationClass) {
+		final Method getter = ReflectionTools.getGetterOfProperty(clazz, property);
+		if (getter.getAnnotation(annotationClass) != null)
+			return getter.getAnnotation(annotationClass);
+		Class owner = ReflectionTools.getOwnerOfMethod(clazz, property);
+		if (!owner.equals(clazz))
+			return ReflectionTools.getGetterOfProperty(owner, property).getAnnotation(annotationClass);
+		return null;
 	}
 }

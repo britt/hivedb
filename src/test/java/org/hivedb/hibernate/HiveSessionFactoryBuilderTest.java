@@ -1,18 +1,23 @@
 package org.hivedb.hibernate;
 
 import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertNotNull;
 
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Properties;
 import java.util.Random;
 
+import org.hibernate.CallbackException;
+import org.hibernate.EmptyInterceptor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
+import org.hibernate.shards.util.InterceptorDecorator;
 import org.hivedb.Hive;
 import org.hivedb.HiveReadOnlyException;
 import org.hivedb.configuration.EntityHiveConfig;
@@ -59,6 +64,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 		assertNotNull(factoryBuilder.getSessionFactory());
 		factoryBuilder.openSession();
 	}
+	
 	
 	@SuppressWarnings("unchecked")
 	@Test
@@ -120,7 +126,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 			}};
 		doInTransaction(callback, session);
 		
-		factoryBuilder.openSession("WeatherReport", "weatherEventEventId", Atom.getFirstOrThrow(report.getWeatherEvents()));
+		factoryBuilder.openSession("WeatherReport", "weatherEventEventId", Atom.getFirstOrThrow(report.getWeatherEvents()).getEventId());
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -137,6 +143,30 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 			if (!new WeatherSchema(node.getUri()).tableExists("WEATHER_REPORT"))
 				throw new RuntimeException("Can't find WEATHER_REPORT table on node " + node.getUri());
 		doInTransaction(callback, session);
+		
+		Hive hive = getHive();
+		assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
+		assertTrue(hive.directory().doesResourceIdExist("Temperature", report.getTemperature()));		
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testInsertFail() throws Exception {
+		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
+		final WeatherReport report = newInstance();
+		Session session = factoryBuilder.openSession();
+		SessionCallback callback = new SessionCallback(){
+			public void execute(Session session) {
+				session.saveOrUpdate(report);
+			}};
+		for (Node node : getHive().getNodes())
+			if (!new WeatherSchema(node.getUri()).tableExists("WEATHER_REPORT"))
+				throw new RuntimeException("Can't find WEATHER_REPORT table on node " + node.getUri());
+		doInTransactionAndFailBeforeCommit(callback, session);
+		
+		Hive hive = getHive();
+		assertFalse(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
+		assertFalse(hive.directory().doesResourceIdExist("Temperature", report.getTemperature()));		
 	}
 	
 
@@ -202,7 +232,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 		GeneratedInstanceInterceptor.setProperty(mutated, "weatherEvents", report.getWeatherEvents());
 		GeneratedInstanceInterceptor.setProperty(mutated, "sources", report.getSources());
 		
-		assertFalse("You have to change something if you want to test update.", mutated.equals(report));
+		assertTrue("You have to change something if you want to test update.", ReflectionTools.getDifferingFields(report, mutated, WeatherReport.class).size() != 0);
 		
 		SessionCallback updateCallback = new SessionCallback(){
 			public void execute(Session session) {
@@ -211,9 +241,46 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 		doInTransaction(updateCallback, factoryBuilder.openSession());
 		WeatherReport fetched = (WeatherReport) factoryBuilder.openSession().get(getGeneratedClass(WeatherReport.class), report.getReportId());
 		assertNotNull(fetched);
-		assertFalse(report.equals(fetched));
-		Assert.assertEquals(fetched.getWeatherEvents().size(), mutated.getWeatherEvents().size());
-		Assert.assertEquals(mutated, fetched, ReflectionTools.getDifferingFields(mutated, fetched, WeatherReport.class).toString());
+		assertFalse(ReflectionTools.getDifferingFields(report, fetched, WeatherReport.class).size() == 0);
+		Assert.assertTrue(ReflectionTools.getDifferingFields(mutated, fetched, WeatherReport.class).size() == 0);
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testUpdateFail() throws Exception {
+		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
+		final WeatherReport report = newInstance();
+		SessionCallback callback = new SessionCallback(){
+			public void execute(Session session) {
+				session.saveOrUpdate(report);
+			}};
+		doInTransaction(callback, factoryBuilder.openSession());
+		
+		final WeatherReport mutated = newInstance();
+		//System.err.println(((WeatherReport) factoryBuilder.openSession().get(getGeneratedClass(WeatherReport.class), report.getReportId())).getWeatherEvents().size());
+		
+		GeneratedInstanceInterceptor.setProperty(mutated, "reportId", report.getReportId());
+		GeneratedInstanceInterceptor.setProperty(mutated, "continent", report.getContinent());
+		GeneratedInstanceInterceptor.setProperty(mutated, "temperature", report.getTemperature());
+		GeneratedInstanceInterceptor.setProperty(mutated, "reportTime", new Date(System.currentTimeMillis()));
+		// Updating collection items requires more advanced persistence login (see BaseDataAccessObject)
+		// so we leave these values identical
+		GeneratedInstanceInterceptor.setProperty(mutated, "weatherEvents", report.getWeatherEvents());
+		GeneratedInstanceInterceptor.setProperty(mutated, "sources", report.getSources());
+		
+		assertTrue(
+				"You have to change something if you want to test update.", 
+				ReflectionTools.getDifferingFields(report, mutated, WeatherReport.class).size() != 0);
+		
+		SessionCallback updateCallback = new SessionCallback(){
+			public void execute(Session session) {
+				session.saveOrUpdate(mutated);
+			}};
+		doInTransactionAndFailBeforeCommit(updateCallback, factoryBuilder.openSession());
+		WeatherReport fetched = (WeatherReport) factoryBuilder.openSession().get(getGeneratedClass(WeatherReport.class), report.getReportId());
+		assertNotNull(fetched);
+		assertTrue(ReflectionTools.getDifferingFields(report, fetched, WeatherReport.class).size() == 0);
+		Assert.assertFalse(ReflectionTools.getDifferingFields(mutated, fetched, WeatherReport.class).size() == 0);
 	}
 	
 	public static void doInTransaction(SessionCallback callback, Session session) {
@@ -241,6 +308,20 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 			if(tx != null)
 				tx.rollback();
 			throw e;
+		}
+	}
+	
+	public static void doInTransactionAndFailBeforeCommit(SessionCallback callback, Session session) {
+		Transaction tx = null;
+		try {
+			tx = session.beginTransaction();
+			callback.execute(session);
+			throw new RuntimeException("mreh");
+		} catch( RuntimeException e ) {
+			if(tx != null)
+				tx.rollback();
+		} finally {
+			session.close();
 		}
 	}
 }

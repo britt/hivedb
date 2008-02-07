@@ -135,6 +135,7 @@ public class DirectoryWrapper implements DirectoryFacade {
 	}
 
 	public void insertPrimaryIndexKey(Object primaryIndexKey) throws HiveReadOnlyException {
+		//TODO: this should select from the set of WRITABLE nodes
 		Node node = assigner.chooseNode(hive.getNodes(), primaryIndexKey);
 		Preconditions.isWritable(hive, node);
 		directory.insertPrimaryIndexKey(node, primaryIndexKey);

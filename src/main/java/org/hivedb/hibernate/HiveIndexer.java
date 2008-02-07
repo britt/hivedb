@@ -38,7 +38,7 @@ public class HiveIndexer {
 		}
 	}
 
-	private void conditionallyInsertPrimaryIndexKey(final EntityConfig config,
+	public void conditionallyInsertPrimaryIndexKey(final EntityConfig config,
 			final Object entity) throws HiveReadOnlyException {
 		if(!hive.directory().doesPrimaryIndexKeyExist(config.getPrimaryIndexKey(entity)))
 			hive.directory().insertPrimaryIndexKey(config.getPrimaryIndexKey(entity));

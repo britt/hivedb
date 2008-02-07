@@ -26,9 +26,9 @@ public class PluralHiveConfig implements EntityHiveConfig {
 	
 	@SuppressWarnings("unchecked")
 	public EntityConfig getEntityConfig(Class<?> clazz) {
-		List<Class> ancestors = getAncestors(clazz);
 		EntityConfig config = indexConfigurations.get(clazz.getName());
 		if(config == null){
+			List<Class> ancestors = getAncestors(clazz);
 			for(Class ancestor : ancestors) {
 				if(indexConfigurations.containsKey(ancestor.getName())){
 					config = indexConfigurations.get(ancestor.getName());
