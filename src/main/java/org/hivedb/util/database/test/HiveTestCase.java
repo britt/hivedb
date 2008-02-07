@@ -46,12 +46,22 @@ public class HiveTestCase {
 	}
 	public void beforeMethod() {
 		hive = null;
-		new HiveInstaller(getConnectString.f(getHiveDatabaseName())).run();		
+		String connectString = getConnectString.f(getHiveDatabaseName());
+		new HiveInstaller(connectString).run();		
 		installEntityHiveConfig();
-			
+		
+		String username = getUserName(connectString);
+		String password = getPassword(connectString);
 		for(String nodeName : dataNodeNames)
 			try {
-				hive.addNode(new Node(Hive.NEW_OBJECT_ID,nodeName, nodeName, hiveDbDialect == HiveDbDialect.H2 ? "" : "localhost", hiveDbDialect));
+				Node node = new Node(Hive.NEW_OBJECT_ID,nodeName, nodeName, hiveDbDialect == HiveDbDialect.H2 ? "" : "localhost", hiveDbDialect);
+				if (username != null) {
+					node.setUsername(username);
+				}
+				if (password != null) {
+					node.setPassword(password);
+				}
+				hive.addNode(node);
 			} catch (HiveReadOnlyException e) {
 				throw new HiveRuntimeException("Hive was read-only", e);
 			}
@@ -121,5 +131,23 @@ public class HiveTestCase {
 	
 	public String getHiveDatabaseName() {
 		return hiveDatabaseName;
+	}
+	
+	private String getUserName(String connectString) {
+		String username = null;
+		String[] tokens = connectString.split("user=");
+		if (tokens.length > 1) {
+			username = tokens[1].split("&")[0];
+		}
+		return username;
+	}
+	
+	private String getPassword(String connectString) {
+		String password = null;
+		String[] tokens = connectString.split("password=");
+		if (tokens.length > 1) {
+			password = tokens[1].split("&")[0];
+		}
+		return password;
 	}
 }

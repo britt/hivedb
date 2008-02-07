@@ -327,6 +327,17 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		doInTransaction(callback, getSession());
 		return entity;
 	}
+	
+	public Object save(final Object entity, Session session) {
+		// Compensates for Hibernate's inability to delete items orphaned by updates
+		deleteOrphanedCollectionItems(Collections.singletonList(entity));
+		SessionCallback callback = new SessionCallback(){
+			public void execute(Session session) {
+				session.saveOrUpdate(getRespresentedClass().getName(),entity);
+			}};
+		doInTransaction(callback, session);
+		return entity;
+	}
 
 	public Collection<Object> saveAll(final Collection<Object> collection) {
 		validateNonNull(collection);
@@ -435,5 +446,19 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		} finally {
 			session.close();
 		}
+	}
+	
+	// for testing purposes
+	
+	public Session openRegularSession(String resource, Object resourceId) {
+		return factory.openSession(resource, resourceId);
+	}
+	
+	public Session openShardedSession() {
+		return factory.openSession(factory.getDefaultInterceptor());
+	}
+	
+	public Session openAllShardsSession() {
+		return factory.openAllShardsSession();
 	}
 }

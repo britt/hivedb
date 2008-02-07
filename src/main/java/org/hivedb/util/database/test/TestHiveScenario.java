@@ -39,7 +39,7 @@ public class TestHiveScenario {
 				.performTest(2,resourceInstanceCount);
 		}
 	}
-	private DataAccessObject<Object, Serializable> getDao(Class clazz) {	
+	public DataAccessObject<Object, Serializable> getDao(Class clazz) {	
 		return new BaseDataAccessObjectFactory<Object,Serializable>(
 				this.entityHiveConfig,
 				mappedClasses,
