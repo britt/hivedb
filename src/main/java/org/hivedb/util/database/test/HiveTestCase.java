@@ -7,7 +7,6 @@ import java.util.Collection;
 import org.hivedb.Hive;
 import org.hivedb.HiveReadOnlyException;
 import org.hivedb.HiveRuntimeException;
-import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.hibernate.ConfigurationReader;
 import org.hivedb.management.HiveInstaller;
@@ -18,7 +17,6 @@ import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.JdbcTypeMapper;
-import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Unary;
 
 public class HiveTestCase {
@@ -55,12 +53,14 @@ public class HiveTestCase {
 		for(String nodeName : dataNodeNames)
 			try {
 				Node node = new Node(Hive.NEW_OBJECT_ID,nodeName, nodeName, hiveDbDialect == HiveDbDialect.H2 ? "" : "localhost", hiveDbDialect);
-				if (username != null) {
+				if (username != null)
 					node.setUsername(username);
-				}
-				if (password != null) {
+				else
+					node.setUsername("test");
+				if (password != null)
 					node.setPassword(password);
-				}
+				else
+					node.setUsername("test");
 				hive.addNode(node);
 			} catch (HiveReadOnlyException e) {
 				throw new HiveRuntimeException("Hive was read-only", e);
