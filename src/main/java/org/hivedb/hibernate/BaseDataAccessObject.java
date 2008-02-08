@@ -145,17 +145,13 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		return queryInTransaction(callback, getSession());
 	}
 	
+	@SuppressWarnings("unchecked")
 	protected Collection<Object> queryWithHQL(final EntityIndexConfig indexConfig, Session session, final Object propertyValue) {
-		QueryCallback callback = new QueryCallback(){
-			@SuppressWarnings("unchecked")
-			public Collection<Object> execute(Session session) {
-				Query query = session.createQuery(String.format("from %s as x where :value in elements (x.%s)",
-						GeneratedInstanceInterceptor.getGeneratedClass(config.getRepresentedInterface()).getSimpleName(),
-						indexConfig.getPropertyName())
-						).setParameter("value", propertyValue);
-				return query.list();
-			}};
-		return queryInTransaction(callback, session);
+		Query query = session.createQuery(String.format("from %s as x where :value in elements (x.%s)",
+				GeneratedInstanceInterceptor.getGeneratedClass(config.getRepresentedInterface()).getSimpleName(),
+				indexConfig.getPropertyName())
+				).setParameter("value", propertyValue);
+		return query.list();
 	}
 
 	public Integer getCount(final String propertyName, final Object propertyValue) {
