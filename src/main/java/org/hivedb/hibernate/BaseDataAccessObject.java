@@ -145,7 +145,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		return queryInTransaction(callback, getSession());
 	}
 	
-	private Collection<Object> queryWithHQL(final EntityIndexConfig indexConfig, Session session, final Object propertyValue) {
+	protected Collection<Object> queryWithHQL(final EntityIndexConfig indexConfig, Session session, final Object propertyValue) {
 		QueryCallback callback = new QueryCallback(){
 			@SuppressWarnings("unchecked")
 			public Collection<Object> execute(Session session) {
@@ -198,7 +198,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		return query.list();
 	}
 	
-	private EntityIndexConfig resolveEntityIndexConfig(String propertyName) {
+	protected EntityIndexConfig resolveEntityIndexConfig(String propertyName) {
 		EntityIndexConfig indexConfig = config.getPrimaryIndexKeyPropertyName().equals(propertyName)
 			? createEntityIndexConfigForPartitionIndex(config)
 			: config.getEntityIndexConfig(propertyName);
@@ -256,7 +256,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			criteria.add( Restrictions.eq(propertyName, propertyValue));
 	}
 	
-	private Session createSessionForIndex(EntityConfig entityConfig, EntityIndexConfig indexConfig, Object propertyValue) {
+	protected Session createSessionForIndex(EntityConfig entityConfig, EntityIndexConfig indexConfig, Object propertyValue) {
 		if (indexConfig.getIndexType().equals(IndexType.Delegates))
 			return factory.openSession(
 					((EntityIndexConfigDelegator)indexConfig).getDelegateEntityConfig().getResourceName(),
