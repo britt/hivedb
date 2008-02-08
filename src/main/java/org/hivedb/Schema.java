@@ -145,7 +145,11 @@ public abstract class Schema extends JdbcDaoSupport {
 			PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
 					createStatement);
 			j.update(creatorFactory.newPreparedStatementCreator(new Object[] {}));
-			//System.err.println("Table " + table.getName() + " created for for database " + dbURI);
+			/* try {
+				System.out.println("Table " + table.getName() + " created for for database " + j.getDataSource().getConnection().toString());
+			} catch (SQLException e) {
+				throw new RuntimeException(e);
+			} */
 		}
 	}
 	

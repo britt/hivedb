@@ -39,6 +39,7 @@ public class H2TestCase extends DatabaseTestCase {
 		try {
 			getConnection(name).createStatement().execute("SHUTDOWN");
 			DeleteDbFiles.execute("./", name, true);
+			//System.out.println("Dropped database " + name);
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}

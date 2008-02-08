@@ -12,6 +12,8 @@ import org.testng.annotations.BeforeClass;
 
 public class MysqlTestCase extends DatabaseTestCase {
 	
+	protected String userName = "test";
+	protected String password = "test";
 	@BeforeClass
 	protected void beforeClass() {
 		try {

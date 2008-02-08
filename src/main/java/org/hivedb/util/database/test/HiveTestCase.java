@@ -56,11 +56,11 @@ public class HiveTestCase {
 				if (username != null)
 					node.setUsername(username);
 				else
-					node.setUsername("test");
+					node.setUsername("");
 				if (password != null)
 					node.setPassword(password);
 				else
-					node.setUsername("test");
+					node.setUsername("");
 				hive.addNode(node);
 			} catch (HiveReadOnlyException e) {
 				throw new HiveRuntimeException("Hive was read-only", e);

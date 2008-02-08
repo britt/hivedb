@@ -114,10 +114,13 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 				return propertyValue;
 		}
 		else if ( name.equals("hashCode")) {
-			return hashCode(obj);
+			return idHashCode(obj);
+		}
+		else if ( name.equals("deepHashCode")) {
+			return deepHashCode(obj);
 		}
 		else if ( name.equals("equals")) {
-			return hashCode(obj) == hashCode(args[0]);
+			return idHashCode(obj) == idHashCode(args[0]);
 		}
 		else if ( name.equals("toString")) {
 			return new DebugMap<Object, Object>(dictionary, true).toString() + "###("+dictionary.hashCode()+")";
@@ -126,7 +129,7 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 		return retValFromSuper;
 	}
 
-	private Object hashCode(Object obj) {
+	private Object idHashCode(Object obj) {
 		Method idGetter = Atom.getFirstOrNull(AnnotationHelper.getAllMethodsWithAnnotation(clazz, EntityId.class));
 		if (idGetter != null)
 			try {
@@ -135,6 +138,9 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 				throw new RuntimeException(e);
 			}
 		
+		return Amass.makeHashCode(ReflectionTools.invokeGetters(obj, clazz));
+	}
+	private Object deepHashCode(Object obj) {
 		return Amass.makeHashCode(ReflectionTools.invokeGetters(obj, clazz));
 	}
 	

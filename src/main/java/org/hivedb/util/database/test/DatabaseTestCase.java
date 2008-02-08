@@ -14,11 +14,7 @@ import org.testng.annotations.BeforeMethod;
 @SuppressWarnings("unchecked")
 public abstract class DatabaseTestCase {
 	protected boolean cleanupAfterEachTest = true;
-	protected boolean cleanupOnExit = true;
-
-	protected String userName = "test";
-	protected String password = "test";
-	
+	protected boolean cleanupOnExit = true;	
 	private Collection<String> databaseNames = Collections.EMPTY_LIST;
 	
 	protected abstract void createDatabase(String name);
