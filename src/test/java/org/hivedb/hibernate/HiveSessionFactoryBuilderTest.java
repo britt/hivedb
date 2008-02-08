@@ -242,7 +242,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 		WeatherReport fetched = (WeatherReport) factoryBuilder.openSession().get(getGeneratedClass(WeatherReport.class), report.getReportId());
 		assertNotNull(fetched);
 		assertFalse(ReflectionTools.getDifferingFields(report, fetched, WeatherReport.class).size() == 0);
-		Assert.assertTrue(ReflectionTools.getDifferingFields(mutated, fetched, WeatherReport.class).size() == 0);
+		Assert.assertEquals(report, fetched, ReflectionTools.getDifferingFields(mutated, fetched, WeatherReport.class).toString());
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -279,7 +279,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 		doInTransactionAndFailBeforeCommit(updateCallback, factoryBuilder.openSession());
 		WeatherReport fetched = (WeatherReport) factoryBuilder.openSession().get(getGeneratedClass(WeatherReport.class), report.getReportId());
 		assertNotNull(fetched);
-		assertTrue(ReflectionTools.getDifferingFields(report, fetched, WeatherReport.class).size() == 0);
+		assertEquals(ReflectionTools.getDifferingFields(report, fetched, WeatherReport.class).toString(), report, fetched);
 		Assert.assertFalse(ReflectionTools.getDifferingFields(mutated, fetched, WeatherReport.class).size() == 0);
 	}
 	

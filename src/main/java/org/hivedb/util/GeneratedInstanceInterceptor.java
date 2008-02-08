@@ -120,7 +120,7 @@ public class GeneratedInstanceInterceptor implements MethodInterceptor {
 			return deepHashCode(obj);
 		}
 		else if ( name.equals("equals")) {
-			return idHashCode(obj) == idHashCode(args[0]);
+			return idHashCode(obj).equals(idHashCode(args[0]));
 		}
 		else if ( name.equals("toString")) {
 			return new DebugMap<Object, Object>(dictionary, true).toString() + "###("+dictionary.hashCode()+")";
