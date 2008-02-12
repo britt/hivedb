@@ -5,12 +5,15 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/***
- *  Identifies a property that should be ignored during processing by the random value generator
- *  etc.
+/**
+ *  Represents a delegate property name to which to delegate data index queries. Currently the
+ *  property must be in the same class as the annotated method.
  * @author andylikuski
  *
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface Ignore {}
+public @interface DataIndexDelegate {
+	String value();
+}
+

@@ -75,13 +75,13 @@ public class AnnotationHelper {
 		return elements;
 	}
 	
-	public static Object getAnnotationDeeply(Class clazz, String property, Class annotationClass) {
+	public static<T> T getAnnotationDeeply(Class clazz, String property, Class<? extends T> annotationClass) {
 		final Method getter = ReflectionTools.getGetterOfProperty(clazz, property);
-		if (getter.getAnnotation(annotationClass) != null)
-			return getter.getAnnotation(annotationClass);
-		Class owner = ReflectionTools.getOwnerOfMethod(clazz, property);
+		if (getter.getAnnotation((Class)annotationClass) != null)
+			return (T)getter.getAnnotation((Class)annotationClass);
+		Class<T> owner = ReflectionTools.getOwnerOfMethod(clazz, property);
 		if (!owner.equals(clazz))
-			return ReflectionTools.getGetterOfProperty(owner, property).getAnnotation(annotationClass);
+			return (T)ReflectionTools.getGetterOfProperty(owner, property).getAnnotation((Class)annotationClass);
 		return null;
 	}
 }

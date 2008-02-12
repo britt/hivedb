@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.sql.Blob;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
@@ -42,6 +43,19 @@ public class PrimitiveUtils {
 		}
 			 
 		throw new RuntimeException(String.format("Class %s not supported", clazz.getSimpleName()));
+	}
+	public static Object getPrimitiveEquivalent(Object value) {
+		if (isInteger(value.getClass()))
+			return (int)(Integer)value;
+		if (isLong(value.getClass()))
+			return (long)(Long)value;
+		if (isShort(value.getClass()))
+			return (short)(Short)value;
+		if (isDouble(value.getClass()))
+			return (double)(Double)value;
+		if (isFloat(value.getClass()))
+			return (float)(Float)value;
+		return value;
 	}
 	
 	public static<T> T getMinValue(Class<T> clazz) {

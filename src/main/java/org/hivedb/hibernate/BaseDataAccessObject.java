@@ -1,6 +1,7 @@
 package org.hivedb.hibernate;
 
 import java.io.Serializable;
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -19,12 +20,16 @@ import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.shards.util.Lists;
 import org.hivedb.Hive;
 import org.hivedb.HiveRuntimeException;
+import org.hivedb.annotations.AnnotationHelper;
+import org.hivedb.annotations.DataIndexDelegate;
 import org.hivedb.annotations.IndexType;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.configuration.EntityIndexConfigDelegator;
 import org.hivedb.configuration.EntityIndexConfigImpl;
+import org.hivedb.util.GenerateInstance;
 import org.hivedb.util.GeneratedInstanceInterceptor;
+import org.hivedb.util.PrimitiveUtils;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.Atom;
@@ -100,26 +105,28 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	}
 	
 	public Collection<Object> findByProperty(final String propertyName, final Object propertyValue) {
-		final EntityIndexConfig indexConfig = resolveEntityIndexConfig(propertyName);
-		Session session = createSessionForIndex(config, indexConfig, propertyValue);
-		
+		final EntityIndexConfig hiveIndexConfig = resolveEntityIndexConfig(propertyName);
+		Session session = createSessionForIndex(config, hiveIndexConfig, propertyValue);
+		DataIndexDelegate dataIndexDelegate = AnnotationHelper.getAnnotationDeeply(clazz, propertyName, DataIndexDelegate.class);
+		final EntityIndexConfig dataIndexConfig =  (dataIndexDelegate != null)
+			? resolveEntityIndexConfig(dataIndexDelegate.value())
+			: hiveIndexConfig;
+		final String dataIndexPropertyName = dataIndexConfig.getPropertyName();
+			
 		QueryCallback query;
-		// We use HQL to query for collection properties. Technically this is only needed
-		// for primitive collections, but since we sometimes trick Hibernate into thinking our non-primitive collections
-		// are primtives, we'll use this for everything for now.
-		if (isComplexCollection(propertyName)) {
+		// We must use HQL to query for primitive collection properties. 
+		if (isPrimitiveCollection(dataIndexPropertyName)) {
 			 query = new QueryCallback(){
 				 public Collection<Object> execute(Session session) {
-					return queryWithHQL(indexConfig, session, propertyValue);
+					return queryWithHQL(dataIndexConfig, session, propertyValue);
 				 }};
 		}
 		else {
 			query = new QueryCallback(){
 				@SuppressWarnings("unchecked")
 				public Collection<Object> execute(Session session) {
-					// setResultTransformer fixes a Hibernate bug of returning duplicates when joins exist
 					Criteria criteria = session.createCriteria(config.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-					addPropertyRestriction(indexConfig, criteria, propertyName, propertyValue); 
+					addPropertyRestriction(dataIndexConfig, criteria, dataIndexPropertyName, propertyValue); 
 					return criteria.list();
 				}};
 		}
@@ -158,7 +165,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		final EntityIndexConfig indexConfig = resolveEntityIndexConfig(propertyName);
 		QueryCallback query;
 		Session session = createSessionForIndex(config, indexConfig, propertyValue);
-		if (isComplexCollection(propertyName)) {
+		if (isPrimitiveCollection(propertyName)) {
 				query = new QueryCallback(){
 
 					public Collection<Object> execute(Session session) {
@@ -179,7 +186,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		return (Integer)Atom.getFirstOrThrow(queryInTransaction(query, session));
 	}
 
-	private boolean isComplexCollection(final String propertyName) {
+	private boolean isPrimitiveCollection(final String propertyName) {
 		return ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName)
 			&& !ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName);
 	}
@@ -212,7 +219,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		final EntityIndexConfig indexConfig = entityConfig.getEntityIndexConfig(propertyName);
 		Session session = createSessionForIndex(entityConfig, indexConfig, propertyValue);
 		QueryCallback callback;
-		if (isComplexCollection(propertyName)) {
+		if (isPrimitiveCollection(propertyName)) {
 			callback = new QueryCallback(){
 				@SuppressWarnings("unchecked")
 				public Collection<Object> execute(Session session) {
@@ -275,7 +282,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		final EntityIndexConfig indexConfig = config.getEntityIndexConfig(propertyName);
 		Session session = factory.openAllShardsSession();
 		QueryCallback callback;
-		if (isComplexCollection(propertyName)) {
+		if (isPrimitiveCollection(propertyName)) {
 			callback = new QueryCallback(){
 				@SuppressWarnings("unchecked")
 				public Collection<Object> execute(Session session) {
@@ -320,7 +327,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		final EntityIndexConfig indexConfig = config.getEntityIndexConfig(propertyName);
 		Session session = factory.openAllShardsSession();
 		QueryCallback callback;
-		if (isComplexCollection(propertyName)) {
+		if (isPrimitiveCollection(propertyName)) {
 			callback = new QueryCallback(){
 				@SuppressWarnings("unchecked")
 				public Collection<Object> execute(Session session) {
@@ -363,34 +370,37 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	}
 
 	public Object save(final Object entity) {
+		final Collection<Object> entities = populateDataIndexDelegates(Collections.singletonList(entity));
 		// Compensates for Hibernate's inability to delete items orphaned by updates
-		//deleteOrphanedCollectionItems(Collections.singletonList(entity));
+		//deleteOrphanedCollectionItems(entities);
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
-				session.saveOrUpdate(getRespresentedClass().getName(),entity);
+				session.saveOrUpdate(getRespresentedClass().getName(),Atom.getFirstOrThrow(entities));
 			}};
 		doInTransaction(callback, getSession());
 		return entity;
 	}
 	
 	public Object save(final Object entity, Session session) {
+		final Collection<Object> entities = populateDataIndexDelegates(Collections.singletonList(entity));
 		// Compensates for Hibernate's inability to delete items orphaned by updates
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
-				deleteOrphanedCollectionItems(Collections.singletonList(entity), session);
-				session.saveOrUpdate(getRespresentedClass().getName(),entity);
+				deleteOrphanedCollectionItems(entities, session);
+				session.saveOrUpdate(getRespresentedClass().getName(),Atom.getFirstOrThrow(entities));
 			}};
 		doInTransaction(callback, session);
 		return entity;
 	}
 
 	public Collection<Object> saveAll(final Collection<Object> collection) {
+		final Collection<Object> entities = populateDataIndexDelegates(collection);
 		validateNonNull(collection);
 		// Compensates for Hibernate's inability to delete items orphaned by updates
-		//deleteOrphanedCollectionItems(collection);
+		//deleteOrphanedCollectionItems(entities);
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
-				for(Object entity : collection) {
+				for(Object entity : entities) {
 					session.saveOrUpdate(getRespresentedClass().getName(), entity);
 				}
 			}};
@@ -497,5 +507,23 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			session.close();
 		}
 		return results;
+	}
+	
+	// This operation needs to be generalized with an attribute and push down to a lower layer
+	public Collection<Object> populateDataIndexDelegates(Collection<Object> instances) {
+		return Transform.map(new Unary<Object, Object>() { 
+			public Object f(final Object instance) {
+				Object modified = new GenerateInstance<Object>((Class<Object>)clazz).generateAndCopyProperties(instance);
+				for (Method getter : AnnotationHelper.getAllMethodsWithAnnotation(clazz, DataIndexDelegate.class)) {
+					String delegatorPropertyName = ReflectionTools.getPropertyNameOfAccessor(getter);
+					EntityIndexConfig entityIndexConfig = config.getEntityIndexConfig(delegatorPropertyName);
+					String delegatePropertyName = AnnotationHelper.getAnnotationDeeply(clazz, delegatorPropertyName, DataIndexDelegate.class).value();
+					GeneratedInstanceInterceptor.setProperty(
+						modified,
+						delegatePropertyName,
+						PrimitiveUtils.getPrimitiveEquivalent(Filter.grepUnique(entityIndexConfig.getIndexValues(modified))));
+				}
+				return modified;
+			}}, instances);
 	}
 }
