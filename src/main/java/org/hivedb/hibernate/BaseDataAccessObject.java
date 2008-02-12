@@ -4,11 +4,13 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.hibernate.Criteria;
 import org.hibernate.EmptyInterceptor;
+import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -498,6 +500,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	public static Collection<Object> queryInTransaction(QueryCallback callback, Session session) {
 		Collection<Object> results = Lists.newArrayList();
 		try {
+			session.setFlushMode(FlushMode.MANUAL);
 			Transaction tx = session.beginTransaction();
 			results = callback.execute(session);
 			tx.commit();
@@ -513,8 +516,11 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	public Collection<Object> populateDataIndexDelegates(Collection<Object> instances) {
 		return Transform.map(new Unary<Object, Object>() { 
 			public Object f(final Object instance) {
+				final List<Method> allMethodsWithAnnotation = AnnotationHelper.getAllMethodsWithAnnotation(clazz, DataIndexDelegate.class);
+				if (allMethodsWithAnnotation.size()==0)
+					return instance;
 				Object modified = new GenerateInstance<Object>((Class<Object>)clazz).generateAndCopyProperties(instance);
-				for (Method getter : AnnotationHelper.getAllMethodsWithAnnotation(clazz, DataIndexDelegate.class)) {
+				for (Method getter : allMethodsWithAnnotation) {
 					String delegatorPropertyName = ReflectionTools.getPropertyNameOfAccessor(getter);
 					EntityIndexConfig entityIndexConfig = config.getEntityIndexConfig(delegatorPropertyName);
 					String delegatePropertyName = AnnotationHelper.getAnnotationDeeply(clazz, delegatorPropertyName, DataIndexDelegate.class).value();

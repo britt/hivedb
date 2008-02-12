@@ -18,6 +18,7 @@ import org.hivedb.util.GenerateInstance;
 import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.MySqlHiveTestCase;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.Atom;
@@ -43,7 +44,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	
 	@Test
 	public void testGet() throws Exception {
-		DataAccessObject<WeatherReport, Integer> dao = getDao(getGeneratedClass());
+		DataAccessObject<WeatherReport, Integer> dao = (DataAccessObject<WeatherReport, Integer>)getDao(getGeneratedClass());
 		WeatherReport original = getPersistentInstance(dao);
 		WeatherReport report = dao.get(original.getReportId());
 		assertEquals(ReflectionTools.getDifferingFields(original, report, WeatherReport.class).toString(), original.hashCode(), report.hashCode());
@@ -51,7 +52,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	
 	@Test
 	public void testFindByProperty() throws Exception {
-		DataAccessObject<WeatherReport, Integer> dao = getDao(getGeneratedClass());
+		DataAccessObject<WeatherReport, Integer> dao = (DataAccessObject<WeatherReport, Integer>) getDao(getGeneratedClass());
 		WeatherReport report = new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
 		dao.save(report);
 		int temperature = random.nextInt();
@@ -71,7 +72,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	
 	@Test
 	public void testFindByPropertyPaged() throws Exception {
-		final DataAccessObject<WeatherReport, Integer> dao = getDao(getGeneratedClass());
+		final DataAccessObject<WeatherReport, Integer> dao = (DataAccessObject<WeatherReport, Integer>) getDao(getGeneratedClass());
 		Collection<WeatherReport> reports =
 			Generate.create(new Generator<WeatherReport>() {
 				public WeatherReport generate() {
@@ -114,7 +115,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 					return new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
 				}}, new NumberIterator(5));
 		
-		DataAccessObject<WeatherReport,Integer> dao = getDao(getGeneratedClass());
+		DataAccessObject<WeatherReport,Integer> dao = (DataAccessObject<WeatherReport, Integer>) getDao(getGeneratedClass());
 		dao.saveAll(reports);
 		Collection<WeatherReport> x = dao.findByProperty("temperature", Atom.getFirst(reports).getTemperature());
 		Integer min = Amass.min(
@@ -141,7 +142,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	
 	@Test
 	public void testFindByPropertyRangePaged() throws Exception {
-		final DataAccessObject<WeatherReport, Integer> dao = getDao(getGeneratedClass());
+		final DataAccessObject<WeatherReport, Integer> dao = (DataAccessObject<WeatherReport, Integer>) getDao(getGeneratedClass());
 		final int INSTANCE_COUNT = 12;
 		Collection<WeatherReport> set = new HashSet<WeatherReport>();
 		int min=0, max=0;
@@ -181,7 +182,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 					return weatherReport;
 				}}, new NumberIterator(5));
 		
-		DataAccessObject<WeatherReport,Integer> dao = getDao(getGeneratedClass());
+		DataAccessObject<WeatherReport,Integer> dao = (DataAccessObject<WeatherReport, Integer>) getDao(getGeneratedClass());
 		dao.saveAll(reports);
 		Assert.assertEquals(dao.getCount("temperature", temperature) + dao.getCount("temperature", temperature+1), 5);
 		Assert.assertEquals(dao.getCountByRange("temperature", temperature, temperature+1), (Integer)5);
@@ -189,7 +190,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		
 	@Test
 	public void testDelete() throws Exception {
-		DataAccessObject<WeatherReport, Integer> dao = getDao(getGeneratedClass());
+		DataAccessObject<WeatherReport, Integer> dao = (DataAccessObject<WeatherReport, Integer>) getDao(getGeneratedClass());
 		WeatherReport original = getPersistentInstance(dao);
 		dao.delete(original.getReportId());
 		assertNull(dao.get(original.getReportId()));
@@ -197,7 +198,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	
 	@Test 
 	public void testInsert() {			
-		DataAccessObject<WeatherReport, Integer> dao = getDao(getGeneratedClass());
+		DataAccessObject<WeatherReport, Integer> dao = (DataAccessObject<WeatherReport, Integer>) getDao(getGeneratedClass());
 		WeatherReport report = new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
 		dao.save(report);
 		WeatherReport savedReport = dao.get(report.getReportId());
@@ -207,14 +208,6 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 
 	private Class getGeneratedClass() {
 		return GeneratedInstanceInterceptor.newInstance(WeatherReport.class).getClass();
-	}
-
-	private DataAccessObject<WeatherReport, Integer> getDao(Class clazz) {
-		
-		return new BaseDataAccessObjectFactory<WeatherReport,Integer>(
-				this.config,
-				getMappedClasses(),
-				clazz, getHive()).create();
 	}
 	
 	private<T> T getInstance(Class<T> clazz) throws Exception {
@@ -227,7 +220,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	
 	@Test
 	public void testUpdate() throws Exception {
-		DataAccessObject<WeatherReport, Integer> dao = getDao(getGeneratedClass());
+		DataAccessObject<WeatherReport, Integer> dao = (DataAccessObject<WeatherReport, Integer>) getDao(getGeneratedClass());
 		WeatherReport original = getPersistentInstance(dao);
 		WeatherReport updated = dao.get(original.getReportId());
 		GeneratedInstanceInterceptor.setProperty(updated, "latitude", new Double(30));
@@ -273,7 +266,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 			GeneratedInstanceInterceptor.setProperty(report, "reportId", i);
 			reports.add(report);
 		}
-		DataAccessObject<WeatherReport,Integer> dao = getDao(getGeneratedClass());
+		DataAccessObject<WeatherReport,Integer> dao = (DataAccessObject<WeatherReport, Integer>) getDao(getGeneratedClass());
 		dao.saveAll(reports);
 		
 		for(WeatherReport report : reports)
@@ -288,7 +281,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 			GeneratedInstanceInterceptor.setProperty(report, "reportId", i);
 			reports.add(report);
 		}
-		DataAccessObject<WeatherReport,Integer> dao = getDao(getGeneratedClass());
+		DataAccessObject<WeatherReport,Integer> dao = (DataAccessObject<WeatherReport, Integer>) getDao(getGeneratedClass());
 		dao.saveAll(reports);
 
 
@@ -307,7 +300,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	
 	@Test
 	public void testExists() throws Exception {
-		DataAccessObject<WeatherReport, Integer> dao = getDao(getGeneratedClass());
+		DataAccessObject<WeatherReport, Integer> dao = (DataAccessObject<WeatherReport, Integer>) getDao(getGeneratedClass());
 		assertFalse(dao.exists(88));
 		WeatherReport original = getPersistentInstance(dao);
 		assertTrue(dao.exists(original.getReportId()));

@@ -1,5 +1,6 @@
 package org.hivedb.util.database.test;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -7,6 +8,8 @@ import java.util.List;
 
 import org.hivedb.Hive;
 import org.hivedb.configuration.EntityHiveConfig;
+import org.hivedb.hibernate.BaseDataAccessObjectFactory;
+import org.hivedb.hibernate.DataAccessObject;
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
@@ -116,6 +119,13 @@ public abstract class MySqlHiveTestCase extends MysqlTestCase {
 	}
 	protected HiveSemaphore createHiveSemaphore() {
 		return hiveTestCase.createHiveSemaphore();
+	}
+	public DataAccessObject<? extends Object, ? extends Serializable> getDao(Class clazz) {	
+		return new BaseDataAccessObjectFactory<Object,Serializable>(
+				getEntityHiveConfig(),
+				getMappedClasses(),
+				clazz,
+				getHive()).create();
 	}
 	
 }
