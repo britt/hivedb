@@ -8,8 +8,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.hivedb.annotations.Validate;
 import org.hivedb.services.ClassDaoService;
@@ -24,6 +26,11 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
 
 public class ReflectionTools {
+	
+	private static Map<String, Method> methodCache = new HashMap<String, Method>();
+	private static Map<Class<?>, Collection<Method>> getterCache = new HashMap<Class<?>, Collection<Method>>();
+	private static Map<Method, String> propertyCache = new HashMap<Method, String>();
+	private static Map<String, Class<?>> ownerCache = new HashMap<String, Class<?>>();
 	
 	/**
 	 *  Creates a hash code based on the getters of an interface
@@ -53,10 +60,16 @@ public class ReflectionTools {
 	 */
 	public static String getPropertyNameOfAccessor(Method accessor)
 	{
-		return BeanUtils.findPropertyForMethod(accessor).getName();
+		String property = propertyCache.get(accessor);
+		if (property == null) {
+			property = BeanUtils.findPropertyForMethod(accessor).getName();
+			propertyCache.put(accessor, property);
+		}
+		return property;
 //		return accessor.getName().substring(3,4).toLowerCase()
 //			+ accessor.getName().substring(4);
 	}
+	
 	public static boolean isGetter(Method method) {
 		return 
 			(method.getName().startsWith("is") || method.getName().startsWith("get")) &&
@@ -297,12 +310,21 @@ public class ReflectionTools {
 	    	}
     	}
     }
+	
 	private static Method getMethod(Object instance, final String setterName) {
-		return Filter.grepSingle(
-			new Predicate<Method>() {	public boolean f(Method m) {
-				return m.getName().equals(setterName);						
-			}},
-			getDeepMethods(instance.getClass()));
+		String key = instance.getClass().getCanonicalName().concat(".").concat(setterName);
+		Method method = methodCache.get(key);
+		if (method == null) {
+			method = Filter.grepSingle(
+				new Predicate<Method>() {	public boolean f(Method m) {
+					return m.getName().equals(setterName);						
+				}},
+				getDeepMethods(instance.getClass()));
+			if (method != null) {
+				methodCache.put(key, method);
+			}
+		}
+		return method;
 	}
 	
 	public static<T> Collection<Method> getGetters(final Class<T> ofThisInterface) {
@@ -409,7 +431,9 @@ public class ReflectionTools {
 	
 	private static class MethodGrepper<T> {
 		public Collection<Method> grepGetters(Class<T> basedUponThisInterface) {
-			return Filter.grep(new Predicate<Method>() {
+			Collection<Method> getters = getterCache.get(basedUponThisInterface);
+			if (getters == null) {
+				getters = Filter.grep(new Predicate<Method>() {
 					public boolean f(Method method) {
 						try {
 							return
@@ -420,8 +444,12 @@ public class ReflectionTools {
 							throw new RuntimeException(e);
 						}
 					}
-				},
-				getDeepMethods(basedUponThisInterface));
+				}, getDeepMethods(basedUponThisInterface));
+				if (getters != null) {
+					getterCache.put(basedUponThisInterface, getters);
+				}
+			}
+			return getters;
 		}
 		
 		
@@ -546,10 +574,19 @@ public class ReflectionTools {
 	}
 	
 	private static Class getOwnerOfProperty(final Class<?> clazz, final String propertyName, final Class[] parameterTypes) {
-		final List<Class> classes = new ArrayList(getAncestors(clazz));
-		Class ofThisInterface;
-		ofThisInterface = 
-			Filter.grepSingleOrNull(new Predicate<Class>() {
+		StringBuilder buf = new StringBuilder();
+		if (parameterTypes != null) {
+			for (int i = 0; i < parameterTypes.length; i++) {
+				buf.append(parameterTypes[i].getCanonicalName());
+				buf.append(",");
+			}
+			buf.setLength(buf.length() > 0 ? buf.length()-1 : buf.length());
+		}
+		String key = clazz.getCanonicalName().concat(".").concat(propertyName).concat("(").concat(buf.toString()).concat(")");
+		Class<?> owner = ownerCache.get(key);
+		if (owner == null) {
+			final List<Class> classes = new ArrayList(getAncestors(clazz));
+			owner = Filter.grepSingleOrNull(new Predicate<Class>() {
 				public boolean f(Class c) {
 					try {
 						c.getDeclaredMethod(BeanUtils.getPropertyDescriptor(c, propertyName).getReadMethod().getName(), parameterTypes);
@@ -560,11 +597,13 @@ public class ReflectionTools {
 					}
 				}
 			}, classes);
-		if (ofThisInterface == null)
-			ofThisInterface = clazz;
-		return ofThisInterface;
+			if (owner == null) {
+				owner = clazz;
+			}
+			ownerCache.put(key, owner);
+		}
+		return owner;
 	}
-	
 	
 	private static Collection<Class<?>> getAncestors(Class<?> clazz) {
 		return Transform.flatten(new Collection[] {
