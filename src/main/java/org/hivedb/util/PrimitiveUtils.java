@@ -179,7 +179,7 @@ public class PrimitiveUtils {
 	}
 	
 	public static boolean isDate(Class clazz) {
-		return clazz.equals(Date.class);
+		return ReflectionTools.doesImplementOrExtend(clazz, Date.class); // account for java.sql derivatives
 	}
 	public static boolean isBoolean(Class clazz) {
 		return clazz.equals(boolean.class) || clazz.equals(Boolean.class);
