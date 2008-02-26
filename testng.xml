@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="HiveDB">
+	<test name="all">
+		<packages>
+			<package name="org.hivedb"/>
+			<package name="org.hivedb.hibernate"/>
+			<package name="org.hivedb.management"/>
+			<package name="org.hivedb.management.migration"/>
+			<package name="org.hivedb.meta"/>
+			<package name="org.hivedb.persistence"/>
+			<package name="org.hivedb.util"/>
+			<!-- package name="org.hivedb.services"/ -->
+		</packages>
+		<classes>
+			<!-- class name="org.hivedb.services.DataGenerationServiceTest"/ -->
+			<class name="org.hivedb.services.InstallServiceTest"/>
+			<class name="org.hivedb.services.ExampleDaoServiceTest"/>
+		</classes>
+	</test>
+</suite>
