@@ -51,7 +51,7 @@ public class TestBeanGenerator {
 		}
 	}
 	
-	@Test
+//	@Test
 	public void testGenerateInstance() {
 		Foo foo = new BeanGenerator<Foo>(Foo.class).generate();
 		Assert.assertTrue(foo.getInt() != 0);

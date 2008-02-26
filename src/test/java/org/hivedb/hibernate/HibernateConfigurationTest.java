@@ -30,7 +30,7 @@ public class HibernateConfigurationTest {
 		assertEquals(new Integer(7).toString(), config.getProperty("hibernate.connection.shard_id"));
 		assertEquals("true", config.getProperty("hibernate.shard.enable_cross_shard_relationship_checks"));
 		//NOTE: this value is taken from hibernate.cfg.xml
-		assertEquals("8", config.getProperty("hibernate.connection.pool_size"));
+		assertEquals("32", config.getProperty("hibernate.dbcp.maxActive"));
 		config.buildSessionFactory();
 	}
 	

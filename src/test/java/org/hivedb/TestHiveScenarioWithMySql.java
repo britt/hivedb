@@ -11,7 +11,7 @@ import org.testng.annotations.Test;
 
 public class TestHiveScenarioWithMySql extends MySqlHiveTestCase {
 	
-	@Test(groups={"mysql"})
+//	@Test(groups={"mysql"})
 	public void test()  throws Exception {
 		new TestHiveScenario(getEntityClasses(getEntityHiveConfig().getEntityConfigs()), getEntityHiveConfig(), getMappedClasses(), getHive()).test();
 	}

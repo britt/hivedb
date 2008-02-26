@@ -10,7 +10,7 @@ import org.hivedb.util.functional.Unary;
 import org.testng.annotations.Test;
 
 public class TestHiveScenarioWithH2 extends H2HiveTestCase {
-	@Test
+//	@Test
 	public void test() throws Exception {
 		new TestHiveScenario(getEntityClasses(getEntityHiveConfig().getEntityConfigs()), getEntityHiveConfig(), getMappedClasses(), getHive()).test();
 	}
