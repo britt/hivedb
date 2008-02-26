@@ -1,6 +1,7 @@
 package org.hivedb.util;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
@@ -13,8 +14,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.hivedb.annotations.Validate;
-import org.hivedb.services.ClassDaoService;
 import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
@@ -23,14 +22,181 @@ import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.hivedb.util.functional.Joiner.ConcatStrings;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.BeansException;
 
 public class ReflectionTools {
 	
-	private static Map<String, Method> methodCache = new HashMap<String, Method>();
-	private static Map<Class<?>, Collection<Method>> getterCache = new HashMap<Class<?>, Collection<Method>>();
-	private static Map<Method, String> propertyCache = new HashMap<Method, String>();
-	private static Map<String, Class<?>> ownerCache = new HashMap<String, Class<?>>();
+	public static final class Descriptor {
+		private final Class<?> clazz;
+		private final Collection<Method> deepMethods;
+		private final Collection<Method> declaredPublicMethods;
+		private final Map<Method, Method> accessors;
+		
+		private final Map<Method, String> propertyByGetter;
+		private final Map<String, Method> getterByProperty;
+		
+		private final Map<String, Class<?>> ownerByProperty;
+		
+		private final Map<Method, Map<Class<?>, Method>> settersByGetter;
+		
+		private final Map<Method, String> propertyByAccessor;
+		
+		private Method rawSetter;
+		
+		Descriptor(Class<?> clazz) {
+			this.clazz = clazz;
+			
+			deepMethods = Collections.unmodifiableCollection(ReflectionTools.getDeepMethods(clazz));
+			
+			declaredPublicMethods = new HashSet<Method>();
+			for (Method method : clazz.getDeclaredMethods()) {
+				if ((method.getModifiers() & Modifier.PUBLIC) == Modifier.PUBLIC) {
+					declaredPublicMethods.add(method);
+				}
+			}
+			
+			accessors = new HashMap<Method, Method>();
+			for (Method method : clazz.getMethods()) {
+				if (ReflectionTools.isGetter(method)) {
+					Method setter = BeanUtils.findPropertyForMethod(method).getWriteMethod();
+					accessors.put(method, setter);
+				}
+			}
+			
+			propertyByGetter = new HashMap<Method, String>();
+			getterByProperty = new HashMap<String, Method>();
+			for (Method method : accessors.keySet()) {
+				String property = BeanUtils.findPropertyForMethod(method).getName();
+				propertyByGetter.put(method, property);
+				getterByProperty.put(property, method);
+			}
+			
+			ownerByProperty = new HashMap<String, Class<?>>();
+			for (String property : getterByProperty.keySet()) {
+				Class<?> owner = ReflectionTools.getOwnerOfMethod(clazz, property, new Class[] {});
+				ownerByProperty.put(property, owner);
+			}
+			
+			settersByGetter = new HashMap<Method, Map<Class<?>, Method>>();
+			for (Method getter : accessors.keySet()) {
+				Map<Class<?>, Method> setters = new HashMap<Class<?>, Method>();
+				setters.put(getter.getReturnType(), accessors.get(getter));
+				for (Method method : clazz.getMethods()) {
+					if (method.getName().equals("set" + getter.getName().substring(3))) {
+						if (method != accessors.get(getter)) {
+							Class<?>[] parameterTypes = method.getParameterTypes();
+							if (parameterTypes.length == 1 && !parameterTypes[0].equals(getter.getReturnType())) {
+								setters.put(parameterTypes[0], method);
+							}
+						}
+					} 
+				}
+				settersByGetter.put(getter, setters);
+			}
+			
+			propertyByAccessor = new HashMap<Method, String>();
+			for (Method getter : accessors.keySet()) {
+				String property = BeanUtils.findPropertyForMethod(getter).getName();
+				propertyByAccessor.put(getter, property);
+				for (Method setter : settersByGetter.get(getter).values()) {
+					propertyByAccessor.put(setter, property);
+				}
+			}
+			
+			try {
+				for (Class<?> c = clazz; !c.equals(Object.class) && rawSetter == null; c = c.getSuperclass()) {
+					rawSetter = clazz.getDeclaredMethod("set", String.class, Object.class);
+				}
+			} catch (Exception ex) {
+			}
+		}
+		
+		public Collection<Method> getDeepMethods() {
+			return deepMethods;
+		}
+		
+		public Class<?> getRepresentedClass() {
+			return clazz;
+		}
+		
+		public Collection<Method> getGetters() {
+			return accessors.keySet();
+		}
+		
+		public String getPropertyName(Method method) {
+			return propertyByGetter.get(method);
+		}
+		
+		public boolean doesSetterExist(Method getter) {
+			return accessors.get(getter) != null;
+		}
+		
+		public Method getCorrespondingSetter(String getterName, Class<?> argument) {
+			return getSetterOfProperty(toProperty(getterName), argument);
+
+		}
+		
+		public Method getCorrespondingSetter(Method getter) {
+			return accessors.get(getter);
+		}
+		
+		public Method getCorrespondingGetter(String setterName) {
+			return getterByProperty.get(toProperty(setterName));
+		}
+		
+		public Method getGetterOfProperty(String property) {
+			return getterByProperty.get(property);
+		}
+		
+		public boolean hasGetterOfProperty(String property) {
+			return getterByProperty.get(property) != null;
+		}
+		
+		public Method getSetterOfProperty(String property) {
+			return accessors.get(getterByProperty.get(property));
+		}
+		
+		public Method getSetterOfProperty(String property, Class<?> argument) {
+			Method setter = null;
+			Method getter = getterByProperty.get(property);
+			if (getter != null) {
+				setter = settersByGetter.get(getter).get(argument);
+			}
+			if (setter == null) {
+				if (accessors.get(getter).getParameterTypes()[0].isAssignableFrom(argument)) {
+					setter = accessors.get(getter);
+				}
+;			}
+			return setter;
+		}
+		
+		public Collection<Method> getDeclaredPublicMethods() {
+			return declaredPublicMethods;
+		}
+		
+		public Method getRawSetter() {
+			return rawSetter;
+		}
+		
+		public Collection<String> getPropertiesOfGetters() {
+			return getterByProperty.keySet();
+		}
+		
+		public Class<?> getOwnerOfMethod(String property) {
+			return ownerByProperty.get(property);
+		}
+		
+		private String toProperty(String accessor) {
+			return accessor.substring(3, 4).toLowerCase().concat(accessor.length() > 4 ? accessor.substring(4) : "");
+		}
+	}
+	
+	private static Map<Class<?>, Descriptor> descriptors = new HashMap<Class<?>, Descriptor>();
+	
+	private static void checkInitialized(Class<?> clazz) {
+		if (! descriptors.containsKey(clazz)) {
+			descriptors.put(clazz, new Descriptor(clazz));
+		}
+	}
 	
 	/**
 	 *  Creates a hash code based on the getters of an interface
@@ -55,19 +221,13 @@ public class ReflectionTools {
 	
 	/*
 	 *  Strip the get or set off a getter or setter and lower case
-	 *  the name to rveal the underlying property name
+	 *  the name to reveal the underlying property name
 	 * 
 	 */
-	public static String getPropertyNameOfAccessor(Method accessor)
-	{
-		String property = propertyCache.get(accessor);
-		if (property == null) {
-			property = BeanUtils.findPropertyForMethod(accessor).getName();
-			propertyCache.put(accessor, property);
-		}
-		return property;
-//		return accessor.getName().substring(3,4).toLowerCase()
-//			+ accessor.getName().substring(4);
+	public static String getPropertyNameOfAccessor(Method accessor) {
+		Class<?> clazz = accessor.getDeclaringClass();
+		checkInitialized(clazz);
+		return descriptors.get(clazz).getPropertyName(accessor);
 	}
 	
 	public static boolean isGetter(Method method) {
@@ -83,70 +243,42 @@ public class ReflectionTools {
 			method.getParameterTypes().length == 1;
 	}
 	public static boolean doesSetterExist(Method getter) {
-		try {
-			return BeanUtils.findPropertyForMethod(getter).getWriteMethod() != null;
-		} catch (SecurityException e) {
-			throw new RuntimeException(e);
-		}
+		Class<?> clazz = getter.getDeclaringClass();
+		checkInitialized(clazz);
+		return descriptors.get(clazz).doesSetterExist(getter);
 	}
+	
 	public static Method getCorrespondingSetter(Object instance, String getterName, Class argumentType) {
-		try {
-			return instance.getClass().getMethod("set" + getterName.substring(3), new Class[] {argumentType});
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		Class<?> clazz = instance.getClass();
+		checkInitialized(clazz);
+		return descriptors.get(clazz).getCorrespondingSetter(getterName, argumentType);
 	}
+	
 	public static Method getCorrespondingSetter(Method getter) {
-		try {
-			return getter.getDeclaringClass().getMethod("set" + getter.getName().substring(3), new Class[] {getter.getReturnType()});
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		Class<?> clazz = getter.getDeclaringClass();
+		checkInitialized(clazz);
+		return descriptors.get(clazz).getCorrespondingSetter(getter);
 	}
+	
 	public static Method getCorrespondingGetter(Object instance, String setterName) {
-		try {
-			return instance.getClass().getMethod("get" + setterName.substring(3), new Class[] {});
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		Class<?> clazz = instance.getClass();
+		checkInitialized(clazz);
+		return descriptors.get(clazz).getCorrespondingGetter(setterName);
 	}
 	
 	public static Method getGetterOfProperty(Class ofInterface, final String property) {
-		try {
-			return Filter.grepSingle(new Predicate<Method>() {
-				public boolean f(Method method) {
-					return getPropertyNameOfAccessor(method).equals(property);
-				}
-			},
-			getGetters((Class<Object>)ofInterface));
-			//return BeanUtils.getPropertyDescriptor(ofInterface, property).getReadMethod();
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		checkInitialized(ofInterface);
+		return descriptors.get(ofInterface).getGetterOfProperty(property);
 	}
 	
 	public static boolean hasGetterOfProperty(Class ofInterface, final String property) {
-		try {
-			return Filter.isMatch(new Predicate<Method>() {
-				public boolean f(Method method) {
-					return getPropertyNameOfAccessor(method).equals(property);
-				}
-			},
-			getGetters((Class<Object>)ofInterface));
-			//return BeanUtils.getPropertyDescriptor(ofInterface, property).getReadMethod() != null;
-		} catch (Exception e) {
-			return false;
-		}
+		checkInitialized(ofInterface);
+		return descriptors.get(ofInterface).hasGetterOfProperty(property);
 	}
 	
 	public static Method getSetterOfProperty(Class ofInterface, String property) {
-		try {
-			return ofInterface.getMethod(makeSetterName(property), new Class[] {
-				getGetterOfProperty(ofInterface, property).getReturnType()
-			});
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		checkInitialized(ofInterface);
+		return descriptors.get(ofInterface).getSetterOfProperty(property);
 	}
 	
 	public static String makeSetterName(String property) {
@@ -154,31 +286,23 @@ public class ReflectionTools {
 	}
 	
 	public static Collection<Method> getDeclaredPublicMethods(Class subject) {
-		return Filter.grepAgainstList( // get declared in the class and public
-			   Arrays.asList(subject.getMethods()),						   
-			   Arrays.asList(subject.getDeclaredMethods()));
-	}
-	public static boolean doesImplementOrExtend(Class doesClass, Class implementOrExtendThisClass)
-	{
-		return doesClass.equals(implementOrExtendThisClass) ||
-			doesImplementOrExtend(doesClass.getInterfaces(), implementOrExtendThisClass) ||
-				(doesClass.getSuperclass() != null &&
-				!doesClass.getSuperclass().equals(Object.class) &&	
-				 doesImplementOrExtend(doesClass.getSuperclass(), implementOrExtendThisClass));
-		 
+		checkInitialized(subject);
+		return descriptors.get(subject).getDeclaredPublicMethods();
 	}
 	
-	public static boolean doesImplementOrExtend(final Class[] doesOneOfThese, final Class matchOrImplementThisInterface)
-	{
-		return Filter.isMatch(new Predicate<Class>() {
-			
-			public boolean f(Class anInterface) {
-				return anInterface.equals(matchOrImplementThisInterface) || 
-						doesImplementOrExtend(anInterface.getInterfaces(), matchOrImplementThisInterface);
-					
-			}},
-			doesOneOfThese);
+	public static boolean doesImplementOrExtend(Class doesClass, Class implementOrExtendThisClass) {
+		return implementOrExtendThisClass.isAssignableFrom(doesClass);
 	}
+	
+	public static boolean doesImplementOrExtend(final Class[] doesOneOfThese, final Class matchOrImplementThisInterface) {
+		for (Class clazz : doesOneOfThese) {
+			if (doesImplementOrExtend(clazz, matchOrImplementThisInterface)){
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	/**
 	 *  Returns the interface in the list that is mostly closest to the given class/interface.
 	 *  The order of search is 1) see if the class matches one of the given interfaces,
@@ -245,6 +369,7 @@ public class ReflectionTools {
 			throw new RuntimeException();
 		}
 	}
+	
 	public static<T> Collection<Method> getNullFields(final T checkMembersOfThis, Class<T> basedUponThisInterface) {
 		return
 			new MethodGrepper<T>() {
@@ -257,9 +382,12 @@ public class ReflectionTools {
 				}
 			}.grepGetters(basedUponThisInterface);
 	}
+	
 	public static<T> Collection<Object> invokeGetters(final T instance, Class<T> basedUponThisInterface) {
-		return invokeGetters(instance, getGetters(basedUponThisInterface));	
+		checkInitialized(basedUponThisInterface);
+		return invokeGetters(instance, descriptors.get(basedUponThisInterface).getGetters());	
 	}
+	
 	public static<T> Collection<Object> invokeGetters(final T instance, Collection<Method> getters) {
 		return Transform.map(new Unary<Method, Object>() {
 			public Object f(Method method) {
@@ -271,73 +399,52 @@ public class ReflectionTools {
 			}},
 			getters);	
 	}
+	
 	public static Object invokeGetter(Object instance, String propertyName)
     {
-		final String getterName = "get"+capitalize(propertyName);
+		Class<?> clazz = instance.getClass();
+		checkInitialized(clazz);
+		Method getter = descriptors.get(clazz).getGetterOfProperty(propertyName);
 		// try to match on the value's type
     	try {
-    		return instance.getClass().getMethod(getterName, new Class[] {})
-    			.invoke(instance, new Object[] {});
+    		return getter.invoke(instance, new Object[] {});
     	}
     	catch (Exception e) {
-	    	throw new RuntimeException(String.format("Error invoking %s of class %s", getterName, instance.getClass()), e);
+	    	throw new RuntimeException(String.format("Error invoking %s of class %s", getter.getName(), instance.getClass()), e);
     	}
     }
 	
 	public static void invokeSetter(Object instance, String propertyName, Object value)
     {
-		final String setterName = makeSetterName(propertyName);
+		Class<?> clazz = instance.getClass();
+		checkInitialized(clazz);
+		
 		// try to match on the value's type
-    	try {
-    		instance.getClass().getMethod(setterName, new Class[] {value.getClass()})
-    			.invoke(instance, new Object[] {value});
+		Method setter = descriptors.get(clazz).getSetterOfProperty(propertyName, value.getClass());
+		if (setter != null) {
+			try {
+				setter.invoke(instance, new Object[] {value});
+				return;
+			} catch (Exception ex) {
+			}
     	}
-    	catch (Exception exception) {
-    		// iterate through all methods until a name-matched setter is found
-    		try {
-	    		getMethod(instance, setterName).invoke(instance, new Object[] {value});
-    		}
-	    	catch (Exception e)
-	    	{
-	    		// handle our CGLib classes that don't have a setter interface
-	    		// TODO poor solution
-	    		try {
-					getMethod(instance, "set").invoke(instance, new Object[] {propertyName, value});
-				} catch (Exception ex) {
-					throw new RuntimeException("Exception calling method " + setterName 
-							+ " with a value of type " + value.getClass(), e);
-				}
-	    	}
-    	}
+		// handle our CGLib classes that don't have a setter interface
+	    // TODO poor solution
+	    try {
+			descriptors.get(clazz).getRawSetter().invoke(instance, new Object[] {propertyName, value});
+		} catch (Exception ex) {
+			throw new RuntimeException("Exception calling method " + makeSetterName(propertyName) + " with a value of type " + value.getClass(), ex);
+		}
     }
 	
-	private static Method getMethod(Object instance, final String setterName) {
-		String key = instance.getClass().getCanonicalName().concat(".").concat(setterName);
-		Method method = methodCache.get(key);
-		if (method == null) {
-			method = Filter.grepSingle(
-				new Predicate<Method>() {	public boolean f(Method m) {
-					return m.getName().equals(setterName);						
-				}},
-				getDeepMethods(instance.getClass()));
-			if (method != null) {
-				methodCache.put(key, method);
-			}
-		}
-		return method;
-	}
-	
 	public static<T> Collection<Method> getGetters(final Class<T> ofThisInterface) {
-		return new MethodGrepper<T>().grepGetters(ofThisInterface);
+		checkInitialized(ofThisInterface);
+		return descriptors.get(ofThisInterface).getGetters();
 	}
 	
 	public static<T> Collection<String> getPropertiesOfGetters(final Class<T> ofThisInterface) {
-		return Transform.map(new Unary<Method,String>() {
-			public String f(Method method) {
-				return getPropertyNameOfAccessor(method);
-			}
-		},
-		new MethodGrepper<T>().grepGetters(ofThisInterface));
+		checkInitialized(ofThisInterface);
+		return descriptors.get(ofThisInterface).getPropertiesOfGetters();
 	}
 	
 	public static<T> DiffCollection getEqualFields(final T expected, final T actual, Class<T> basedUponThisInterface) { 
@@ -429,26 +536,23 @@ public class ReflectionTools {
 		return fieldValue;
 	}
 	
+	
 	private static class MethodGrepper<T> {
 		public Collection<Method> grepGetters(Class<T> basedUponThisInterface) {
-			Collection<Method> getters = getterCache.get(basedUponThisInterface);
-			if (getters == null) {
-				getters = Filter.grep(new Predicate<Method>() {
-					public boolean f(Method method) {
-						try {
-							return
-								!method.getDeclaringClass().equals(Object.class) &&
-								isGetter(method) &&
-								invokableMemberPredicate(method);
-						} catch (Exception e) {
-							throw new RuntimeException(e);
-						}
+			checkInitialized(basedUponThisInterface);
+			Collection<Method> deepMethods = descriptors.get(basedUponThisInterface).getDeepMethods();
+			Collection<Method> getters = Filter.grep(new Predicate<Method>() {
+				public boolean f(Method method) {
+					try {
+						return
+							!method.getDeclaringClass().equals(Object.class) &&
+							isGetter(method) &&
+							invokableMemberPredicate(method);
+					} catch (Exception e) {
+						throw new RuntimeException(e);
 					}
-				}, getDeepMethods(basedUponThisInterface));
-				if (getters != null) {
-					getterCache.put(basedUponThisInterface, getters);
 				}
-			}
+			}, deepMethods);
 			return getters;
 		}
 		
@@ -458,18 +562,18 @@ public class ReflectionTools {
 		 * @param getter
 		 * @return
 		 */
+	
 		public boolean invokableMemberPredicate(Method getter) { return true; }
 	}
 	
 	// Returns uniquely named methods belong to the given class and its ancestors.
-	public static Collection<Method> getDeepMethods(Class<?> clazz) {
+	private static Collection<Method> getDeepMethods(Class<?> clazz) {
 		return Filter.grepUnique(
 			new Unary<Method, String>() {
 				public String f(Method method) {
 					return method.getName();
 				}
-			},
-			Transform.flatMap(new Unary<Class<?>, Collection<Method>>() {
+			}, Transform.flatMap(new Unary<Class<?>, Collection<Method>>() {
 
 				public Collection<Method> f(Class<?> clazz) {
 					return Arrays.asList(clazz.getMethods());
@@ -477,49 +581,16 @@ public class ReflectionTools {
 			}, Transform.flatten(Arrays.asList((Class<?>[])new Class[] { clazz }), getAncestors(clazz))));
 	}
 
-	public static class AccessorGrepper<T> {
-		public Collection<Method> grepAccessors(Class<? extends T> basedUponThisInterface) {
-			return Filter.grep(new Predicate<Method>() {
-					public boolean f(Method method) {
-						try {
-							return ReflectionTools.doesImplementOrExtend(
-										method.getReturnType(),
-										AccessorFunction.class) &&
-								 invokableMemberPredicate(method);
-						} catch (Exception e) {
-							throw new RuntimeException(e);
-						}
-					}
-				},
-				getDeepMethods(basedUponThisInterface));
-		}
-		/**
-		 *  Override this to filter for specific methods
-		 * @param accessor
-		 * @return
-		 */
-		public boolean invokableMemberPredicate(Method accessor) { return true; }
-		
-	}
-
 	public static Class<?> getPropertyType(final Class<?> ofThisInterface, String propertyName) {
-		try {
-			return ofThisInterface.getMethod("get"+capitalize(propertyName), new Class[] {}).getReturnType();
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		checkInitialized(ofThisInterface);
+		return descriptors.get(ofThisInterface).getGetterOfProperty(propertyName).getReturnType();
 	}
-	public static Class<?> getCollectionItemType(final Class<?> clazz, final String propertyName) {	
-		
-		Class ofThisInterface = getOwnerOfMethod(clazz, propertyName);
 	
-		Type type;
-		try {
-			final Method getter = BeanUtils.getPropertyDescriptor(ofThisInterface, propertyName).getReadMethod();
-			type = getter.getGenericReturnType();
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+	public static Class<?> getCollectionItemType(final Class<?> clazz, final String propertyName) {	
+		checkInitialized(clazz);
+		Class ofThisInterface = descriptors.get(clazz).getOwnerOfMethod(propertyName);
+		final Method getter = descriptors.get(ofThisInterface).getGetterOfProperty(propertyName);
+		Type type = getter.getGenericReturnType();
 	
 		if (type instanceof ParameterizedType) {
 			Type typeArgument = Atom.getFirstOrThrow(((ParameterizedType)type).getActualTypeArguments());
@@ -539,12 +610,13 @@ public class ReflectionTools {
 	}
 	
 	public static Class getOwnerOfMethod(final Class<?> clazz, final String propertyName) {
+		checkInitialized(clazz);
 		// Java magically erases generic information when referencing a method from a subclass,
 		// extended interface, or implementation (naturally)
 		// Extract the first owning interface or superclass if it exists
-		
-		return getOwnerOfProperty(clazz, propertyName, new Class[] {});
+		return descriptors.get(clazz).getOwnerOfMethod(propertyName);
 	}
+	
 	public static Method getMethodOfOwner(Method method) {
 		Class owner = getOwnerOfMethod(method.getDeclaringClass(), method.getName(), method.getParameterTypes());
 		try {
@@ -553,6 +625,7 @@ public class ReflectionTools {
 			throw new RuntimeException(e);
 		}
 	}
+	
 	private static Class getOwnerOfMethod(final Class<?> clazz, final String methodName, final Class[] parameterTypes) {
 		final List<Class> classes = new ArrayList(getAncestors(clazz));
 		Class ofThisInterface;
@@ -571,38 +644,6 @@ public class ReflectionTools {
 		if (ofThisInterface == null)
 			ofThisInterface = clazz;
 		return ofThisInterface;
-	}
-	
-	private static Class getOwnerOfProperty(final Class<?> clazz, final String propertyName, final Class[] parameterTypes) {
-		StringBuilder buf = new StringBuilder();
-		if (parameterTypes != null) {
-			for (int i = 0; i < parameterTypes.length; i++) {
-				buf.append(parameterTypes[i].getCanonicalName());
-				buf.append(",");
-			}
-			buf.setLength(buf.length() > 0 ? buf.length()-1 : buf.length());
-		}
-		String key = clazz.getCanonicalName().concat(".").concat(propertyName).concat("(").concat(buf.toString()).concat(")");
-		Class<?> owner = ownerCache.get(key);
-		if (owner == null) {
-			final List<Class> classes = new ArrayList(getAncestors(clazz));
-			owner = Filter.grepSingleOrNull(new Predicate<Class>() {
-				public boolean f(Class c) {
-					try {
-						c.getDeclaredMethod(BeanUtils.getPropertyDescriptor(c, propertyName).getReadMethod().getName(), parameterTypes);
-						return true;
-					}
-					catch (Exception e) {
-						return false;
-					}
-				}
-			}, classes);
-			if (owner == null) {
-				owner = clazz;
-			}
-			ownerCache.put(key, owner);
-		}
-		return owner;
 	}
 	
 	private static Collection<Class<?>> getAncestors(Class<?> clazz) {
