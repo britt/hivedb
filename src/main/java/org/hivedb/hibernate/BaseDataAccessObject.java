@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.FlushMode;
@@ -20,7 +22,9 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.shards.util.Lists;
+import org.hivedb.DirectoryCorruptionException;
 import org.hivedb.Hive;
+import org.hivedb.HiveReadOnlyException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.annotations.AnnotationHelper;
 import org.hivedb.annotations.DataIndexDelegate;
@@ -43,6 +47,7 @@ import org.hivedb.util.functional.Unary;
 import org.hivedb.util.functional.Transform.IdentityFunction;
 
 public class BaseDataAccessObject implements DataAccessObject<Object, Serializable>{
+	private Log log = LogFactory.getLog(BaseDataAccessObject.class);
 	protected HiveSessionFactory factory;
 	protected EntityConfig config;
 	protected Class<?> clazz;
@@ -89,7 +94,16 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		try {
 			QueryCallback query = new QueryCallback(){
 				public Collection<Object> execute(Session session) {
-					return Lists.newArrayList(get(id,session));
+					Object fetched = get(id,session);
+					if(fetched == null && exists(id)){
+						try {
+							hive.directory().deleteResourceId(config.getResourceName(), id);
+						} catch (HiveReadOnlyException e) {
+							log.warn(String.format("%s with id %s exists in the directory but not on the data node.  Unable to cleanup record because Hive was read-only.", config.getResourceName(), id));
+						}
+						log.warn(String.format("%s with id %s exists in the directory but not on the data node.  Directory record removed.", config.getResourceName(), id));
+					}
+					return Lists.newArrayList(fetched);
 				}};
 			return Atom.getFirstOrThrow(queryInTransaction(query, getSession()));
 		} catch(RuntimeException e) {
@@ -102,8 +116,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	}
 	
 	private Object get(Serializable id, Session session) {
-		Object fetched = session.get(getRespresentedClass(), id);
-		return fetched;
+		return session.get(getRespresentedClass(), id);
 	}
 	
 	public Collection<Object> findByProperty(final String propertyName, final Object propertyValue) {
@@ -388,7 +401,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		// Compensates for Hibernate's inability to delete items orphaned by updates
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
-				deleteOrphanedCollectionItems(entities, session);
+//				deleteOrphanedCollectionItems(entities, session);
 				session.saveOrUpdate(getRespresentedClass().getName(),Atom.getFirstOrThrow(entities));
 			}};
 		doInTransaction(callback, session);
@@ -420,47 +433,47 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
-	private void deleteOrphanedCollectionItems(final Collection entities, final Session session) {
-		
-		final Map<Object, Object> entityToLoadedEntity = Transform.toMap(
-				new IdentityFunction<Object>(),
-				new Unary<Object,Object>() {
-					public Object f(Object entity) {
-						return get(config.getId(entity), session);
-					}
-				},
-				entities,
-				new Predicate<Map.Entry<Object,Object>>() {
-					 public boolean f(Entry<Object, Object> entry) {
-						return entry.getValue() != null;
-				}});
-		
-		Collection<Object> existingKeys = Transform.map(new Unary<Object, Object>() {
-			public Object f(Object entity) {
-				return config.getId(entity);
-			}
-		},
-		entityToLoadedEntity.keySet());
-		for (Object entity : entities ) {
-			if (!existingKeys.contains(config.getId(entity)))
-				continue;
-			Object loadedEntity = entityToLoadedEntity.get(entity);
-			for (EntityIndexConfig entityIndexConfig : Filter.grep(new Predicate<EntityIndexConfig>() {
-				public boolean f(EntityIndexConfig entityIndexConfig) {
-					return ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), entityIndexConfig.getPropertyName());						
-				}}, config.getEntityIndexConfigs())) {
-				Collection<Object> newIds = entityIndexConfig.getIndexValues(entity);
-				String indexItemIdProperty = entityIndexConfig.getInnerClassPropertyName();
-				for (Object item : (Collection<Object>)ReflectionTools.invokeGetter(loadedEntity, entityIndexConfig.getPropertyName())) {
-					Object itemId = ReflectionTools.invokeGetter(item, indexItemIdProperty);
-					if (!newIds.contains(itemId)) {
-						session.delete(item);
-					}
-				}
-			}
-		}
-	}
+//	@SuppressWarnings("unchecked")
+//	private void deleteOrphanedCollectionItems(final Collection entities, final Session session) {
+//		
+//		final Map<Object, Object> entityToLoadedEntity = Transform.toMap(
+//				new IdentityFunction<Object>(),
+//				new Unary<Object,Object>() {
+//					public Object f(Object entity) {
+//						return get(config.getId(entity), session);
+//					}
+//				},
+//				entities,
+//				new Predicate<Map.Entry<Object,Object>>() {
+//					 public boolean f(Entry<Object, Object> entry) {
+//						return entry.getValue() != null;
+//				}});
+//		
+//		Collection<Object> existingKeys = Transform.map(new Unary<Object, Object>() {
+//			public Object f(Object entity) {
+//				return config.getId(entity);
+//			}
+//		},
+//		entityToLoadedEntity.keySet());
+//		for (Object entity : entities ) {
+//			if (!existingKeys.contains(config.getId(entity)))
+//				continue;
+//			Object loadedEntity = entityToLoadedEntity.get(entity);
+//			for (EntityIndexConfig entityIndexConfig : Filter.grep(new Predicate<EntityIndexConfig>() {
+//				public boolean f(EntityIndexConfig entityIndexConfig) {
+//					return ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), entityIndexConfig.getPropertyName());						
+//				}}, config.getEntityIndexConfigs())) {
+//				Collection<Object> newIds = entityIndexConfig.getIndexValues(entity);
+//				String indexItemIdProperty = entityIndexConfig.getInnerClassPropertyName();
+//				for (Object item : (Collection<Object>)ReflectionTools.invokeGetter(loadedEntity, entityIndexConfig.getPropertyName())) {
+//					Object itemId = ReflectionTools.invokeGetter(item, indexItemIdProperty);
+//					if (!newIds.contains(itemId)) {
+//						session.delete(item);
+//					}
+//				}
+//			}
+//		}
+//	}
 	
 	protected Session getSession() {
 		return factory.openSession(factory.getDefaultInterceptor());
@@ -481,16 +494,9 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			tx = session.beginTransaction();
 			callback.execute(session);
 			tx.commit();
-		} catch (JDBCConnectionException ce) {
-			throw new RuntimeException(ce);
 		} catch( RuntimeException e ) {
 			if(tx != null)
-				try {
-					tx.rollback();
-				}
-				catch (Exception ex){
-					throw e;
-				}
+				tx.rollback();
 			throw e;
 		} finally {
 			session.close();
@@ -504,8 +510,6 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			Transaction tx = session.beginTransaction();
 			results = callback.execute(session);
 			tx.commit();
-		} catch (JDBCConnectionException ce) {
-			throw new RuntimeException(ce);
 		} finally {
 			session.close();
 		}

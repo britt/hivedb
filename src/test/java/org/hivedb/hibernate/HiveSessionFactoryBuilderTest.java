@@ -167,6 +167,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 		Hive hive = getHive();
 		assertFalse(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
 		assertFalse(hive.directory().doesResourceIdExist("Temperature", report.getTemperature()));		
+		assertTrue(factoryBuilder.getDefaultInterceptor().isTransient(report));
 	}
 	
 

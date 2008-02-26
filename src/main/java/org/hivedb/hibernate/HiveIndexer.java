@@ -11,6 +11,8 @@ import org.hivedb.annotations.IndexType;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.configuration.EntityIndexConfigDelegator;
+import org.hivedb.meta.AccessType;
+import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Collect;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Maps;
@@ -18,6 +20,8 @@ import org.hivedb.util.functional.Pair;
 import org.hivedb.util.functional.Predicate;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 
 public class HiveIndexer {
 	private Hive hive;
@@ -129,6 +133,7 @@ public class HiveIndexer {
 	public boolean exists(EntityConfig config, Object entity) {
 		return hive.directory().doesResourceIdExist(config.getResourceName(), config.getId(entity));
 	}
+	
 	public boolean idExists(EntityConfig config, Object id) {
 		return hive.directory().doesResourceIdExist(config.getResourceName(), id);
 	}

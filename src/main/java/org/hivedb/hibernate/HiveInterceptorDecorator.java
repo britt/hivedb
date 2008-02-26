@@ -26,6 +26,8 @@ import org.hivedb.util.functional.Unary;
 import org.springframework.beans.BeanUtils;
 
 public class HiveInterceptorDecorator extends InterceptorDecorator implements Interceptor {
+	private EntityHiveConfig hiveConfig;
+	private HiveIndexer indexer;
 	
 	@SuppressWarnings("unchecked")
 	@Override
@@ -62,10 +64,6 @@ public class HiveInterceptorDecorator extends InterceptorDecorator implements In
 			throw new CallbackException(e);
 		} 
 	}
-
-	private EntityHiveConfig hiveConfig;
-	private HiveIndexer indexer;
-	
 	public HiveInterceptorDecorator(EntityHiveConfig hiveConfig, Hive hive) {
 		this(EmptyInterceptor.INSTANCE, hiveConfig, hive);
 	}
@@ -141,10 +139,5 @@ public class HiveInterceptorDecorator extends InterceptorDecorator implements In
 		} catch (HiveReadOnlyException e) {
 			throw new CallbackException(e);
 		}
-	}
-
-	@Override
-	public Object getEntity(String entityName, Serializable id) throws CallbackException {
-		return super.getEntity(entityName, id);
 	}
 }

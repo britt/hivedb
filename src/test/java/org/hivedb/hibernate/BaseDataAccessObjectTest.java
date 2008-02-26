@@ -51,6 +51,19 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	}
 	
 	@Test
+	public void testGetMissingRecord() throws Exception {
+		DataAccessObject<WeatherReport, Integer> dao = (DataAccessObject<WeatherReport, Integer>)getDao(getGeneratedClass());
+		WeatherReport original = getInstance(WeatherReport.class);
+		HiveIndexer indexer = new HiveIndexer(getHive());
+		indexer.insert(getEntityHiveConfig().getEntityConfig(WeatherReport.class), original);
+		assertTrue(dao.exists(original.getReportId()));
+		WeatherReport report = dao.get(original.getReportId());
+		assertFalse(dao.exists(original.getReportId()));
+		assertEquals(null, report);
+//		assertEquals(ReflectionTools.getDifferingFields(original, report, WeatherReport.class).toString(), original.hashCode(), report.hashCode());
+	}
+	
+	@Test
 	public void testFindByProperty() throws Exception {
 		DataAccessObject<WeatherReport, Integer> dao = (DataAccessObject<WeatherReport, Integer>) getDao(getGeneratedClass());
 		WeatherReport report = new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
@@ -261,7 +274,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	@Test
 	public void testSaveAll() throws Exception {
 		Collection<WeatherReport> reports = new ArrayList<WeatherReport>();
-		for(int i=0; i<5; i++) {
+		for(int i=0; i<50; i++) {
 			WeatherReport report = new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
 			GeneratedInstanceInterceptor.setProperty(report, "reportId", i);
 			reports.add(report);
