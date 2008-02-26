@@ -1,5 +1,6 @@
 package org.hivedb.util;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
@@ -14,6 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.hivedb.HiveRuntimeException;
 import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
@@ -24,27 +26,27 @@ import org.hivedb.util.functional.Joiner.ConcatStrings;
 import org.springframework.beans.BeanUtils;
 
 public class ReflectionTools {
-	
+	public interface PropertySetterWrapper {
+		void set(Object instance, Object value);
+	}
 	public static final class Descriptor {
 		private final Class<?> clazz;
 		private final Collection<Method> deepMethods;
 		private final Collection<Method> declaredPublicMethods;
-		private final Map<Method, Method> accessors;
+		private final Map<Method, PropertySetterWrapper> accessors;
 		
 		private final Map<Method, String> propertyByGetter;
 		private final Map<String, Method> getterByProperty;
 		
 		private final Map<String, Class<?>> ownerByProperty;
 		
-		private final Map<Method, Map<Class<?>, Method>> settersByGetter;
+		private final Map<Method, Map<Class<?>, PropertySetterWrapper>> settersByGetter;
 		
-		private final Map<Method, String> propertyByAccessor;
+		private final Map<PropertySetterWrapper, String> propertyBySetter;
 		
 		private Method rawSetter;
 		
-		private interface PropertySetterWrapper {
-			void set(Object instance, Object value);
-		}
+		
 		
 		Descriptor(Class<?> clazz) {
 			this.clazz = clazz;
@@ -58,26 +60,32 @@ public class ReflectionTools {
 				}
 			}
 			
-			accessors = new HashMap<Method, Method>();
+			accessors = new HashMap<Method, PropertySetterWrapper>();
 			for (Method method : clazz.getMethods()) {
 				if (ReflectionTools.isGetter(method)) {
-					Method setter = BeanUtils.findPropertyForMethod(method).getWriteMethod();
-					if (setter != null)
-						accessors.put(method, setter);
-					else {
-						// Interface has no setter, create a wrapper setter
-						final String propertyName = BeanUtils.findPropertyForMethod(method).getName(); // bypass our caching method
-						Object propertySetterWrapper = new PropertySetterWrapper() {
-							public void set(Object instance, Object value) {
-								GeneratedInstanceInterceptor.setProperty(instance, propertyName, value);
-							}
-						};
-						try {
-							accessors.put(method, propertySetterWrapper.getClass().getMethod("set", new Class[] {Object.class, Object.class}));
-						} catch (Exception e) {
-							throw new RuntimeException(e);
+					final Method setter = BeanUtils.findPropertyForMethod(method).getWriteMethod();
+					// Interface has no setter, create a wrapper setter
+					final String propertyName = BeanUtils.findPropertyForMethod(method).getName(); // bypass our caching method
+					PropertySetterWrapper propertySetterWrapper = new PropertySetterWrapper() {
+						public void set(Object instance, Object value) {
+							if (setter != null)
+								try {
+									setter.invoke(instance, new Object[] {value});
+								} catch (Exception e) {
+									new RuntimeException(e);
+								}
+							else if (instance instanceof PropertySetter)
+									((PropertySetter)instance).set(propertyName, value);
+							else
+								throw new HiveRuntimeException(String.format("No way to inoke setter of class %s, property %s", instance.getClass(), propertyName));
 						}
+					};
+					try {
+						accessors.put(method, propertySetterWrapper);
+					} catch (Exception e) {
+						throw new RuntimeException(e);
 					}
+					
 				}
 			}
 			
@@ -90,34 +98,30 @@ public class ReflectionTools {
 			}
 			
 			ownerByProperty = new HashMap<String, Class<?>>();
-			for (String property : getterByProperty.keySet()) {
-				Class<?> owner = ReflectionTools.getOwnerOfMethod(clazz, property, new Class[] {});
+			for (Method getter : accessors.keySet()) {
+				String property = getPropertyName(getter);
+				Class<?> owner = ReflectionTools.getOwnerOfMethod(clazz, getter.getName(), new Class[] {});
 				ownerByProperty.put(property, owner);
 			}
 			
-			settersByGetter = new HashMap<Method, Map<Class<?>, Method>>();
+			settersByGetter = new HashMap<Method, Map<Class<?>, PropertySetterWrapper>>();
 			for (Method getter : accessors.keySet()) {
-				Map<Class<?>, Method> setters = new HashMap<Class<?>, Method>();
+				Map<Class<?>, PropertySetterWrapper> setters = new HashMap<Class<?>, PropertySetterWrapper>();
 				setters.put(getter.getReturnType(), accessors.get(getter));
 				for (Method method : clazz.getMethods()) {
-					if (method.getName().equals("set" + getter.getName().substring(3))) {
-						if (method != accessors.get(getter)) {
-							Class<?>[] parameterTypes = method.getParameterTypes();
-							if (parameterTypes.length == 1 && !parameterTypes[0].equals(getter.getReturnType())) {
-								setters.put(parameterTypes[0], method);
-							}
-						}
+					if (method.getName().equals("get" + getter.getName().substring(3))) {
+						setters.put(method.getReturnType(), accessors.get(getter));
 					} 
 				}
 				settersByGetter.put(getter, setters);
 			}
 			
-			propertyByAccessor = new HashMap<Method, String>();
+			propertyBySetter = new HashMap<PropertySetterWrapper, String>();
 			for (Method getter : accessors.keySet()) {
 				String property = BeanUtils.findPropertyForMethod(getter).getName();
-				propertyByAccessor.put(getter, property);
-				for (Method setter : settersByGetter.get(getter).values()) {
-					propertyByAccessor.put(setter, property);
+				propertyByGetter.put(getter, property);
+				for (PropertySetterWrapper setterWrapper : settersByGetter.get(getter).values()) {
+					propertyBySetter.put(setterWrapper, property);
 				}
 			}
 			
@@ -149,12 +153,12 @@ public class ReflectionTools {
 			return accessors.get(getter) != null;
 		}
 		
-		public Method getCorrespondingSetter(String getterName, Class<?> argument) {
+		public PropertySetterWrapper getCorrespondingSetter(String getterName, Class<?> argument) {
 			return getSetterOfProperty(toProperty(getterName), argument);
 
 		}
 		
-		public Method getCorrespondingSetter(Method getter) {
+		public PropertySetterWrapper getCorrespondingSetter(Method getter) {
 			return accessors.get(getter);
 		}
 		
@@ -170,22 +174,12 @@ public class ReflectionTools {
 			return getterByProperty.get(property) != null;
 		}
 		
-		public Method getSetterOfProperty(String property) {
+		public PropertySetterWrapper getSetterOfProperty(String property) {
 			return accessors.get(getterByProperty.get(property));
 		}
 		
-		public Method getSetterOfProperty(String property, Class<?> argument) {
-			Method setter = null;
-			Method getter = getterByProperty.get(property);
-			if (getter != null) {
-				setter = settersByGetter.get(getter).get(argument);
-			}
-			if (setter == null) {
-				if (accessors.get(getter).getParameterTypes()[0].isAssignableFrom(argument)) {
-					setter = accessors.get(getter);
-				}
-;			}
-			return setter;
+		public PropertySetterWrapper getSetterOfProperty(String property, Class<?> argument) {
+			return accessors.get(getterByProperty.get(property));
 		}
 		
 		public Collection<Method> getDeclaredPublicMethods() {
@@ -267,13 +261,13 @@ public class ReflectionTools {
 		return descriptors.get(clazz).doesSetterExist(getter);
 	}
 	
-	public static Method getCorrespondingSetter(Object instance, String getterName, Class argumentType) {
+	public static PropertySetterWrapper getCorrespondingSetter(Object instance, String getterName, Class argumentType) {
 		Class<?> clazz = instance.getClass();
 		checkInitialized(clazz);
 		return descriptors.get(clazz).getCorrespondingSetter(getterName, argumentType);
 	}
 	
-	public static Method getCorrespondingSetter(Method getter) {
+	public static PropertySetterWrapper getCorrespondingSetter(Method getter) {
 		Class<?> clazz = getter.getDeclaringClass();
 		checkInitialized(clazz);
 		return descriptors.get(clazz).getCorrespondingSetter(getter);
@@ -295,7 +289,7 @@ public class ReflectionTools {
 		return descriptors.get(ofInterface).hasGetterOfProperty(property);
 	}
 	
-	public static Method getSetterOfProperty(Class ofInterface, String property) {
+	public static PropertySetterWrapper getSetterOfProperty(Class ofInterface, String property) {
 		checkInitialized(ofInterface);
 		return descriptors.get(ofInterface).getSetterOfProperty(property);
 	}
@@ -439,20 +433,15 @@ public class ReflectionTools {
 		checkInitialized(clazz);
 		
 		// try to match on the value's type
-		Method setter = descriptors.get(clazz).getSetterOfProperty(propertyName, value.getClass());
-		if (setter != null) {
+		PropertySetterWrapper setterWrapper = descriptors.get(clazz).getSetterOfProperty(propertyName, value.getClass());
+		if (setterWrapper != null) {
 			try {
-				setter.invoke(instance, new Object[] {value});
+				// Invoke our SetterWrapper
+				setterWrapper.set(instance, value);
 				return;
 			} catch (Exception ex) {
+				throw new RuntimeException("Exception calling method " + makeSetterName(propertyName) + " with a value of type " + value.getClass(), ex);
 			}
-    	}
-		// handle our CGLib classes that don't have a setter interface
-	    // TODO poor solution
-	    try {
-			descriptors.get(clazz).getRawSetter().invoke(instance, new Object[] {propertyName, value});
-		} catch (Exception ex) {
-			throw new RuntimeException("Exception calling method " + makeSetterName(propertyName) + " with a value of type " + value.getClass(), ex);
 		}
     }
 	
