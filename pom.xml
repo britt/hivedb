@@ -10,10 +10,6 @@
 	<description>HiveDB is an open source framework for partitioning MySQL systems.</description>
 	<developers>
 		<developer>
-			<id>kkelm</id>
-			<name>Kevin Kelm</name>
-		</developer>
-		<developer>
 			<id>alikuski</id>
 			<name>Andy Likuski</name>
 			<email>alikuski@cafepress.com</email>
@@ -317,10 +313,6 @@
 					<suiteXmlFiles>
 						<suiteXmlFile>testng.xml</suiteXmlFile>
 					</suiteXmlFiles>
-					<!-- includes>
-						<include>**/Test*.class</include>
-						<include>**/*Test.class</include>
-					</includes -->
 					<excludedGroups>mysql</excludedGroups>
 					<testFailureIgnore>true</testFailureIgnore>
 				</configuration>
