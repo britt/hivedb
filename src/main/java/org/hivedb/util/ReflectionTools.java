@@ -42,6 +42,10 @@ public class ReflectionTools {
 		
 		private Method rawSetter;
 		
+		private interface PropertySetterWrapper {
+			void set(Object instance, Object value);
+		}
+		
 		Descriptor(Class<?> clazz) {
 			this.clazz = clazz;
 			
@@ -58,7 +62,22 @@ public class ReflectionTools {
 			for (Method method : clazz.getMethods()) {
 				if (ReflectionTools.isGetter(method)) {
 					Method setter = BeanUtils.findPropertyForMethod(method).getWriteMethod();
-					accessors.put(method, setter);
+					if (setter != null)
+						accessors.put(method, setter);
+					else {
+						// Interface has no setter, create a wrapper setter
+						final String propertyName = BeanUtils.findPropertyForMethod(method).getName(); // bypass our caching method
+						Object propertySetterWrapper = new PropertySetterWrapper() {
+							public void set(Object instance, Object value) {
+								GeneratedInstanceInterceptor.setProperty(instance, propertyName, value);
+							}
+						};
+						try {
+							accessors.put(method, propertySetterWrapper.getClass().getMethod("set", new Class[] {Object.class, Object.class}));
+						} catch (Exception e) {
+							throw new RuntimeException(e);
+						}
+					}
 				}
 			}
 			
