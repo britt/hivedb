@@ -95,17 +95,19 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			QueryCallback query = new QueryCallback(){
 				public Collection<Object> execute(Session session) {
 					Object fetched = get(id,session);
-					if(fetched == null && exists(id)){
-						try {
-							hive.directory().deleteResourceId(config.getResourceName(), id);
-						} catch (HiveReadOnlyException e) {
-							log.warn(String.format("%s with id %s exists in the directory but not on the data node.  Unable to cleanup record because Hive was read-only.", config.getResourceName(), id));
-						}
-						log.warn(String.format("%s with id %s exists in the directory but not on the data node.  Directory record removed.", config.getResourceName(), id));
-					}
 					return Lists.newArrayList(fetched);
 				}};
-			return Atom.getFirstOrThrow(queryInTransaction(query, getSession()));
+			
+			Object fetched = Atom.getFirstOrThrow(queryInTransaction(query, getSession()));
+			if(fetched == null && exists(id)){
+				try {
+					hive.directory().deleteResourceId(config.getResourceName(), id);
+				} catch (HiveReadOnlyException e) {
+					log.warn(String.format("%s with id %s exists in the directory but not on the data node.  Unable to cleanup record because Hive was read-only.", config.getResourceName(), id));
+				}
+				log.warn(String.format("%s with id %s exists in the directory but not on the data node.  Directory record removed.", config.getResourceName(), id));
+			}
+			return fetched;
 		} catch(RuntimeException e) {
 			//This save us a directory hit for all cases except when requesting a non-existent id.
 			if(!exists(id))
