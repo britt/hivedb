@@ -432,15 +432,16 @@ public class ReflectionTools {
 		Class<?> clazz = instance.getClass();
 		checkInitialized(clazz);
 		
-		// try to match on the value's type
-		PropertySetterWrapper setterWrapper = descriptors.get(clazz).getSetterOfProperty(propertyName, value.getClass());
+		// try to match on the value's type - for now we only have standard accessors (no need to match value Class)
+		PropertySetterWrapper setterWrapper = descriptors.get(clazz).getSetterOfProperty(propertyName);
+		// PropertySetterWrapper setterWrapper = descriptors.get(clazz).getSetterOfProperty(propertyName, value.getClass()); causes NPE if value == null
 		if (setterWrapper != null) {
 			try {
 				// Invoke our SetterWrapper
 				setterWrapper.set(instance, value);
 				return;
 			} catch (Exception ex) {
-				throw new RuntimeException("Exception calling method " + makeSetterName(propertyName) + " with a value of type " + value.getClass(), ex);
+				throw new RuntimeException("Exception calling method " + makeSetterName(propertyName) + " with a value of type " + (value.getClass() == null ? "null" : value.getClass().getName()), ex);
 			}
 		}
     }
