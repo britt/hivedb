@@ -20,6 +20,6 @@
         <property name="dbcp.ps.maxIdle">0</property>
         <property name="dbcp.ps.maxWait">-1</property>
         <property name="dbcp.ps.whenExhaustedAction">2</property>
-	 <!--   <property name="hibernate.show_sql">true</property> -->
+	    <!-- property name="hibernate.show_sql">true</property -->
     </session-factory>
 </hibernate-configuration>

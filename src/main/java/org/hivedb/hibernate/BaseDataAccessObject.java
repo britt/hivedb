@@ -14,6 +14,7 @@ import org.hibernate.Criteria;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
+import org.hibernate.LockMode;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -385,41 +386,77 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		else
 			criteria.add( Restrictions.between(propertyName, minValue, maxValue));
 	}
-
-	public Object save(final Object entity) {
-		return save(entity, getSession());
-	}
 	
-	public Object save(final Object entity, Session session) {
+	public Object save(final Object entity) {
 		final Collection<Object> entities = populateDataIndexDelegates(Collections.singletonList(entity));
 		final Object populatedEntity = Atom.getFirstOrThrow(entities);
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
-				try {
-					session.saveOrUpdate(getRespresentedClass().getName(),populatedEntity);
-				} catch(org.hibernate.exception.ConstraintViolationException dupe) {
-					if(!exists(config.getId(populatedEntity))) {
-						session.delete(populatedEntity);
-						session.saveOrUpdate(getRespresentedClass().getName(),populatedEntity);
-					}
-				}
+				session.saveOrUpdate(getRespresentedClass().getName(),entity);
 			}};
-		doInTransaction(callback, session);
+			
+		SessionCallback cleanupCallback = new SessionCallback(){
+			public void execute(Session session) {
+				session.refresh(entity);
+				session.lock(getRespresentedClass().getName(),entity, LockMode.UPGRADE);
+				session.update(getRespresentedClass().getName(),entity);
+				log.warn(String.format("%s with id %s exists in the data node but not on the directory. Data node record was updated and re-indexed.", config.getResourceName(), config.getId(entity)));
+			}};
+			
+		doSave(populatedEntity, callback, cleanupCallback);
 		return entity;
+	}
+	
+	private void doSave(final Object entity, SessionCallback callback, SessionCallback cleanupCallback) {		
+		try {
+			doInTransaction(callback, getSession());
+		} catch(org.hibernate.TransactionException dupe) {
+			if(dupe.getCause().getClass().equals(org.hibernate.exception.ConstraintViolationException.class)
+				&& !exists(config.getId(entity))) {
+				doInTransaction(cleanupCallback, factory.openSession(config.getPrimaryIndexKey(entity)));
+			} else {
+				log.error(String.format("Detected an integrity constraint violation on the data node but %s with id %s exists in the directory.", config.getResourceName(), config.getId(entity)));
+				throw dupe;
+			}
+		}
+	}
+	
+	private void doSaveAll(final Collection<Object> entities, SessionCallback callback, SessionCallback cleanupCallback) {		
+		try {
+			doInTransaction(callback, getSession());
+		} catch(org.hibernate.TransactionException dupe) {
+			if(dupe.getCause().getClass().equals(org.hibernate.exception.ConstraintViolationException.class)) {
+				doInTransaction(cleanupCallback, factory.openSession(config.getPrimaryIndexKey(Atom.getFirstOrThrow(entities))));
+			} else {
+				log.error(String.format("Detected an integrity constraint violation on the data node while doing a saveAll with entities of class %s.", config.getResourceName()));
+				throw dupe;
+			}
+		}
 	}
 
 	public Collection<Object> saveAll(final Collection<Object> collection) {
 		final Collection<Object> entities = populateDataIndexDelegates(collection);
 		validateNonNull(collection);
-		// Compensates for Hibernate's inability to delete items orphaned by updates
-		//deleteOrphanedCollectionItems(entities);
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
 				for(Object entity : entities) {
-					session.saveOrUpdate(getRespresentedClass().getName(), entity);
+					session.saveOrUpdate(getRespresentedClass().getName(),entity);
 				}
 			}};
-		doInTransaction(callback, getSession());
+		SessionCallback cleanupCallback = new SessionCallback(){
+			public void execute(Session session) {
+				for(Object entity : entities) {
+					if(!exists(config.getId(entity))){
+						session.refresh(entity);
+						session.lock(getRespresentedClass().getName(),entity, LockMode.UPGRADE);
+						session.update(getRespresentedClass().getName(),entity);
+						log.warn(String.format("%s with id %s exists in the data node but not on the directory. Data node record was updated and re-indexed.", config.getResourceName(), config.getId(entity)));
+					} else {
+						session.saveOrUpdate(getRespresentedClass().getName(), entity);
+					}
+				}
+			}};
+		doSaveAll(entities, callback, cleanupCallback);
 		return collection;
 	}
 
@@ -432,48 +469,6 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			throw new HiveRuntimeException(String.format("Encountered null items in collection: %s", ids));
 		}
 	}
-	
-//	@SuppressWarnings("unchecked")
-//	private void deleteOrphanedCollectionItems(final Collection entities, final Session session) {
-//		
-//		final Map<Object, Object> entityToLoadedEntity = Transform.toMap(
-//				new IdentityFunction<Object>(),
-//				new Unary<Object,Object>() {
-//					public Object f(Object entity) {
-//						return get(config.getId(entity), session);
-//					}
-//				},
-//				entities,
-//				new Predicate<Map.Entry<Object,Object>>() {
-//					 public boolean f(Entry<Object, Object> entry) {
-//						return entry.getValue() != null;
-//				}});
-//		
-//		Collection<Object> existingKeys = Transform.map(new Unary<Object, Object>() {
-//			public Object f(Object entity) {
-//				return config.getId(entity);
-//			}
-//		},
-//		entityToLoadedEntity.keySet());
-//		for (Object entity : entities ) {
-//			if (!existingKeys.contains(config.getId(entity)))
-//				continue;
-//			Object loadedEntity = entityToLoadedEntity.get(entity);
-//			for (EntityIndexConfig entityIndexConfig : Filter.grep(new Predicate<EntityIndexConfig>() {
-//				public boolean f(EntityIndexConfig entityIndexConfig) {
-//					return ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), entityIndexConfig.getPropertyName());						
-//				}}, config.getEntityIndexConfigs())) {
-//				Collection<Object> newIds = entityIndexConfig.getIndexValues(entity);
-//				String indexItemIdProperty = entityIndexConfig.getInnerClassPropertyName();
-//				for (Object item : (Collection<Object>)ReflectionTools.invokeGetter(loadedEntity, entityIndexConfig.getPropertyName())) {
-//					Object itemId = ReflectionTools.invokeGetter(item, indexItemIdProperty);
-//					if (!newIds.contains(itemId)) {
-//						session.delete(item);
-//					}
-//				}
-//			}
-//		}
-//	}
 	
 	protected Session getSession() {
 		return factory.openSession(factory.getDefaultInterceptor());
@@ -489,6 +484,10 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	public void setInterceptor(Interceptor i) {this.defaultInterceptor = i;}
 	
 	public static void doInTransaction(SessionCallback callback, Session session) {
+		doInTransaction(callback, session, true);
+	}
+	
+	public static void doInTransaction(SessionCallback callback, Session session, Boolean closeSession) {
 		Transaction tx = null;
 		try {
 			tx = session.beginTransaction();
@@ -499,7 +498,8 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 				tx.rollback();
 			throw e;
 		} finally {
-			session.close();
+			if(closeSession)
+				session.close();
 		}
 	}
 	
