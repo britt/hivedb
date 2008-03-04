@@ -10,7 +10,7 @@
         <property name="dbcp.maxIdle">2</property>
         <property name="dbcp.maxWait">500</property>
         <property name="dbcp.whenExhaustedAction">1</property>
-        <property name="dbcp.testOnBorrow">false</property>
+        <property name="dbcp.testOnBorrow">true</property>
         <property name="dbcp.testOnReturn">true</property>
         <property name="dbcp.validationQuery">
             select count(1) from information_schema.tables limit 1;

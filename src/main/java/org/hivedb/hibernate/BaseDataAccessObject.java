@@ -387,24 +387,22 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	}
 
 	public Object save(final Object entity) {
-		final Collection<Object> entities = populateDataIndexDelegates(Collections.singletonList(entity));
-		// Compensates for Hibernate's inability to delete items orphaned by updates
-		//deleteOrphanedCollectionItems(entities);
-		SessionCallback callback = new SessionCallback(){
-			public void execute(Session session) {
-				session.saveOrUpdate(getRespresentedClass().getName(),Atom.getFirstOrThrow(entities));
-			}};
-		doInTransaction(callback, getSession());
-		return entity;
+		return save(entity, getSession());
 	}
 	
 	public Object save(final Object entity, Session session) {
 		final Collection<Object> entities = populateDataIndexDelegates(Collections.singletonList(entity));
-		// Compensates for Hibernate's inability to delete items orphaned by updates
+		final Object populatedEntity = Atom.getFirstOrThrow(entities);
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
-//				deleteOrphanedCollectionItems(entities, session);
-				session.saveOrUpdate(getRespresentedClass().getName(),Atom.getFirstOrThrow(entities));
+				try {
+					session.saveOrUpdate(getRespresentedClass().getName(),populatedEntity);
+				} catch(org.hibernate.exception.ConstraintViolationException dupe) {
+					if(!exists(config.getId(populatedEntity))) {
+						session.delete(populatedEntity);
+						session.saveOrUpdate(getRespresentedClass().getName(),populatedEntity);
+					}
+				}
 			}};
 		doInTransaction(callback, session);
 		return entity;
