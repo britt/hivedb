@@ -80,8 +80,6 @@ public class HiveIndexerTest extends H2HiveTestCase {
 		assertTrue(hive.directory().getResourceIdsOfPrimaryIndexKey("Temperature", report.getContinent()).contains(report.getTemperature()));
 		Collection<Object> asiatics = hive.directory().getResourceIdsOfPrimaryIndexKey("WeatherReport", "Asia");
 		Collection<Object> europeans = hive.directory().getResourceIdsOfPrimaryIndexKey("WeatherReport", "Europe");
-		//System.out.println(String.format("There are %s asiatics: %s", asiatics.size(), asiatics));
-		//System.out.println(String.format("There are %s europeans: %s", europeans.size(), europeans));
 		
 		assertEquals("Europe", hive.directory().getPrimaryIndexKeyOfResourceId("WeatherReport", report.getReportId()));	
 	}

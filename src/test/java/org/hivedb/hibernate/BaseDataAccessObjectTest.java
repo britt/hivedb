@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.commons.logging.LogFactory;
 import org.hivedb.Hive;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.util.GenerateInstance;
@@ -297,9 +298,47 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		Hive hive = getHive();
 		hive.directory().deleteResourceId(config.getEntityConfig(getGeneratedClass()).getResourceName(), report.getReportId());
 		ReflectionTools.invokeSetter(report, "regionCode", report.getRegionCode()+1);
+		assertFalse(dao.exists(report.getReportId()));
 		dao.save(report);
 		assertEquals(report, dao.get(report.getReportId()));
 	}
+	
+	@Test
+	public void testHealDataNodeOnlyRecordSaveAll() throws Exception {
+		Collection<WeatherReport> reports = new ArrayList<WeatherReport>();
+		for(int i=0; i<5; i++) {
+			WeatherReport report = new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
+			GeneratedInstanceInterceptor.setProperty(report, "reportId", i);
+			reports.add(report);
+		}
+		
+		DataAccessObject<WeatherReport,Integer> dao = (DataAccessObject<WeatherReport, Integer>) getDao(getGeneratedClass());
+		dao.saveAll(reports);
+		for(WeatherReport report : reports)
+			assertEquals(report, dao.get(report.getReportId()));
+		
+		WeatherReport orphan = Atom.getFirstOrThrow(reports);
+		
+		Hive hive = getHive();
+		hive.directory().deleteResourceId(config.getEntityConfig(getGeneratedClass()).getResourceName(), orphan.getReportId());
+		for(WeatherReport report : reports)
+			ReflectionTools.invokeSetter(report, "regionCode", report.getRegionCode()+1);
+		assertFalse(dao.exists(orphan.getReportId()));
+		dao.saveAll(reports);
+		
+		for(WeatherReport report : reports)
+			assertEquals(report, dao.get(report.getReportId()));
+		
+		HiveIndexer indexer = new HiveIndexer(getHive());
+		
+		dao.delete(orphan.getReportId());
+		indexer.insert(config.getEntityConfig(dao.getRespresentedClass()), orphan);
+		
+		dao.saveAll(reports);
+		for(WeatherReport report : reports)
+			assertEquals(report, dao.get(report.getReportId()));
+	}
+	
 	
 	@Test
 	public void testUpdateAll() throws Exception {

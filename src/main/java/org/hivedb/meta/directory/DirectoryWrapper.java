@@ -144,11 +144,11 @@ public class DirectoryWrapper implements DirectoryFacade {
 	public void insertResourceId(String resource, Object id, Object primaryIndexKey) throws HiveReadOnlyException {
 		if (getResource(resource).isPartitioningResource()) {
 			insertPrimaryIndexKey(primaryIndexKey);
-			return;
+		} else {
+			Collection<KeySemaphore> semaphores = directory.getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey);
+			Preconditions.isWritable(semaphores, hive);
+			directory.insertResourceId(getResource(resource), id, primaryIndexKey);
 		}
-		Collection<KeySemaphore> semaphores = directory.getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey);
-		Preconditions.isWritable(semaphores, hive);
-		directory.insertResourceId(getResource(resource), id, primaryIndexKey);
 	}
 
 	public void insertSecondaryIndexKey(String resource, String secondaryIndex, Object secondaryIndexKey, Object resourceId) throws HiveReadOnlyException {

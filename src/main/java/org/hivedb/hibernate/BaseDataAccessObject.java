@@ -425,7 +425,8 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		try {
 			doInTransaction(callback, getSession());
 		} catch(org.hibernate.TransactionException dupe) {
-			if(dupe.getCause().getClass().equals(org.hibernate.exception.ConstraintViolationException.class)) {
+			if(dupe.getCause().getClass().equals(org.hibernate.exception.ConstraintViolationException.class)
+				|| dupe.getCause().getClass().equals(org.hibernate.StaleObjectStateException.class)) {
 				doInTransaction(cleanupCallback, factory.openSession(config.getPrimaryIndexKey(Atom.getFirstOrThrow(entities))));
 			} else {
 				log.error(String.format("Detected an integrity constraint violation on the data node while doing a saveAll with entities of class %s.", config.getResourceName()));
@@ -436,7 +437,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 
 	public Collection<Object> saveAll(final Collection<Object> collection) {
 		final Collection<Object> entities = populateDataIndexDelegates(collection);
-		validateNonNull(collection);
+		validateNonNull(entities);
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
 				for(Object entity : entities) {
@@ -446,18 +447,38 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		SessionCallback cleanupCallback = new SessionCallback(){
 			public void execute(Session session) {
 				for(Object entity : entities) {
-					if(!exists(config.getId(entity))){
+					try {
 						session.refresh(entity);
-						session.lock(getRespresentedClass().getName(),entity, LockMode.UPGRADE);
-						session.update(getRespresentedClass().getName(),entity);
-						log.warn(String.format("%s with id %s exists in the data node but not on the directory. Data node record was updated and re-indexed.", config.getResourceName(), config.getId(entity)));
+					} catch(RuntimeException e) {
+						//Damned Hibernate
+					}
+					if(!exists(config.getId(entity))){
+						if(existsInSession(session, config.getId(entity))){
+							session.lock(getRespresentedClass().getName(),entity, LockMode.UPGRADE);
+							session.update(getRespresentedClass().getName(),entity);
+							log.warn(String.format("%s with id %s exists in the data node but not on the directory. Data node record was updated and re-indexed.", config.getResourceName(), config.getId(entity)));
+						} else {
+							session.saveOrUpdate(getRespresentedClass().getName(), entity);
+						}
 					} else {
+						if(!existsInSession(session, config.getId(entity))){
+							try {
+								getHive().directory().deleteResourceId(config.getResourceName(), config.getId(entity));
+							} catch (HiveReadOnlyException e) {
+								log.warn(String.format("%s with id %s exists in the directory but not on the data node.  Unable to cleanup record because Hive was read-only.", config.getResourceName(), config.getId(entity)));
+							}
+							log.warn(String.format("%s with id %s exists in the directory but not on the data node.  Directory record removed.", config.getResourceName(), config.getId(entity)));					
+						}
 						session.saveOrUpdate(getRespresentedClass().getName(), entity);
 					}
 				}
 			}};
 		doSaveAll(entities, callback, cleanupCallback);
 		return collection;
+	}
+	
+	private Boolean existsInSession(Session session, Serializable id) {
+		return null != session.get(getRespresentedClass(), id);
 	}
 
 	private void validateNonNull(final Collection<Object> collection) {
@@ -484,10 +505,6 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	public void setInterceptor(Interceptor i) {this.defaultInterceptor = i;}
 	
 	public static void doInTransaction(SessionCallback callback, Session session) {
-		doInTransaction(callback, session, true);
-	}
-	
-	public static void doInTransaction(SessionCallback callback, Session session, Boolean closeSession) {
 		Transaction tx = null;
 		try {
 			tx = session.beginTransaction();
@@ -498,8 +515,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 				tx.rollback();
 			throw e;
 		} finally {
-			if(closeSession)
-				session.close();
+			session.close();
 		}
 	}
 	
