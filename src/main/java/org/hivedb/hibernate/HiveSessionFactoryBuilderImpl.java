@@ -14,11 +14,13 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLInnoDBDialect;
+import org.hibernate.shards.Shard;
 import org.hibernate.shards.ShardId;
 import org.hibernate.shards.ShardedConfiguration;
 import org.hibernate.shards.cfg.ConfigurationToShardConfigurationAdapter;
 import org.hibernate.shards.cfg.ShardConfiguration;
 import org.hibernate.shards.engine.ShardedSessionFactoryImplementor;
+import org.hibernate.shards.session.ShardedSessionImpl;
 import org.hibernate.shards.strategy.ShardStrategy;
 import org.hibernate.shards.strategy.ShardStrategyFactory;
 import org.hibernate.shards.strategy.ShardStrategyImpl;
@@ -175,21 +177,40 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 		map.put(HiveDbDialect.MySql, MySQLInnoDBDialect.class);
 		return map;
 	}
-
+		
+	// ShardedSessionImpl
+	
+	public Session openAllShardsSession() {
+		return openAllShardsSession(getDefaultInterceptor());
+	}
+	
 	public Session openSession() {
-		return factory.openSession(getDefaultInterceptor());
+		return openAllShardsSession();
 	}
 
 	public Session openSession(Interceptor interceptor) {
-		return factory.openSession(interceptor);
+		return openAllShardsSession(interceptor);
 	}
-
+	
+	private Session openAllShardsSession(Interceptor interceptor) {
+		return addOpenSessionEvents(factory.openSession(interceptor));
+	}
+	
+	private Session addOpenSessionEvents(Session session) {
+		for (Shard shard : ((ShardedSessionImpl) session).getShards()) {
+			shard.addOpenSessionEvent(new OpenSessionEventImpl());
+		}
+		return session;
+	}
+	
+	// SessionImpl
+	
 	public Session openSession(Object primaryIndexKey) {
 		return openSession(
 				hive.directory().getNodeIdsOfPrimaryIndexKey(primaryIndexKey), 
 				getDefaultInterceptor());
 	}
-
+	
 	public Session openSession(Object primaryIndexKey, Interceptor interceptor) {
 		return openSession(
 				hive.directory().getNodeIdsOfPrimaryIndexKey(primaryIndexKey), 
@@ -223,15 +244,14 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 				interceptor);
 	}
 	
-	public Session openAllShardsSession() {
-		return factory.openSession(getDefaultInterceptor());
-	}
-	
 	private Session openSession(Collection<Integer> nodeIds, Interceptor interceptor) {
-		if(nodeIds.size() == 1)
-			return nodeSessionFactories.get(Atom.getFirstOrThrow(nodeIds)).openSession(interceptor);
-		else
+		if(nodeIds.size() == 1) {
+			Session session = nodeSessionFactories.get(Atom.getFirstOrThrow(nodeIds)).openSession(interceptor);
+			OpenSessionEventImpl.setNode(session);
+			return session;
+		} else {
 			throw new UnsupportedOperationException("This operation is not yet implemented " + nodeIds.size());
+		}
 	}
 	
 	public Interceptor getDefaultInterceptor() {

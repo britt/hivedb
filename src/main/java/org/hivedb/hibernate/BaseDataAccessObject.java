@@ -2,11 +2,14 @@ package org.hivedb.hibernate;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Logger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -22,6 +25,7 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.exception.JDBCConnectionException;
+import org.hibernate.shards.session.ShardedSessionImpl;
 import org.hibernate.shards.util.Lists;
 import org.hivedb.DirectoryCorruptionException;
 import org.hivedb.Hive;
@@ -511,6 +515,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			callback.execute(session);
 			tx.commit();
 		} catch( RuntimeException e ) {
+			LogFactory.getLog(BaseDataAccessObject.class).debug("doInTransaction: Error on data node " + OpenSessionEventImpl.getNode(), e);
 			if(tx != null)
 				tx.rollback();
 			throw e;
@@ -526,6 +531,9 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			Transaction tx = session.beginTransaction();
 			results = callback.execute(session);
 			tx.commit();
+		} catch( RuntimeException e ) {
+			LogFactory.getLog(BaseDataAccessObject.class).debug("queryInTransaction: Error on data node " + OpenSessionEventImpl.getNode(), e);
+			throw e;
 		} finally {
 			session.close();
 		}
