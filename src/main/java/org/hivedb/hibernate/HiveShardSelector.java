@@ -5,7 +5,7 @@ import java.util.Collection;
 import org.hibernate.shards.ShardId;
 import org.hibernate.shards.strategy.selection.ShardSelectionStrategy;
 import org.hivedb.Hive;
-import org.hivedb.HiveReadOnlyException;
+import org.hivedb.HiveLockableException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
@@ -29,7 +29,7 @@ public class HiveShardSelector implements ShardSelectionStrategy {
 		if(!hive.directory().doesPrimaryIndexKeyExist(config.getPrimaryIndexKey(entity)))
 			try {
 				hive.directory().insertPrimaryIndexKey(config.getPrimaryIndexKey(entity));
-			} catch (HiveReadOnlyException e) {
+			} catch (HiveLockableException e) {
 				throw new HiveRuntimeException(e.getMessage(), e);
 			}
 		

@@ -24,12 +24,10 @@ import org.hibernate.Transaction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.shards.session.ShardedSessionImpl;
 import org.hibernate.shards.util.Lists;
-import org.hivedb.DirectoryCorruptionException;
 import org.hivedb.Hive;
-import org.hivedb.HiveReadOnlyException;
+import org.hivedb.HiveLockableException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.annotations.AnnotationHelper;
 import org.hivedb.annotations.DataIndexDelegate;
@@ -39,6 +37,7 @@ import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.configuration.EntityIndexConfigDelegator;
 import org.hivedb.configuration.EntityIndexConfigImpl;
 import org.hivedb.util.GenerateInstance;
+import org.hivedb.util.GeneratedClassFactory;
 import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.PrimitiveUtils;
 import org.hivedb.util.ReflectionTools;
@@ -46,10 +45,10 @@ import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Joiner;
+import org.hivedb.util.functional.Pair;
 import org.hivedb.util.functional.Predicate;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
-import org.hivedb.util.functional.Transform.IdentityFunction;
 
 public class BaseDataAccessObject implements DataAccessObject<Object, Serializable>{
 	private Log log = LogFactory.getLog(BaseDataAccessObject.class);
@@ -100,6 +99,14 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			QueryCallback query = new QueryCallback(){
 				public Collection<Object> execute(Session session) {
 					Object fetched = get(id,session);
+					if(fetched == null && exists(id)){
+						try {
+							hive.directory().deleteResourceId(config.getResourceName(), id);
+						} catch (HiveLockableException e) {
+							log.warn(String.format("%s with id %s exists in the directory but not on the data node.  Unable to cleanup record because Hive was read-only.", config.getResourceName(), id));
+						}
+						log.warn(String.format("%s with id %s exists in the directory but not on the data node.  Directory record removed.", config.getResourceName(), id));
+					}
 					return Lists.newArrayList(fetched);
 				}};
 			
@@ -107,7 +114,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			if(fetched == null && exists(id)){
 				try {
 					hive.directory().deleteResourceId(config.getResourceName(), id);
-				} catch (HiveReadOnlyException e) {
+				} catch (HiveLockableException e) {
 					log.warn(String.format("%s with id %s exists in the directory but not on the data node.  Unable to cleanup record because Hive was read-only.", config.getResourceName(), id));
 				}
 				log.warn(String.format("%s with id %s exists in the directory but not on the data node.  Directory record removed.", config.getResourceName(), id));
@@ -127,31 +134,66 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	}
 	
 	public Collection<Object> findByProperty(final String propertyName, final Object propertyValue) {
-		final EntityIndexConfig hiveIndexConfig = resolveEntityIndexConfig(propertyName);
-		Session session = createSessionForIndex(config, hiveIndexConfig, propertyValue);
-		DataIndexDelegate dataIndexDelegate = AnnotationHelper.getAnnotationDeeply(clazz, propertyName, DataIndexDelegate.class);
-		final EntityIndexConfig dataIndexConfig =  (dataIndexDelegate != null)
-			? resolveEntityIndexConfig(dataIndexDelegate.value())
-			: hiveIndexConfig;
-		final String dataIndexPropertyName = dataIndexConfig.getPropertyName();
-			
+		return findByProperties(propertyName, Collections.singletonMap(propertyName, propertyValue));
+	}
+	
+	public Collection<Object> findByProperties(String partitioningPropertyName, final Map<String,Object> propertyNameValueMap) {
+		final EntityIndexConfig entityIndexConfig = resolveEntityIndexConfig(partitioningPropertyName);
+		Session session = createSessionForIndex(config, entityIndexConfig, propertyNameValueMap.get(partitioningPropertyName));
+
+		final Map<String, Entry<EntityIndexConfig, Object>> propertyNameEntityIndexConfigValueMap = 
+			Transform.toOrderedMap(
+				new Unary<String, Entry<String, Entry<EntityIndexConfig, Object>>>() {
+					public Entry<String, Entry<EntityIndexConfig, Object>> f(String propertyName) {
+						EntityIndexConfig entityIndexConfig = resolveEntityIndexConfig(propertyName);
+						DataIndexDelegate dataIndexDelegate = AnnotationHelper.getAnnotationDeeply(clazz, propertyName, DataIndexDelegate.class);
+						EntityIndexConfig resolvedEntityIndexConfig =  
+							(dataIndexDelegate != null)
+							? resolveEntityIndexConfig(dataIndexDelegate.value())
+							: entityIndexConfig;
+						return new Pair<String, Entry<EntityIndexConfig, Object>>(
+								resolvedEntityIndexConfig.getPropertyName(), 
+								new Pair<EntityIndexConfig, Object>(resolvedEntityIndexConfig, propertyNameValueMap.get(propertyName)));
+					}
+			}, propertyNameValueMap.keySet());
+	
 		QueryCallback query;
-		// We must use HQL to query for primitive collection properties. 
-		if (isPrimitiveCollection(dataIndexPropertyName)) {
-			 query = new QueryCallback(){
+		
+		if (Filter.isMatch(new Predicate<String>() {
+			// We must use HQL to query for primitive collection properties. 
+			public boolean f(String propertyName) {
+				return isPrimitiveCollection(propertyName);
+			}}, propertyNameEntityIndexConfigValueMap.keySet()))
+			query = new QueryCallback(){
 				 public Collection<Object> execute(Session session) {
-					return queryWithHQL(dataIndexConfig, session, propertyValue);
+					Map <String, Object> revisedPropertyNameValueMap = Transform.toMap(
+							new Unary<Entry<String, Entry<EntityIndexConfig, Object>>, String>() {
+								public String f(Map.Entry<String,Map.Entry<EntityIndexConfig,Object>> item) {
+									return item.getKey();
+								}
+							},
+							new Unary<Entry<String, Entry<EntityIndexConfig, Object>>, Object>() {
+								public Object f(Map.Entry<String,Map.Entry<EntityIndexConfig,Object>> item) {
+									return item.getValue().getValue();
+								}
+							},
+							propertyNameEntityIndexConfigValueMap.entrySet());
+			
+					return queryWithHQL(session, revisedPropertyNameValueMap);
 				 }};
-		}
-		else {
+		else
 			query = new QueryCallback(){
 				@SuppressWarnings("unchecked")
 				public Collection<Object> execute(Session session) {
 					Criteria criteria = session.createCriteria(config.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-					addPropertyRestriction(dataIndexConfig, criteria, dataIndexPropertyName, propertyValue); 
+					for (Entry<EntityIndexConfig,Object> entityIndexConfigValueEntry : propertyNameEntityIndexConfigValueMap.values()) {
+						EntityIndexConfig entityIndexConfig = entityIndexConfigValueEntry.getKey();
+						Object value = entityIndexConfigValueEntry.getValue();
+						addPropertyRestriction(entityIndexConfig, criteria, entityIndexConfig.getPropertyName(), value);
+					}
+						 
 					return criteria.list();
 				}};
-		}
 		return queryInTransaction(query, session);
 	}
 	
@@ -164,7 +206,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 						String.format(
 								"select %s from %s", 
 								propertyName, 
-								GeneratedInstanceInterceptor.getGeneratedClass(config.getRepresentedInterface()).getSimpleName()));
+								GeneratedClassFactory.getGeneratedClass(config.getRepresentedInterface()).getSimpleName()));
 				if (maxResults > 0) {
 					query.setFirstResult(firstResult);
 					query.setMaxResults(maxResults);
@@ -173,20 +215,34 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			}};
 		return queryInTransaction(callback, getSession());
 	}
-	
+
 	@SuppressWarnings("unchecked")
-	protected Collection<Object> queryWithHQL(final EntityIndexConfig indexConfig, Session session, final Object propertyValue) {
-		Query query = session.createQuery(String.format("from %s as x where :value in elements (x.%s)",
-				GeneratedInstanceInterceptor.getGeneratedClass(config.getRepresentedInterface()).getSimpleName(),
-				indexConfig.getPropertyName())
-				).setParameter("value", propertyValue);
+	protected Collection<Object> queryWithHQL(Session session, Map<String, Object> propertyNameValueMap) {
+		final StringBuilder queryString = new StringBuilder(String.format("from %s as x where", GeneratedClassFactory.getGeneratedClass(config.getRepresentedInterface()).getSimpleName()));
+		
+		for (Entry<String, Object> entry : propertyNameValueMap.entrySet()) {
+			String propertyName = entry.getKey();
+			if (ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName))
+				queryString.append(String.format(" :%s in elements (x.%s)", propertyName, propertyName));
+			else
+				queryString.append(String.format(" :%s = x.%s", propertyName, propertyName));
+		}
+		Query query = session.createQuery(queryString.toString());
+		for (Entry<String, Object> entry : propertyNameValueMap.entrySet())
+			query.setParameter(entry.getKey(), entry.getValue());
 		return query.list();
 	}
 
 	public Integer getCount(final String propertyName, final Object propertyValue) {
 		final EntityIndexConfig indexConfig = resolveEntityIndexConfig(propertyName);
 		QueryCallback query;
-		Session session = createSessionForIndex(config, indexConfig, propertyValue);
+		Session session = null;
+		try {
+			session = createSessionForIndex(config, indexConfig, propertyValue);
+		}
+		catch (UnsupportedOperationException e) {
+			return 0;
+		}
 		if (isPrimitiveCollection(propertyName)) {
 				query = new QueryCallback(){
 
@@ -217,7 +273,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	private Collection<Object> queryWithHQLRowCount(EntityIndexConfig indexConfig, Session session, Object propertyValue) {
 		Query query = session.createQuery(String.format("select count(%s) from %s as x where :value in elements (x.%s)",
 			config.getIdPropertyName(),
-			GeneratedInstanceInterceptor.getGeneratedClass(config.getRepresentedInterface()).getSimpleName(),
+			GeneratedClassFactory.getGeneratedClass(config.getRepresentedInterface()).getSimpleName(),
 			indexConfig.getIndexName())
 			).setParameter("value", propertyValue);
 		return query.list();
@@ -246,7 +302,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 				@SuppressWarnings("unchecked")
 				public Collection<Object> execute(Session session) {
 					Query query = session.createQuery(String.format("from %s as x where :value in elements (x.%s) order by x.%s asc limit %s, %s",
-							GeneratedInstanceInterceptor.getGeneratedClass(entityConfig.getRepresentedInterface()).getSimpleName(),
+							GeneratedClassFactory.getGeneratedClass(entityConfig.getRepresentedInterface()).getSimpleName(),
 							indexConfig.getIndexName(),
 							entityConfig.getIdPropertyName(),
 							firstResult,
@@ -468,7 +524,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 						if(!existsInSession(session, config.getId(entity))){
 							try {
 								getHive().directory().deleteResourceId(config.getResourceName(), config.getId(entity));
-							} catch (HiveReadOnlyException e) {
+							} catch (HiveLockableException e) {
 								log.warn(String.format("%s with id %s exists in the directory but not on the data node.  Unable to cleanup record because Hive was read-only.", config.getResourceName(), config.getId(entity)));
 							}
 							log.warn(String.format("%s with id %s exists in the directory but not on the data node.  Directory record removed.", config.getResourceName(), config.getId(entity)));					

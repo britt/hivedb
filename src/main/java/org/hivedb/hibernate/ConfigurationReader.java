@@ -1,21 +1,21 @@
 package org.hivedb.hibernate;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveFacade;
-import org.hivedb.HiveReadOnlyException;
+import org.hivedb.HiveLockableException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.annotations.AnnotationHelper;
 import org.hivedb.annotations.EntityId;
 import org.hivedb.annotations.EntityVersion;
-import org.hivedb.annotations.IndexDelegate;
 import org.hivedb.annotations.Index;
+import org.hivedb.annotations.IndexDelegate;
 import org.hivedb.annotations.IndexType;
 import org.hivedb.annotations.PartitionIndex;
 import org.hivedb.annotations.Resource;
@@ -43,7 +43,9 @@ public class ConfigurationReader {
 	private Map<String, EntityConfig> configs = new HashMap<String, EntityConfig>();
 	private PartitionDimension dimension = null;
 	
-	public ConfigurationReader() {}
+	public ConfigurationReader(PartitionDimension partitionDimension) {
+		dimension = partitionDimension;
+	}
 	
 	public ConfigurationReader(Class<?>... classes) {
 		for(Class<?> clazz : classes)
@@ -64,7 +66,7 @@ public class ConfigurationReader {
 	public EntityConfig configure(Class<?> clazz) {
 		EntityConfig config = readConfiguration(clazz) ;
 		if(dimension == null) 
-			dimension = new PartitionDimension(config.getPartitionDimensionName(), JdbcTypeMapper.primitiveTypeToJdbcType(config.getPrimaryKeyClass()));
+			dimension = extractPartitionDimension(clazz);
 		else
 			if(!dimension.getName().equals(config.getPartitionDimensionName()))
 				throw new UnsupportedOperationException(
@@ -73,14 +75,18 @@ public class ConfigurationReader {
 		configs.put(clazz.getName(), config);
 		return config;
 	}
+
+	public static PartitionDimension extractPartitionDimension(Class clazz) {
+		Method partitionIndexMethod = AnnotationHelper.getFirstMethodWithAnnotation(clazz, PartitionIndex.class);
+		return new PartitionDimension(getPartitionDimensionName(clazz), JdbcTypeMapper.primitiveTypeToJdbcType(partitionIndexMethod.getReturnType()));
+	}
 	
 	public static EntityConfig readConfiguration(Class<?> clazz) {
-		Method partitionIndexMethod = AnnotationHelper.getFirstMethodWithAnnotation(clazz, PartitionIndex.class);
-		
-		PartitionDimension dimension = new PartitionDimension(getPartitionDimensionName(clazz), JdbcTypeMapper.primitiveTypeToJdbcType(partitionIndexMethod.getReturnType()));
-		
+		PartitionDimension dimension = extractPartitionDimension(clazz);
+
 		Method versionMethod = AnnotationHelper.getFirstMethodWithAnnotation(clazz, EntityVersion.class);
 		Method resourceIdMethod = AnnotationHelper.getFirstMethodWithAnnotation(clazz, EntityId.class);
+		Method partitionIndexMethod = AnnotationHelper.getFirstMethodWithAnnotation(clazz, PartitionIndex.class);
 		
 		String primaryIndexPropertyName = getIndexNameForMethod(partitionIndexMethod);
 		String idPropertyName = getIndexNameForMethod(resourceIdMethod);
@@ -101,8 +107,7 @@ public class ConfigurationReader {
 		return config;
 	}
 
-	private static List<EntityIndexConfig> createIndexMethods(Class<?> clazz,
-			Method resourceIdMethod) {
+	private static List<EntityIndexConfig> createIndexMethods(Class<?> clazz, Method resourceIdMethod) {
 		Collection<Method> indexMethods = getIndexMethods(clazz,resourceIdMethod);	
 		List<EntityIndexConfig> indexes = Lists.newArrayList();
 		
@@ -124,7 +129,7 @@ public class ConfigurationReader {
 		return Filter.grep(new Predicate<Method>() {
 			public boolean f(Method method) {
 				return !method.equals(resourceIdMethod);
-		}}, AnnotationHelper.getAllMethodsWithAnnotation(clazz, Index.class));
+		}}, AnnotationHelper.getAllMethodsWithAnnotations(clazz, (Collection)Arrays.asList(Index.class, PartitionIndex.class)));
 	}
 	
 	private static boolean isIndexDelegate(Method indexMethod) {
@@ -200,7 +205,7 @@ public class ConfigurationReader {
 					hive.addSecondaryIndex(resource, createSecondaryIndex(indexConfig));
 				}
 					
-		} catch (HiveReadOnlyException e) {
+		} catch (HiveLockableException e) {
 			throw new HiveRuntimeException(e.getMessage(),e);
 		}
 	}

@@ -57,7 +57,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache{
 		return jdbcDaoSupports.remove(node.getId());
 	}
 	
-	private SimpleJdbcDaoSupport get(KeySemaphore semaphore, AccessType intention) throws HiveReadOnlyException { 
+	private SimpleJdbcDaoSupport get(KeySemaphore semaphore, AccessType intention) throws HiveLockableException { 
 		Node node = null;
 		node = hive.getNode(semaphore.getId());
 		
@@ -76,9 +76,9 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache{
 	 * @param primaryIndexKey The partition key
 	 * @param intention The permissions with which you wish to acquire the conenction
 	 * @return
-	 * @throws HiveReadOnlyException
+	 * @throws HiveLockableException
 	 */
-	public Collection<SimpleJdbcDaoSupport> get(Object primaryIndexKey, final AccessType intention) throws HiveReadOnlyException {
+	public Collection<SimpleJdbcDaoSupport> get(Object primaryIndexKey, final AccessType intention) throws HiveLockableException {
 		Collection<KeySemaphore> semaphores = directory.getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey);
 		Collection<SimpleJdbcDaoSupport> supports = new ArrayList<SimpleJdbcDaoSupport>();
 		for(KeySemaphore semaphore : semaphores)
@@ -92,9 +92,9 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache{
 	 * @param secondaryIndexKey The secondary key
 	 * @param intention The permissions with which you wish to acquire the conenction
 	 * @return
-	 * @throws HiveReadOnlyException
+	 * @throws HiveLockableException
 	 */
-	public Collection<SimpleJdbcDaoSupport> get(String resource, String secondaryIndex, Object secondaryIndexKey, final AccessType intention) throws HiveReadOnlyException {
+	public Collection<SimpleJdbcDaoSupport> get(String resource, String secondaryIndex, Object secondaryIndexKey, final AccessType intention) throws HiveLockableException {
 		Collection<KeySemaphore> keySemaphores = directory.getKeySemaphoresOfSecondaryIndexKey(getSecondaryIndex(resource, secondaryIndex), secondaryIndexKey);
 		keySemaphores = Filter.getUnique(keySemaphores, new Unary<KeySemaphore, Integer>(){
 			public Integer f(KeySemaphore item) {
@@ -118,14 +118,14 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache{
 	public SimpleJdbcDaoSupport getUnsafe(String nodeName) {
 		try {
 			Node node = hive.getNode(nodeName);
-			KeySemaphore semaphore = new KeySemaphore(node.getId(), node.isReadOnly());
+			KeySemaphore semaphore = new KeySemaphore(node.getId(), node.getStatus());
 			return get(semaphore, AccessType.ReadWrite);
 		} catch (HiveException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	public Collection<SimpleJdbcDaoSupport> get(String resource, Object resourceId, AccessType intention) throws HiveReadOnlyException {
+	public Collection<SimpleJdbcDaoSupport> get(String resource, Object resourceId, AccessType intention) throws HiveLockableException {
 		Collection<KeySemaphore> semaphores = directory.getKeySemaphoresOfResourceId(getResource(resource), resourceId);
 		Collection<SimpleJdbcDaoSupport> supports = new ArrayList<SimpleJdbcDaoSupport>();
 		for(KeySemaphore semaphore : semaphores)

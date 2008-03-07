@@ -24,15 +24,6 @@ import org.testng.annotations.BeforeMethod;
 public abstract class MySqlHiveTestCase extends MysqlTestCase {
 	
 	@Override
-	@BeforeClass
-	protected void beforeClass() {
-		cleanupAfterEachTest = true;
-		hiveTestCase = createHiveTestCase();
-		hiveTestCase.beforeClass();
-		super.beforeClass();
-	}
-	
-	@Override
 	@BeforeMethod
 	public void beforeMethod() {
 		super.beforeMethod();
@@ -51,7 +42,8 @@ public abstract class MySqlHiveTestCase extends MysqlTestCase {
 						return getConnectString(databaseName);
 					}
 				},
-				getDataNodeNames());
+				getDataNodeNames(),
+				cleanupAfterEachTest || createDatabaseIfNoCleanup);
 	}
 	
 	protected HiveTestCase hiveTestCase;

@@ -13,7 +13,7 @@ import org.hivedb.Lockable;
  * @author Justin McCarthy (jmccarthy@cafepress.com)
  */
 public class HiveSemaphore implements Lockable{
-	private boolean isReadOnly = false;
+	private Lockable.Status status = Lockable.Status.writable;
 	private int revision = 0;
 	
 	public HiveSemaphore() {}
@@ -22,20 +22,22 @@ public class HiveSemaphore implements Lockable{
 		this.revision = revision;
 	}
 
-	public HiveSemaphore(boolean isReadOnly, int revision) {
-		this.isReadOnly = isReadOnly;
+	public HiveSemaphore(Lockable.Status status, int revision) {
+		this.status = status;
 		this.revision = revision;		
 	}
-	public boolean isReadOnly() {
-		return isReadOnly;
+
+	public Status getStatus() {
+		return status;
 	}
-	public void setReadOnly(boolean isReadOnly) {
-		this.isReadOnly = isReadOnly;
+	public void setStatus(Status status) {
+		this.status = status;
 	}
 	public int getRevision() {
 		return revision;
 	}
 	public void incrementRevision() {
 		revision++;
-	}	
+	}
+	
 }

@@ -5,6 +5,7 @@
 package org.hivedb.meta;
 
 import org.hivedb.Lockable;
+import org.hivedb.Lockable.Status;
 import org.hivedb.util.HiveUtils;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.JdbcUriFormatter;
@@ -18,7 +19,7 @@ import org.hivedb.util.database.JdbcUriFormatter;
 public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable<Integer>, Lockable {
 	private int id,port;
 	private String name, host,databaseName, username, password, options;
-	private boolean readOnly = false;
+	private Status status = Status.writable;
 	private double capacity;
 	private HiveDbDialect dialect;
 
@@ -100,12 +101,14 @@ public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable<
 	public Integer getId() {
 		return id;
 	}
-	public boolean isReadOnly() {
-		return readOnly;
+	
+	public Status getStatus() {
+		return status;
 	}
-	public void setReadOnly(boolean readOnly) {
-		this.readOnly = readOnly;
+	public void setStatus(Status status) {
+		this.status = status;
 	}
+	
 	public String getUri() {
 		return new JdbcUriFormatter(this).getUri();
 	}
@@ -139,7 +142,7 @@ public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable<
 	}
 	public int hashCode() {
 		return HiveUtils.makeHashCode(new Object[] {
-				id,port,name, host,databaseName, username, password, options,readOnly,capacity,dialect
+				id,port,name, host,databaseName, username, password, options,status,capacity,dialect
 		});
 	}
 	public String toString()
@@ -148,7 +151,8 @@ public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable<
 										"Id", 		getId(), 
 										"Name", 	getName(), 
 										"Uri", 		getUri(), 
-										"ReadOnly",	isReadOnly());									
+										"Status",	status
+										);									
 	}
 
 	public int compareTo(Node o) {

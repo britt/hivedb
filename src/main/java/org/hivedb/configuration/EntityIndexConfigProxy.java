@@ -1,6 +1,7 @@
 package org.hivedb.configuration;
 
 import org.hivedb.annotations.IndexType;
+import org.hivedb.util.GeneratedClassFactory;
 import org.hivedb.util.GeneratedInstanceInterceptor;
 
 public class EntityIndexConfigProxy extends EntityIndexConfigImpl implements EntityIndexConfigDelegator {
@@ -42,7 +43,7 @@ public class EntityIndexConfigProxy extends EntityIndexConfigImpl implements Ent
 		return delegateEntityConfig;
 	}
 	public Object stubEntityInstance(Object entityId, Object primaryIndexKey) {
-		Object instance = GeneratedInstanceInterceptor.newInstance(this.getDelegateEntityConfig().getRepresentedInterface());
+		Object instance = GeneratedClassFactory.newInstance(this.getDelegateEntityConfig().getRepresentedInterface());
 		GeneratedInstanceInterceptor.setProperty(instance, this.getDelegateEntityConfig().getIdPropertyName(), entityId);
 		GeneratedInstanceInterceptor.setProperty(instance, this.getDelegateEntityConfig().getPrimaryIndexKeyPropertyName(), primaryIndexKey);
 		return instance;

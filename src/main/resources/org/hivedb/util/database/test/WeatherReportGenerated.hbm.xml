@@ -14,7 +14,6 @@
     	<property name="latitude" column="LATITUDE" access="org.hivedb.hibernate.GeneratedAccessor"/>
     	<property name="longitude" column="LONGITUDE" access="org.hivedb.hibernate.GeneratedAccessor"/>
     	<property name="temperature" column="TEMPERATURE" access="org.hivedb.hibernate.GeneratedAccessor"/>
-    	<!--  Demonstates a one-to-many relationship to another entity class -->
 		<bag name="weatherEvents" lazy="false" access="org.hivedb.hibernate.GeneratedAccessor" cascade="all,delete-orphan" >
       		<key column="REPORT_ID" not-null="true"  /> 
         	<one-to-many class="WeatherEventGenerated" />

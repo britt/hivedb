@@ -17,6 +17,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hivedb.Hive;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.util.GenerateInstance;
+import org.hivedb.util.GeneratedClassFactory;
 import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.test.H2HiveTestCase;
@@ -222,7 +223,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	}
 
 	private Class getGeneratedClass() {
-		return GeneratedInstanceInterceptor.newInstance(WeatherReport.class).getClass();
+		return GeneratedClassFactory.newInstance(WeatherReport.class).getClass();
 	}
 	
 	private<T> T getInstance(Class<T> clazz) throws Exception {

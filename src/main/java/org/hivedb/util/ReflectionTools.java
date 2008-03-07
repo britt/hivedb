@@ -1,6 +1,5 @@
 package org.hivedb.util;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
@@ -23,32 +22,32 @@ import org.hivedb.util.functional.Predicate;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.hivedb.util.functional.Joiner.ConcatStrings;
-import org.springframework.beans.BeanUtils;
 
 public class ReflectionTools {
-	public interface PropertySetterWrapper {
-		void set(Object instance, Object value);
+	public interface SetterWrapper {
+		void invoke(Object instance, Object value);
+		Method getRealSetter();
 	}
 	public static final class Descriptor {
 		private final Class<?> clazz;
 		private final Collection<Method> deepMethods;
 		private final Collection<Method> declaredPublicMethods;
-		private final Map<Method, PropertySetterWrapper> accessors;
+		private final Map<Method, SetterWrapper> accessors;
 		
 		private final Map<Method, String> propertyByGetter;
 		private final Map<String, Method> getterByProperty;
 		
 		private final Map<String, Class<?>> ownerByProperty;
 		
-		private final Map<Method, Map<Class<?>, PropertySetterWrapper>> settersByGetter;
+		private final Map<Method, Map<Class<?>, SetterWrapper>> settersByGetter;
 		
-		private final Map<PropertySetterWrapper, String> propertyBySetter;
+		private final Map<SetterWrapper, String> propertyBySetter;
 		
 		private Method rawSetter;
 		
 		
 		
-		Descriptor(Class<?> clazz) {
+		Descriptor(final Class<?> clazz) {
 			this.clazz = clazz;
 			
 			deepMethods = Collections.unmodifiableCollection(ReflectionTools.getDeepMethods(clazz));
@@ -60,14 +59,14 @@ public class ReflectionTools {
 				}
 			}
 			
-			accessors = new HashMap<Method, PropertySetterWrapper>();
-			for (Method method : clazz.getMethods()) {
+			accessors = new HashMap<Method, SetterWrapper>();
+			for (final Method method : clazz.getMethods()) {
 				if (ReflectionTools.isGetter(method)) {
-					final Method setter = BeanUtils.findPropertyForMethod(method).getWriteMethod();
+					final String propertyName = formPropertyNameFromGetter(method);
 					// Interface has no setter, create a wrapper setter
-					final String propertyName = BeanUtils.findPropertyForMethod(method).getName(); // bypass our caching method
-					PropertySetterWrapper propertySetterWrapper = new PropertySetterWrapper() {
-						public void set(Object instance, Object value) {
+					SetterWrapper propertySetterWrapper = new SetterWrapper() {
+						public void invoke(Object instance, Object value) {
+							Method setter = getRealSetter();
 							if (setter != null)
 								try {
 									setter.invoke(instance, new Object[] {value});
@@ -78,6 +77,16 @@ public class ReflectionTools {
 									((PropertySetter)instance).set(propertyName, value);
 							else
 								throw new HiveRuntimeException(String.format("No way to inoke setter of class %s, property %s", instance.getClass(), propertyName));
+						}
+
+						public Method getRealSetter() {
+							try {
+								return clazz.getMethod(makeSetterName(propertyName), new Class[] {method.getReturnType()});
+							} catch (SecurityException e) {
+								throw new RuntimeException(e);
+							} catch (NoSuchMethodException em) {
+								return null;
+							}
 						}
 					};
 					try {
@@ -92,7 +101,7 @@ public class ReflectionTools {
 			propertyByGetter = new HashMap<Method, String>();
 			getterByProperty = new HashMap<String, Method>();
 			for (Method method : accessors.keySet()) {
-				String property = BeanUtils.findPropertyForMethod(method).getName();
+				String property = formPropertyNameFromGetter(method);
 				propertyByGetter.put(method, property);
 				getterByProperty.put(property, method);
 			}
@@ -104,23 +113,23 @@ public class ReflectionTools {
 				ownerByProperty.put(property, owner);
 			}
 			
-			settersByGetter = new HashMap<Method, Map<Class<?>, PropertySetterWrapper>>();
+			settersByGetter = new HashMap<Method, Map<Class<?>, SetterWrapper>>();
 			for (Method getter : accessors.keySet()) {
-				Map<Class<?>, PropertySetterWrapper> setters = new HashMap<Class<?>, PropertySetterWrapper>();
+				Map<Class<?>, SetterWrapper> setters = new HashMap<Class<?>, SetterWrapper>();
 				setters.put(getter.getReturnType(), accessors.get(getter));
 				for (Method method : clazz.getMethods()) {
-					if (method.getName().equals("get" + getter.getName().substring(3))) {
+					if (method.getName().equals(getter.getName())) {
 						setters.put(method.getReturnType(), accessors.get(getter));
 					} 
 				}
 				settersByGetter.put(getter, setters);
 			}
 			
-			propertyBySetter = new HashMap<PropertySetterWrapper, String>();
+			propertyBySetter = new HashMap<SetterWrapper, String>();
 			for (Method getter : accessors.keySet()) {
-				String property = BeanUtils.findPropertyForMethod(getter).getName();
+				String property = formPropertyNameFromGetter(getter);
 				propertyByGetter.put(getter, property);
-				for (PropertySetterWrapper setterWrapper : settersByGetter.get(getter).values()) {
+				for (SetterWrapper setterWrapper : settersByGetter.get(getter).values()) {
 					propertyBySetter.put(setterWrapper, property);
 				}
 			}
@@ -131,6 +140,11 @@ public class ReflectionTools {
 				}
 			} catch (Exception ex) {
 			}
+		}
+
+		private String formPropertyNameFromGetter(Method getter) {
+			String name = getter.getName();
+			return name.substring(3, 4).toLowerCase().concat(name.length() > 4 ? name.substring(4) : "");
 		}
 		
 		public Collection<Method> getDeepMethods() {
@@ -150,15 +164,15 @@ public class ReflectionTools {
 		}
 		
 		public boolean doesSetterExist(Method getter) {
-			return accessors.get(getter) != null;
+			return accessors.get(getter).getRealSetter() != null;
 		}
 		
-		public PropertySetterWrapper getCorrespondingSetter(String getterName, Class<?> argument) {
+		public SetterWrapper getCorrespondingSetter(String getterName, Class<?> argument) {
 			return getSetterOfProperty(toProperty(getterName), argument);
 
 		}
 		
-		public PropertySetterWrapper getCorrespondingSetter(Method getter) {
+		public SetterWrapper getCorrespondingSetter(Method getter) {
 			return accessors.get(getter);
 		}
 		
@@ -174,11 +188,11 @@ public class ReflectionTools {
 			return getterByProperty.get(property) != null;
 		}
 		
-		public PropertySetterWrapper getSetterOfProperty(String property) {
+		public SetterWrapper getSetterOfProperty(String property) {
 			return accessors.get(getterByProperty.get(property));
 		}
 		
-		public PropertySetterWrapper getSetterOfProperty(String property, Class<?> argument) {
+		public SetterWrapper getSetterOfProperty(String property, Class<?> argument) {
 			return accessors.get(getterByProperty.get(property));
 		}
 		
@@ -228,8 +242,14 @@ public class ReflectionTools {
 	public static boolean isGetter(String s) {
 		return s.startsWith("get");
 	}
+	public static String makeGetterName(String propertyName) {
+		return "get"+capitalize(propertyName);
+	}
 	public static boolean isSetter(String s) {
 		return s.startsWith("set");
+	}
+	public static String makeSetterName(String propertyName) {
+		return "set"+capitalize(propertyName);
 	}
 	
 	/*
@@ -255,19 +275,19 @@ public class ReflectionTools {
 			method.getReturnType() == void.class &&
 			method.getParameterTypes().length == 1;
 	}
-	public static boolean doesSetterExist(Method getter) {
+	public static boolean doesRealSetterExist(Method getter) {
 		Class<?> clazz = getter.getDeclaringClass();
 		checkInitialized(clazz);
 		return descriptors.get(clazz).doesSetterExist(getter);
 	}
 	
-	public static PropertySetterWrapper getCorrespondingSetter(Object instance, String getterName, Class argumentType) {
+	public static SetterWrapper getCorrespondingSetterWrapper(Object instance, String getterName, Class argumentType) {
 		Class<?> clazz = instance.getClass();
 		checkInitialized(clazz);
 		return descriptors.get(clazz).getCorrespondingSetter(getterName, argumentType);
 	}
 	
-	public static PropertySetterWrapper getCorrespondingSetter(Method getter) {
+	public static SetterWrapper getCorrespondingSetterWrapper(Method getter) {
 		Class<?> clazz = getter.getDeclaringClass();
 		checkInitialized(clazz);
 		return descriptors.get(clazz).getCorrespondingSetter(getter);
@@ -289,14 +309,16 @@ public class ReflectionTools {
 		return descriptors.get(ofInterface).hasGetterOfProperty(property);
 	}
 	
-	public static PropertySetterWrapper getSetterOfProperty(Class ofInterface, String property) {
+	public static SetterWrapper getSetterWrapperOfProperty(Class ofInterface, String property) {
 		checkInitialized(ofInterface);
 		return descriptors.get(ofInterface).getSetterOfProperty(property);
 	}
-	
-	public static String makeSetterName(String property) {
-		return "set" + capitalize(property);
+	public static Method getSetterOfProperty(Class ofInterface, String property) {
+		checkInitialized(ofInterface);
+		return descriptors.get(ofInterface).getSetterOfProperty(property).getRealSetter();
 	}
+	
+	
 	
 	public static Collection<Method> getDeclaredPublicMethods(Class subject) {
 		checkInitialized(subject);
@@ -353,36 +375,6 @@ public class ReflectionTools {
 					: null;
 	}
 	
-	/**
-	 *  Call the default constructor
-	 * @param <T>
-	 * @param type
-	 * @param partitionDimensionName
-	 * @return
-	 */
-	public static<T> T carefreeConstructor(Class<T> type) {
-		try {
-			return type.getConstructor().newInstance();
-		} catch (Exception e) {
-			throw new RuntimeException();
-		}
-	}
-	/**
-	 *  Call a one-argument constructor
-	 * @param <T>
-	 * @param type
-	 * @param partitionDimensionName
-	 * @param argument
-	 * @return
-	 */
-	public static<T> T carefreeConstructor(Class<T> type, String partitionDimensionName, Object argument) {
-		try {
-			return type.getConstructor(new Class[] {argument.getClass()}).newInstance(new Object[] {argument});
-		} catch (Exception e) {
-			throw new RuntimeException();
-		}
-	}
-	
 	public static<T> Collection<Method> getNullFields(final T checkMembersOfThis, Class<T> basedUponThisInterface) {
 		return
 			new MethodGrepper<T>() {
@@ -433,15 +425,15 @@ public class ReflectionTools {
 		checkInitialized(clazz);
 		
 		// try to match on the value's type - for now we only have standard accessors (no need to match value Class)
-		PropertySetterWrapper setterWrapper = descriptors.get(clazz).getSetterOfProperty(propertyName);
+		SetterWrapper setterWrapper = descriptors.get(clazz).getSetterOfProperty(propertyName);
 		// PropertySetterWrapper setterWrapper = descriptors.get(clazz).getSetterOfProperty(propertyName, value.getClass()); causes NPE if value == null
 		if (setterWrapper != null) {
 			try {
 				// Invoke our SetterWrapper
-				setterWrapper.set(instance, value);
+				setterWrapper.invoke(instance, value);
 				return;
 			} catch (Exception ex) {
-				throw new RuntimeException("Exception calling method " + makeSetterName(propertyName) + " with a value of type " + (value.getClass() == null ? "null" : value.getClass().getName()), ex);
+				throw new RuntimeException("Exception calling method " + makeSetterName(propertyName) + " with a value of type " + (value == null || value.getClass() == null ? "null" : value.getClass().getName()), ex);
 			}
 		}
     }

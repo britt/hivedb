@@ -6,7 +6,7 @@ import java.util.Collection;
 
 import net.sf.cglib.proxy.Factory;
 
-import org.hivedb.annotations.Ignore;
+import org.hivedb.annotations.GeneratorIgnore;
 import org.hivedb.util.functional.Delay;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Generator;
@@ -81,7 +81,7 @@ public class GenerateInstance<T> implements Generator<T> {
 	    	Class methodOwner = ReflectionTools.getOwnerOfMethod(clazz, propertyName);
 	    	Method method = ReflectionTools.getGetterOfProperty(methodOwner, propertyName);
 	    	
-	    	if (method.getAnnotation(Ignore.class) != null)
+	    	if (method.getAnnotation(GeneratorIgnore.class) != null)
 	    		continue; 
 	    	
 	    	final Class<Object> returnType = (Class<Object>) getter.getReturnType();
@@ -114,7 +114,7 @@ public class GenerateInstance<T> implements Generator<T> {
 		T instance;
 		try {
 			instance = clazz.isInterface() 
-				? (T)GeneratedInstanceInterceptor.newInstance( clazz )
+				? (T)GeneratedClassFactory.newInstance( clazz )
 				: clazz.newInstance();
 		} catch (InstantiationException e) {
 			throw new RuntimeException(e);

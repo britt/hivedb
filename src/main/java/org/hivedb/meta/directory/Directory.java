@@ -9,6 +9,7 @@ import javax.sql.DataSource;
 
 import org.hivedb.DirectoryCorruptionException;
 import org.hivedb.HiveKeyNotFoundException;
+import org.hivedb.Lockable.Status;
 import org.hivedb.meta.KeySemaphore;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
@@ -236,7 +237,11 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	@SuppressWarnings("unchecked")
 	public class KeySemaphoreRowMapper implements ParameterizedRowMapper {
 		public Object mapRow(ResultSet rs, int arg1) throws SQLException {
-			return new KeySemaphore(rs.getInt("node"), rs.getBoolean("read_only"));
+			return new KeySemaphore(rs.getInt("node"), resolveStatus(rs));
+		}
+
+		private Status resolveStatus(ResultSet rs) throws SQLException {
+			return Status.getByValue(rs.getInt("status"));
 		}	
 	}
 
@@ -300,7 +305,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 		return new Unary<KeySemaphore, Boolean>(){
 
 			public Boolean f(KeySemaphore item) {
-				return item.isReadOnly();
+				return !item.getStatus().equals(Status.writable);
 			}};
 	}
 

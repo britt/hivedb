@@ -9,7 +9,7 @@
        	<property name="latitude" column="LATITUDE"/>
        	<property name="longitude" column="LONGITUDE"/>
        	<property name="temperature" column="TEMPERATURE"/>
-       	<property name="reportTime" type="timestamp" column="REPORT_TIME"/>
+       	<property name="reportTime" column="REPORT_TIME"/>
        	<bag name="weatherEvents" lazy="false" cascade="all,delete-orphan" >
       		<key column="REPORT_ID" not-null="true"  /> 
         	<one-to-many class="WeatherEventGenerated" />

@@ -1,5 +1,6 @@
 package org.hivedb;
 
+import org.hivedb.Lockable.Status;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
@@ -28,13 +29,13 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 		final String key = new String("North America");
 
 		hive.directory().insertPrimaryIndexKey(key);
-		hive.updateHiveReadOnly(true);
+		hive.updateHiveStatus(Status.readOnly);
 
 		AssertUtils.assertThrows(new Toss(){
 
 			public void f() throws Exception {
 				hive.connection().getByPartitionKey(key, AccessType.ReadWrite);
-			}}, HiveReadOnlyException.class);
+			}}, HiveLockableException.class);
 	}
 
 	@Test
@@ -43,7 +44,7 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 		final String key = new String("Stoatia");
 
 		hive.directory().insertPrimaryIndexKey(key);
-		hive.updateHiveReadOnly(true);
+		hive.updateHiveStatus(Status.readOnly);
 		hive = null;
 
 		final Hive fetchedHive = Hive.load(getConnectString(getHiveDatabaseName()));
@@ -52,7 +53,7 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 
 			public void f() throws Exception {
 				fetchedHive.connection().getByPartitionKey(key, AccessType.ReadWrite);
-			}}, HiveReadOnlyException.class);
+			}}, HiveLockableException.class);
 	}
 
 	@Test
@@ -64,12 +65,12 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 		hive.directory().insertPrimaryIndexKey(key);
 		NodeResolver directory = new Directory(partitionDimension, new HiveBasicDataSource(hive.getUri()));
 		for(Integer id : Transform.map(DirectoryWrapper.semaphoreToId(), directory.getKeySemamphoresOfPrimaryIndexKey(key)))
-			hive.getNode(id).setReadOnly(true);
+			hive.getNode(id).setStatus(Status.readOnly);
 
 		AssertUtils.assertThrows(new Toss(){
 			public void f() throws Exception {
 				hive.connection().getByPartitionKey(key, AccessType.ReadWrite);
-			}}, HiveReadOnlyException.class);
+			}}, HiveLockableException.class);
 	}
 
 	@Test
@@ -81,7 +82,7 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 		hive.directory().insertPrimaryIndexKey(key);
 		NodeResolver directory = new Directory(partitionDimension, new HiveBasicDataSource(hive.getUri()));
 		for(Integer id : Transform.map(DirectoryWrapper.semaphoreToId(), directory.getKeySemamphoresOfPrimaryIndexKey(key)))
-			hive.updateNodeReadOnly(hive.getNode(id), true);
+			hive.updateNodeStatus(hive.getNode(id), Status.readOnly);
 		hive = null;
 
 		final Hive fetchedHive = Hive.load(getConnectString(getHiveDatabaseName()));
@@ -90,7 +91,7 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 
 			public void f() throws Exception {
 				fetchedHive.connection().getByPartitionKey(key, AccessType.ReadWrite);
-			}}, HiveReadOnlyException.class);
+			}}, HiveLockableException.class);
 
 	}
 
@@ -106,7 +107,7 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 
 			public void f() throws Exception {
 				hive.connection().getByPartitionKey(key, AccessType.ReadWrite);
-			}}, HiveReadOnlyException.class);
+			}}, HiveLockableException.class);
 	}
 
 	@Test
@@ -124,6 +125,6 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 
 			public void f() throws Exception {
 				fetchedHive.connection().getByPartitionKey(key, AccessType.ReadWrite);
-			}}, HiveReadOnlyException.class);
+			}}, HiveLockableException.class);
 	}
 }

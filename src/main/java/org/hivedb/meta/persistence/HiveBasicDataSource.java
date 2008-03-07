@@ -30,6 +30,9 @@ public class HiveBasicDataSource extends BasicDataSource implements Cloneable {
 			return DEFAULT_POOL_SIZE;
 		}
 	}
+	public String getUrl() { //publicize for testing
+		return super.getUrl();
+	}
 	
 	@Override
 	public HiveBasicDataSource clone() throws CloneNotSupportedException {

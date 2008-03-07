@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.hivedb.annotations.GeneratedClass;
-import org.hivedb.annotations.Ignore;
+import org.hivedb.annotations.GeneratorIgnore;
 import org.hivedb.util.functional.Atom;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -12,7 +12,7 @@ import org.testng.annotations.Test;
 public class TestGenerateInstance {
 	@GeneratedClass("FooImpl")
 	public interface Foo {
-		@Ignore
+		@GeneratorIgnore
 		String getString();
 		int getInt();
 	}
@@ -49,6 +49,13 @@ public class TestGenerateInstance {
 	@Test
 	public void testGenerateAndCopyProperties() {
 		Baa baa = (Baa)new GenerateInstance<Baa>(Baa.class).generate();
+		Object x = baa;
+		// Test getter via method invocation
+		try {
+			Assert.assertEquals(x.getClass().getMethod("getInt", new Class[] {}).invoke(baa, new Object[] {}), baa.getInt());
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 		Baa boohaa = new GenerateInstance<Baa>(Baa.class).generateAndCopyProperties(baa);
 		Assert.assertEquals(baa, boohaa);
 		Assert.assertSame(baa.getString(), boohaa.getString()); // "primitives" are not cloned

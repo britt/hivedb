@@ -10,12 +10,14 @@ import java.sql.SQLException;
 import javax.sql.DataSource;
 
 import org.hivedb.HiveRuntimeException;
+import org.hivedb.Lockable.Status;
 import org.hivedb.meta.HiveSemaphore;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
+import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy;
 
 /**
  * @author Justin McCarthy (jmccarthy@cafepress.com)
@@ -44,6 +46,11 @@ public class HiveSemaphoreDao extends JdbcDaoSupport {
 			throw new HiveSemaphoreNotFound(
 					"Exception loading HiveSemaphore -- verify that semaphore_metadata has one and only one row: "
 							+ ex.getMessage());
+		} catch (RuntimeException re) {
+			String url = (getJdbcTemplate().getDataSource() instanceof HiveBasicDataSource)
+				 ? ((HiveBasicDataSource)getJdbcTemplate().getDataSource()).getUrl()
+				 : ((HiveBasicDataSource)((LazyConnectionDataSourceProxy)getJdbcTemplate().getDataSource()).getTargetDataSource()).getUrl();
+			throw new HiveRuntimeException(String.format("Error connecting to the hive databse %s",url));
 		}
 		return result;
 	}
@@ -54,10 +61,10 @@ public class HiveSemaphoreDao extends JdbcDaoSupport {
 			hs = get();
 		else {
 			JdbcTemplate j = getJdbcTemplate();
-			hs = new HiveSemaphore(false,1);
-			Object[] parameters = new Object[] { hs.isReadOnly() ? 1 : 0, hs.getRevision() };
+			hs = new HiveSemaphore(Status.writable,1);
+			Object[] parameters = new Object[] { hs.getStatus().getValue(), hs.getRevision() };
 			try {
-				j.update("INSERT INTO semaphore_metadata (read_only,revision) VALUES (?,?)",parameters);
+				j.update("INSERT INTO semaphore_metadata (status,revision) VALUES (?,?)",parameters);
 			} catch(BadSqlGrammarException e) {
 				throw new HiveSemaphoreNotFound(e.getMessage());
 			}
@@ -73,11 +80,11 @@ public class HiveSemaphoreDao extends JdbcDaoSupport {
 	 */
 	public HiveSemaphore update(HiveSemaphore hs) {
 		//Unilateral decision to abandon implicit creation
-		Object[] parameters = new Object[] { hs.isReadOnly() ? 1 : 0,
+		Object[] parameters = new Object[] { hs.getStatus().getValue(),
 				hs.getRevision() };
 		JdbcTemplate j = getJdbcTemplate();
 		try {
-			int rows = j.update("UPDATE semaphore_metadata SET read_only = ?, revision = ?",parameters);
+			int rows = j.update("UPDATE semaphore_metadata SET status = ?, revision = ?",parameters);
 			if(rows != 1)
 				throw new IllegalStateException("Hive semaphore contians more than one row and has been corrupted.");
 		} catch (BadSqlGrammarException e) {
@@ -99,9 +106,7 @@ public class HiveSemaphoreDao extends JdbcDaoSupport {
 	
 	protected class HiveSemaphoreRowMapper implements RowMapper {
 		public Object mapRow(ResultSet rs, int rowNumber) throws SQLException {
-			return new HiveSemaphore(
-					rs.getInt("read_only") == 0 ? false : true, rs
-							.getInt("revision"));
+			return new HiveSemaphore(Status.getByValue(rs.getInt("status")), rs.getInt("revision"));
 		}
 	}
 

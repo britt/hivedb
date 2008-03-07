@@ -14,7 +14,8 @@ import java.util.Map;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveFacade;
-import org.hivedb.HiveReadOnlyException;
+import org.hivedb.HiveLockableException;
+import org.hivedb.Lockable.Status;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.directory.Directory;
 import org.hivedb.meta.directory.DirectoryWrapper;
@@ -228,7 +229,7 @@ public class DirectoryTest extends H2TestCase {
 		for(String key : getPrimaryIndexKeys()){
 			d.updatePrimaryIndexKeyReadOnly(key, true);
 			for(KeySemaphore s : d.getKeySemamphoresOfPrimaryIndexKey(key))
-				assertTrue(s.isReadOnly());
+				assertTrue(s.getStatus().equals(Status.readOnly));
 		}
 	}
 	
@@ -417,7 +418,7 @@ public class DirectoryTest extends H2TestCase {
 		return Arrays.asList(new String[] {"1","2","3","4"});
 	}
 	
-	private void insertKeys(Hive hive) throws HiveReadOnlyException {
+	private void insertKeys(Hive hive) throws HiveLockableException {
 		Directory d = getDirectory();
 		Resource resource = dimension.getResource(createResource().getName());
 		for(String key: getPrimaryIndexKeys()) {

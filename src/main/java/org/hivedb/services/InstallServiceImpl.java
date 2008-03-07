@@ -8,7 +8,7 @@ import java.util.NoSuchElementException;
 import javax.jws.WebService;
 
 import org.hivedb.Hive;
-import org.hivedb.HiveReadOnlyException;
+import org.hivedb.HiveLockableException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.Schema;
 import org.hivedb.meta.Node;
@@ -48,7 +48,7 @@ public class InstallServiceImpl implements InstallService {
 			node.setPassword(password);
 			try {
 				hive.addNode(node);
-			} catch (HiveReadOnlyException e1) {
+			} catch (HiveLockableException e1) {
 				throw new HiveRuntimeException("Hive was locked read-only.", e1);
 			}
 		}
@@ -92,7 +92,7 @@ public class InstallServiceImpl implements InstallService {
 			node.setPassword(password);
 			hive.addNode(node);
 			return true;
-		} catch (HiveReadOnlyException e) {
+		} catch (HiveLockableException e) {
 			throw new HiveRuntimeException("hive was locked read-only", e);
 		}
 	}

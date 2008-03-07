@@ -121,6 +121,9 @@ public class PartitionDimensionDao extends JdbcDaoSupport {
 				.newPreparedStatementCreator(parameters));
 		if (rows != 1)
 			throw new HiveRuntimeException("Unable to update Partition Dimension for id: " + partitionDimension.getId());
+		// dependencies
+		for (Resource r : partitionDimension.getResources())
+			new ResourceDao(ds).update(r);
 	}
 
 	public void delete(PartitionDimension partitionDimension) {

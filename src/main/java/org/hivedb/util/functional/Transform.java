@@ -140,6 +140,10 @@ public class Transform {
 			map.put(keyMapper.f(item), valueMapper.f(item));
 		return map;
 	}
+	public static<K,V,I> Map<K,V> toOrderedMap(Unary<I, Entry<K,V>> mapToEntry, Iterable<? extends I> iterable)
+	{
+		return Transform.toMap(Transform.map(mapToEntry, iterable));
+	}
 
 	public static<K,V> Map<V, K> reverseMap(Map<K, V> map) {
 		return

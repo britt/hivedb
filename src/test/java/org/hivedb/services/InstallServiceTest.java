@@ -7,6 +7,7 @@ import java.util.Collection;
 import org.hivedb.Hive;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.Schema;
+import org.hivedb.Lockable.Status;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.persistence.TableInfo;
@@ -51,7 +52,7 @@ public class InstallServiceTest extends H2TestCase {
 	@Test(expectedExceptions=HiveRuntimeException.class)
 	public void tryToInstallToAReadOnlyHive() throws Exception {
 		Hive hive = Hive.load(uri());
-		hive.updateHiveReadOnly(true);
+		hive.updateHiveStatus(Status.readOnly);
 		getService().install(new WeatherSchema().getName(), "aNewNode", H2TestCase.TEST_DB, "unecessary for H2", "H2", "na", "na");
 	}
 	

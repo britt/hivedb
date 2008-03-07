@@ -11,10 +11,12 @@ import java.util.Arrays;
 import org.hibernate.CallbackException;
 import org.hibernate.EntityMode;
 import org.hivedb.Hive;
-import org.hivedb.HiveReadOnlyException;
+import org.hivedb.HiveLockableException;
+import org.hivedb.Lockable.Status;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.meta.Node;
 import org.hivedb.util.GenerateInstance;
+import org.hivedb.util.GeneratedClassFactory;
 import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.Continent;
@@ -36,7 +38,7 @@ public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
 		Hive hive = getHive();
 		HiveInterceptorDecorator interceptor = new HiveInterceptorDecorator(config, hive);
 		Object o = interceptor.instantiate("org.hivedb.util.database.test.WeatherReport", EntityMode.POJO, 7);
-		assertEquals(GeneratedInstanceInterceptor.getGeneratedClass(WeatherReport.class), o.getClass());
+		assertEquals(GeneratedClassFactory.getGeneratedClass(WeatherReport.class), o.getClass());
 	}
 	
 	@Test
@@ -94,12 +96,12 @@ public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
 		
 		WeatherReport report = generateInstance();
 		hive.directory().insertPrimaryIndexKey(report.getContinent());
-		hive.updateHiveReadOnly(true);
+		hive.updateHiveStatus(Status.readOnly);
 		try {
 			interceptor.postFlush(Arrays.asList(new Object[]{report}).iterator());
 			fail("No exception thrown");
 		} catch(CallbackException e ) {
-			assertEquals(HiveReadOnlyException.class, e.getCause().getClass());
+			assertEquals(HiveLockableException.class, e.getCause().getClass());
 		}
 	}
 	
@@ -118,12 +120,12 @@ public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
 		assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
 		assertTrue(hive.directory().doesResourceIdExist("Temperature", report.getTemperature()));
 		
-		hive.updateHiveReadOnly(true);
+		hive.updateHiveStatus(Status.readOnly);
 		try {
 			interceptor.onDelete(report, null, null, null, null);
 			fail("No exception thrown");
 		} catch(CallbackException e ) {
-			assertEquals(HiveReadOnlyException.class, e.getCause().getClass());
+			assertEquals(HiveLockableException.class, e.getCause().getClass());
 		}
 	}
 	

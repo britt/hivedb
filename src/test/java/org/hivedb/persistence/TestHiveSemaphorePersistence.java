@@ -17,7 +17,7 @@ public class TestHiveSemaphorePersistence extends H2HiveTestCase {
 		
 		HiveSemaphore hs2 = hsd.get();
 		assertEquals(hs.getRevision(),hs2.getRevision());
-		assertEquals(hs.isReadOnly(),hs2.isReadOnly());
+		assertEquals(hs.getStatus(),hs2.getStatus());
 	}
 
 }

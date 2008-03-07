@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.hivedb.Hive;
-import org.hivedb.HiveReadOnlyException;
+import org.hivedb.HiveLockableException;
 import org.hivedb.annotations.IndexType;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityIndexConfig;
@@ -30,7 +30,7 @@ public class HiveIndexer {
 		this.hive = hive;
 	}
 	
-	public void insert(final EntityConfig config, final Object entity) throws HiveReadOnlyException{
+	public void insert(final EntityConfig config, final Object entity) throws HiveLockableException{
 		try {
 			conditionallyInsertPrimaryIndexKey(config, entity);
 			hive.directory().insertResourceId(config.getResourceName(), config.getId(entity), config.getPrimaryIndexKey(entity));
@@ -43,12 +43,12 @@ public class HiveIndexer {
 	}
 
 	public void conditionallyInsertPrimaryIndexKey(final EntityConfig config,
-			final Object entity) throws HiveReadOnlyException {
+			final Object entity) throws HiveLockableException {
 		if(!hive.directory().doesPrimaryIndexKeyExist(config.getPrimaryIndexKey(entity)))
 			hive.directory().insertPrimaryIndexKey(config.getPrimaryIndexKey(entity));
 	}
 	
-	private void conditionallyInsertDelegatedResourceIndexes(EntityConfig config, Object entity) throws HiveReadOnlyException {
+	private void conditionallyInsertDelegatedResourceIndexes(EntityConfig config, Object entity) throws HiveLockableException {
 		for (EntityIndexConfig entityIndexConfig : config.getEntityIndexConfigs())
 			if (entityIndexConfig.getIndexType().equals(IndexType.Delegates)) {
 				final EntityIndexConfigDelegator delegateEntityConfig = ((EntityIndexConfigDelegator)entityIndexConfig);
@@ -61,7 +61,7 @@ public class HiveIndexer {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private void insertSecondaryIndexes(final EntityConfig config, final Object entity) throws HiveReadOnlyException {
+	private void insertSecondaryIndexes(final EntityConfig config, final Object entity) throws HiveLockableException {
 		Map<String, Collection<Object>> secondaryIndexMap = Transform.toMap(
 			Filter.grep(
 				new Filter.NotNullPredicate<Entry<String, Collection<Object>>>(), 
@@ -99,7 +99,7 @@ public class HiveIndexer {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public void update(EntityConfig config, Object entity) throws HiveReadOnlyException {
+	public void update(EntityConfig config, Object entity) throws HiveLockableException {
 		Map<String, Collection<Object>> secondaryIndexValues = getAllSecondaryIndexValues(config, entity);
 		Map<String, Collection<Object>> toDelete = Maps.newHashMap();
 		Map<String, Collection<Object>> toInsert = Maps.newHashMap();
@@ -123,7 +123,7 @@ public class HiveIndexer {
 		hive.directory().deleteSecondaryIndexKeys(config.getResourceName(), toDelete, config.getId(entity));
 	}
 	
-	public void delete(EntityConfig config, Object entity) throws HiveReadOnlyException {
+	public void delete(EntityConfig config, Object entity) throws HiveLockableException {
 		if(config.isPartitioningResource())
 			hive.directory().deletePrimaryIndexKey(config.getPrimaryIndexKey(entity));
 		else

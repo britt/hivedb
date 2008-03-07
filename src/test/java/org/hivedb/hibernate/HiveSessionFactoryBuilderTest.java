@@ -19,10 +19,11 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hibernate.shards.util.InterceptorDecorator;
 import org.hivedb.Hive;
-import org.hivedb.HiveReadOnlyException;
+import org.hivedb.HiveLockableException;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.meta.Node;
 import org.hivedb.util.GenerateInstance;
+import org.hivedb.util.GeneratedClassFactory;
 import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.Lists;
 import org.hivedb.util.ReflectionTools;
@@ -187,7 +188,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 	}
 
 	private Class<?> getGeneratedClass(Class clazz) {
-		return GeneratedInstanceInterceptor.getGeneratedClass(clazz);
+		return GeneratedClassFactory.getGeneratedClass(clazz);
 	}
 	
 	@SuppressWarnings("unchecked")

@@ -12,11 +12,12 @@ import org.hibernate.Interceptor;
 import org.hibernate.shards.util.InterceptorDecorator;
 import org.hibernate.type.Type;
 import org.hivedb.Hive;
-import org.hivedb.HiveReadOnlyException;
+import org.hivedb.HiveLockableException;
 import org.hivedb.annotations.AnnotationHelper;
 import org.hivedb.annotations.EntityId;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
+import org.hivedb.util.GeneratedClassFactory;
 import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.functional.Filter;
@@ -39,13 +40,13 @@ public class HiveInterceptorDecorator extends InterceptorDecorator implements In
 			throw new CallbackException(String.format("Unable to load class for %s", entityName), e);
 		}
 		if(EntityResolver.generatesImplementation(clazz))
-			return getInstance(GeneratedInstanceInterceptor.getGeneratedClass(clazz));
+			return getInstance(GeneratedClassFactory.getGeneratedClass(clazz));
 		else if(EntityResolver.isGeneratedImplementation(clazz)){
 			Class generatingClass = Filter.grepSingle(new Predicate<Class>(){
 				public boolean f(Class item) {
 					return EntityResolver.generatesImplementation(item);
 				}}, Arrays.asList(clazz.getInterfaces()));
-			Object instance = getInstance(GeneratedInstanceInterceptor.getGeneratedClass(generatingClass));
+			Object instance = getInstance(GeneratedClassFactory.getGeneratedClass(generatingClass));
 			Method idMethod = AnnotationHelper.getFirstMethodWithAnnotation(generatingClass, EntityId.class);
 			if(idMethod != null)
 				GeneratedInstanceInterceptor.setProperty(instance, BeanUtils.findPropertyForMethod(idMethod).getName(), id);
@@ -99,7 +100,7 @@ public class HiveInterceptorDecorator extends InterceptorDecorator implements In
 			final Class<?> resolvedEntityClass = resolveEntityClass(entity.getClass());
 			if (resolvedEntityClass != null)
 				indexer.delete(hiveConfig.getEntityConfig(entity.getClass()), entity);
-		} catch (HiveReadOnlyException e) {
+		} catch (HiveLockableException e) {
 			throw new CallbackException(e);
 		}
 		super.onDelete(entity, id, state, propertyNames, types);
@@ -126,7 +127,7 @@ public class HiveInterceptorDecorator extends InterceptorDecorator implements In
 			final Class<?> resolvedEntityClass = resolveEntityClass(entity.getClass());
 			if (resolvedEntityClass != null)
 				indexer.update(hiveConfig.getEntityConfig(entity.getClass()), entity);
-		} catch (HiveReadOnlyException e) {
+		} catch (HiveLockableException e) {
 			throw new CallbackException(e);
 		}
 	}
@@ -136,7 +137,7 @@ public class HiveInterceptorDecorator extends InterceptorDecorator implements In
 			final Class<?> resolvedEntityClass = resolveEntityClass(entity.getClass());
 			if (resolvedEntityClass != null)
 				indexer.insert(hiveConfig.getEntityConfig(resolvedEntityClass), entity);
-		} catch (HiveReadOnlyException e) {
+		} catch (HiveLockableException e) {
 			throw new CallbackException(e);
 		}
 	}

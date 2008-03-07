@@ -1,6 +1,8 @@
 package org.hivedb.hibernate;
 
 import java.util.Collection;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.hivedb.HiveKeyNotFoundException;
 
@@ -26,6 +28,16 @@ public interface DataAccessObject<T, ID> {
     public Collection<T> findByPropertyRange(String propertyName, Object minValue, Object maxValue);
     
     public Collection<T> findByPropertyRange(String propertyName, Object minValue, Object maxValue, Integer firstResult, Integer maxResults);
+    
+    /**
+     *  Queries by one or more properties of the instance. partitioningPropertyName specified the property value
+     *  used to resolve the hive shard(s). propertyNameValue map includes all properties and their value to 
+     *  specify in the generated query. The partitioningPropertyName must be in the map.
+     * @param partitioningPropertyName
+     * @param propertyNameValueMap
+     * @return
+     */
+    public Collection<T> findByProperties(String partitioningPropertyName, Map<String,Object> propertyNameValueMap);
     
     public Integer getCount(String propertyName, Object propertyValue);
     public Integer getCountByRange(String propertyName, Object minValue, Object maxValue);

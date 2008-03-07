@@ -16,7 +16,8 @@ import java.util.Queue;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
-import org.hivedb.HiveReadOnlyException;
+import org.hivedb.HiveLockableException;
+import org.hivedb.Lockable.Status;
 import org.hivedb.annotations.IndexType;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
@@ -320,12 +321,11 @@ public class HiveScenarioTest {
 				new Undoable() { 
 					public void f() {
 						final Node node = Atom.getFirstOrThrow(hive.getNodes());
-						final boolean readOnly = node.isReadOnly();
+						final Status status = node.getStatus();
 						final String host = node.getHost();
 						final String db = node.getDatabaseName();
 						final String user = node.getUsername();
 						final String pw = node.getPassword();
-						node.setReadOnly(!readOnly);
 						node.setHost("arb");
 						node.setDatabaseName("it");
 						node.setUsername("ra");
@@ -336,8 +336,6 @@ public class HiveScenarioTest {
 						assertEquality(hive, node);
 						new Undo() {							
 							public void f() {
-								node.setReadOnly(readOnly);
-		
 								node.setHost(host);
 								node.setDatabaseName(db);
 								node.setUsername(user);
@@ -423,9 +421,9 @@ public class HiveScenarioTest {
 				if (secondaryIndex != null) {
 					// Attempt to insert a secondary index key
 					AssertUtils.assertThrows(new AssertUtils.UndoableToss() { public void f() throws Exception {				
-						hive.updateHiveReadOnly(true);
+						hive.updateHiveStatus(Status.readOnly);
 						new Undo() { public void f() throws Exception {
-							hive.updateHiveReadOnly(false);
+							hive.updateHiveStatus(Status.writable);
 						}};
 						Object newResourceInstance = new EntityGeneratorImpl<Object>(entityConfig)
 												.generate(primaryIndexKey);
@@ -437,13 +435,13 @@ public class HiveScenarioTest {
 								secondaryIndex.getName(), 
 								secondaryIndexKey,
 								entityConfig.getId(newResourceInstance));
-					}}, HiveReadOnlyException.class);	
+					}}, HiveLockableException.class);	
 				}
 				// Attempt to insert a primary index key
 				AssertUtils.assertThrows(new AssertUtils.UndoableToss() { public void f() throws Exception {				
-					hive.updateHiveReadOnly(true);
+					hive.updateHiveStatus(Status.readOnly);
 					new Undo() { public void f() throws Exception {
-						hive.updateHiveReadOnly(false);
+						hive.updateHiveStatus(Status.writable);
 					}};
 					hive.directory().insertPrimaryIndexKey(
 							primitiveGenerators.get(entityConfig.getPrimaryIndexKeyPropertyName(), new Delay<Generator>() {
@@ -454,7 +452,7 @@ public class HiveScenarioTest {
 								}}).generate());
 							
 							
-				}}, HiveReadOnlyException.class);	
+				}}, HiveLockableException.class);	
 			} catch (Exception e) { throw new HiveException("Undoable exception", e); }
 		}	
 		private Collection<? extends EntityIndexConfig> getHiveIndexes() {

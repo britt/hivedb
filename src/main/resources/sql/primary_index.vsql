@@ -1,6 +1,6 @@
 CREATE TABLE $tableName (
 	id $indexType not null,
 	node SMALLINT not null,
-	read_only $booleanType default 0,
+	status integer default 0,
 	PRIMARY KEY (id,node)
 ) #if ( $dialect == $mysql ) ENGINE=InnoDB #end

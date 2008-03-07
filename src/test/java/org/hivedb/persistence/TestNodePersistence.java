@@ -7,6 +7,7 @@ import static org.testng.AssertJUnit.assertNotNull;
 import java.util.List;
 
 import org.hivedb.Hive;
+import org.hivedb.Lockable.Status;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.persistence.NodeDao;
 import org.hivedb.util.database.HiveDbDialect;
@@ -45,8 +46,8 @@ public class TestNodePersistence extends H2HiveTestCase {
 		assertEquals(full, fetchedFull);
 		assertEquals(minimal, fetchedMinimal);
 		
-		assertFalse(fetchedFull.isReadOnly());
-		assertFalse(fetchedMinimal.isReadOnly());
+		assertFalse(fetchedFull.getStatus().equals(Status.readOnly));
+		assertFalse(fetchedMinimal.getStatus().equals(Status.readOnly));
 	}
 	
 	@Test
@@ -124,7 +125,7 @@ public class TestNodePersistence extends H2HiveTestCase {
 	public Node createFullyPopulatedNode() {
 		Node node = createMinimalNode();
 		node.setName("full node");
-		node.setReadOnly(false);
+		node.setStatus(Status.writable);
 		node.setUsername("test");
 		node.setPassword("test");
 		node.setPort(3306);

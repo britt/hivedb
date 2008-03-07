@@ -11,7 +11,7 @@ import org.hivedb.Hive;
 import org.hivedb.HiveException;
 import org.hivedb.HiveFacade;
 import org.hivedb.HiveKeyNotFoundException;
-import org.hivedb.HiveReadOnlyException;
+import org.hivedb.HiveLockableException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.annotations.IndexType;
 import org.hivedb.configuration.EntityConfig;
@@ -57,9 +57,9 @@ public class HiveSyncer {
 	 *  specified by the HiveScenarioConfig they will be left alone, not deleted.
 	 * @param entityHiveConfig
 	 * @return
-	 * @throws HiveReadOnlyException 
+	 * @throws HiveLockableException 
 	 */
-	public HiveDiff syncHive(EntityHiveConfig entityHiveConfig) throws HiveReadOnlyException
+	public HiveDiff syncHive(EntityHiveConfig entityHiveConfig) throws HiveLockableException
 	{
 		HiveDiff hiveDiff = diffHive(entityHiveConfig);
 		for(Resource resource: hiveDiff.getMissingResources())

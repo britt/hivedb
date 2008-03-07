@@ -4,13 +4,18 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import org.hivedb.util.Lists;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.functional.Atom;
+import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Maps;
+import org.hivedb.util.functional.Predicate;
 
 public class AnnotationHelper {
 	public static<T extends Annotation> T getFirstInstanceOfAnnotation(Class entityClass, Class<T> annotationClass) {
@@ -22,7 +27,10 @@ public class AnnotationHelper {
 		return Atom.getFirstOrNull(getAllMethodsWithAnnotation(entityClass, annotationClass));
 	}
 	
-	public static<T extends Annotation> List<Method> getAllMethodsWithAnnotation(Class entityClass, Class<T> annotationClass) {
+	public static List<Method> getAllMethodsWithAnnotation(Class entityClass, Class annotationClass) {
+		return getAllMethodsWithAnnotations(entityClass, Collections.singleton(annotationClass));
+	}
+	public static List<Method> getAllMethodsWithAnnotations(Class entityClass, Collection<Class> annotationClasses) {
 		List<Method> methods = Lists.newArrayList();
 		for(Method method : entityClass.getMethods()) {
 			Method targetMethod = method;
@@ -35,8 +43,11 @@ public class AnnotationHelper {
 					throw new RuntimeException(e);
 				}
 			}
-			if(targetMethod.getAnnotation(annotationClass) != null)
-				methods.add(method);
+			for (Class annotationClass : annotationClasses )
+				if(targetMethod.getAnnotation(annotationClass) != null) {
+					methods.add(method);
+					break;
+				}
 		}
 		return methods;
 	}
@@ -83,5 +94,15 @@ public class AnnotationHelper {
 		if (!owner.equals(clazz))
 			return (T)ReflectionTools.getGetterOfProperty(owner, property).getAnnotation((Class)annotationClass);
 		return null;
+	}
+	public static<T> T  getMethodArgumentAnnotationDeeply(Method method, int argumentIndex, final Class<? extends T> annotationClass) {
+		return (T)Filter.grepSingleOrNull(
+				new Predicate<Annotation>() {
+					public boolean f(Annotation annoation) {
+						return ReflectionTools.doesImplementOrExtend(annoation.getClass(), annotationClass);
+					}
+				},
+				Arrays.asList(method.getParameterAnnotations()[argumentIndex]));
+				
 	}
 }

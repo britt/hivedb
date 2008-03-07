@@ -19,12 +19,12 @@ public class IndexSqlFormatter {
 	 */
 	public String insertPrimaryIndexKey(PartitionDimension partitionDimension) {
 		return String.format(
-				"insert into %s (id, node, read_only) values(?, ?, 0)", 
+				"insert into %s (id, node, status) values(?, ?, 0)", 
 				IndexSchema.getPrimaryIndexTableName(partitionDimension));
 	}
 	
 	public String selectKeySemaphoreOfPrimaryIndexKey(PartitionDimension partitionDimension) {
-		return String.format("select node,read_only from %s where id = ?", IndexSchema.getPrimaryIndexTableName(partitionDimension)); 
+		return String.format("select node,status from %s where id = ?", IndexSchema.getPrimaryIndexTableName(partitionDimension)); 
 	}
 	
 	public String selectResourceIdsOfPrimaryIndexKey(ResourceIndex resourceIndex) {
@@ -36,7 +36,7 @@ public class IndexSqlFormatter {
 	}
 	
 	public String updateReadOnlyOfPrimaryIndexKey(PartitionDimension partitionDimension) {
-		return String.format("update %s set read_only = ? where id = ?", IndexSchema.getPrimaryIndexTableName(partitionDimension));
+		return String.format("update %s set status = ? where id = ?", IndexSchema.getPrimaryIndexTableName(partitionDimension));
 	}
 	
 	public String deletePrimaryIndexKey(PartitionDimension partitionDimension) {
@@ -74,19 +74,19 @@ public class IndexSqlFormatter {
 		if (ResourceIndex.class.isInstance(secondaryIndex))		
 			// index of a resource
 			return String.format(
-				"select distinct p.node,p.read_only from %s p join %s r on r.pkey = p.id where r.id = ?", 
+				"select distinct p.node,p.status from %s p join %s r on r.pkey = p.id where r.id = ?", 
 				IndexSchema.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
 				IndexSchema.getSecondaryIndexTableName(secondaryIndex.getResource().getIdIndex()));
 		else if (secondaryIndex.getResource().isPartitioningResource())
 			 // secondary index of a resource that is also the partition dimension
 			 return String.format(
-				"select distinct p.node,p.read_only from %s p join %s s on s.pkey = p.id where s.id = ?", 
+				"select distinct p.node,p.status from %s p join %s s on s.pkey = p.id where s.id = ?", 
 				IndexSchema.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
 				IndexSchema.getSecondaryIndexTableName(secondaryIndex));
 		else 
 			// secondary index of a resource that is not also the partition dimension
 			return String.format(
-				"select distinct p.node,p.read_only from %s p join %s r on r.pkey = p.id join %s s on s.pkey = r.id where s.id = ?", 
+				"select distinct p.node,p.status from %s p join %s r on r.pkey = p.id join %s s on s.pkey = r.id where s.id = ?", 
 				IndexSchema.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
 				IndexSchema.getResourceIndexTableName(secondaryIndex.getResource()),
 				IndexSchema.getSecondaryIndexTableName(secondaryIndex));
@@ -153,7 +153,7 @@ public class IndexSqlFormatter {
 	
 	public String selectKeySemaphoresOfResourceId(Resource resource) {
 		return String.format(
-				"select p.node,p.read_only from %s p join %s r on r.pkey = p.id where r.id = ?", 
+				"select p.node,p.status from %s p join %s r on r.pkey = p.id where r.id = ?", 
 				IndexSchema.getPrimaryIndexTableName(resource.getPartitionDimension()),
 				IndexSchema.getResourceIndexTableName(resource));
 	}

@@ -40,7 +40,7 @@ public class DataGenerationServiceImpl implements DataGenerationService {
 		config = new ConfigurationReader(classes);
 		List<Class<?>> hiveSessionClasses = Lists.newArrayList();
 		hiveSessionClasses.addAll(new EntityResolver(config.getHiveConfiguration()).getEntityClasses());
-		HiveSessionFactory factory = new HiveSessionFactoryBuilderImpl(config.getHiveConfiguration(), hiveSessionClasses, hive, new SequentialShardAccessStrategy());
+		HiveSessionFactory factory = new HiveSessionFactoryBuilderImpl(config.getHiveConfiguration(), classes, hive, new SequentialShardAccessStrategy());
 		for (Class clazz : hiveSessionClasses) {
 			if (clazz.getAnnotation(Resource.class) != null) {
 				daos.put(clazz, new BaseDataAccessObject(config.getEntityConfig(clazz.getName()),hive,factory));

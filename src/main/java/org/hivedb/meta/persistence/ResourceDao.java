@@ -83,12 +83,16 @@ public class ResourceDao extends JdbcDaoSupport {
 				.newPreparedStatementCreator(parameters), generatedKey);
 		if (rows != 1)
 			throw new HiveRuntimeException("Unable to update Resource: " + resource.getId());
+		
+		// dependencies
+		for (SecondaryIndex si : resource.getSecondaryIndexes())
+			new SecondaryIndexDao(ds).update(si);
 	}
 	
 	public void delete(Resource resource) {
 		// dependencies
 		for (SecondaryIndex si : resource.getSecondaryIndexes())
-			new SecondaryIndexDao(ds).create(si);
+			new SecondaryIndexDao(ds).delete(si);
 		
 		Object[] parameters;
 		parameters = new Object[] { resource.getId()};

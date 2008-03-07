@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
-import org.hivedb.HiveReadOnlyException;
+import org.hivedb.HiveLockableException;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.directory.Directory;
@@ -118,7 +118,7 @@ public class HiveMigrator implements Migrator {
 	private void lock(Object key) {
 		try {
 			hive.directory().updatePrimaryIndexKeyReadOnly(key, true);
-		} catch (HiveReadOnlyException e) {
+		} catch (HiveLockableException e) {
 			throw new MigrationException("Failed to lock partition key "+ key +" for writing.", e);
 		}
 	}
@@ -126,7 +126,7 @@ public class HiveMigrator implements Migrator {
 	private void unlock(Object key) {
 		try {
 			hive.directory().updatePrimaryIndexKeyReadOnly(key, false);
-		} catch (HiveReadOnlyException e) {
+		} catch (HiveLockableException e) {
 			throw new MigrationException("Failed to unlock partition key " + key + " for writing.", e);
 		}
 	}

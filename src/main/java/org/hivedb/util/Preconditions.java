@@ -3,7 +3,7 @@ package org.hivedb.util;
 import java.util.Collection;
 
 import org.hivedb.HiveKeyNotFoundException;
-import org.hivedb.HiveReadOnlyException;
+import org.hivedb.HiveLockableException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.Lockable;
 import org.hivedb.meta.IdAndNameIdentifiable;
@@ -30,22 +30,22 @@ public class Preconditions {
 					String.format("Could not find %s with id %s", item.getClass().getSimpleName(), item.getId()), item);
 	}
 	
-	public static void isWritable(Collection<? extends Lockable> lockables, Lockable... moreLockables) throws HiveReadOnlyException {
+	public static void isWritable(Collection<? extends Lockable> lockables, Lockable... moreLockables) throws HiveLockableException {
 		for(Lockable lockable : lockables)
 			isWritable(lockable);
 		isWritable(moreLockables);
 	}
 	
-	public static void isWritable(Lockable... lockables) throws HiveReadOnlyException {
+	public static void isWritable(Lockable... lockables) throws HiveLockableException {
 		for(Lockable lockable : lockables)
 			isWritable(lockable);
 	}
 	
-	public static void isWritable(Lockable lockable) throws HiveReadOnlyException {
-		if(lockable.isReadOnly())
-			throw new HiveReadOnlyException(
-					String.format("This operation is invalid because the %s is currently read-only.", lockable.getClass().getSimpleName()));
-	}
+	public static void isWritable(Lockable lockable) throws HiveLockableException {
+		if(lockable.getStatus() != Lockable.Status.writable)
+			throw new HiveLockableException(
+					String.format("This operation is invalid because the %s is currently set to status %s.", lockable.getClass().getSimpleName(), lockable.getStatus()));
+		}
 	
 	public static void isNotEmpty(Collection c, String message) throws HiveKeyNotFoundException {
 		if(c == null || c.size() == 0)

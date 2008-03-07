@@ -10,14 +10,14 @@ import org.testng.annotations.Test;
 
 public class ExampleDaoServiceTest extends ClassDaoServiceTest {
 
-//	@Override
-//	@BeforeClass
-//	public void initializeDataProvider() {
-//		addEntity(WeatherReport.class, new WeatherSchema(getConnectString(getHiveDatabaseName())));
-//		addEntity(WeatherEvent.class);
-//	}
-//	
-//	@Test
-//	public void pluginDetectable(){}
+	@Override
+	@BeforeClass
+	public void initializeDataProvider() {
+		addEntity(WeatherReport.class, new WeatherSchema(getConnectString(getHiveDatabaseName())));
+		addEntity(WeatherEvent.class);
+	}
+	
+	@Test
+	public void pluginDetectable(){}
 
 }

@@ -1,4 +1,4 @@
 CREATE TABLE semaphore_metadata (
-	read_only int not null, 
+	status int not null, 
 	revision int not null
 )

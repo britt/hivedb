@@ -37,13 +37,11 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class DataGenerationServiceTest extends H2HiveTestCase {
-	private static Hive hive;
-	private EntityHiveConfig config;
 
 	@Test
 	public void testGeneration() throws Exception {
 		Collection<Class<?>> classes = getMappedClasses();
-		DataGenerationService service = new DataGenerationServiceImpl(classes, hive);
+		DataGenerationService service = new DataGenerationServiceImpl(classes, getHive());
 		int partitionKeyCount = 2;
 		int instanceCount = 4;
 		
@@ -58,7 +56,7 @@ public class DataGenerationServiceTest extends H2HiveTestCase {
 			assertNotNull(instance);
 			instances.add(instance);
 		}
-		final EntityConfig entityConfig = config.getEntityConfig(WeatherReport.class);
+		final EntityConfig entityConfig = getEntityHiveConfig().getEntityConfig(WeatherReport.class);
 		assertEquals(partitionKeyCount, Filter.grepUnique(new Unary<Object, Object>(){
 			public Object f(Object item) {
 				return entityConfig.getPrimaryIndexKey(item);
@@ -72,7 +70,7 @@ public class DataGenerationServiceTest extends H2HiveTestCase {
 	@Test
 	public void overTheWire() throws Exception {
 		Collection<Class<?>> classes = getMappedClasses();
-		DataGenerationService service = new DataGenerationServiceImpl(classes, hive);
+		DataGenerationService service = new DataGenerationServiceImpl(classes, getHive());
 		JaxWsServerFactoryBean sf = new JaxWsServerFactoryBean();
 		sf.setAddress("local://generate");
 		sf.setServiceBean(service);
@@ -105,7 +103,6 @@ public class DataGenerationServiceTest extends H2HiveTestCase {
 		new HiveInstaller(getConnectString(getHiveDatabaseName())).run();	
 		ConfigurationReader reader = new ConfigurationReader(getMappedClasses());
 		reader.install(getConnectString(getHiveDatabaseName()));
-		hive = getHive();
 	}
 	
 	@BeforeClass

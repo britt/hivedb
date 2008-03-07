@@ -42,20 +42,20 @@ public class ConnectionManager {
 		return dataSources;
 	}
 	
-	private Connection getConnection(KeySemaphore semaphore, AccessType intention) throws HiveReadOnlyException,SQLException {
+	private Connection getConnection(KeySemaphore semaphore, AccessType intention) throws HiveLockableException,SQLException {
 		if(intention == AccessType.ReadWrite)
 			Preconditions.isWritable(hive, semaphore, hive.getNode(semaphore.getId()));
 		return nodeDataSources.get(semaphore.getId()).getConnection();
 	}
 	
-	public Collection<Connection> getByPartitionKey(Object primaryIndexKey, AccessType intent) throws SQLException, HiveReadOnlyException {
+	public Collection<Connection> getByPartitionKey(Object primaryIndexKey, AccessType intent) throws SQLException, HiveLockableException {
 		Collection<Connection> connections = new ArrayList<Connection>();
 		for(KeySemaphore semaphore : directory.getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey))
 			connections.add(getConnection(semaphore, intent));
 		return connections;
 	}
 
-	public Collection<Connection> getByResourceId(String resourceName, Object resourceId, AccessType intent) throws HiveReadOnlyException, SQLException {
+	public Collection<Connection> getByResourceId(String resourceName, Object resourceId, AccessType intent) throws HiveLockableException, SQLException {
 		Collection<Connection> connections = new ArrayList<Connection>();
 		for(KeySemaphore semaphore : directory.getKeySemaphoresOfResourceId(getResource(resourceName), resourceId))
 			connections.add(getConnection(semaphore, intent));
@@ -66,7 +66,7 @@ public class ConnectionManager {
 		return this.directory.getPartitionDimension().getResource(resourceName);
 	}
 
-	public Collection<Connection> getBySecondaryIndexKey(String secondaryIndexName, String resourceName, Object secondaryIndexKey, AccessType intent) throws HiveReadOnlyException, SQLException {
+	public Collection<Connection> getBySecondaryIndexKey(String secondaryIndexName, String resourceName, Object secondaryIndexKey, AccessType intent) throws HiveLockableException, SQLException {
 		if(AccessType.ReadWrite == intent)
 			throw new UnsupportedOperationException("Writes must be performed using the primary index key.");
 		

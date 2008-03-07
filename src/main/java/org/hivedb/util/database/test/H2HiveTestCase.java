@@ -53,7 +53,8 @@ public class H2HiveTestCase extends H2TestCase {
 						return getConnectString(databaseName);
 					}
 				},
-				getDataNodeNames());
+				getDataNodeNames(),
+				cleanupAfterEachTest || createDatabaseIfNoCleanup);
 	}
 	
 	protected HiveTestCase hiveTestCase;

@@ -4,29 +4,31 @@ import org.hivedb.Lockable;
 import org.hivedb.util.HiveUtils;
 
 public class KeySemaphore implements Lockable {
-	private boolean readOnly;
+	private Status status;
 	private int id;
 	
-	public KeySemaphore(int id, boolean readOnly) {
+	public KeySemaphore(int id, Lockable.Status status) {
 		this.id = id;
-		this.readOnly = readOnly;
+		this.status = status;
 	}
 	
 	public int getId() {
 		return id;
 	}
-	
-	public boolean isReadOnly() {
-		return readOnly;
-	}
-	
+		
 	public boolean equals(Object obj)
 	{
 		return obj.hashCode() == hashCode();
 	}
 	public int hashCode() {
 		return HiveUtils.makeHashCode(new Object[] {
-				id, readOnly
+				id, status
 		});
 	}
+
+	public Status getStatus() {
+		return status;
+	}
+
+
 }

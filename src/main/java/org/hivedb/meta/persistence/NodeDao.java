@@ -13,6 +13,7 @@ import java.util.List;
 import javax.sql.DataSource;
 
 import org.hivedb.HiveRuntimeException;
+import org.hivedb.Lockable.Status;
 import org.hivedb.meta.Node;
 import org.hivedb.util.Lists;
 import org.hivedb.util.database.DialectTools;
@@ -112,7 +113,7 @@ public class NodeDao extends JdbcDaoSupport {
 							rs.getString("host"), 
 							rs.getString("dialect") == null ? HiveDbDialect.MySql : DialectTools.stringToDialect(rs.getString("dialect"))
 			);
-			node.setReadOnly(readOnlyAsBoolean(rs.getInt("read_only")));
+			node.setStatus(Status.getByValue(rs.getInt("status")));		
 			node.setUsername(rs.getString("username"));
 			node.setPassword(rs.getString("password"));
 			node.setPort(rs.getInt("port"));
@@ -120,14 +121,6 @@ public class NodeDao extends JdbcDaoSupport {
 			node.setOptions(rs.getString("options"));
 			return node;
 		}
-	}
-	
-	private boolean readOnlyAsBoolean(int readOnly) {
-		return readOnly != 0;
-	}
-	
-	private int readOnlyAsInteger(boolean readOnly) {
-		return readOnly ? 1 : 0;
 	}
 	
 	private String insertSql(){
@@ -153,12 +146,12 @@ public class NodeDao extends JdbcDaoSupport {
 				"database_name",
 				"host",
 				"dialect",
-				"read_only",
+				"status",
 				"username",
 				"password",
 				"port",
 				"capacity",
-				"options"
+				"options",
 		};
 	}
 
@@ -183,12 +176,12 @@ public class NodeDao extends JdbcDaoSupport {
 				newObject.getDatabaseName(),
 				newObject.getHost(),
 				DialectTools.dialectToString(newObject.getDialect()),
-				readOnlyAsInteger(newObject.isReadOnly()),
+				newObject.getStatus().getValue(),
 				newObject.getUsername(),
 				newObject.getPassword(),
 				newObject.getPort(),
 				newObject.getCapacity(),
-				newObject.getOptions()
+				newObject.getOptions(),
 				};
 	}
 }

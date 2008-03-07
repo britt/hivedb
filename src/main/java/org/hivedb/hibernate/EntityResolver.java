@@ -13,6 +13,7 @@ import org.hivedb.annotations.IndexType;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.EntityIndexConfig;
+import org.hivedb.util.GeneratedClassFactory;
 import org.hivedb.util.GeneratedImplementation;
 import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.ReflectionTools;
@@ -114,7 +115,7 @@ public class EntityResolver {
 	}
 	public static Class<?> getPersistedImplementation(Class<?> clazz) {
 		if(generatesImplementation(clazz))
-			return GeneratedInstanceInterceptor.getGeneratedClass(clazz);
+			return GeneratedClassFactory.getGeneratedClass(clazz);
 		else
 			return clazz;
 	}

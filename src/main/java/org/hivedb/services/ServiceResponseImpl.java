@@ -9,7 +9,7 @@ import org.hivedb.util.Lists;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 
-public class ServiceResponseImpl<T> implements ServiceResponse<T>, Serializable {
+public class ServiceResponseImpl<T> implements ServiceResponse<T,ServiceContainer<T>>, Serializable {
 	private static final long serialVersionUID = 1L;
 	private Collection<ServiceContainer<T>> containers = Lists.newArrayList();
 	

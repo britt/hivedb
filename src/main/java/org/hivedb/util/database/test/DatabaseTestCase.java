@@ -15,6 +15,7 @@ import org.testng.annotations.BeforeMethod;
 public abstract class DatabaseTestCase {
 	protected boolean cleanupAfterEachTest = true;
 	protected boolean cleanupOnExit = true;	
+	protected boolean createDatabaseIfNoCleanup = true; // overridden by cleanup* flags
 	private Collection<String> databaseNames = Collections.EMPTY_LIST;
 	
 	protected abstract void createDatabase(String name);
@@ -41,8 +42,9 @@ public abstract class DatabaseTestCase {
 			}
 		}
 		else
-			for(String name : getDatabaseNames())
-				createDatabase(name);
+			if (createDatabaseIfNoCleanup)
+				for(String name : getDatabaseNames())
+					createDatabase(name);
 	}
 	
 	@AfterClass

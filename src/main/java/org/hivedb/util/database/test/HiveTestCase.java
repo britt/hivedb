@@ -5,8 +5,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.hivedb.Hive;
-import org.hivedb.HiveReadOnlyException;
+import org.hivedb.HiveLockableException;
 import org.hivedb.HiveRuntimeException;
+import org.hivedb.Lockable.Status;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.hibernate.ConfigurationReader;
 import org.hivedb.management.HiveInstaller;
@@ -26,45 +27,53 @@ public class HiveTestCase {
 	private ConfigurationReader configurationReader;
 	private Collection<String> dataNodeNames;
 	private String hiveDatabaseName;
+	private boolean doInstall;
 	HiveTestCase(
 			String hiveDatabaseName,
 			Collection<Class<?>> entityClasses,
 			HiveDbDialect hiveDbDialect, 
 			Unary<String,String> getConnectString,
-			Collection<String> dataNodeNames)
+			Collection<String> dataNodeNames,
+			boolean doInstall)
 	{
 		this.hiveDatabaseName = hiveDatabaseName;
 		this.getConnectString = getConnectString;
 		this.hiveDbDialect = hiveDbDialect;
 		this.configurationReader = new ConfigurationReader(entityClasses);
 		this.dataNodeNames = dataNodeNames;
+		this.doInstall = doInstall;
 	}
 	public void beforeClass() {
 		
 	}
 	public void beforeMethod() {
-		hive = null;
-		String connectString = getConnectString.f(getHiveDatabaseName());
-		new HiveInstaller(connectString).run();		
-		installEntityHiveConfig();
 		
-		String username = getUserName(connectString);
-		String password = getPassword(connectString);
-		for(String nodeName : dataNodeNames)
-			try {
-				Node node = new Node(Hive.NEW_OBJECT_ID,nodeName, nodeName, hiveDbDialect == HiveDbDialect.H2 ? "" : "localhost", hiveDbDialect);
-				if (username != null)
-					node.setUsername(username);
-				else
-					node.setUsername("");
-				if (password != null)
-					node.setPassword(password);
-				else
-					node.setUsername("");
-				hive.addNode(node);
-			} catch (HiveReadOnlyException e) {
-				throw new HiveRuntimeException("Hive was read-only", e);
-			}
+		if (doInstall) {
+			hive = null;
+			String connectString = getConnectString.f(getHiveDatabaseName());
+			new HiveInstaller(connectString).run();		
+			installEntityHiveConfig();
+			
+			String username = getUserName(connectString);
+			String password = getPassword(connectString);
+			for(String nodeName : dataNodeNames)
+				try {
+					Node node = new Node(Hive.NEW_OBJECT_ID,nodeName, nodeName, hiveDbDialect == HiveDbDialect.H2 ? "" : "localhost", hiveDbDialect);
+					if (username != null)
+						node.setUsername(username);
+					else
+						node.setUsername("");
+					if (password != null)
+						node.setPassword(password);
+					else
+						node.setUsername("");
+					hive.addNode(node);
+				} catch (HiveLockableException e) {
+					throw new HiveRuntimeException("Hive was read-only", e);
+				}
+		}
+		else
+			hive = getOrLoadHive();
 	}
 	
 	public EntityHiveConfig getEntityHiveConfig()
@@ -85,6 +94,11 @@ public class HiveTestCase {
 						getConnectString.f(getHiveDatabaseName()),
 						dimensionName,
 						JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKeyType));
+		return hive;
+	}
+	protected Hive getOrLoadHive() {
+		if (hive == null)
+			hive = Hive.load(getConnectString.f(getHiveDatabaseName()));
 		return hive;
 	}
 	public Hive getHive() { 
@@ -126,7 +140,7 @@ public class HiveTestCase {
 		return "member";
 	}
 	protected HiveSemaphore createHiveSemaphore() {
-		return new HiveSemaphore(false,54321);
+		return new HiveSemaphore(Status.writable,54321);
 	}
 	
 	public String getHiveDatabaseName() {

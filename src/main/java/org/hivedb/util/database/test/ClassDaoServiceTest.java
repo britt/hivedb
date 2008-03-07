@@ -1,6 +1,5 @@
 package org.hivedb.util.database.test;
 
-import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertTrue;
 
@@ -8,7 +7,6 @@ import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -18,12 +16,11 @@ import java.util.List;
 
 import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hivedb.Hive;
-import org.hivedb.HiveReadOnlyException;
+import org.hivedb.HiveLockableException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.Schema;
 import org.hivedb.annotations.AnnotationHelper;
-import org.hivedb.annotations.Ignore;
-import org.hivedb.annotations.Index;
+import org.hivedb.annotations.GeneratorIgnore;
 import org.hivedb.annotations.IndexParam;
 import org.hivedb.annotations.Validate;
 import org.hivedb.configuration.EntityConfig;
@@ -31,7 +28,6 @@ import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.hibernate.BaseDataAccessObject;
 import org.hivedb.hibernate.ConfigurationReader;
-import org.hivedb.hibernate.DataAccessObject;
 import org.hivedb.hibernate.HiveSessionFactory;
 import org.hivedb.hibernate.HiveSessionFactoryBuilderImpl;
 import org.hivedb.management.HiveInstaller;
@@ -39,30 +35,24 @@ import org.hivedb.meta.Node;
 import org.hivedb.services.BaseClassDaoService;
 import org.hivedb.services.ClassDaoService;
 import org.hivedb.services.ServiceResponse;
-import org.hivedb.util.AssertUtils;
 import org.hivedb.util.GenerateInstance;
-import org.hivedb.util.GeneratePrimitiveValue;
 import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.Lists;
 import org.hivedb.util.ReflectionTools;
-import org.hivedb.util.ReflectionTools.DiffCollection;
 import org.hivedb.util.database.HiveDbDialect;
-import org.hivedb.util.functional.Actor;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Delay;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Predicate;
-import org.hivedb.util.functional.Toss;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.hivedb.util.validators.NoValidator;
-import org.springframework.beans.BeanUtils;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-public class ClassDaoServiceTest extends H2TestCase {
+public class ClassDaoServiceTest extends H2TestCase implements SchemaInitializer {
 	public static int INSTANCE_COUNT = 5;
 	protected EntityHiveConfig config;
 	protected Hive hive;
@@ -70,11 +60,46 @@ public class ClassDaoServiceTest extends H2TestCase {
 	protected static Collection<Class> entityClasses = Lists.newArrayList();
 	protected HiveSessionFactory factory;
 	
-	public static void addEntity(Class clazz, Schema schema) {
-		addEntity(clazz, new LazyInitializer(clazz, Lists.newList(schema)));
+	@Override
+	protected void beforeMethod() {
 	}
-	public static void addEntity(Class clazz, Collection<Schema> schemaList) {
-		addEntity(clazz, new LazyInitializer(clazz, schemaList));
+
+	protected void superClassBeforeMethod() {
+		super.beforeMethod();
+	}
+	
+	public void initialize(Collection<Schema> schemaList) {
+		superClassBeforeMethod();
+		new HiveInstaller(getConnectString(getHiveDatabaseName())).run();		
+		ConfigurationReader reader = new ConfigurationReader(getEntityClasses());
+		reader.install(getConnectString(getHiveDatabaseName()));
+		hive = getHive();
+		for(String nodeName : getDataNodeNames())
+			try {
+				hive.addNode(new Node(nodeName, nodeName, "" , HiveDbDialect.H2));
+				for (Schema schema : schemaList)
+					schema.install(getConnectString(nodeName));
+			} catch (HiveLockableException e) {
+				throw new HiveRuntimeException("Hive was read-only", e);
+			}
+		config = reader.getHiveConfiguration();
+		factory = getSessionFactory();
+	}
+	
+	public void addEntity(final Class clazz, Schema schema) {
+		addEntity(clazz, Lists.newList(schema));
+	}
+	public void addEntity(final Class clazz, Collection<Schema> schemaList) {
+		addEntity(clazz, new LazyInitializer(clazz, schemaList,
+				new Delay<ClassDaoService>(){
+					public ClassDaoService f() {
+						return new BaseClassDaoService(
+								ConfigurationReader.readConfiguration(clazz),
+								new BaseDataAccessObject(
+										config.getEntityConfig(clazz),
+										hive,
+										factory));
+					}}));
 	}
 	
 	public static void addEntity(Class clazz) {
@@ -99,7 +124,7 @@ public class ClassDaoServiceTest extends H2TestCase {
 	@SuppressWarnings("unused")
 	@DataProvider(name = "service")
 	protected Iterator<?> getServices() {
-		return new ServiceIterator(services.iterator(),this);
+		return new TestIterator(services.iterator(),this);
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -164,8 +189,8 @@ public class ClassDaoServiceTest extends H2TestCase {
 		for (Method getter : ReflectionTools.getGetters(clazz))
 		{
 			if(!getter.getReturnType().isAssignableFrom(Collection.class) &&
-				AnnotationHelper.getAnnotationDeeply(clazz, ReflectionTools.getPropertyNameOfAccessor(getter), Ignore.class) == null)
-				Assert.assertEquals(getter.invoke(instance), getter.invoke(actual));
+				AnnotationHelper.getAnnotationDeeply(clazz, ReflectionTools.getPropertyNameOfAccessor(getter), GeneratorIgnore.class) == null)
+				Assert.assertEquals(getter.invoke(instance).hashCode(), getter.invoke(actual).hashCode()); // hashCode for Date comparisons
 		}
 	}
 
@@ -378,82 +403,6 @@ public class ClassDaoServiceTest extends H2TestCase {
 				getConnectString(getHiveDatabaseName()), 
 				Arrays.asList(getEntityClasses()), 
 				new SequentialShardAccessStrategy());
-	}
-	
-	public static class LazyInitializer implements Delay<Object> {
-		private Delay<?> delay;
-		private Collection<Schema> schemaList;
-		private ClassDaoServiceTest test;
-		public LazyInitializer(Delay<?> delay, Schema schema) {
-			this.delay = delay;
-			this.schemaList = Collections.singletonList(schema);
-		}
-		public LazyInitializer(Delay<?> delay, Collection<Schema> schemaList) {
-			this.delay = delay;
-			this.schemaList = schemaList;
-		}
-		public LazyInitializer(final Class clazz, Collection<Schema> schemaList){
-			this.schemaList = schemaList;
-			this.delay = new Delay<ClassDaoService>(){
-				public ClassDaoService f() {
-					return new BaseClassDaoService(
-							ConfigurationReader.readConfiguration(clazz),
-							new BaseDataAccessObject(
-									test.config.getEntityConfig(clazz),
-									test.hive,
-									test.factory));
-				}};
-		}
-		public LazyInitializer(final Class clazz, Schema schema){
-			new LazyInitializer(clazz, Collections.singletonList(schema));
-		}
-		public Object f() {
-			initialize(schemaList, test);
-			return delay.f();
-		}
-		public LazyInitializer setTest(ClassDaoServiceTest test) {this.test = test; return this;}
-	}
-	
-	private class ServiceIterator implements Iterator<Object[]> {
-		Iterator<LazyInitializer> i;
-		ClassDaoServiceTest test;
-		public ServiceIterator(Iterator<LazyInitializer> i, ClassDaoServiceTest test) { 
-			this.i = i;
-			this.test = test;
-		}
-		
-		public Object[] next() {return new Object[]{
-				i.next().setTest(test).f()};
-		}
-		public void remove() {throw new UnsupportedOperationException();}
-		public boolean hasNext() {return i.hasNext();}
-		
-	}
-	
-	@Override
-	protected void beforeMethod() {
-	}
-
-	protected void superClassBeforeMethod() {
-		super.beforeMethod();
-	}
-	
-	protected static void initialize(Collection<Schema> schemaList, ClassDaoServiceTest test) {
-		test.superClassBeforeMethod();
-		new HiveInstaller(test.getConnectString(test.getHiveDatabaseName())).run();		
-		ConfigurationReader reader = new ConfigurationReader(test.getEntityClasses());
-		reader.install(test.getConnectString(test.getHiveDatabaseName()));
-		test.hive = test.getHive();
-		for(String nodeName : test.getDataNodeNames())
-			try {
-				test.hive.addNode(new Node(nodeName, nodeName, "" , HiveDbDialect.H2));
-				for (Schema schema : schemaList)
-					schema.install(test.getConnectString(nodeName));
-			} catch (HiveReadOnlyException e) {
-				throw new HiveRuntimeException("Hive was read-only", e);
-			}
-		test.config = reader.getHiveConfiguration();
-		test.factory = test.getSessionFactory();
 	}
 	
 	protected Class<Object> toClass(String className) {
