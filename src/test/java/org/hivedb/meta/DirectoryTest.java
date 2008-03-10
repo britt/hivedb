@@ -23,10 +23,10 @@ import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.AssertUtils;
 import org.hivedb.util.Lists;
 import org.hivedb.util.database.HiveDbDialect;
-import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.H2TestCase;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Transform;
+import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -40,7 +40,7 @@ public class DirectoryTest extends H2TestCase {
 	@BeforeMethod
 	public void setUp() throws Exception {
 		new HiveInstaller(getConnectString(H2TestCase.TEST_DB)).run();
-		HiveFacade hive = Hive.create(getConnectString(H2TestCase.TEST_DB), partitionDimensionName(), Types.INTEGER);
+		Hive hive = Hive.create(getConnectString(H2TestCase.TEST_DB), partitionDimensionName(), Types.INTEGER);
 		hive.addResource(createResource());
 		nameIndex = new SecondaryIndex("name", Types.VARCHAR);
 		numIndex = new SecondaryIndex("num", Types.INTEGER);
@@ -49,7 +49,10 @@ public class DirectoryTest extends H2TestCase {
 		hive.addSecondaryIndex(resource, numIndex);
 		resource = hive.getPartitionDimension().getResource(resource.getName());
 		dimension = hive.getPartitionDimension();
-		hive.addNode(new Node("node", getConnectString(H2TestCase.TEST_DB), "",HiveDbDialect.H2));
+		hive.addNode(new Node("node", H2TestCase.TEST_DB, "",HiveDbDialect.H2));
+		SimpleJdbcDaoSupport dao = new SimpleJdbcDaoSupport();
+		dao.setDataSource(hive.getDataSourceProvider().getDataSource(getConnectString(H2TestCase.TEST_DB)));
+//		dao.getJdbcTemplate().update("SET TRACE_LEVEL_SYSTEM_OUT 3");
 	}
 
 	

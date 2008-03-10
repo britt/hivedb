@@ -1,11 +1,17 @@
 package org.hivedb.meta.persistence;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+
 import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.hivedb.util.HiveUtils;
 
 public class HiveBasicDataSource extends BasicDataSource implements Cloneable {
+	private Log log = LogFactory.getLog(HiveBasicDataSource.class);
 	public static final String CONNECTION_POOL_SIZE = "HiveDataSourceConnectionPoolSize";
-	public static final int DEFAULT_POOL_SIZE = 32;
+	public static final int DEFAULT_POOL_SIZE = 4;
 	private Long connectionTimeout = 500l;
 	private Long socketTimeout  = 500l;
 	
@@ -15,6 +21,10 @@ public class HiveBasicDataSource extends BasicDataSource implements Cloneable {
 		super();
 		setUrl(hiveUri);	
 		setMaxActive(poolSize);
+		setValidationQuery("select count(1);");
+		log.debug(String.format(
+				"HiveBasicDataSource created for %s.  Max pool size: %s  Min idle connections: %s  Idle timeout: %s  TestOnBorrow: %s", 
+				this.getUrl(), this.getMaxActive(), this.getMinIdle(), this.getMinEvictableIdleTimeMillis(), this.testOnBorrow));
 	}
 	
 	public HiveBasicDataSource(String hiveUri)
@@ -106,4 +116,18 @@ public class HiveBasicDataSource extends BasicDataSource implements Cloneable {
 		this.addConnectionProperty("socketTimeout", socketTimeout.toString());
 	}
 
+	@Override
+	public Connection getConnection() throws SQLException {
+		Connection connection = super.getConnection();
+		log.debug("Loaned connection, current active connections: " + this.getNumActive());
+		return connection;
+	}
+
+	@Override
+	public Connection getConnection(String username, String password)
+			throws SQLException {
+		Connection connection = super.getConnection(username,password);		
+		log.debug("Loaned connection, current active connections: " + this.getNumActive());
+		return connection;
+	}
 }
