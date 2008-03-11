@@ -7,10 +7,10 @@ public interface GeneratedImplementation {
 	 *  Retrieve the primary interface implemented by this proxy
 	 * @return
 	 */
-	Class getUnderlyingInterface();
+	Class retrieveUnderlyingInterface();
 	/**
 	 *  Get the underlying Map that stores the field data of the proxy implementation
 	 * @return
 	 */
-	Map getMap();
+	Map retrieveMap();
 }

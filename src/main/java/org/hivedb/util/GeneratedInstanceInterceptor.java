@@ -116,11 +116,11 @@ public class GeneratedInstanceInterceptor implements  MethodInterceptor {
 			propertySupport.removePropertyChangeListener(listener);
 		}
 	
-		public Map getMap() {
+		public Map retrieveMap() {
 			return map;
 		}
 	
-		public Class getUnderlyingInterface() {
+		public Class retrieveUnderlyingInterface() {
 			return clazz;
 		}
 		
