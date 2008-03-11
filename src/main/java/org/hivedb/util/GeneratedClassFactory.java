@@ -22,7 +22,7 @@ public class GeneratedClassFactory {
 		e.setCallbackType(interceptor.getClass());
 		e.setNamingPolicy(new ImplNamer(clazz));
 		e.setSuperclass(Mapper.class);
-		e.setInterfaces(new Class[] {clazz, PropertySetter.class, GeneratedImplementation.class});
+		e.setInterfaces(new Class[] {clazz, PropertyAccessor.class, GeneratedImplementation.class});
 		Class<? extends T> generatedClass = e.createClass();
 		Enhancer.registerCallbacks(generatedClass, new Callback[] {interceptor});
 		return generatedClass;
@@ -44,7 +44,7 @@ public class GeneratedClassFactory {
 	}
 	
 	public static<T> T newInstance( Class<T> clazz, MethodInterceptor interceptor, Map<String, Object> prototype ){
-		PropertySetter instance = (PropertySetter) newInstance(clazz, interceptor);
+		PropertyAccessor instance = (PropertyAccessor) newInstance(clazz, interceptor);
 		for (String propertyName : ReflectionTools.getPropertiesOfGetters((Class<?>)clazz))
 			instance.set(propertyName, prototype.get(propertyName));
 		return (T) instance;

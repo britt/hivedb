@@ -2,7 +2,7 @@ package org.hivedb.meta;
 
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.util.GenerateInstance;
-import org.hivedb.util.PropertySetter;
+import org.hivedb.util.PropertyAccessor;
 
 public class GenerateEntityInstance<R> {
 	private EntityConfig entityConfig;
@@ -12,7 +12,7 @@ public class GenerateEntityInstance<R> {
 	@SuppressWarnings("unchecked")
 	public R generate(Object primaryIndexKey) {
 		R instance = new GenerateInstance<R>((Class<R>) entityConfig.getRepresentedInterface()).generate();
-		((PropertySetter)instance).set(entityConfig.getPrimaryIndexKeyPropertyName(), primaryIndexKey);
+		((PropertyAccessor)instance).set(entityConfig.getPrimaryIndexKeyPropertyName(), primaryIndexKey);
 		return instance;
 	}
 }

@@ -13,7 +13,7 @@ import org.hivedb.hibernate.HiveSessionFactoryBuilderImpl;
 import org.hivedb.meta.Node;
 import org.hivedb.util.GenerateInstance;
 import org.hivedb.util.GeneratedInstanceInterceptor;
-import org.hivedb.util.PropertySetter;
+import org.hivedb.util.PropertyAccessor;
 import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.functional.Atom;
 import org.testng.AssertJUnit;

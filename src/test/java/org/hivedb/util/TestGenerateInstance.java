@@ -52,7 +52,8 @@ public class TestGenerateInstance {
 		Object x = baa;
 		// Test getter via method invocation
 		try {
-			Assert.assertEquals(x.getClass().getMethod("getInt", new Class[] {}).invoke(baa, new Object[] {}), baa.getInt());
+			final int int1 = baa.getInt();
+			Assert.assertEquals(x.getClass().getMethod("getInt", new Class[] {}).invoke(baa, new Object[] {}), int1);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

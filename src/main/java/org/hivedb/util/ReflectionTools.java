@@ -73,8 +73,8 @@ public class ReflectionTools {
 								} catch (Exception e) {
 									new RuntimeException(e);
 								}
-							else if (instance instanceof PropertySetter)
-									((PropertySetter)instance).set(propertyName, value);
+							else if (instance instanceof PropertyAccessor)
+									((PropertyAccessor)instance).set(propertyName, value);
 							else
 								throw new HiveRuntimeException(String.format("No way to inoke setter of class %s, property %s", instance.getClass(), propertyName));
 						}
