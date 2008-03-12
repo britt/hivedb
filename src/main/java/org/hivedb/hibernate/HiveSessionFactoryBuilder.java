@@ -1,7 +1,7 @@
 package org.hivedb.hibernate;
 
-import org.hibernate.shards.engine.ShardedSessionFactoryImplementor;
+import org.hibernate.shards.session.ShardedSessionFactory;
 
 public interface HiveSessionFactoryBuilder {
-	public ShardedSessionFactoryImplementor getSessionFactory();
+	public ShardedSessionFactory getSessionFactory();
 }

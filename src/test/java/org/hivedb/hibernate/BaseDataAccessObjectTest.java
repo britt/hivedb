@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Random;
 
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Session;
 import org.hivedb.Hive;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.util.GenerateInstance;
@@ -372,6 +373,27 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		assertFalse(dao.exists(88));
 		WeatherReport original = getPersistentInstance(dao);
 		assertTrue(dao.exists(original.getReportId()));
+	}
+	
+	@Test
+	public void testAllShardsQuery() {
+		final DataAccessObject<WeatherReport,Integer> dao = (DataAccessObject<WeatherReport, Integer>) getDao(getGeneratedClass());
+		final int INSTANCES = 20;
+		Collection<WeatherReport> reports = Generate.create(new Generator<WeatherReport>() {
+			public WeatherReport generate() {
+				WeatherReport report = new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
+				GeneratedInstanceInterceptor.setProperty(report, "latitude", 1d);
+				GeneratedInstanceInterceptor.setProperty(report, "regionCode", 1); // used to verify node spread
+				dao.save(report);
+				return report;
+			}
+		}, new NumberIterator(INSTANCES));
+		
+		Hive hive = getHive();
+		// Make sure we saved to > 1 node
+		Assert.assertTrue(1 < hive.directory().getNodeIdsOfSecondaryIndexKey("WeatherReport", "regionCode", Atom.getFirstOrThrow(reports).getRegionCode()).size());
+		// Make sure all instances are found across nodes
+		Assert.assertEquals(INSTANCES, dao.findByProperty("latitude", 1d).size());
 	}
 
 }

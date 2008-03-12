@@ -1,11 +1,14 @@
 package org.hivedb.hibernate;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Properties;
+import java.util.Set;
 import java.util.Map.Entry;
 
 import org.hibernate.Interceptor;
@@ -20,6 +23,7 @@ import org.hibernate.shards.ShardedConfiguration;
 import org.hibernate.shards.cfg.ConfigurationToShardConfigurationAdapter;
 import org.hibernate.shards.cfg.ShardConfiguration;
 import org.hibernate.shards.engine.ShardedSessionFactoryImplementor;
+import org.hibernate.shards.session.ShardedSessionFactory;
 import org.hibernate.shards.session.ShardedSessionImpl;
 import org.hibernate.shards.strategy.ShardStrategy;
 import org.hibernate.shards.strategy.ShardStrategyFactory;
@@ -32,18 +36,27 @@ import org.hivedb.HiveFacade;
 import org.hivedb.Synchronizeable;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.meta.Node;
+import org.hivedb.util.Combiner;
 import org.hivedb.util.database.DriverLoader;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.functional.Atom;
+import org.hivedb.util.functional.Binary;
+import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Transform;
+import org.hivedb.util.functional.Unary;
+import org.hivedb.util.functional.Filter.BinaryPredicate;
+import org.hivedb.util.functional.Transform.IdentityFunction;
 
 public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder, HiveSessionFactory, Observer, Synchronizeable {	
+	
+	private static final int NODE_SET_LIMIT = 1;
 	private static Map<HiveDbDialect, Class<?>> dialectMap = buildDialectMap();
-	private Map<Integer, SessionFactory> nodeSessionFactories;
+	private Map<Set<Integer>, SessionFactory> nodeSessionFactories;
 	private Collection<Class<?>> mappedClasses;
 	private EntityHiveConfig config;
 	private ShardAccessStrategy accessStrategy;
 	private Properties overrides = new Properties();
-	private ShardedSessionFactoryImplementor factory = null;
+	private ShardedSessionFactory allNodesSessionFactory = null;
 	private Hive hive;
 	
 	public HiveSessionFactoryBuilderImpl(String hiveUri, List<Class<?>> mappedClasses, ShardAccessStrategy strategy) {
@@ -72,25 +85,46 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	private void initialize(EntityHiveConfig config,Hive hive, ShardAccessStrategy strategy) {
 		this.accessStrategy = strategy;
 		this.config = config;
-		this.nodeSessionFactories = Maps.newHashMap();
-		this.factory = buildBaseSessionFactory();
+		this.nodeSessionFactories = buildNodeSetSessionFactories();
+		this.allNodesSessionFactory = buildAllNodesSessionFactory();
 		hive.addObserver(this);
 	}
 	
-	public ShardedSessionFactoryImplementor getSessionFactory() {
-		return factory;
+	public ShardedSessionFactory getSessionFactory() {
+		return allNodesSessionFactory;
 	}
 	
-	private ShardedSessionFactoryImplementor buildBaseSessionFactory() {
-		Map<Integer, Configuration> hibernateConfigs = getConfigurationsFromNodes(hive);
+	private Map<Set<Integer>, SessionFactory> buildNodeSetSessionFactories() {
+		final Map<Integer, Configuration> hibernateConfigs = getConfigurationsFromNodes(hive);
 		
-		for(Map.Entry<Integer,Configuration> entry : hibernateConfigs.entrySet()) {
-			Configuration cfg = entry.getValue();
-			addConfigurations(cfg);
-			this.nodeSessionFactories.put(entry.getKey(), cfg.buildSessionFactory());
-		}
+		// Build non-sharded session factories for individual single-shard access
+		final Map<Integer, SessionFactory> hibernateSessionFactories = Transform.toMap(
+				new Transform.IdentityFunction<Integer>(),
+				new Unary<Integer,SessionFactory>() {
+					public SessionFactory f(Integer nodeId) {
+						return hibernateConfigs.get(nodeId).buildSessionFactory();
+					}},
+				hibernateConfigs.keySet());
+	
+		Collection<Set<Integer>> nodeSetCombinations = Combiner.generateSets(hibernateConfigs.keySet(), NODE_SET_LIMIT);
+		return Transform.toMap(
+			new IdentityFunction<Set<Integer>>(),
+			new Unary<Set<Integer>, SessionFactory>() {
+				public SessionFactory f(Set<Integer> nodeSet) {
+					return  (nodeSet.size() == 1)
+						? hibernateSessionFactories.get(Atom.getFirstOrThrow(nodeSet)) // non-sharded
+						: buildMultiNodeSessionFactory(getSomeNodeConfigurations(nodeSet)); // sharded
 		
-		List<ShardConfiguration> shardConfigs = getNodeConfigurations(hibernateConfigs);
+			}}, nodeSetCombinations);
+	}
+	
+	private ShardedSessionFactory buildAllNodesSessionFactory() {
+		
+		List<ShardConfiguration> shardConfigs = getNodeConfigurations();
+		return buildMultiNodeSessionFactory(shardConfigs);
+	}
+
+	private ShardedSessionFactory buildMultiNodeSessionFactory(List<ShardConfiguration> shardConfigs) {
 		Configuration prototypeConfig = buildPrototypeConfiguration();
 		ShardedConfiguration shardedConfig = new ShardedConfiguration(prototypeConfig, shardConfigs, buildShardStrategyFactory());
 		return (ShardedSessionFactoryImplementor) shardedConfig.buildShardedSessionFactory();
@@ -99,15 +133,27 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	private Map<Integer, Configuration> getConfigurationsFromNodes(HiveFacade hive) {
 		Map<Integer, Configuration> configMap = Maps.newHashMap();
 		for(Node node : hive.getNodes())
-			configMap.put(node.getId(), createConfigurationFromNode(node, overrides));
+			configMap.put(node.getId(), addClassesToConfig(createConfigurationFromNode(node, overrides)));
 		return configMap;
 	}
 	
-	private List<ShardConfiguration> getNodeConfigurations(Map<Integer, Configuration> configMap) {
+	private List<ShardConfiguration> getNodeConfigurations() {
+		final Map<Integer, Configuration> nodeToHibernateConfigMap = getConfigurationsFromNodes(hive);
 		List<ShardConfiguration> configs = Lists.newArrayList();
-		for(Configuration config : configMap.values())
-			configs.add(new ConfigurationToShardConfigurationAdapter(config));
+		for(Configuration hibernateConfig : nodeToHibernateConfigMap.values())
+			configs.add(new ConfigurationToShardConfigurationAdapter(hibernateConfig));
 		return configs;
+	}
+	private List<ShardConfiguration> getSomeNodeConfigurations(Set<Integer> nodeIds) {
+		return new ArrayList<ShardConfiguration>(Filter.grepAgainstList(
+				nodeIds,
+				getNodeConfigurations(),
+				new BinaryPredicate<Integer, ShardConfiguration>() {
+					@Override
+					public boolean f(Integer nodeId, ShardConfiguration shardConfiguration) {
+						return shardConfiguration.getShardId().equals(nodeId);
+					}
+				}));
 	}
 
 	private Configuration buildPrototypeConfiguration() {
@@ -118,14 +164,15 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 		catch (Exception e) {
 			throw new RuntimeException("The hive has no nodes, so it is impossible to build a prototype configuration");
 		}
-		addConfigurations(hibernateConfig);
+		addClassesToConfig(hibernateConfig);
 		hibernateConfig.setProperty("hibernate.session_factory_name", "factory:prototype");
 		return hibernateConfig;
 	}
 
-	private void addConfigurations(Configuration hibernateConfig) {
+	private Configuration addClassesToConfig(Configuration hibernateConfig) {
 		for(Class<?> clazz : mappedClasses) 
 			hibernateConfig.addClass(EntityResolver.getPersistedImplementation(clazz));
+		return hibernateConfig;
 	}
 	
 	private EntityHiveConfig buildHiveConfiguration(Hive hive, Collection<Class<?>> classes) {
@@ -164,9 +211,9 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	}
 
 	public boolean sync() {
-		ShardedSessionFactoryImplementor newFactory = buildBaseSessionFactory();
+		ShardedSessionFactory newFactory = buildAllNodesSessionFactory();
 		synchronized(this) {
-			this.factory = newFactory;
+			this.allNodesSessionFactory = newFactory;
 		}
 		return true;
 	}
@@ -193,7 +240,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	}
 	
 	private Session openAllShardsSession(Interceptor interceptor) {
-		return addOpenSessionEvents(factory.openSession(interceptor));
+		return addOpenSessionEvents(allNodesSessionFactory.openSession(interceptor));
 	}
 	
 	private Session addOpenSessionEvents(Session session) {
@@ -245,12 +292,14 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	}
 	
 	private Session openSession(Collection<Integer> nodeIds, Interceptor interceptor) {
-		if(nodeIds.size() == 1) {
-			Session session = nodeSessionFactories.get(Atom.getFirstOrThrow(nodeIds)).openSession(interceptor);
+		// We only create SessionFactories for 1 to NODE_SET_LIMIT nodes.
+		// If more are requested then we delegate to the allNodesSessionFactory
+		if(nodeIds.size() <= NODE_SET_LIMIT) {
+			Session session = nodeSessionFactories.get(new HashSet(nodeIds)).openSession(interceptor);
 			OpenSessionEventImpl.setNode(session);
 			return session;
 		} else {
-			throw new UnsupportedOperationException("This operation is not yet implemented " + nodeIds.size());
+			return allNodesSessionFactory.openSession(interceptor);
 		}
 	}
 	

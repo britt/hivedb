@@ -5,6 +5,7 @@ import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertNotNull;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Properties;
@@ -24,6 +25,7 @@ import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.meta.Node;
 import org.hivedb.util.GenerateInstance;
 import org.hivedb.util.GeneratedClassFactory;
+import org.hivedb.util.GeneratedImplementation;
 import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.Lists;
 import org.hivedb.util.ReflectionTools;
@@ -34,6 +36,9 @@ import org.hivedb.util.database.test.WeatherEvent;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.database.test.WeatherSchema;
 import org.hivedb.util.functional.Atom;
+import org.hivedb.util.functional.Generate;
+import org.hivedb.util.functional.Generator;
+import org.hivedb.util.functional.NumberIterator;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -66,27 +71,19 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 		factoryBuilder.openSession();
 	}
 	
-	
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testOpenSessionByPrimaryKey() throws Exception {
 		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
 		
 		final WeatherReport report = newInstance();
-		Session session = factoryBuilder.getSessionFactory().openSession();
-		SessionCallback callback = new SessionCallback(){
-			public void execute(Session session) {
-				session.saveOrUpdate(report);
-			}};
-		doInTransaction(callback, session);
 		
+		save(factoryBuilder, report);
 		assertNotNull(factoryBuilder.getSessionFactory());
 		factoryBuilder.openSession(config.getEntityConfig(getGeneratedClass(WeatherReport.class)).getPrimaryIndexKey(report));
 	}
 
-	private WeatherReport newInstance() {
-		return new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
-	}
+	
 	
 	@SuppressWarnings("unchecked")
 	@Test
@@ -95,12 +92,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 		assertNotNull(factoryBuilder.getSessionFactory());
 		
 		final WeatherReport report = newInstance();
-		Session session = factoryBuilder.openSession();
-		SessionCallback callback = new SessionCallback(){
-			public void execute(Session session) {
-				session.saveOrUpdate(report);
-			}};
-		doInTransaction(callback, session);
+		save(factoryBuilder, report);
 		
 		factoryBuilder.openSession("WeatherReport", config.getEntityConfig(getGeneratedClass(WeatherReport.class)).getId(report));
 	}
@@ -120,12 +112,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
 
 		final WeatherReport report = newInstance();
-		Session session = factoryBuilder.openSession();
-		SessionCallback callback = new SessionCallback(){
-			public void execute(Session session) {
-				session.saveOrUpdate(report);
-			}};
-		doInTransaction(callback, session);
+		save(factoryBuilder, report);
 		
 		factoryBuilder.openSession("WeatherReport", "weatherEventEventId", Atom.getFirstOrThrow(report.getWeatherEvents()).getEventId());
 	}
@@ -135,16 +122,10 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 	public void testInsert() throws Exception {
 		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
 		final WeatherReport report = newInstance();
-		Session session = factoryBuilder.openSession();
-		SessionCallback callback = new SessionCallback(){
-			public void execute(Session session) {
-				session.saveOrUpdate(report);
-			}};
 		for (Node node : getHive().getNodes())
 			if (!new WeatherSchema(node.getUri()).tableExists("WEATHER_REPORT"))
 				throw new RuntimeException("Can't find WEATHER_REPORT table on node " + node.getUri());
-		doInTransaction(callback, session);
-		
+		save(factoryBuilder, report);
 		Hive hive = getHive();
 		assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
 		assertTrue(hive.directory().doesResourceIdExist("Temperature", report.getTemperature()));		
@@ -155,7 +136,8 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 	public void testInsertFail() throws Exception {
 		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
 		final WeatherReport report = newInstance();
-		Session session = factoryBuilder.openSession();
+		
+		Session session = factoryBuilder.getSessionFactory().openSession();
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
 				session.saveOrUpdate(report);
@@ -177,31 +159,21 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 	public void testInsertAndRetrieve() throws Exception {
 		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
 		final WeatherReport report = newInstance();
-		Session session = factoryBuilder.openSession();
-		SessionCallback callback = new SessionCallback(){
-			public void execute(Session session) {
-				session.saveOrUpdate(report);
-			}};
-		doInTransaction(callback, session);
+		save(factoryBuilder, report);
+		
 		WeatherReport fetched = (WeatherReport) factoryBuilder.openSession().get(getGeneratedClass(WeatherReport.class), report.getReportId());
 		Assert.assertEquals(report, fetched, ReflectionTools.getDifferingFields(report, fetched, WeatherReport.class).toString());
 	}
 
-	private Class<?> getGeneratedClass(Class clazz) {
-		return GeneratedClassFactory.getGeneratedClass(clazz);
-	}
+	
 	
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testDelete() throws Exception {
 		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
 		final WeatherReport report = newInstance();
-		Session session = factoryBuilder.openSession();
-		SessionCallback callback = new SessionCallback(){
-			public void execute(Session session) {
-				session.saveOrUpdate(report);
-			}};
-		doInTransaction(callback, session);
+		save(factoryBuilder, report);
+		
 		SessionCallback deleteCallback = new SessionCallback(){
 			public void execute(Session session) {
 				session.delete(report);
@@ -283,6 +255,22 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 		assertNotNull(fetched);
 		assertEquals(ReflectionTools.getDifferingFields(report, fetched, WeatherReport.class).toString(), report, fetched);
 		Assert.assertFalse(ReflectionTools.getDifferingFields(mutated, fetched, WeatherReport.class).size() == 0);
+	}
+	
+	private void save(HiveSessionFactoryBuilderImpl factoryBuilder, final WeatherReport report) {
+		Session session = factoryBuilder.openSession();
+		SessionCallback callback = new SessionCallback(){
+			public void execute(Session session) {
+				session.saveOrUpdate(report);
+			}};
+		doInTransaction(callback, session);
+	}
+	
+	private Class<?> getGeneratedClass(Class clazz) {
+		return GeneratedClassFactory.getGeneratedClass(clazz);
+	}
+	private WeatherReport newInstance() {
+		return new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
 	}
 	
 	public static void doInTransaction(SessionCallback callback, Session session) {
