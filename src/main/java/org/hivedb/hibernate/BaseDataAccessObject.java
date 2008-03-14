@@ -478,6 +478,13 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 				log.error(String.format("Detected an integrity constraint violation on the data node but %s with id %s exists in the directory.", config.getResourceName(), config.getId(entity)));
 				throw dupe;
 			}
+		} catch(org.hibernate.exception.ConstraintViolationException dupe) {
+			if(!exists(config.getId(entity))) {
+				doInTransaction(cleanupCallback, factory.openSession(config.getPrimaryIndexKey(entity)));
+			} else {
+				log.error(String.format("Detected an integrity constraint violation on the data node but %s with id %s exists in the directory.", config.getResourceName(), config.getId(entity)));
+				throw dupe;
+			}
 		}
 	}
 	
@@ -492,6 +499,8 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 				log.error(String.format("Detected an integrity constraint violation on the data node while doing a saveAll with entities of class %s.", config.getResourceName()));
 				throw dupe;
 			}
+		} catch(org.hibernate.exception.ConstraintViolationException dupe) {
+			doInTransaction(cleanupCallback, factory.openSession(config.getPrimaryIndexKey(Atom.getFirstOrThrow(entities))));
 		}
 	}
 
