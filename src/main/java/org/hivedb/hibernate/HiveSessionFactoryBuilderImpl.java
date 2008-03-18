@@ -306,4 +306,8 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	public Interceptor getDefaultInterceptor() {
 		return new HiveInterceptorDecorator(config, hive);
 	}
+	
+	public SessionFactory getSessionFactory(Integer nodeId) {
+		return nodeSessionFactories.get(nodeId);
+	}
 }
