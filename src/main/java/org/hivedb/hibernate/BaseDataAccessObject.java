@@ -2,14 +2,11 @@ package org.hivedb.hibernate;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.logging.Logger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -24,7 +21,6 @@ import org.hibernate.Transaction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.shards.session.ShardedSessionImpl;
 import org.hibernate.shards.util.Lists;
 import org.hivedb.Hive;
 import org.hivedb.HiveLockableException;
