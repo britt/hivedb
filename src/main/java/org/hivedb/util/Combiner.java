@@ -31,8 +31,10 @@ public class Combiner
 	}
 	public static<T> Collection<Set<T>> generateSets(Set<T> set, final int maxSetSize)
 	{
+		if (set.size() == 0)
+			return Collections.emptyList();
 		if (set.size() == 1)
-			return Collections.singleton(set);
+			return Collections.singletonList(set);
 		
 		final T first = Atom.getFirstOrThrow(set);
 		// Create all sets without the first item
