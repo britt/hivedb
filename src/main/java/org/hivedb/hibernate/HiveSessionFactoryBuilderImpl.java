@@ -308,6 +308,6 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	}
 	
 	public SessionFactory getSessionFactory(Integer nodeId) {
-		return nodeSessionFactories.get(nodeId);
+		return nodeSessionFactories.get(new HashSet(nodeId));
 	}
 }
