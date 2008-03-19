@@ -1,6 +1,7 @@
 package org.hivedb.hibernate;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -308,6 +309,6 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	}
 	
 	public SessionFactory getSessionFactory(Integer nodeId) {
-		return nodeSessionFactories.get(new HashSet(nodeId));
+		return nodeSessionFactories.get(new HashSet(Arrays.asList(nodeId)));
 	}
 }
