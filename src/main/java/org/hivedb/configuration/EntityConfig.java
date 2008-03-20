@@ -2,6 +2,7 @@ package org.hivedb.configuration;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.EnumSet;
 
 import org.hivedb.annotations.IndexType;
 
@@ -17,6 +18,7 @@ public interface EntityConfig {
 	Collection<? extends EntityIndexConfig> getEntityIndexConfigs();
 	EntityIndexConfig getEntityIndexConfig(String propertyName);
 	
+	Collection<? extends EntityIndexConfig> getEntityIndexConfigs(EnumSet<IndexType> indexTypes);
 	Collection<? extends EntityIndexConfig> getEntityIndexConfigs(IndexType indexType);
 	String getResourceName();
 	

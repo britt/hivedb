@@ -2,11 +2,13 @@ package org.hivedb.configuration;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.EnumSet;
 
 import org.hivedb.annotations.IndexType;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Predicate;
+import org.hivedb.util.functional.Filter.BinaryPredicate;
 
 public class EntityConfigImpl implements EntityConfig {
 
@@ -123,12 +125,15 @@ public class EntityConfigImpl implements EntityConfig {
 	public Class<?> getIdClass() {
 		return ReflectionTools.getPropertyType(getRepresentedInterface(), getIdPropertyName());
 	}
+	public Collection<? extends EntityIndexConfig> getEntityIndexConfigs(EnumSet<IndexType> indexTypes) {
+		return Filter.grepAgainstList(
+				indexTypes, entityIndexConfigs,new BinaryPredicate<IndexType, EntityIndexConfig>() {
+					public boolean f(IndexType indexType, EntityIndexConfig entityIndexConfig) {
+						return entityIndexConfig.getIndexType().equals(indexType);
+					}});
+	}
 	public Collection<? extends EntityIndexConfig> getEntityIndexConfigs(final IndexType indexType) {
-		return Filter.grep(new Predicate<EntityIndexConfig>() {
-			public boolean f(EntityIndexConfig entityIndexConfig) {
-				return entityIndexConfig.getIndexType().equals(indexType);
-			}},
-			entityIndexConfigs);
+		return getEntityIndexConfigs(EnumSet.of(indexType));
 	}
 	public EntityIndexConfig getEntityIndexConfig(final String propertyName) {
 		return Filter.grepSingle(new Predicate<EntityIndexConfig>() {
