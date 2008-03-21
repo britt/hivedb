@@ -1,7 +1,0 @@
-bcrawford = Britt Crawford <britt@illtemper.org>
-Britt Crawford = Britt Crawford <britt@illtemper.org>
-alikuski = Andy Likuski <alikuski@cafepress.com>
-mellwanger = Marco Ellwanger <mellwanger@cafepress.com>
-mellewanger = Marco Ellwanger <mellwanger@cafepress.com>
-jmccarthy = Justin McCarthy <jmccarthy@cafepress.com>
-kkelm = Kevin Kelm <kkelm@triggur.org>
