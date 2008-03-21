@@ -14,7 +14,7 @@ public class EntityConfigImpl implements EntityConfig {
 
 	private Class<?> representedInterface;
 	private String partitionDimensionName, resourceName, primaryIndexKeyPropertyName, idPropertyName, versionPropertyName;
-	private Collection<? extends EntityIndexConfig> entityIndexConfigs;
+	private Collection<EntityIndexConfig> entityIndexConfigs;
 	private boolean isPartitioningResource;
 	
 	public static EntityConfig createEntity(
@@ -24,7 +24,7 @@ public class EntityConfigImpl implements EntityConfig {
 			String primaryIndexPropertyName,
 			String idPropertyName,
 			String versionPropertyName,
-			Collection<? extends EntityIndexConfig> indexConfigs) {
+			Collection<EntityIndexConfig> indexConfigs) {
 		return new EntityConfigImpl(
 				representedInterface, 
 				partitionDimensionName,
@@ -50,7 +50,7 @@ public class EntityConfigImpl implements EntityConfig {
 			String partitionDimensionName,
 			String idPropertyName,
 			String versionPropertyName,
-			Collection<? extends EntityIndexConfig> secondaryIndexIdentifiables) {
+			Collection<EntityIndexConfig> secondaryIndexIdentifiables) {
 		return new EntityConfigImpl(
 				representedInterface, 
 				partitionDimensionName,
@@ -70,7 +70,7 @@ public class EntityConfigImpl implements EntityConfig {
 			String primaryIndexKeyPropertyName,
 			String idPropertyName,
 			String versionPropertyName,
-			Collection<? extends EntityIndexConfig> entityIndexConfigs,
+			Collection<EntityIndexConfig> entityIndexConfigs,
 			boolean isPartitioningResource) {
 		this.representedInterface = representedInterface;
 		this.partitionDimensionName = partitionDimensionName;
@@ -86,7 +86,7 @@ public class EntityConfigImpl implements EntityConfig {
 		return resourceName;
 	}
 	
-	public Collection<? extends EntityIndexConfig> getEntityIndexConfigs() {
+	public Collection<EntityIndexConfig> getEntityIndexConfigs() {
 		return entityIndexConfigs;
 	}
 	
@@ -125,14 +125,14 @@ public class EntityConfigImpl implements EntityConfig {
 	public Class<?> getIdClass() {
 		return ReflectionTools.getPropertyType(getRepresentedInterface(), getIdPropertyName());
 	}
-	public Collection<? extends EntityIndexConfig> getEntityIndexConfigs(EnumSet<IndexType> indexTypes) {
+	public Collection<EntityIndexConfig> getEntityIndexConfigs(EnumSet<IndexType> indexTypes) {
 		return Filter.grepAgainstList(
 				indexTypes, entityIndexConfigs,new BinaryPredicate<IndexType, EntityIndexConfig>() {
 					public boolean f(IndexType indexType, EntityIndexConfig entityIndexConfig) {
 						return entityIndexConfig.getIndexType().equals(indexType);
 					}});
 	}
-	public Collection<? extends EntityIndexConfig> getEntityIndexConfigs(final IndexType indexType) {
+	public Collection<EntityIndexConfig> getEntityIndexConfigs(final IndexType indexType) {
 		return getEntityIndexConfigs(EnumSet.of(indexType));
 	}
 	public EntityIndexConfig getEntityIndexConfig(final String propertyName) {
@@ -149,6 +149,10 @@ public class EntityConfigImpl implements EntityConfig {
 			version = ((Integer) ReflectionTools.invokeGetter(instance, versionPropertyName));
 		return version == null ? 0 : version;
 		
+	}
+	
+	public EntityIndexConfig getPrimaryIndexKeyEntityIndexConfig() {
+		return getEntityIndexConfig(getPrimaryIndexKeyPropertyName());
 	}
 	
 }
