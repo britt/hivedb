@@ -23,6 +23,7 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.shards.util.Lists;
 import org.hivedb.Hive;
+import org.hivedb.HiveFacade;
 import org.hivedb.HiveLockableException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.annotations.AnnotationHelper;
@@ -52,10 +53,10 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	protected EntityConfig config;
 	protected Class<?> clazz;
 	protected Interceptor defaultInterceptor = EmptyInterceptor.INSTANCE;
-	protected Hive hive;
+	protected HiveFacade hive;
 	protected EntityIndexConfig partitionIndexEntityIndexConfig;
 
-	public Hive getHive() {
+	public HiveFacade getHive() {
 		return hive;
 	}
 
@@ -63,7 +64,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		this.hive = hive;
 	}
 
-	public BaseDataAccessObject(EntityConfig config, Hive hive, HiveSessionFactory factory) {
+	public BaseDataAccessObject(EntityConfig config, HiveFacade hive, HiveSessionFactory factory) {
 		this.clazz = config.getRepresentedInterface();
 		this.config = config;
 		this.factory = factory;
@@ -125,6 +126,26 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		}
 	}
 	
+	public Collection<Object> getProperty(final String propertyName, final int firstResult, final int maxResults) {
+		QueryCallback callback = new QueryCallback(){
+			@SuppressWarnings("unchecked")
+			public Collection<Object> execute(Session session) {
+				Query query = 
+					session.createQuery(
+						String.format(
+								"select %s from %s", 
+								propertyName, 
+								GeneratedClassFactory.getGeneratedClass(config.getRepresentedInterface()).getSimpleName()));
+				if (maxResults > 0) {
+					query.setFirstResult(firstResult);
+					query.setMaxResults(maxResults);
+				}
+				return query.list();
+			}};
+		return queryInTransaction(callback, getSession());
+	}
+
+	
 	private Object get(Serializable id, Session session) {
 		return session.get(getRespresentedClass(), id);
 	}
@@ -132,8 +153,10 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	public Collection<Object> findByProperty(final String propertyName, final Object propertyValue) {
 		return findByProperties(propertyName, Collections.singletonMap(propertyName, propertyValue));
 	}
-	
-	public Collection<Object> findByProperties(String partitioningPropertyName, final Map<String,Object> propertyNameValueMap) {
+	public Collection<Object> findByProperties(String partitioningPropertyName, final Map<String,Object> propertyNameValueMap) { 
+		return findByProperties(partitioningPropertyName, propertyNameValueMap, 0, 0);
+	}
+	public Collection<Object> findByProperties(String partitioningPropertyName, final Map<String,Object> propertyNameValueMap, final Integer firstResult, final Integer maxResults) {
 		final EntityIndexConfig entityIndexConfig = resolveEntityIndexConfig(partitioningPropertyName);
 		Session session = createSessionForIndex(config, entityIndexConfig, propertyNameValueMap.get(partitioningPropertyName));
 
@@ -175,7 +198,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 							},
 							propertyNameEntityIndexConfigValueMap.entrySet());
 			
-					return queryWithHQL(session, revisedPropertyNameValueMap);
+					return queryWithHQL(session, revisedPropertyNameValueMap, firstResult, maxResults);
 				 }};
 		else
 			query = new QueryCallback(){
@@ -187,33 +210,14 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 						Object value = entityIndexConfigValueEntry.getValue();
 						addPropertyRestriction(entityIndexConfig, criteria, entityIndexConfig.getPropertyName(), value);
 					}
-						 
+					addPaging(firstResult, maxResults, criteria);	 
 					return criteria.list();
 				}};
 		return queryInTransaction(query, session);
 	}
-	
-	public Collection<Object> getProperty(final String propertyName, final int firstResult, final int maxResults) {
-		QueryCallback callback = new QueryCallback(){
-			@SuppressWarnings("unchecked")
-			public Collection<Object> execute(Session session) {
-				Query query = 
-					session.createQuery(
-						String.format(
-								"select %s from %s", 
-								propertyName, 
-								GeneratedClassFactory.getGeneratedClass(config.getRepresentedInterface()).getSimpleName()));
-				if (maxResults > 0) {
-					query.setFirstResult(firstResult);
-					query.setMaxResults(maxResults);
-				}
-				return query.list();
-			}};
-		return queryInTransaction(callback, getSession());
-	}
 
 	@SuppressWarnings("unchecked")
-	protected Collection<Object> queryWithHQL(Session session, Map<String, Object> propertyNameValueMap) {
+	protected Collection<Object> queryWithHQL(Session session, Map<String, Object> propertyNameValueMap, Integer firstResult, Integer maxResult) {
 		final StringBuilder queryString = new StringBuilder(String.format("from %s as x where", GeneratedClassFactory.getGeneratedClass(config.getRepresentedInterface()).getSimpleName()));
 		
 		for (Entry<String, Object> entry : propertyNameValueMap.entrySet()) {
@@ -260,33 +264,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		return (Integer)Atom.getFirstOrThrow(queryInTransaction(query, session));
 	}
 
-	private boolean isPrimitiveCollection(final String propertyName) {
-		return ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName)
-			&& !ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName);
-	}
 	
-	@SuppressWarnings("unchecked")
-	private Collection<Object> queryWithHQLRowCount(EntityIndexConfig indexConfig, Session session, Object propertyValue) {
-		Query query = session.createQuery(String.format("select count(%s) from %s as x where :value in elements (x.%s)",
-			config.getIdPropertyName(),
-			GeneratedClassFactory.getGeneratedClass(config.getRepresentedInterface()).getSimpleName(),
-			indexConfig.getIndexName())
-			).setParameter("value", propertyValue);
-		return query.list();
-	}
-	
-	protected EntityIndexConfig resolveEntityIndexConfig(String propertyName) {
-		EntityIndexConfig indexConfig = config.getPrimaryIndexKeyPropertyName().equals(propertyName)
-			? createEntityIndexConfigForPartitionIndex(config)
-			: config.getEntityIndexConfig(propertyName);
-		return indexConfig;
-	}
-
-	private EntityIndexConfig createEntityIndexConfigForPartitionIndex(EntityConfig entityConfig) {
-		if (partitionIndexEntityIndexConfig == null)
-			partitionIndexEntityIndexConfig = new EntityIndexConfigImpl(entityConfig.getRepresentedInterface(), entityConfig.getPrimaryIndexKeyPropertyName());
-		return partitionIndexEntityIndexConfig;
-	}
 
 	public Collection<Object> findByProperty(final String propertyName, final Object propertyValue, final Integer firstResult, final Integer maxResults) {
 		final EntityConfig entityConfig = config;
@@ -312,8 +290,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 				public Collection<Object> execute(Session session) {
 					Criteria criteria = session.createCriteria(entityConfig.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
 					addPropertyRestriction(indexConfig, criteria, propertyName, propertyValue);
-					criteria.setFirstResult(firstResult);
-					criteria.setMaxResults(maxResults);
+					addPaging(firstResult, maxResults, criteria);
 					criteria.addOrder(Order.asc(entityConfig.getIdPropertyName()));
 					return criteria.list();
 				}};
@@ -321,34 +298,6 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		return queryInTransaction(callback, session);
 	}
 	
-	private void addPropertyRestriction(EntityIndexConfig indexConfig, Criteria criteria, String propertyName, Object propertyValue) {
-		if (ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName))
-			if (ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName)) {
-				criteria.createAlias(propertyName, "x")
-					.add( Restrictions.eq("x." + indexConfig.getInnerClassPropertyName(), propertyValue));
-			}
-			else
-				throw new UnsupportedOperationException("This call should have used HQL, not Criteria");
-		else
-			criteria.add( Restrictions.eq(propertyName, propertyValue));
-	}
-	
-	protected Session createSessionForIndex(EntityConfig entityConfig, EntityIndexConfig indexConfig, Object propertyValue) {
-		if (indexConfig.getIndexType().equals(IndexType.Delegates))
-			return factory.openSession(
-					((EntityIndexConfigDelegator)indexConfig).getDelegateEntityConfig().getResourceName(),
-					propertyValue);
-		else if (indexConfig.getIndexType().equals(IndexType.Hive))
-			return factory.openSession(
-					entityConfig.getResourceName(), 
-					indexConfig.getIndexName(), 
-					propertyValue);
-		else if (indexConfig.getIndexType().equals(IndexType.Data))
-			return factory.openAllShardsSession();
-		else if (indexConfig.getIndexType().equals(IndexType.Partition))
-			return factory.openSession(propertyValue);
-		throw new RuntimeException(String.format("Unknown IndexType: %s", indexConfig.getIndexType()));
-	}
 	
 	public Collection<Object> findByPropertyRange(final String propertyName, final Object minValue, final Object maxValue) {
 		// Use an AllShardsresolutionStrategy + Criteria
@@ -431,18 +380,6 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		return queryInTransaction(callback, session);
 	}
 	
-	private void addPropertyRangeRestriction(EntityIndexConfig indexConfig, Criteria criteria, String propertyName, Object minValue, Object maxValue) {
-		if (ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName))
-			if (ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName)) {
-				criteria.createAlias(propertyName, "x")
-					.add(  Restrictions.between("x." + propertyName, minValue, maxValue));
-			}
-			else
-				throw new UnsupportedOperationException("This isn't working yet");
-		else
-			criteria.add( Restrictions.between(propertyName, minValue, maxValue));
-	}
-	
 	public Object save(final Object entity) {
 		final Collection<Object> entities = populateDataIndexDelegates(Collections.singletonList(entity));
 		final Object populatedEntity = Atom.getFirstOrThrow(entities);
@@ -463,43 +400,6 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		return entity;
 	}
 	
-	private void doSave(final Object entity, SessionCallback callback, SessionCallback cleanupCallback) {		
-		try {
-			doInTransaction(callback, getSession());
-		} catch(org.hibernate.TransactionException dupe) {
-			if(dupe.getCause().getClass().equals(org.hibernate.exception.ConstraintViolationException.class)
-				&& !exists(config.getId(entity))) {
-				doInTransaction(cleanupCallback, factory.openSession(config.getPrimaryIndexKey(entity)));
-			} else {
-				log.error(String.format("Detected an integrity constraint violation on the data node but %s with id %s exists in the directory.", config.getResourceName(), config.getId(entity)));
-				throw dupe;
-			}
-		} catch(org.hibernate.exception.ConstraintViolationException dupe) {
-			if(!exists(config.getId(entity))) {
-				doInTransaction(cleanupCallback, factory.openSession(config.getPrimaryIndexKey(entity)));
-			} else {
-				log.error(String.format("Detected an integrity constraint violation on the data node but %s with id %s exists in the directory.", config.getResourceName(), config.getId(entity)));
-				throw dupe;
-			}
-		}
-	}
-	
-	private void doSaveAll(final Collection<Object> entities, SessionCallback callback, SessionCallback cleanupCallback) {		
-		try {
-			doInTransaction(callback, getSession());
-		} catch(org.hibernate.TransactionException dupe) {
-			if(dupe.getCause().getClass().equals(org.hibernate.exception.ConstraintViolationException.class)
-				|| dupe.getCause().getClass().equals(org.hibernate.StaleObjectStateException.class)) {
-				doInTransaction(cleanupCallback, factory.openSession(config.getPrimaryIndexKey(Atom.getFirstOrThrow(entities))));
-			} else {
-				log.error(String.format("Detected an integrity constraint violation on the data node while doing a saveAll with entities of class %s.", config.getResourceName()));
-				throw dupe;
-			}
-		} catch(org.hibernate.exception.ConstraintViolationException dupe) {
-			doInTransaction(cleanupCallback, factory.openSession(config.getPrimaryIndexKey(Atom.getFirstOrThrow(entities))));
-		}
-	}
-
 	public Collection<Object> saveAll(final Collection<Object> collection) {
 		final Collection<Object> entities = populateDataIndexDelegates(collection);
 		validateNonNull(entities);
@@ -542,24 +442,6 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		return collection;
 	}
 	
-	private Boolean existsInSession(Session session, Serializable id) {
-		return null != session.get(getRespresentedClass(), id);
-	}
-
-	private void validateNonNull(final Collection<Object> collection) {
-		if (Filter.isMatch(new Filter.NullPredicate<Object>(), collection)) {
-			String ids = Amass.joinByToString(new Joiner.ConcatStrings<String>(", "), 
-				Transform.map(new Unary<Object, String>() {
-					public String f(Object item) {
-						return item != null ? config.getId(item).toString() : "null"; }}, collection));
-			throw new HiveRuntimeException(String.format("Encountered null items in collection: %s", ids));
-		}
-	}
-	
-	protected Session getSession() {
-		return factory.openSession(factory.getDefaultInterceptor());
-	}
-
 	@SuppressWarnings("unchecked")
 	public Class<Object> getRespresentedClass() {
 		return (Class<Object>) EntityResolver.getPersistedImplementation(clazz);
@@ -621,4 +503,139 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 				return modified;
 			}}, instances);
 	}
+	
+	private boolean isPrimitiveCollection(final String propertyName) {
+		return ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName)
+			&& !ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName);
+	}
+	
+	@SuppressWarnings("unchecked")
+	private Collection<Object> queryWithHQLRowCount(EntityIndexConfig indexConfig, Session session, Object propertyValue) {
+		Query query = session.createQuery(String.format("select count(%s) from %s as x where :value in elements (x.%s)",
+			config.getIdPropertyName(),
+			GeneratedClassFactory.getGeneratedClass(config.getRepresentedInterface()).getSimpleName(),
+			indexConfig.getIndexName())
+			).setParameter("value", propertyValue);
+		return query.list();
+	}
+	
+	protected EntityIndexConfig resolveEntityIndexConfig(String propertyName) {
+		EntityIndexConfig indexConfig = config.getPrimaryIndexKeyPropertyName().equals(propertyName)
+			? createEntityIndexConfigForPartitionIndex(config)
+			: config.getEntityIndexConfig(propertyName);
+		return indexConfig;
+	}
+
+	private EntityIndexConfig createEntityIndexConfigForPartitionIndex(EntityConfig entityConfig) {
+		if (partitionIndexEntityIndexConfig == null)
+			partitionIndexEntityIndexConfig = new EntityIndexConfigImpl(entityConfig.getRepresentedInterface(), entityConfig.getPrimaryIndexKeyPropertyName());
+		return partitionIndexEntityIndexConfig;
+	}
+	
+	private void addPropertyRestriction(EntityIndexConfig indexConfig, Criteria criteria, String propertyName, Object propertyValue) {
+		if (ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName))
+			if (ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName)) {
+				criteria.createAlias(propertyName, "x")
+					.add( Restrictions.eq("x." + indexConfig.getInnerClassPropertyName(), propertyValue));
+			}
+			else
+				throw new UnsupportedOperationException("This call should have used HQL, not Criteria");
+		else
+			criteria.add( Restrictions.eq(propertyName, propertyValue));
+	}
+	
+	protected Session createSessionForIndex(EntityConfig entityConfig, EntityIndexConfig indexConfig, Object propertyValue) {
+		if (indexConfig.getIndexType().equals(IndexType.Delegates))
+			return factory.openSession(
+					((EntityIndexConfigDelegator)indexConfig).getDelegateEntityConfig().getResourceName(),
+					propertyValue);
+		else if (indexConfig.getIndexType().equals(IndexType.Hive))
+			return factory.openSession(
+					entityConfig.getResourceName(), 
+					indexConfig.getIndexName(), 
+					propertyValue);
+		else if (indexConfig.getIndexType().equals(IndexType.Data))
+			return factory.openAllShardsSession();
+		else if (indexConfig.getIndexType().equals(IndexType.Partition))
+			return factory.openSession(propertyValue);
+		throw new RuntimeException(String.format("Unknown IndexType: %s", indexConfig.getIndexType()));
+	}
+	private void addPropertyRangeRestriction(EntityIndexConfig indexConfig, Criteria criteria, String propertyName, Object minValue, Object maxValue) {
+		if (ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName))
+			if (ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName)) {
+				criteria.createAlias(propertyName, "x")
+					.add(  Restrictions.between("x." + propertyName, minValue, maxValue));
+			}
+			else
+				throw new UnsupportedOperationException("This isn't working yet");
+		else
+			criteria.add( Restrictions.between(propertyName, minValue, maxValue));
+	}
+	
+	private void doSave(final Object entity, SessionCallback callback, SessionCallback cleanupCallback) {		
+		try {
+			doInTransaction(callback, getSession());
+		} catch(org.hibernate.TransactionException dupe) {
+			if(dupe.getCause().getClass().equals(org.hibernate.exception.ConstraintViolationException.class)
+				&& !exists(config.getId(entity))) {
+				doInTransaction(cleanupCallback, factory.openSession(config.getPrimaryIndexKey(entity)));
+			} else {
+				log.error(String.format("Detected an integrity constraint violation on the data node but %s with id %s exists in the directory.", config.getResourceName(), config.getId(entity)));
+				throw dupe;
+			}
+		} catch(org.hibernate.exception.ConstraintViolationException dupe) {
+			if(!exists(config.getId(entity))) {
+				doInTransaction(cleanupCallback, factory.openSession(config.getPrimaryIndexKey(entity)));
+			} else {
+				log.error(String.format("Detected an integrity constraint violation on the data node but %s with id %s exists in the directory.", config.getResourceName(), config.getId(entity)));
+				throw dupe;
+			}
+		}
+	}
+	
+	private void doSaveAll(final Collection<Object> entities, SessionCallback callback, SessionCallback cleanupCallback) {		
+		try {
+			doInTransaction(callback, getSession());
+		} catch(org.hibernate.TransactionException dupe) {
+			if(dupe.getCause().getClass().equals(org.hibernate.exception.ConstraintViolationException.class)
+				|| dupe.getCause().getClass().equals(org.hibernate.StaleObjectStateException.class)) {
+				doInTransaction(cleanupCallback, factory.openSession(config.getPrimaryIndexKey(Atom.getFirstOrThrow(entities))));
+			} else {
+				log.error(String.format("Detected an integrity constraint violation on the data node while doing a saveAll with entities of class %s.", config.getResourceName()));
+				throw dupe;
+			}
+		} catch(org.hibernate.exception.ConstraintViolationException dupe) {
+			doInTransaction(cleanupCallback, factory.openSession(config.getPrimaryIndexKey(Atom.getFirstOrThrow(entities))));
+		}
+	}
+
+	
+	
+	private Boolean existsInSession(Session session, Serializable id) {
+		return null != session.get(getRespresentedClass(), id);
+	}
+
+	private void validateNonNull(final Collection<Object> collection) {
+		if (Filter.isMatch(new Filter.NullPredicate<Object>(), collection)) {
+			String ids = Amass.joinByToString(new Joiner.ConcatStrings<String>(", "), 
+				Transform.map(new Unary<Object, String>() {
+					public String f(Object item) {
+						return item != null ? config.getId(item).toString() : "null"; }}, collection));
+			throw new HiveRuntimeException(String.format("Encountered null items in collection: %s", ids));
+		}
+	}
+	
+	protected Session getSession() {
+		return factory.openSession(factory.getDefaultInterceptor());
+	}
+	
+	private void addPaging(final Integer firstResult,
+			final Integer maxResults, Criteria criteria) {
+		if (maxResults > 0) {
+			criteria.setFirstResult(firstResult);
+			criteria.setMaxResults(maxResults);
+		}
+	}
+
+	
 }

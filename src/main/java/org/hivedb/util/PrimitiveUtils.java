@@ -3,6 +3,8 @@ package org.hivedb.util;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.sql.Blob;
+import java.text.DateFormat;
+import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -141,6 +143,38 @@ public class PrimitiveUtils {
 	}
 	
 	/**
+	 *  Convert the given string to the given primitive class
+	 * @param clazz
+	 * @param string
+	 * @return
+	 */
+	public static<T> T parseString(Class<T> clazz, String string) {
+		if (isInteger(clazz))
+			return (T) new Integer(Integer.parseInt(string));
+		if (isLong(clazz))
+			return (T) new Long(Long.parseLong(string));
+		if (isShort(clazz))
+			return (T) new Short(Short.parseShort(string));
+		if (isDouble(clazz))
+			return (T) new Double(Double.parseDouble(string));
+		if (isFloat(clazz))
+			return (T) new Float(Float.parseFloat(string));
+		if (isBigDecimal(clazz)) {		
+			return (T) new BigDecimal(string);
+		}
+		if (isString(clazz))
+			return (T)new String(string); // copy so we can tell that it changed (even though Strings are immutable)
+		if (isDate(clazz)) {		
+			try {
+				return (T)DateFormat.getDateInstance().parse(string);
+			} catch (ParseException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		throw new RuntimeException(String.format("Class %s not supported", clazz.getSimpleName()));
+	}
+	
+	/**
 	 *  Is this class representable as one our supported noncomplex types
 	 * @param clazz
 	 */
@@ -193,4 +227,5 @@ public class PrimitiveUtils {
 	public static boolean isSerializationClass(Class clazz) {
 		return clazz.equals(Blob.class) || clazz.equals(InputStream.class);
 	}
+	
 }

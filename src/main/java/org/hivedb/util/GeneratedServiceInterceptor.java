@@ -1,5 +1,6 @@
 package org.hivedb.util;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
@@ -15,9 +16,12 @@ import net.sf.cglib.proxy.MethodProxy;
 import org.hibernate.shards.strategy.access.ShardAccessStrategy;
 import org.hibernate.shards.util.Lists;
 import org.hivedb.Hive;
+import org.hivedb.HiveFacade;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.annotations.AnnotationHelper;
 import org.hivedb.annotations.IndexParam;
+import org.hivedb.annotations.IndexParamPagingPair;
+import org.hivedb.annotations.IndexParamPairs;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.hibernate.BaseDataAccessObject;
@@ -38,12 +42,21 @@ import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Joiner;
 import org.hivedb.util.functional.NumberIterator;
 import org.hivedb.util.functional.Pair;
+import org.hivedb.util.functional.PairIterator;
+import org.hivedb.util.functional.Predicate;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 
 public class GeneratedServiceInterceptor implements MethodInterceptor, Service {
 
-	public static Service load(Class clazz, Class serviceClass, Class serviceResponseClass, Class serviceContainerClass, Hive hive, EntityHiveConfig entityHiveConfig, ShardAccessStrategy strategy) {
+	public static Service load(String className, String serviceClassName, String serviceResponseClassName, String serviceContainerClassName, HiveFacade hive, EntityHiveConfig entityHiveConfig, ShardAccessStrategy strategy) {
+		try {
+			return load(Class.forName(className), Class.forName(serviceClassName), Class.forName(serviceResponseClassName), Class.forName(serviceContainerClassName), hive, entityHiveConfig, strategy);
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	public static Service load(Class clazz, Class serviceClass, Class serviceResponseClass, Class serviceContainerClass, HiveFacade hive, EntityHiveConfig entityHiveConfig, ShardAccessStrategy strategy) {
 		EntityConfig config = entityHiveConfig.getEntityConfig(clazz.getCanonicalName());
 		List<Class<?>> classes = Lists.newArrayList();
 		classes.addAll(new EntityResolver(entityHiveConfig).getEntityClasses());
@@ -51,7 +64,7 @@ public class GeneratedServiceInterceptor implements MethodInterceptor, Service {
 		DataAccessObject dao = new BaseDataAccessObject(config, hive, factory);
 		return (Service)GeneratedClassFactory.newInstance(serviceClass, new GeneratedServiceInterceptor(clazz, serviceClass, serviceResponseClass, serviceContainerClass, dao, config));
 	}
-	public static Service load(Class clazz, Class serviceClass, Class serviceResponseClass, Class serviceContainerClass, Hive hive, ConfigurationReader reader, ShardAccessStrategy strategy) {
+	public static Service load(Class clazz, Class serviceClass, Class serviceResponseClass, Class serviceContainerClass, HiveFacade hive, ConfigurationReader reader, ShardAccessStrategy strategy) {
 		return load(clazz, serviceClass, serviceResponseClass, serviceContainerClass, hive, reader.getHiveConfiguration(), strategy);
 	}
 	
@@ -152,9 +165,13 @@ public class GeneratedServiceInterceptor implements MethodInterceptor, Service {
 	public ServiceResponse findByPropertyRange(String propertyName, Object start, Object end) {
 		return formulateResponse(dao.findByPropertyRange(propertyName, start, end));
 	}
+	
+	public ServiceResponse findByPropertyPaged(String propertyName, Object value, Integer firstResult, Integer maxResults) {
+		return formulateResponse(dao.findByProperty(propertyName, value, firstResult, maxResults));
+	}
 
-	public ServiceResponse findByProperties(String partitioningProperty, Map<String,Object> propertyNameValueMap){
-		return formulateResponse(dao.findByProperties(partitioningProperty, propertyNameValueMap));
+	public ServiceResponse findByProperties(String partitioningProperty, Map<String,Object> propertyNameValueMap, Integer firstResult, Integer maxResults){
+		return formulateResponse(dao.findByProperties(partitioningProperty, propertyNameValueMap, firstResult, maxResults));
 	}
 
 	public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
@@ -187,14 +204,46 @@ public class GeneratedServiceInterceptor implements MethodInterceptor, Service {
 
 	private Object makeGeneralizedCall(Object obj, final Method method, final Object[] args) {
 		
-		Collection<Entry<String,Object>> entries = Transform.map(new Unary<Integer, Entry<String,Object>>() {
+		Collection<Entry<String,Object>> entries = null;	
+		IndexParamPairs indexParamPairs = AnnotationHelper.getAnnotationDeeply(method, IndexParamPairs.class);
+		if (indexParamPairs != null) {
+			// Collect method parameters pairs that represent an EntityIndexConfig property name and corresponding value
+			int[] ints = indexParamPairs.value(); // java array stupidity
+			Integer[] pairs = new Integer[ints.length];
+			for (int i : ints)
+				pairs[i] = i;
+			
+			entries = Transform.map(new Unary<Entry<Integer,Integer>, Entry<String,Object>>() {
+				public Entry<String,Object> f(Entry<Integer,Integer> indexPair) {
+					String property  =  ((String)args[indexPair.getKey()]);
+					Object value =	PrimitiveUtils.parseString(
+							config.getEntityIndexConfig(property).getIndexClass(),
+							(String) args[indexPair.getValue()]);
+					return new Pair<String, Object>(property, value);
+				}
+			}, new PairIterator<Integer>(Arrays.asList(pairs)));
+		}
+		else {
+			// Collect method parameters that represent and EntityIndexConfig property value
+			entries = Transform.map(new Unary<Integer, Entry<String,Object>>() {
 				public Entry<String,Object> f(Integer index) {
 					IndexParam annotation = AnnotationHelper.getMethodArgumentAnnotationDeeply(method, index-1, IndexParam.class);
-					if (annotation == null)
-						throw new RuntimeException(String.format("Parameter %s of method %s of class %s has no annoation", index-1, method.getName(), method.getDeclaringClass()));
 					return new Pair<String, Object>(config.getEntityIndexConfig(((IndexParam)annotation).value()).getPropertyName(), args[index-1]);
 				}
-			}, new NumberIterator(args.length));
+			}, Filter.grep(new Predicate<Integer>() {
+				public boolean f(Integer index) {
+					return AnnotationHelper.getMethodArgumentAnnotationDeeply(method, index-1, IndexParam.class) != null;
+				}}, new NumberIterator(args.length)));
+		}
+		IndexParamPagingPair indexParamPagingPair = AnnotationHelper.getAnnotationDeeply(method, IndexParamPagingPair.class);
+		Entry<Integer,Integer> pagingPair = new Pair<Integer,Integer>(0,0);
+		if (indexParamPagingPair != null) {
+			// Collect method parameters pairs that represent an EntityIndexConfig property name and corresponding value
+			pagingPair = new Pair<Integer, Integer>(
+					(Integer)args[indexParamPagingPair.startIndexIndex()],
+					(Integer)args[indexParamPagingPair.maxResultsIndex()]);
+		}
+		
 		
 		if (entries.size()==1) {
 			Entry<String, Object> entry = Atom.getFirstOrThrow(entries);
@@ -206,7 +255,7 @@ public class GeneratedServiceInterceptor implements MethodInterceptor, Service {
 			if (entry1.getKey().equals(entry2.getKey()))
 				return findByPropertyRange(entry1.getKey(), entry1.getValue(), entry2.getValue());
 		}
-		// TODO assumes the first parameter is the partitioning parameter. Use the anotation to specify
-		return findByProperties(Atom.getFirstOrThrow(entries).getKey(), Transform.toOrderedMap(entries));
+		// TODO assumes the first parameter is the partitioning parameter. Use the annotation to specify
+		return findByProperties(Atom.getFirstOrThrow(entries).getKey(), Transform.toOrderedMap(entries), pagingPair.getKey(), pagingPair.getValue());
 	}
 }

@@ -50,7 +50,7 @@ public class HiveSemaphoreDao extends JdbcDaoSupport {
 			String url = (getJdbcTemplate().getDataSource() instanceof HiveBasicDataSource)
 				 ? ((HiveBasicDataSource)getJdbcTemplate().getDataSource()).getUrl()
 				 : ((HiveBasicDataSource)((LazyConnectionDataSourceProxy)getJdbcTemplate().getDataSource()).getTargetDataSource()).getUrl();
-			throw new HiveRuntimeException(String.format("Error connecting to the hive database %s",url));
+			throw new HiveRuntimeException(String.format("Error connecting to the hive database %s",url), re);
 		}
 		return result;
 	}

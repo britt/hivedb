@@ -294,7 +294,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		return this.connection;
 	}
 	
-	/**
+	/**e
 	 * Dumps the properties of the Hive.
 	 */
 	public String toString() {

@@ -38,11 +38,11 @@ public interface DataAccessObject<T, ID> {
      * @return
      */
     public Collection<T> findByProperties(String partitioningPropertyName, Map<String,Object> propertyNameValueMap);
-    
+    public Collection<T> findByProperties(String partitioningPropertyName, Map<String,Object> propertyNameValueMap, Integer firstResult, Integer maxResults);
+    public Collection<Object> getProperty(String propertyName, int firstResult, int maxResults);
+
     public Integer getCount(String propertyName, Object propertyValue);
     public Integer getCountByRange(String propertyName, Object minValue, Object maxValue);
-    
-    Collection<Object> getProperty(String propertyName, int firstResult, int maxResults);
     
     /**
      *  Create or Update this instance.

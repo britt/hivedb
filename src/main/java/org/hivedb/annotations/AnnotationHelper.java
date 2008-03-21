@@ -87,14 +87,18 @@ public class AnnotationHelper {
 	}
 	
 	public static<T> T getAnnotationDeeply(Class clazz, String property, Class<? extends T> annotationClass) {
-		final Method getter = ReflectionTools.getGetterOfProperty(clazz, property);
-		if (getter.getAnnotation((Class)annotationClass) != null)
-			return (T)getter.getAnnotation((Class)annotationClass);
-		Class<T> owner = ReflectionTools.getOwnerOfMethod(clazz, property);
-		if (!owner.equals(clazz))
-			return (T)ReflectionTools.getGetterOfProperty(owner, property).getAnnotation((Class)annotationClass);
+		return getAnnotationDeeply(ReflectionTools.getGetterOfProperty(clazz, property), annotationClass);
+	}
+	public static<T> T getAnnotationDeeply(Method method, Class<? extends T> annotationClass) {
+		if (method.getAnnotation((Class)annotationClass) != null)
+			return (T)method.getAnnotation((Class)annotationClass);
+		final Method ownerMethod = ReflectionTools.getMethodOfOwner(method);
+		Class<T> owner = (Class<T>) ownerMethod.getDeclaringClass();
+		if (!owner.equals(method.getDeclaringClass()))
+			return (T)ownerMethod.getAnnotation((Class)annotationClass);
 		return null;
 	}
+	
 	public static<T> T  getMethodArgumentAnnotationDeeply(Method method, int argumentIndex, final Class<? extends T> annotationClass) {
 		return (T)Filter.grepSingleOrNull(
 				new Predicate<Annotation>() {

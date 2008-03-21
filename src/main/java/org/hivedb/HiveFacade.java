@@ -9,6 +9,7 @@ import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.meta.directory.DirectoryFacade;
 import org.hivedb.meta.persistence.DataSourceProvider;
 import org.hivedb.util.database.HiveDbDialect;
 
@@ -77,4 +78,6 @@ public interface HiveFacade {
 			SecondaryIndex secondaryIndex) throws HiveLockableException;
 
 	public Collection<Node> getNodes();
+
+	public DirectoryFacade directory();
 }
