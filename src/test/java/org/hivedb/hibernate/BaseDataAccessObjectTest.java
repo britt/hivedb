@@ -278,7 +278,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	@Test
 	public void testSaveAll() throws Exception {
 		Collection<WeatherReport> reports = new ArrayList<WeatherReport>();
-		for(int i=0; i<50; i++) {
+		for(int i=0; i<54; i++) {
 			WeatherReport report = new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
 			GeneratedInstanceInterceptor.setProperty(report, "reportId", i);
 			reports.add(report);

@@ -21,7 +21,6 @@ import org.hibernate.Transaction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.shards.util.Lists;
 import org.hivedb.Hive;
 import org.hivedb.HiveFacade;
 import org.hivedb.HiveLockableException;
@@ -33,11 +32,7 @@ import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.configuration.EntityIndexConfigDelegator;
 import org.hivedb.configuration.EntityIndexConfigImpl;
-import org.hivedb.util.GenerateInstance;
-import org.hivedb.util.GeneratedClassFactory;
-import org.hivedb.util.GeneratedInstanceInterceptor;
-import org.hivedb.util.PrimitiveUtils;
-import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.*;
 import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
@@ -49,7 +44,8 @@ import org.hivedb.util.functional.Unary;
 
 public class BaseDataAccessObject implements DataAccessObject<Object, Serializable>{
 	private Log log = LogFactory.getLog(BaseDataAccessObject.class);
-	protected HiveSessionFactory factory;
+	private static int CHUNK_SIZE = 10;
+  protected HiveSessionFactory factory;
 	protected EntityConfig config;
 	protected Class<?> clazz;
 	protected Interceptor defaultInterceptor = EmptyInterceptor.INSTANCE;
@@ -104,7 +100,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 						}
 						log.warn(String.format("%s with id %s exists in the directory but not on the data node.  Directory record removed.", config.getResourceName(), id));
 					}
-					return Lists.newArrayList(fetched);
+					return Collections.singletonList(fetched);
 				}};
 			
 			Object fetched = Atom.getFirstOrThrow(queryInTransaction(query, getSession()));
@@ -401,48 +397,66 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	}
 	
 	public Collection<Object> saveAll(final Collection<Object> collection) {
-		final Collection<Object> entities = populateDataIndexDelegates(collection);
+		List<Object> entities = Lists.newList(populateDataIndexDelegates(collection));
 		validateNonNull(entities);
-		SessionCallback callback = new SessionCallback(){
-			public void execute(Session session) {
-				for(Object entity : entities) {
-					session.saveOrUpdate(getRespresentedClass().getName(),entity);
-				}
+
+    //o large save operations in manageable sized chunks
+    for(int chunkId = 0; chunkId < entities.size(); chunkId += BaseDataAccessObject.getSaveChunkSize()) {
+      final Collection<Object> chunk =
+        entities.subList(
+          chunkId,
+          chunkId + getSaveChunkSize() <= entities.size() ? chunkId + getSaveChunkSize(): entities.size());
+      
+      SessionCallback callback = new SessionCallback(){
+			  public void execute(Session session) {
+				  for(Object entity : chunk) {
+					  session.saveOrUpdate(getRespresentedClass().getName(),entity);
+				  }
 			}};
-		SessionCallback cleanupCallback = new SessionCallback(){
-			public void execute(Session session) {
-				for(Object entity : entities) {
-					try {
-						session.refresh(entity);
-					} catch(RuntimeException e) {
-						//Damned Hibernate
-					}
-					if(!exists(config.getId(entity))){
-						if(existsInSession(session, config.getId(entity))){
-							session.lock(getRespresentedClass().getName(),entity, LockMode.UPGRADE);
-							session.update(getRespresentedClass().getName(),entity);
-							log.warn(String.format("%s with id %s exists in the data node but not on the directory. Data node record was updated and re-indexed.", config.getResourceName(), config.getId(entity)));
-						} else {
-							session.saveOrUpdate(getRespresentedClass().getName(), entity);
-						}
-					} else {
-						if(!existsInSession(session, config.getId(entity))){
-							try {
-								getHive().directory().deleteResourceId(config.getResourceName(), config.getId(entity));
-							} catch (HiveLockableException e) {
-								log.warn(String.format("%s with id %s exists in the directory but not on the data node.  Unable to cleanup record because Hive was read-only.", config.getResourceName(), config.getId(entity)));
-							}
-							log.warn(String.format("%s with id %s exists in the directory but not on the data node.  Directory record removed.", config.getResourceName(), config.getId(entity)));					
-						}
-						session.saveOrUpdate(getRespresentedClass().getName(), entity);
-					}
-				}
-			}};
-		doSaveAll(entities, callback, cleanupCallback);
+		  SessionCallback cleanupCallback = new SessionCallback(){
+			  public void execute(Session session) {
+				  for(Object entity : chunk) {
+            try {
+              session.refresh(entity);
+            } catch(RuntimeException e) {
+              //Damned Hibernate
+            }
+            if(!exists(config.getId(entity))){
+              if(existsInSession(session, config.getId(entity))){
+                session.lock(getRespresentedClass().getName(),entity, LockMode.UPGRADE);
+                session.update(getRespresentedClass().getName(),entity);
+                log.warn(String.format("%s with id %s exists in the data node but not on the directory. Data node record was updated and re-indexed.", config.getResourceName(), config.getId(entity)));
+              } else {
+                session.saveOrUpdate(getRespresentedClass().getName(), entity);
+              }
+            } else {
+              if(!existsInSession(session, config.getId(entity))){
+                try {
+                  getHive().directory().deleteResourceId(config.getResourceName(), config.getId(entity));
+                } catch (HiveLockableException e) {
+                  log.warn(String.format("%s with id %s exists in the directory but not on the data node.  Unable to cleanup record because Hive was read-only.", config.getResourceName(), config.getId(entity)));
+                }
+                log.warn(String.format("%s with id %s exists in the directory but not on the data node.  Directory record removed.", config.getResourceName(), config.getId(entity)));
+              }
+              session.saveOrUpdate(getRespresentedClass().getName(), entity);
+            }
+          }
+      }};
+		  doSaveAll(chunk, callback, cleanupCallback);
+    }
+
 		return collection;
 	}
-	
-	@SuppressWarnings("unchecked")
+
+  public static int getSaveChunkSize() {
+    return BaseDataAccessObject.CHUNK_SIZE;
+  }
+
+  public synchronized static void setSaveChunkSize(int size) {
+    BaseDataAccessObject.CHUNK_SIZE = size;
+  }
+
+  @SuppressWarnings("unchecked")
 	public Class<Object> getRespresentedClass() {
 		return (Class<Object>) EntityResolver.getPersistedImplementation(clazz);
 	}
