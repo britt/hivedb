@@ -110,7 +110,7 @@ public class HiveInterceptorDecorator extends InterceptorDecorator implements In
 	@Override
 	public void postFlush(Iterator entities) throws CallbackException {
 		while(entities.hasNext()) {
-			Object entity = entities.next();
+      Object entity = entities.next();
 			Class<?> resolvedClass = resolveEntityClass(entity.getClass());
 			if(resolvedClass != null) {
 				if(indexer.exists(hiveConfig.getEntityConfig(resolvedClass), entity))
@@ -118,7 +118,7 @@ public class HiveInterceptorDecorator extends InterceptorDecorator implements In
 				else
 					insertIndexes(entity);
 			}
-		}
+    }
 		super.postFlush(entities);
 	}
 

@@ -247,7 +247,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 
 	@SuppressWarnings("unchecked")
 	public Collection getSecondaryIndexKeysOfResourceId(SecondaryIndex secondaryIndex, Object id) {
-		return doRead(
+    return doRead(
 				sql.selectSecondaryIndexKeyOfResourceId(secondaryIndex), 
 				new Object[] { id }, 
 				RowMappers.newObjectRowMapper(secondaryIndex.getColumnInfo().getColumnType()));
