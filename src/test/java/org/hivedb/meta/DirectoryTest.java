@@ -84,8 +84,13 @@ public class DirectoryTest extends H2TestCase {
 		return Hive.load(getConnectString(H2TestCase.TEST_DB));
 	}
 
+  @Test
+  public void transactionTest() throws Exception {
+    Directory d = getDirectory();
+    d.newTransaction().
+  }
 
-	@Test
+  @Test
 	public void testInsertPrimaryIndexKey() throws Exception{
 		Directory d = getDirectory();
 		Integer key = new Integer(43);

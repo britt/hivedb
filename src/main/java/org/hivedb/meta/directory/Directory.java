@@ -256,16 +256,14 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	@SuppressWarnings("unchecked")
 	private<T> Collection<T> doRead(String sql, Object[] parameters, RowMapper mapper) {
 		try{
-			return (Collection<T>) getJdbcTemplate().query(sql,	parameters, mapper);
+      return (Collection<T>) getJdbcTemplate().query(sql,	parameters, mapper);
 		} catch(EmptyResultDataAccessException e) {
-			throw new HiveKeyNotFoundException(String.format("Unable to get secondary index keys of primary index key %s, key not found.", parameters[0]), parameters[0],e);
+			throw new HiveKeyNotFoundException(String.format("Directory query returned no results. %s with parameters: %s", sql, parameters), e);
 		}
 	}
 	
 	private void doUpdate(String sql, int[] types, Object[] parameters){
-		PreparedStatementCreatorFactory factory = 
-			Statements.newStmtCreatorFactory(sql, types);
-		getJdbcTemplate().update(factory.newPreparedStatementCreator(parameters));
+		getJdbcTemplate().update(Statements.newStmtCreatorFactory(sql, types).newPreparedStatementCreator(parameters));
 	}
 
 	public void insertResourceId(final Resource resource, final Object id, final Object primaryIndexKey) {
