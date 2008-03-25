@@ -1,0 +1,31 @@
+HiveDB is a Java based system for horizontally partitioning MySQL databases.  The HiveDB architecture is optimized for
+OLTP (Online transaction processing) datasets.  HiveDB provides JDBC access to the database as well as providing
+Hibernate support via Hibernate-Shards.
+
+Here is what you will need in order to use HiveDB.
+    * Java 1.5+
+    * Maven
+    * MySQL 5.0+
+
+* Building HiveDB from source
+
+git clone git://github.com/britt/hivedb.git
+cd hivedb
+mvn install
+# To install project files for your IDE use 'mvn eclipse:eclipse' or 'mvn idea:idea'
+
+* Using HiveDB with Maven
+
+Add the HiveDB repository to your pom.xml.
+<repository>
+	<id>HiveDB</id>
+	<url>http://www.hivedb.org/maven/</url>
+</repository>
+
+Add HiveDB as a dependency.
+<dependency>
+	<groupId>org.hivedb</groupId>
+	<artifactId>hivedb</artifactId>
+	<version>0.9.3</version>
+</dependency>
+

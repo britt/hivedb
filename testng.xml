@@ -10,12 +10,12 @@
 			<package name="org.hivedb.meta"/>
 			<package name="org.hivedb.persistence"/>
 			<package name="org.hivedb.util"/>
-			<!-- package name="org.hivedb.services"/ -->
+			<!-- <package name="org.hivedb.services"/> -->
 		</packages>
 		<classes>
-			<!-- class name="org.hivedb.services.DataGenerationServiceTest"/ -->
+			<!-- <class name="org.hivedb.services.DataGenerationServiceTest"/> 
 			<class name="org.hivedb.services.InstallServiceTest"/>
-			<class name="org.hivedb.services.ExampleDaoServiceTest"/>
+			<class name="org.hivedb.services.ExampleDaoServiceTest"/> -->
 		</classes>
 	</test>
 </suite>

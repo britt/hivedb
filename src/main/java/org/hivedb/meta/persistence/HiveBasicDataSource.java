@@ -11,7 +11,7 @@ import org.hivedb.util.HiveUtils;
 public class HiveBasicDataSource extends BasicDataSource implements Cloneable {
 	private Log log = LogFactory.getLog(HiveBasicDataSource.class);
 	public static final String CONNECTION_POOL_SIZE = "HiveDataSourceConnectionPoolSize";
-	public static final int DEFAULT_POOL_SIZE = 4;
+	public static final int DEFAULT_POOL_SIZE = 32;
 	private Long connectionTimeout = 500l;
 	private Long socketTimeout  = 500l;
 	
