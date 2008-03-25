@@ -85,12 +85,6 @@ public class DirectoryTest extends H2TestCase {
 	}
 
   @Test
-  public void transactionTest() throws Exception {
-    Directory d = getDirectory();
-    d.newTransaction().
-  }
-
-  @Test
 	public void testInsertPrimaryIndexKey() throws Exception{
 		Directory d = getDirectory();
 		Integer key = new Integer(43);

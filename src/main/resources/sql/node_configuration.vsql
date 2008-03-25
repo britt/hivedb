@@ -10,4 +10,4 @@ CREATE TABLE node_metadata (
 	password varchar(255),
 	options varchar(255),
 	capacity int
-)
+) #if ( $dialect == $mysql ) ENGINE=InnoDB #end
