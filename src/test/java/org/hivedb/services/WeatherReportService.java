@@ -18,7 +18,7 @@ public interface WeatherReportService extends Service<WeatherReport, WeatherServ
 	@WebMethod
 	@WebResult
 	@IndexParamPairs({0,1})
-	public WeatherServiceResponse getCountByProperty(String propertyName, String propertyValue);
+	public Integer getCountByProperty(String propertyName, String propertyValue);
 
 	@WebMethod
 	@WebResult
@@ -34,7 +34,7 @@ public interface WeatherReportService extends Service<WeatherReport, WeatherServ
 	@WebMethod
 	@WebResult
 	@IndexParamPairs({0,1,2,3})
-	public WeatherServiceResponse getCountByTwoProperties(String propertyName1, String propertyValue1, String propertyName2, String propertyValue2);
+	public Integer getCountByTwoProperties(String propertyName1, String propertyValue1, String propertyName2, String propertyValue2);
 
 	
 	@WebMethod
@@ -51,7 +51,7 @@ public interface WeatherReportService extends Service<WeatherReport, WeatherServ
 	@WebMethod
 	@WebResult
 	@IndexParamPairs({0,1,2,3,4,5})
-	public WeatherServiceResponse getCountByThreeProperties(String propertyName1, String propertyValue1, String propertyName2, String propertyValue2, String propertyName3, String propertyValue3);
+	public Integer getCountByThreeProperties(String propertyName1, String propertyValue1, String propertyName2, String propertyValue2, String propertyName3, String propertyValue3);
 
 	
 	@WebMethod

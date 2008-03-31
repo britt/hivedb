@@ -173,6 +173,18 @@ public class GeneratedServiceInterceptor implements MethodInterceptor, Service {
 	public ServiceResponse findByProperties(String partitioningProperty, Map<String,Object> propertyNameValueMap, Integer firstResult, Integer maxResults){
 		return formulateResponse(dao.findByProperties(partitioningProperty, propertyNameValueMap, firstResult, maxResults));
 	}
+	
+	public Integer getCountByProperty(String propertyName, String propertyValue) {
+		return dao.getCount(propertyName, propertyValue);
+	}
+	public Integer getCountByTwoProperties(String propertyName1, String propertyValue1, String propertyName2, String propertyValue2) {
+		return null;
+	}
+	public Integer getCountByThreeProperties(String propertyName1, String propertyValue1, String propertyName2, String propertyValue2, String propertyName3, String propertyValue3) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
 
 	public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
 		Object retValFromSuper = null;
@@ -258,4 +270,5 @@ public class GeneratedServiceInterceptor implements MethodInterceptor, Service {
 		// TODO assumes the first parameter is the partitioning parameter. Use the annotation to specify
 		return findByProperties(Atom.getFirstOrThrow(entries).getKey(), Transform.toOrderedMap(entries), pagingPair.getKey(), pagingPair.getValue());
 	}
+	
 }
