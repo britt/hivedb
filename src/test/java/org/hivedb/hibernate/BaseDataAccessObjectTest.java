@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Map.Entry;
 
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Session;
@@ -30,6 +31,7 @@ import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Generate;
 import org.hivedb.util.functional.Generator;
 import org.hivedb.util.functional.NumberIterator;
+import org.hivedb.util.functional.Pair;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.testng.Assert;
@@ -84,6 +86,13 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		found = Atom.getFirstOrThrow(dao.findByProperty("continent", report.getContinent()));
 		assertEquals(report.hashCode(), found.hashCode());	
 		found = Atom.getFirstOrThrow(dao.findByProperty("sources", Atom.getFirstOrThrow(report.getSources())));
+		assertEquals(report.hashCode(), found.hashCode());
+		// Test find by multiple properties
+		found = Atom.getFirstOrThrow(dao.findByProperties("regionCode", Transform.toMap(
+				new Entry[] {
+						new Pair<String,Object>("regionCode", report.getRegionCode()),
+						new Pair<String,Object>("weatherEvents", Atom.getFirstOrThrow(report.getWeatherEvents()).getEventId()),
+				})));
 		assertEquals(report.hashCode(), found.hashCode());
 	}
 	
@@ -196,6 +205,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 					// Set the same temperature for each partition dimension id. The partition dimension id will be calculated from the report id
 					GeneratedInstanceInterceptor.setProperty(weatherReport, "temperature", temperature + weatherReport.getReportId() % 2);
 					GeneratedInstanceInterceptor.setProperty(weatherReport, "continent", partitionDimensionKeys.get(weatherReport.getReportId() % 2));
+					GeneratedInstanceInterceptor.setProperty(weatherReport, "regionCode", 4);
 					return weatherReport;
 				}}, new NumberIterator(5));
 		
@@ -203,6 +213,16 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		dao.saveAll(reports);
 		Assert.assertEquals(dao.getCount("temperature", temperature) + dao.getCount("temperature", temperature+1), 5);
 		Assert.assertEquals(dao.getCountByRange("temperature", temperature, temperature+1), (Integer)5);
+		Assert.assertEquals((Integer)(dao.getCountByProperties("temperature", Transform.toMap(
+				new Entry[] {
+						new Pair<String,Object>("temperature", temperature),
+						new Pair<String,Object>("regionCode", 4),
+				})) +
+							dao.getCountByProperties("temperature", Transform.toMap(
+				new Entry[] {
+						new Pair<String,Object>("temperature", temperature+1),
+						new Pair<String,Object>("regionCode", 4),
+				}))), (Integer)5);
 	}
 		
 	@Test

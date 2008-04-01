@@ -174,17 +174,13 @@ public class GeneratedServiceInterceptor implements MethodInterceptor, Service {
 		return formulateResponse(dao.findByProperties(partitioningProperty, propertyNameValueMap, firstResult, maxResults));
 	}
 	
-	public Integer getCountByProperty(String propertyName, String propertyValue) {
+	public Integer getCountByProperty(String propertyName, Object propertyValue) {
 		return dao.getCount(propertyName, propertyValue);
-	}
-	public Integer getCountByTwoProperties(String propertyName1, String propertyValue1, String propertyName2, String propertyValue2) {
-		return null;
-	}
-	public Integer getCountByThreeProperties(String propertyName1, String propertyValue1, String propertyName2, String propertyValue2, String propertyName3, String propertyValue3) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	}	
 	
+	public Integer getCountByProperties(String partitioningProperty, Map<String,Object> propertyNameValueMap, Integer firstResult, Integer maxResults){
+		return dao.getCountByProperties(partitioningProperty, propertyNameValueMap, firstResult, maxResults);
+	}
 
 	public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
 		Object retValFromSuper = null;
@@ -259,7 +255,10 @@ public class GeneratedServiceInterceptor implements MethodInterceptor, Service {
 		
 		if (entries.size()==1) {
 			Entry<String, Object> entry = Atom.getFirstOrThrow(entries);
-			return findByProperty(entry.getKey(), entry.getValue());
+			if (method.getName().equals("getCountByProperty"))
+				return getCountByProperty(entry.getKey(), entry.getValue());
+			else if (method.getName().equals("findByProperty"))
+				return findByProperty(entry.getKey(), entry.getValue());
 		}
 		if (entries.size()==2) {
 			Entry<String, Object> entry1 = Atom.getFirstOrThrow(entries);
@@ -270,5 +269,4 @@ public class GeneratedServiceInterceptor implements MethodInterceptor, Service {
 		// TODO assumes the first parameter is the partitioning parameter. Use the annotation to specify
 		return findByProperties(Atom.getFirstOrThrow(entries).getKey(), Transform.toOrderedMap(entries), pagingPair.getKey(), pagingPair.getValue());
 	}
-	
 }

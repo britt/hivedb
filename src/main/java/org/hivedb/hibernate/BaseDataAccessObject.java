@@ -122,7 +122,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		}
 	}
 	
-	public Collection<Object> getProperty(final String propertyName, final int firstResult, final int maxResults) {
+	public Collection<Object> getPropertyValue(final String propertyName, final int firstResult, final int maxResults) {
 		QueryCallback callback = new QueryCallback(){
 			@SuppressWarnings("unchecked")
 			public Collection<Object> execute(Session session) {
@@ -140,160 +140,28 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			}};
 		return queryInTransaction(callback, getSession());
 	}
-
-	
-	private Object get(Serializable id, Session session) {
-		return session.get(getRespresentedClass(), id);
-	}
 	
 	public Collection<Object> findByProperty(final String propertyName, final Object propertyValue) {
 		return findByProperties(propertyName, Collections.singletonMap(propertyName, propertyValue));
+	}
+	public Collection<Object> findByProperty(final String propertyName, final Object propertyValue, final Integer firstResult, final Integer maxResults) {
+		return findByProperties(propertyName, Collections.singletonMap(propertyName, propertyValue), firstResult, maxResults);
 	}
 	public Collection<Object> findByProperties(String partitioningPropertyName, final Map<String,Object> propertyNameValueMap) { 
 		return findByProperties(partitioningPropertyName, propertyNameValueMap, 0, 0);
 	}
 	public Collection<Object> findByProperties(String partitioningPropertyName, final Map<String,Object> propertyNameValueMap, final Integer firstResult, final Integer maxResults) {
-		final EntityIndexConfig entityIndexConfig = resolveEntityIndexConfig(partitioningPropertyName);
-		Session session = createSessionForIndex(config, entityIndexConfig, propertyNameValueMap.get(partitioningPropertyName));
-
-		final Map<String, Entry<EntityIndexConfig, Object>> propertyNameEntityIndexConfigValueMap = 
-			Transform.toOrderedMap(
-				new Unary<String, Entry<String, Entry<EntityIndexConfig, Object>>>() {
-					public Entry<String, Entry<EntityIndexConfig, Object>> f(String propertyName) {
-						EntityIndexConfig entityIndexConfig = resolveEntityIndexConfig(propertyName);
-						DataIndexDelegate dataIndexDelegate = AnnotationHelper.getAnnotationDeeply(clazz, propertyName, DataIndexDelegate.class);
-						EntityIndexConfig resolvedEntityIndexConfig =  
-							(dataIndexDelegate != null)
-							? resolveEntityIndexConfig(dataIndexDelegate.value())
-							: entityIndexConfig;
-						return new Pair<String, Entry<EntityIndexConfig, Object>>(
-								resolvedEntityIndexConfig.getPropertyName(), 
-								new Pair<EntityIndexConfig, Object>(resolvedEntityIndexConfig, propertyNameValueMap.get(propertyName)));
-					}
-			}, propertyNameValueMap.keySet());
-	
-		QueryCallback query;
-		
-		if (Filter.isMatch(new Predicate<String>() {
-			// We must use HQL to query for primitive collection properties. 
-			public boolean f(String propertyName) {
-				return isPrimitiveCollection(propertyName);
-			}}, propertyNameEntityIndexConfigValueMap.keySet()))
-			query = new QueryCallback(){
-				 public Collection<Object> execute(Session session) {
-					Map <String, Object> revisedPropertyNameValueMap = Transform.toMap(
-							new Unary<Entry<String, Entry<EntityIndexConfig, Object>>, String>() {
-								public String f(Map.Entry<String,Map.Entry<EntityIndexConfig,Object>> item) {
-									return item.getKey();
-								}
-							},
-							new Unary<Entry<String, Entry<EntityIndexConfig, Object>>, Object>() {
-								public Object f(Map.Entry<String,Map.Entry<EntityIndexConfig,Object>> item) {
-									return item.getValue().getValue();
-								}
-							},
-							propertyNameEntityIndexConfigValueMap.entrySet());
-			
-					return queryWithHQL(session, revisedPropertyNameValueMap, firstResult, maxResults);
-				 }};
-		else
-			query = new QueryCallback(){
-				@SuppressWarnings("unchecked")
-				public Collection<Object> execute(Session session) {
-					Criteria criteria = session.createCriteria(config.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-					for (Entry<EntityIndexConfig,Object> entityIndexConfigValueEntry : propertyNameEntityIndexConfigValueMap.values()) {
-						EntityIndexConfig entityIndexConfig = entityIndexConfigValueEntry.getKey();
-						Object value = entityIndexConfigValueEntry.getValue();
-						addPropertyRestriction(entityIndexConfig, criteria, entityIndexConfig.getPropertyName(), value);
-					}
-					addPaging(firstResult, maxResults, criteria);	 
-					return criteria.list();
-				}};
-		return queryInTransaction(query, session);
+		return queryByProperties(partitioningPropertyName, propertyNameValueMap, firstResult, maxResults, false);
 	}
-
-	@SuppressWarnings("unchecked")
-	protected Collection<Object> queryWithHQL(Session session, Map<String, Object> propertyNameValueMap, Integer firstResult, Integer maxResult) {
-		final StringBuilder queryString = new StringBuilder(String.format("from %s as x where", GeneratedClassFactory.getGeneratedClass(config.getRepresentedInterface()).getSimpleName()));
-		
-		for (Entry<String, Object> entry : propertyNameValueMap.entrySet()) {
-			String propertyName = entry.getKey();
-			if (ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName))
-				queryString.append(String.format(" :%s in elements (x.%s)", propertyName, propertyName));
-			else
-				queryString.append(String.format(" :%s = x.%s", propertyName, propertyName));
-		}
-		Query query = session.createQuery(queryString.toString());
-		for (Entry<String, Object> entry : propertyNameValueMap.entrySet())
-			query.setParameter(entry.getKey(), entry.getValue());
-		return query.list();
-	}
-
 	public Integer getCount(final String propertyName, final Object propertyValue) {
-		final EntityIndexConfig indexConfig = resolveEntityIndexConfig(propertyName);
-		QueryCallback query;
-		Session session = null;
-		try {
-			session = createSessionForIndex(config, indexConfig, propertyValue);
-		}
-		catch (UnsupportedOperationException e) {
-			return 0;
-		}
-		if (isPrimitiveCollection(propertyName)) {
-				query = new QueryCallback(){
-
-					public Collection<Object> execute(Session session) {
-						return queryWithHQLRowCount(indexConfig, session, propertyValue);
-					}};
-		}
-		else {
-			query = new QueryCallback(){
-				@SuppressWarnings("unchecked")
-				public Collection<Object> execute(Session session) {
-					// setResultTransformer fixes a Hibernate bug of returning duplicates when joins exist
-					Criteria criteria = session.createCriteria(config.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-					addPropertyRestriction(indexConfig, criteria, propertyName, propertyValue); 
-					criteria.setProjection( Projections.rowCount() );
-					return criteria.list();
-				}};
-		}
-		return (Integer)Atom.getFirstOrThrow(queryInTransaction(query, session));
+		return (Integer)Atom.getFirstOrThrow(queryByProperties(propertyName, Collections.singletonMap(propertyName, propertyValue), 0, 0, true));
 	}
-
-	
-
-	public Collection<Object> findByProperty(final String propertyName, final Object propertyValue, final Integer firstResult, final Integer maxResults) {
-		final EntityConfig entityConfig = config;
-		final EntityIndexConfig indexConfig = entityConfig.getEntityIndexConfig(propertyName);
-		Session session = createSessionForIndex(entityConfig, indexConfig, propertyValue);
-		QueryCallback callback;
-		if (isPrimitiveCollection(propertyName)) {
-			callback = new QueryCallback(){
-				@SuppressWarnings("unchecked")
-				public Collection<Object> execute(Session session) {
-					Query query = session.createQuery(String.format("from %s as x where :value in elements (x.%s) order by x.%s asc limit %s, %s",
-							GeneratedClassFactory.getGeneratedClass(entityConfig.getRepresentedInterface()).getSimpleName(),
-							indexConfig.getIndexName(),
-							entityConfig.getIdPropertyName(),
-							firstResult,
-							maxResults)
-							).setEntity("value", propertyValue);
-					return query.list();
-				}};
-		} else {
-			callback = new QueryCallback(){
-				@SuppressWarnings("unchecked")
-				public Collection<Object> execute(Session session) {
-					Criteria criteria = session.createCriteria(entityConfig.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-					addPropertyRestriction(indexConfig, criteria, propertyName, propertyValue);
-					addPaging(firstResult, maxResults, criteria);
-					criteria.addOrder(Order.asc(entityConfig.getIdPropertyName()));
-					return criteria.list();
-				}};
-		}
-		return queryInTransaction(callback, session);
+	public Integer getCountByProperties(String partitioningPropertyName, Map<String, Object> propertyNameValueMap) {
+		return (Integer)Atom.getFirstOrThrow(queryByProperties(partitioningPropertyName, propertyNameValueMap, 0, 0, true));
 	}
-	
+	public Integer getCountByProperties(String partitioningPropertyName, Map<String, Object> propertyNameValueMap, Integer firstResult, Integer maxResults) {
+		return (Integer)Atom.getFirstOrThrow(queryByProperties(partitioningPropertyName, propertyNameValueMap, firstResult, maxResults, true));
+	}
 	
 	public Collection<Object> findByPropertyRange(final String propertyName, final Object minValue, final Object maxValue) {
 		// Use an AllShardsresolutionStrategy + Criteria
@@ -311,7 +179,6 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 							).setEntity("minValue", minValue).setEntity("maxValue", maxValue);
 						return query.list();
 				}};
-			
 		}
 		else {
 			callback = new QueryCallback(){
@@ -375,6 +242,126 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		}
 		return queryInTransaction(callback, session);
 	}
+
+	private Object get(Serializable id, Session session) {
+		return session.get(getRespresentedClass(), id);
+	}
+	private Collection<Object> queryByProperties(
+			String partitioningPropertyName,
+			final Map<String, Object> propertyNameValueMap,
+			final Integer firstResult, final Integer maxResults,
+			final boolean justCount) {
+		final EntityIndexConfig entityIndexConfig = resolveEntityIndexConfig(partitioningPropertyName);
+		Session session = createSessionForIndex(config, entityIndexConfig, propertyNameValueMap.get(partitioningPropertyName));
+
+		final Map<String, Entry<EntityIndexConfig, Object>> propertyNameEntityIndexConfigValueMap = createPropertyNameToValueMap(propertyNameValueMap);
+	
+		QueryCallback query;
+		
+		if (Filter.isMatch(new Predicate<String>() { public boolean f(String propertyName) {
+				return isPrimitiveCollection(propertyName);
+			}}, propertyNameEntityIndexConfigValueMap.keySet()))
+			query = new QueryCallback(){
+				 public Collection<Object> execute(Session session) {
+					Map <String, Object> revisedPropertyNameValueMap = Transform.toMap(
+							new Unary<Entry<String, Entry<EntityIndexConfig, Object>>, String>() {
+								public String f(Map.Entry<String,Map.Entry<EntityIndexConfig,Object>> item) {
+									return item.getKey();
+								}
+							},
+							new Unary<Entry<String, Entry<EntityIndexConfig, Object>>, Object>() {
+								public Object f(Map.Entry<String,Map.Entry<EntityIndexConfig,Object>> item) {
+									return item.getValue().getValue();
+								}
+							},
+							propertyNameEntityIndexConfigValueMap.entrySet());
+			
+					return justCount 
+						? queryWithHQLRowCount(session, revisedPropertyNameValueMap, firstResult, maxResults)
+						: queryWithHQL(session, revisedPropertyNameValueMap, firstResult, maxResults);
+			}};
+		else
+			query = new QueryCallback(){
+				@SuppressWarnings("unchecked")
+				public Collection<Object> execute(Session session) {
+					Criteria criteria = session.createCriteria(config.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+					for (Entry<EntityIndexConfig,Object> entityIndexConfigValueEntry : propertyNameEntityIndexConfigValueMap.values()) {
+						EntityIndexConfig entityIndexConfig = entityIndexConfigValueEntry.getKey();
+						Object value = entityIndexConfigValueEntry.getValue();
+						addPropertyRestriction(entityIndexConfig, criteria, entityIndexConfig.getPropertyName(), value);
+					}
+					addPaging(firstResult, maxResults, criteria);
+					if (justCount)
+						criteria.setProjection( Projections.rowCount() );
+					return criteria.list();
+			}};
+		return queryInTransaction(query, session);
+	}
+
+	private Map<String, Entry<EntityIndexConfig, Object>> createPropertyNameToValueMap(
+			final Map<String, Object> propertyNameValueMap) {
+		final Map<String, Entry<EntityIndexConfig, Object>> propertyNameEntityIndexConfigValueMap = 
+			Transform.toOrderedMap(
+				new Unary<String, Entry<String, Entry<EntityIndexConfig, Object>>>() {
+					public Entry<String, Entry<EntityIndexConfig, Object>> f(String propertyName) {
+						EntityIndexConfig entityIndexConfig = resolveEntityIndexConfig(propertyName);
+						DataIndexDelegate dataIndexDelegate = AnnotationHelper.getAnnotationDeeply(clazz, propertyName, DataIndexDelegate.class);
+						EntityIndexConfig resolvedEntityIndexConfig = (dataIndexDelegate != null)
+							? resolveEntityIndexConfig(dataIndexDelegate.value())
+							: entityIndexConfig;
+						return new Pair<String, Entry<EntityIndexConfig, Object>>(
+								resolvedEntityIndexConfig.getPropertyName(), 
+								new Pair<EntityIndexConfig, Object>(resolvedEntityIndexConfig, propertyNameValueMap.get(propertyName)));
+					}
+			}, propertyNameValueMap.keySet());
+		return propertyNameEntityIndexConfigValueMap;
+	}
+	
+
+	@SuppressWarnings("unchecked")
+	protected Collection<Object> queryWithHQL(Session session, Map<String, Object> propertyNameValueMap, Integer firstResult, Integer maxResult) {
+		String queryString = createHQLQuery(session, propertyNameValueMap);
+		Query query = session.createQuery(queryString);
+		for (Entry<String, Object> entry : propertyNameValueMap.entrySet())
+			query.setParameter(entry.getKey(), entry.getValue());
+		return query.list();
+	}
+	@SuppressWarnings("unchecked")
+	protected Collection<Object> queryWithHQLRowCount(Session session, Map<String, Object> propertyNameValueMap, Integer firstResult, Integer maxResult) {
+		String queryString = String.format("select count(%s) %s",
+			config.getIdPropertyName(),
+			createHQLQuery(session, propertyNameValueMap));
+		
+		Query query = session.createQuery(queryString);
+		for (Entry<String, Object> entry : propertyNameValueMap.entrySet())
+			query.setParameter(entry.getKey(), entry.getValue());
+		return query.list();
+	}
+
+	private String createHQLQuery(Session session, Map<String, Object> propertyNameValueMap) {
+		final String queryString = String.format("from %s as x where", GeneratedClassFactory.getGeneratedClass(config.getRepresentedInterface()).getSimpleName())
+			+ Amass.join(
+			new Joiner<Entry<String,Object>, String>() {
+				@Override
+				public String f(Entry<String, Object> entry, String result) {
+					return result + " and " + toHql(entry);
+				}},
+			new Unary<Entry<String,Object>, String>() {
+				public String f(Entry<String, Object> entry) {
+					return toHql(entry);
+				}},
+			propertyNameValueMap.entrySet());
+		return queryString;
+		
+	}
+	private String toHql(Entry<String, Object> entry) {
+		String propertyName = entry.getKey();
+		if (ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName))
+			return String.format(" :%s in elements (x.%s)", propertyName, propertyName);
+		else
+			return String.format(" :%s = x.%s", propertyName, propertyName);
+	}
+	
 	
 	public Object save(final Object entity) {
 		final Collection<Object> entities = populateDataIndexDelegates(Collections.singletonList(entity));
@@ -523,15 +510,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			&& !ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName);
 	}
 	
-	@SuppressWarnings("unchecked")
-	private Collection<Object> queryWithHQLRowCount(EntityIndexConfig indexConfig, Session session, Object propertyValue) {
-		Query query = session.createQuery(String.format("select count(%s) from %s as x where :value in elements (x.%s)",
-			config.getIdPropertyName(),
-			GeneratedClassFactory.getGeneratedClass(config.getRepresentedInterface()).getSimpleName(),
-			indexConfig.getIndexName())
-			).setParameter("value", propertyValue);
-		return query.list();
-	}
+	
 	
 	protected EntityIndexConfig resolveEntityIndexConfig(String propertyName) {
 		EntityIndexConfig indexConfig = config.getPrimaryIndexKeyPropertyName().equals(propertyName)
@@ -622,8 +601,6 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			doInTransaction(cleanupCallback, factory.openSession(config.getPrimaryIndexKey(Atom.getFirstOrThrow(entities))));
 		}
 	}
-
-	
 	
 	private Boolean existsInSession(Session session, Serializable id) {
 		return null != session.get(getRespresentedClass(), id);
@@ -650,6 +627,4 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			criteria.setMaxResults(maxResults);
 		}
 	}
-
-	
 }
