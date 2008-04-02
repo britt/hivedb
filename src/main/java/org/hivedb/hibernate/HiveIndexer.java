@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.hivedb.Hive;
+import org.hivedb.HiveFacade;
 import org.hivedb.HiveLockableException;
 import org.hivedb.annotations.IndexType;
 import org.hivedb.configuration.EntityConfig;
@@ -20,9 +21,9 @@ import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 
 public class HiveIndexer {
-	private Hive hive;
+	private HiveFacade hive;
 	
-	public HiveIndexer(Hive hive) {
+	public HiveIndexer(HiveFacade hive) {
 		this.hive = hive;
 	}
 	

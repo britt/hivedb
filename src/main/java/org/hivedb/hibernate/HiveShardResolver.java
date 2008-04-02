@@ -11,6 +11,7 @@ import org.hibernate.shards.strategy.resolution.ShardResolutionStrategy;
 import org.hibernate.shards.strategy.selection.ShardResolutionStrategyData;
 import org.hibernate.shards.util.Lists;
 import org.hivedb.Hive;
+import org.hivedb.HiveFacade;
 import org.hivedb.annotations.IndexDelegate;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
@@ -24,9 +25,9 @@ import org.hivedb.util.functional.Unary;
 
 public class HiveShardResolver implements ShardResolutionStrategy {
 	private EntityHiveConfig hiveConfig;
-	private Hive hive;
+	private HiveFacade hive;
 
-	public HiveShardResolver(EntityHiveConfig hiveConfig, Hive hive) {
+	public HiveShardResolver(EntityHiveConfig hiveConfig, HiveFacade hive) {
 		this.hiveConfig = hiveConfig;
 		this.hive = hive;
 	}

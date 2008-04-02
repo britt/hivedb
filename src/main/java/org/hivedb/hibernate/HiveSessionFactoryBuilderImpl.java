@@ -58,7 +58,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	private ShardAccessStrategy accessStrategy;
 	private Properties overrides = new Properties();
 	private ShardedSessionFactory allNodesSessionFactory = null;
-	private Hive hive;
+	private HiveFacade hive;
 	
 	public HiveSessionFactoryBuilderImpl(String hiveUri, List<Class<?>> mappedClasses, ShardAccessStrategy strategy) {
 		hive = Hive.load(hiveUri);
@@ -71,19 +71,19 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 		this.overrides = overrides;
 	}
 	
-	public HiveSessionFactoryBuilderImpl(EntityHiveConfig config, Hive hive, ShardAccessStrategy strategy) {
+	public HiveSessionFactoryBuilderImpl(EntityHiveConfig config, HiveFacade hive, ShardAccessStrategy strategy) {
 		this.hive = hive;
 		this.mappedClasses = new EntityResolver(config).getEntityClasses();
 		initialize(config, hive, strategy);
 	}
 	
-	public HiveSessionFactoryBuilderImpl(EntityHiveConfig config, Collection<Class<?>> mappedClasses, Hive hive, ShardAccessStrategy strategy) {
+	public HiveSessionFactoryBuilderImpl(EntityHiveConfig config, Collection<Class<?>> mappedClasses, HiveFacade hive, ShardAccessStrategy strategy) {
 		this.hive = hive;
 		this.mappedClasses = mappedClasses;
 		initialize(config, hive, strategy);
 	}
 	
-	private void initialize(EntityHiveConfig config,Hive hive, ShardAccessStrategy strategy) {
+	private void initialize(EntityHiveConfig config, HiveFacade hive, ShardAccessStrategy strategy) {
 		this.accessStrategy = strategy;
 		this.config = config;
 		this.nodeSessionFactories = buildNodeSetSessionFactories();
@@ -176,7 +176,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 		return hibernateConfig;
 	}
 	
-	private EntityHiveConfig buildHiveConfiguration(Hive hive, Collection<Class<?>> classes) {
+	private EntityHiveConfig buildHiveConfiguration(HiveFacade hive, Collection<Class<?>> classes) {
 		return new ConfigurationReader(classes).getHiveConfiguration();
 	}
 	

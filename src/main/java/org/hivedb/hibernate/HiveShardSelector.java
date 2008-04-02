@@ -5,6 +5,7 @@ import java.util.Collection;
 import org.hibernate.shards.ShardId;
 import org.hibernate.shards.strategy.selection.ShardSelectionStrategy;
 import org.hivedb.Hive;
+import org.hivedb.HiveFacade;
 import org.hivedb.HiveLockableException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.configuration.EntityConfig;
@@ -16,8 +17,8 @@ import org.hivedb.util.functional.Unary;
 
 public class HiveShardSelector implements ShardSelectionStrategy {
 	private EntityHiveConfig hiveConfig;
-	private Hive hive;
-	public HiveShardSelector(EntityHiveConfig hiveConfig, Hive hive) {
+	private HiveFacade hive;
+	public HiveShardSelector(EntityHiveConfig hiveConfig, HiveFacade hive) {
 		this.hiveConfig = hiveConfig;
 		this.hive = hive;
 	}

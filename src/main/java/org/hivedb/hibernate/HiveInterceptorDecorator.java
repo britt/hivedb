@@ -12,6 +12,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.shards.util.InterceptorDecorator;
 import org.hibernate.type.Type;
 import org.hivedb.Hive;
+import org.hivedb.HiveFacade;
 import org.hivedb.HiveLockableException;
 import org.hivedb.annotations.AnnotationHelper;
 import org.hivedb.annotations.EntityId;
@@ -65,11 +66,11 @@ public class HiveInterceptorDecorator extends InterceptorDecorator implements In
 			throw new CallbackException(e);
 		} 
 	}
-	public HiveInterceptorDecorator(EntityHiveConfig hiveConfig, Hive hive) {
+	public HiveInterceptorDecorator(EntityHiveConfig hiveConfig, HiveFacade hive) {
 		this(EmptyInterceptor.INSTANCE, hiveConfig, hive);
 	}
 	
-	public HiveInterceptorDecorator(Interceptor interceptor, EntityHiveConfig hiveConfig, Hive hive) {
+	public HiveInterceptorDecorator(Interceptor interceptor, EntityHiveConfig hiveConfig, HiveFacade hive) {
 		super(interceptor);
 		this.hiveConfig = hiveConfig;
 		this.indexer = new HiveIndexer(hive);

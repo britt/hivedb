@@ -1,8 +1,10 @@
 package org.hivedb;
 
 import java.util.Collection;
+import java.util.Observer;
 
 import org.hivedb.Lockable.Status;
+import org.hivedb.hibernate.HiveSessionFactoryBuilderImpl;
 import org.hivedb.meta.Assigner;
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.Node;
@@ -80,4 +82,8 @@ public interface HiveFacade {
 	public Collection<Node> getNodes();
 
 	public DirectoryFacade directory();
+
+	public Node getNode(String nodeName);
+
+	public void addObserver(Observer observer);
 }

@@ -8,6 +8,7 @@ import java.util.NoSuchElementException;
 import javax.jws.WebService;
 
 import org.hivedb.Hive;
+import org.hivedb.HiveFacade;
 import org.hivedb.HiveLockableException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.Schema;
@@ -21,9 +22,9 @@ import org.hivedb.util.functional.Unary;
 @WebService(endpointInterface = "org.hivedb.services.InstallService")
 public class InstallServiceImpl implements InstallService {
 	private Map<String, Schema> schemata = Maps.newHashMap();
-	private Hive hive;
+	private HiveFacade hive;
 	
-	public InstallServiceImpl(Collection<Schema> schemata, Hive hive) {
+	public InstallServiceImpl(Collection<Schema> schemata, HiveFacade hive) {
 		this.hive = hive;
 		for(Schema s : schemata)
 			this.schemata.put(s.getName(), s);
@@ -37,8 +38,7 @@ public class InstallServiceImpl implements InstallService {
 		return install(schemaName, getOrAddNode(nodeName, dbName, host, dialect, user, password).getName());
 	}
 
-	private Node getOrAddNode(String nodeName, String dbName, String host,
-			String dialect, String user, String password) {
+	private Node getOrAddNode(String nodeName, String dbName, String host, String dialect, String user, String password) {
 		Node node;
 		try {
 			node = hive.getNode(nodeName);

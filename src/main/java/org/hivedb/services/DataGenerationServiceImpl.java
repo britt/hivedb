@@ -13,6 +13,7 @@ import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hibernate.shards.util.Lists;
 import org.hibernate.shards.util.Maps;
 import org.hivedb.Hive;
+import org.hivedb.HiveFacade;
 import org.hivedb.annotations.Resource;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.hibernate.BaseDataAccessObject;
@@ -36,7 +37,7 @@ public class DataGenerationServiceImpl implements DataGenerationService {
 	private Map<Class, DataAccessObject<Object, Serializable>> daos = Maps.newHashMap();
 	private Log log = LogFactory.getLog(DataGenerationServiceImpl.class);
 
-	public DataGenerationServiceImpl(Collection<Class<?>> classes, Hive hive) {
+	public DataGenerationServiceImpl(Collection<Class<?>> classes, HiveFacade hive) {
 		config = new ConfigurationReader(classes);
 		List<Class<?>> hiveSessionClasses = Lists.newArrayList();
 		hiveSessionClasses.addAll(new EntityResolver(config.getHiveConfiguration()).getEntityClasses());
