@@ -34,6 +34,7 @@ import org.hibernate.shards.util.Lists;
 import org.hibernate.shards.util.Maps;
 import org.hivedb.Hive;
 import org.hivedb.HiveFacade;
+import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.Synchronizeable;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.meta.Node;
@@ -255,13 +256,20 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	
 	public Session openSession(Object primaryIndexKey) {
 		return openSession(
-				hive.directory().getNodeIdsOfPrimaryIndexKey(primaryIndexKey), 
+				getNodeIdsOrThrow(primaryIndexKey), 
 				getDefaultInterceptor());
+	}
+
+	private Collection<Integer> getNodeIdsOrThrow(Object primaryIndexKey) {
+		final Collection<Integer> nodeIds = hive.directory().getNodeIdsOfPrimaryIndexKey(primaryIndexKey);
+		if (nodeIds.size() == 0)
+			throw new HiveKeyNotFoundException(String.format("Primary index key %s was not found on any nodes", primaryIndexKey));
+		return nodeIds;
 	}
 	
 	public Session openSession(Object primaryIndexKey, Interceptor interceptor) {
 		return openSession(
-				hive.directory().getNodeIdsOfPrimaryIndexKey(primaryIndexKey), 
+				getNodeIdsOrThrow(primaryIndexKey), 
 				interceptor);
 	}
 
