@@ -76,7 +76,7 @@ public class GeneratedInstanceInterceptor implements  MethodInterceptor {
 		}
 	
 		public boolean equals(Object argument) {
-			return new Integer(shallowHashCode(obj)).equals(new Integer(shallowHashCode(argument)));
+			return argument == null ? false : new Integer(shallowHashCode(obj)).equals(new Integer(shallowHashCode(argument)));
 		}
 		
 		public void set(String propertyName, Object value) {
