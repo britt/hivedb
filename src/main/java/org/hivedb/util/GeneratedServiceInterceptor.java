@@ -60,7 +60,7 @@ public class GeneratedServiceInterceptor implements MethodInterceptor, Service {
 		EntityConfig config = entityHiveConfig.getEntityConfig(clazz.getCanonicalName());
 		List<Class<?>> classes = Lists.newArrayList();
 		classes.addAll(new EntityResolver(entityHiveConfig).getEntityClasses());
-		HiveSessionFactory factory = new HiveSessionFactoryBuilderImpl(hive.getUri(),classes,strategy);
+		HiveSessionFactory factory = new HiveSessionFactoryBuilderImpl(entityHiveConfig, hive, strategy);
 		DataAccessObject dao = new BaseDataAccessObject(config, hive, factory);
 		return (Service)GeneratedClassFactory.newInstance(serviceClass, new GeneratedServiceInterceptor(clazz, serviceClass, serviceResponseClass, serviceContainerClass, dao, config));
 	}

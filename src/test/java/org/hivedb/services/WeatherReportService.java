@@ -4,11 +4,15 @@ import java.util.Collection;
 
 import javax.jws.WebMethod;
 import javax.jws.WebResult;
+import javax.jws.WebService;
 
+import org.hivedb.annotations.GeneratedClass;
 import org.hivedb.annotations.IndexParamPagingPair;
 import org.hivedb.annotations.IndexParamPairs;
 import org.hivedb.util.database.test.WeatherReport;
 
+@GeneratedClass("WeatherReportServiceGenerated")
+@WebService
 public interface WeatherReportService extends Service<WeatherReport, WeatherServiceResponse, WeatherServiceContainer, Collection<WeatherReport>, Integer>  {
 	@WebMethod
 	@WebResult

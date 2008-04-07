@@ -17,14 +17,13 @@ import java.util.Map.Entry;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Session;
 import org.hivedb.Hive;
+import org.hivedb.HiveLockableException;
 import org.hivedb.configuration.EntityHiveConfig;
-import org.hivedb.util.GenerateInstance;
-import org.hivedb.util.GeneratedClassFactory;
-import org.hivedb.util.GeneratedInstanceInterceptor;
-import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.*;
 import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.MySqlHiveTestCase;
 import org.hivedb.util.database.test.WeatherReport;
+import org.hivedb.util.database.test.WeatherEvent;
 import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
@@ -42,7 +41,8 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	private EntityHiveConfig config;
 
 	private static Random random = new Random();
-	@BeforeMethod
+
+    @BeforeMethod
 	public void setup() throws Exception {
 		this.cleanupAfterEachTest = true;
 		this.config = getEntityHiveConfig();
@@ -99,38 +99,29 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	@Test
 	public void testFindByPropertyPaged() throws Exception {
 		final DataAccessObject<WeatherReport, Integer> dao = (DataAccessObject<WeatherReport, Integer>) getDao(getGeneratedClass());
-		Collection<WeatherReport> reports =
+
+        Collection<WeatherReport> reports =
 			Generate.create(new Generator<WeatherReport>() {
 				public WeatherReport generate() {
 					WeatherReport report =  new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
 					GeneratedInstanceInterceptor.setProperty(report, "continent", "Derkaderkastan");
 					GeneratedInstanceInterceptor.setProperty(report, "temperature", 101);
 					GeneratedInstanceInterceptor.setProperty(report, "sources", Arrays.asList(new Integer[] {101, 102,103}));
-					return dao.save(report);
+                    return dao.save(report);
 				}}, new NumberIterator(12));	
 		
-		// Test a scalar property
-		// TODO get this working with a collection primitive "sources"
-		for (final String property : new String[] {"temperature"}) {
+		for (final String property : new String[] {"temperature", "sources"}) {
 			Assert.assertEquals(dao.findByProperty(property, 101).size(), 12);
 			final Collection<WeatherReport> results = Filter.grepUnique(Transform.flatten(Transform.map(new Unary<Integer, Collection<WeatherReport>>() {
 				public Collection<WeatherReport> f(Integer i) {
-					final Collection<WeatherReport> findByProperty = dao.findByProperty(property, 101 ,(i-1)*4, 4);
-					return findByProperty;
+					return dao.findByProperty(property, 101 ,(i-1)*4, 4);
 				}
-			}, new NumberIterator(3))));
-			final HashSet<WeatherReport> retrievedSet = new HashSet<WeatherReport>(results);
+			}, new NumberIterator(3))));                               
 			Assert.assertEquals(
-					retrievedSet.size(),
-					reports.size());
-			Assert.assertEquals(
-					retrievedSet.hashCode(),
+					new HashSet<WeatherReport>(results).hashCode(),
 					new HashSet(reports).hashCode());
 		}
-		
-		
 	}
-	
 
 	@Test
 	public void testFindByPropertyRange() throws Exception {
@@ -262,7 +253,6 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		WeatherReport updated = dao.get(original.getReportId());
 		GeneratedInstanceInterceptor.setProperty(updated, "latitude", new Double(30));
 		GeneratedInstanceInterceptor.setProperty(updated, "longitude", new Double(30));
-		
 		/* TODO this fails because we currently don't support one-to-many relationships. We need to reenable the
 		  deleteOrphanItems in our BaseDataAccessObject to support this
 		 */
@@ -276,23 +266,49 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		// Add a third
 		weatherEvents.add(new GenerateInstance<WeatherEvent>(WeatherEvent.class).generate());
 		GeneratedInstanceInterceptor.setProperty(updated, "weatherEvents", weatherEvents);
+	*/
 		dao.save(updated);
 		final WeatherReport persisted = dao.get(updated.getReportId());
-		assertFalse(updated.equals(original));
+		assertFalse(updated.getLatitude().equals(original.getLatitude()));
 		// Check the updated collection
 			// size should be equal
-		assertEquals(original.getWeatherEvents().size(), persisted.getWeatherEvents().size());
+		//assertEquals(original.getWeatherEvents().size(), persisted.getWeatherEvents().size());
 			// first item should be removed
-		assertFalse(Filter.grepItemAgainstList(Atom.getFirst(original.getWeatherEvents()), persisted.getWeatherEvents()));
+		//assertFalse(Filter.grepItemAgainstList(Atom.getFirst(original.getWeatherEvents()), persisted.getWeatherEvents()));
 			// should be an updated item named foobar
-		assertTrue(Filter.grepItemAgainstList("foobar", 
+		/* assertTrue(Filter.grepItemAgainstList("foobar", 
 				Transform.map(new Unary<WeatherEvent,String>() {
 					public String f(WeatherEvent weatherEvent) {
 						return weatherEvent.getName();
-				}}, persisted.getWeatherEvents())));
+				}}, persisted.getWeatherEvents()))); */
 			// new item should exist
-		assertTrue(Filter.grepItemAgainstList(Atom.getLast(weatherEvents), persisted.getWeatherEvents()));
-		*/
+		//assertTrue(Filter.grepItemAgainstList(Atom.getLast(weatherEvents), persisted.getWeatherEvents()));
+		
+		String newPrimaryIndexKey = findPrimaryKeyOnDifferentNode(original);
+		GeneratedInstanceInterceptor.setProperty(updated, "continent", new Integer(newPrimaryIndexKey).toString());	
+		Assert.assertEquals(getHive().directory().getNodeIdsOfResourceId("WeatherReport", original.getReportId()).size(),1);
+		dao.save(updated);
+		final Collection<Integer> nodeIdsOfResourceId = getHive().directory().getNodeIdsOfResourceId("WeatherReport", updated.getReportId());
+		// Make sure the resource is only on 1 hive node
+		Assert.assertEquals(nodeIdsOfResourceId.size(),1);
+		// Make sure the node matches the new node
+		Assert.assertEquals(Atom.getFirstOrThrow(nodeIdsOfResourceId), Atom.getFirstOrThrow(getHive().directory().getNodeIdsOfPrimaryIndexKey(newPrimaryIndexKey)));
+		// Make sure the entity can be fetched on the new node
+		Assert.assertNotNull(dao.get(updated.getReportId()));
+	}
+
+	private String findPrimaryKeyOnDifferentNode(WeatherReport original)
+			throws HiveLockableException {
+		// Update the primary index key
+		int i=1;
+		// Get a primary index key on a different node
+		for (;i<100;i++) {
+			getHive().directory().insertPrimaryIndexKey(new Integer(i).toString());
+			if (!Atom.getFirstOrThrow(getHive().directory().getNodeIdsOfPrimaryIndexKey(new Integer(i).toString())).equals(
+					Atom.getFirstOrThrow(getHive().directory().getNodeIdsOfPrimaryIndexKey(original.getContinent()))))
+				break;		
+		}
+		return new Integer(i).toString();
 	}
 
 	@Test
@@ -384,6 +400,23 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		for(WeatherReport report : updated) {
 			final WeatherReport weatherReport = dao.get(report.getReportId());
 			assertEquals(report, weatherReport);
+		}
+		
+		// Test changing the partition dimension key
+		String newPrimaryIndexKey = findPrimaryKeyOnDifferentNode(Atom.getFirstOrThrow(reports));
+		for(WeatherReport report : reports) {
+			GeneratedInstanceInterceptor.setProperty(report, "continent", new Integer(newPrimaryIndexKey).toString());
+			Assert.assertEquals(getHive().directory().getNodeIdsOfResourceId("WeatherReport", report.getReportId()).size(),1);
+		}
+		dao.saveAll(reports);
+		for(WeatherReport report : reports) {	
+			final Collection<Integer> nodeIdsOfResourceId = getHive().directory().getNodeIdsOfResourceId("WeatherReport", report.getReportId());
+			// Make sure the resource is only on 1 hive node
+			Assert.assertEquals(nodeIdsOfResourceId.size(),1);
+			// Make sure the node matches the new node
+			Assert.assertEquals(Atom.getFirstOrThrow(nodeIdsOfResourceId), Atom.getFirstOrThrow(getHive().directory().getNodeIdsOfPrimaryIndexKey(newPrimaryIndexKey)));
+			// Make sure the entity can be fetched on the new node
+			Assert.assertNotNull(dao.get(report.getReportId()));
 		}
 	}
 	

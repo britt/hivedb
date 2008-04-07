@@ -40,7 +40,7 @@ import org.hivedb.util.functional.Predicate;
 import org.springframework.beans.BeanUtils;
 
 public class ConfigurationReader {
-	private Map<String, EntityConfig> configs = new HashMap<String, EntityConfig>();
+	private Map<String, EntityConfig> hiveConfigs = new HashMap<String, EntityConfig>();
 	private PartitionDimension dimension = null;
 	
 	public ConfigurationReader(PartitionDimension partitionDimension) {
@@ -60,7 +60,10 @@ public class ConfigurationReader {
 	}
 	
 	private boolean isHiveEntity(Class<?> clazz) {
-		return clazz.isAnnotationPresent(Resource.class);
+		return clazz.isAnnotationPresent(Resource.class); 
+	}
+	private boolean isAssociatedClass(Class<?> clazz) {
+		return AnnotationHelper.getAllMethodsWithAnnotation(clazz, Index.class).size() > 0;
 	}
 
 	public EntityConfig configure(Class<?> clazz) {
@@ -72,7 +75,7 @@ public class ConfigurationReader {
 				throw new UnsupportedOperationException(
 						String.format("You are trying to configure on object from partition dimension %s into a Hive configured to use partition dimension %s. THis is not supported. Use a separate configuration for each dimension.", config.getPartitionDimensionName(), dimension.getName()));
 		
-		configs.put(clazz.getName(), config);
+		hiveConfigs.put(clazz.getName(), config);
 		return config;
 	}
 
@@ -143,9 +146,6 @@ public class ConfigurationReader {
 		}
 	}
 
-	
-	
-
 	private static boolean isCollectionPropertyOfAComplexType(Class<?> clazz, Method indexMethod) {
 		return ReflectionTools.isCollectionProperty(clazz, ReflectionTools.getPropertyNameOfAccessor(indexMethod)) &&
 			!PrimitiveUtils.isPrimitiveClass(ReflectionTools.getCollectionItemType(clazz,ReflectionTools.getPropertyNameOfAccessor(indexMethod)));
@@ -162,15 +162,15 @@ public class ConfigurationReader {
 	}
 	
 	public Collection<EntityConfig> getConfigurations() {
-		 return configs.values();
+		 return hiveConfigs.values();
 	}
 	public EntityConfig getEntityConfig(String className) {
-		return configs.get(className);
+		return hiveConfigs.get(className);
 	}
 
 	public EntityHiveConfig getHiveConfiguration() {
-		EntityConfig prototype = Atom.getFirstOrThrow(configs.values());
-		return new PluralHiveConfig(configs, prototype.getPartitionDimensionName(), prototype.getPrimaryKeyClass());
+		EntityConfig prototype = Atom.getFirstOrThrow(hiveConfigs.values());
+		return new PluralHiveConfig(hiveConfigs, prototype.getPartitionDimensionName(), prototype.getPrimaryKeyClass());
 	}
 	
 	public void install(String uri) {
@@ -184,7 +184,7 @@ public class ConfigurationReader {
 			target = Hive.create(hive.getUri(), dimension.getName(), dimension.getColumnType());
 		}
 		
-		for(EntityConfig config : configs.values())
+		for(EntityConfig config : hiveConfigs.values())
 			installConfiguration(config,target);
 	}
 	

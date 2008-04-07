@@ -15,13 +15,13 @@
     	<property name="longitude" column="LONGITUDE" access="org.hivedb.hibernate.GeneratedAccessor"/>
     	<property name="temperature" column="TEMPERATURE" access="org.hivedb.hibernate.GeneratedAccessor"/>
 		<bag name="weatherEvents" lazy="false" access="org.hivedb.hibernate.GeneratedAccessor" cascade="all,delete-orphan" >
-      		<key column="REPORT_ID" not-null="true"  /> 
+      		<key column="REPORT_ID" not-null="true"  />
         	<one-to-many class="WeatherEventGenerated" />
 		</bag>
 		
 		<bag name="sources" cascade="save-update" table="WEATHER_REPORT_SOURCE" lazy="false" access="org.hivedb.hibernate.GeneratedAccessor">
     	 	<key column="REPORT_ID" />
-			<element type="integer" column="SOURCE"/> 
+			<element type="integer" column="SOURCE"/>
 		</bag>
 		 
     </class>

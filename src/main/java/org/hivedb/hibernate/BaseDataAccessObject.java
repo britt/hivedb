@@ -43,14 +43,14 @@ import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 
 public class BaseDataAccessObject implements DataAccessObject<Object, Serializable>{
-	private Log log = LogFactory.getLog(BaseDataAccessObject.class);
+	private final Log log = LogFactory.getLog(BaseDataAccessObject.class);
 	private static int CHUNK_SIZE = 10;
-  protected HiveSessionFactory factory;
-	protected EntityConfig config;
-	protected Class<?> clazz;
-	protected Interceptor defaultInterceptor = EmptyInterceptor.INSTANCE;
-	protected HiveFacade hive;
-	protected EntityIndexConfig partitionIndexEntityIndexConfig;
+  private final HiveSessionFactory factory;
+	private final EntityConfig config;
+	private final Class<?> clazz;
+	private Interceptor defaultInterceptor = EmptyInterceptor.INSTANCE;
+	private HiveFacade hive;
+	private EntityIndexConfig partitionIndexEntityIndexConfig;
 
 	public HiveFacade getHive() {
 		return hive;
@@ -73,15 +73,6 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		this.defaultInterceptor = interceptor;
 	}
 	
-	public Serializable delete(final Serializable id) {
-		SessionCallback callback = new SessionCallback() {
-			public void execute(Session session) {
-				Object deleted = get(id, session);
-				session.delete(deleted);
-			}};
-		doInTransaction(callback, getSession());
-		return id;
-	}
 
 	public Boolean exists(Serializable id) {
 		return hive.directory().doesResourceIdExist(config.getResourceName(), id);
@@ -185,7 +176,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 				@SuppressWarnings("unchecked")
 				public Collection<Object> execute(Session session) {
 					Criteria criteria = session.createCriteria(config.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-					addPropertyRangeRestriction(indexConfig, criteria, propertyName, minValue, maxValue);
+					addPropertyRangeRestriction(criteria, propertyName, minValue, maxValue);
 					return criteria.list();
 				}};
 		}
@@ -200,7 +191,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			@SuppressWarnings("unchecked")
 			public Collection<Object> execute(Session session) {
 				Criteria criteria = session.createCriteria(config.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-				addPropertyRangeRestriction(indexConfig, criteria, propertyName, minValue, maxValue);
+				addPropertyRangeRestriction(criteria, propertyName, minValue, maxValue);
 				criteria.setProjection( Projections.rowCount() );
 				return criteria.list();
 			}};
@@ -232,7 +223,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 				@SuppressWarnings("unchecked")
 				public Collection<Object> execute(Session session) {
 					Criteria criteria = session.createCriteria(config.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-					addPropertyRangeRestriction(indexConfig, criteria, propertyName, minValue, maxValue);
+					addPropertyRangeRestriction(criteria, propertyName, minValue, maxValue);
 					criteria.add( Restrictions.between(propertyName, minValue, maxValue));
 					criteria.setFirstResult(firstResult);
 					criteria.setMaxResults(maxResults);
@@ -243,7 +234,108 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		return queryInTransaction(callback, session);
 	}
 
-	private Object get(Serializable id, Session session) {
+    public Object save(final Object entity) {
+		final Collection<Object> entities = populateDataIndexDelegates(Collections.singletonList(entity));
+		final Object populatedEntity = Atom.getFirstOrThrow(entities);
+		SessionCallback callback = new SessionCallback(){
+			public void execute(Session session) {
+				session.saveOrUpdate(getRespresentedClass().getName(),entity);
+			}};
+
+		SessionCallback cleanupCallback = new SessionCallback(){
+			public void execute(Session session) {
+				session.refresh(entity);
+				session.lock(getRespresentedClass().getName(),entity, LockMode.UPGRADE);
+				session.update(getRespresentedClass().getName(),entity);
+				log.warn(String.format("%s with id %s exists in the data node but not on the directory. Data node record was updated and re-indexed.", config.getResourceName(), config.getId(entity)));
+			}};
+
+		if (partionDimensionKeyHasChanged(entity))
+			delete(config.getId(entity));
+		doSave(populatedEntity, callback, cleanupCallback);
+		return entity;
+	}
+
+	private boolean partionDimensionKeyHasChanged(Object entity) {
+		return hive.directory().doesResourceIdExist(config.getResourceName(), config.getId(entity)) && 
+				!config.getPrimaryIndexKey(entity).equals(getHive().directory().getPrimaryIndexKeyOfResourceId(config.getResourceName(), config.getId(entity)));
+	}
+
+	public Collection<Object> saveAll(final Collection<Object> collection) {
+		List<Object> entities = Lists.newList(populateDataIndexDelegates(collection));
+		validateNonNull(entities);
+		final boolean partitionDimensionKeyHasChanged = partionDimensionKeyHasChanged(Atom.getFirstOrThrow(entities));
+	    //o large save operations in manageable sized chunks
+	    for(int chunkId = 0; chunkId < entities.size(); chunkId += BaseDataAccessObject.getSaveChunkSize()) {
+	      final Collection<Object> chunk =
+	        entities.subList(
+	          chunkId,
+	          chunkId + getSaveChunkSize() <= entities.size() ? chunkId + getSaveChunkSize(): entities.size());
+
+	      // If the partition dimension key has changed for any entity we assume that we need
+	      // to delete all entities before saving, in case the new partition dimension key
+	      // is on a different node
+		  if (partitionDimensionKeyHasChanged) {
+			  SessionCallback callback = new SessionCallback(){
+			  public void execute(Session session) {
+				  for(Object entity : chunk) {
+					  Object deleted = get(config.getId(entity), session);
+					  session.delete(deleted);
+			  }}};
+			  deleteAll(chunk, callback);
+		  }
+		 
+	      SessionCallback callback = new SessionCallback(){
+			  public void execute(Session session) {
+				  for(Object entity : chunk) {
+					  session.saveOrUpdate(getRespresentedClass().getName(),entity);
+		  }}};
+		SessionCallback cleanupCallback = new SessionCallback(){
+			public void execute(Session session) {
+				for(Object entity : chunk) {
+				    try {
+				      session.refresh(entity);
+				    } catch(RuntimeException e) {
+				      //Damned Hibernate
+				    }
+				    if(!exists(config.getId(entity))){
+				      if(existsInSession(session, config.getId(entity))){
+				        session.lock(getRespresentedClass().getName(),entity, LockMode.UPGRADE);
+				        session.update(getRespresentedClass().getName(),entity);
+				        log.warn(String.format("%s with id %s exists in the data node but not on the directory. Data node record was updated and re-indexed.", config.getResourceName(), config.getId(entity)));
+				      } else {
+				        session.saveOrUpdate(getRespresentedClass().getName(), entity);
+				      }
+				    } else {
+				      if(!existsInSession(session, config.getId(entity))){
+				        try {
+				          getHive().directory().deleteResourceId(config.getResourceName(), config.getId(entity));
+				        } catch (HiveLockableException e) {
+				          log.warn(String.format("%s with id %s exists in the directory but not on the data node.  Unable to cleanup record because Hive was read-only.", config.getResourceName(), config.getId(entity)));
+				        }
+				        log.warn(String.format("%s with id %s exists in the directory but not on the data node.  Directory record removed.", config.getResourceName(), config.getId(entity)));
+				      }
+				      session.saveOrUpdate(getRespresentedClass().getName(), entity);
+				    }
+          }
+      }};
+		  doSaveAll(chunk, callback, cleanupCallback);
+    }
+
+		return collection;
+	}
+    
+    public Serializable delete(final Serializable id) {
+        SessionCallback callback = new SessionCallback() {
+            public void execute(Session session) {
+                Object deleted = get(id, session);
+                session.delete(deleted);
+            }};
+        doInTransaction(callback, getSession());
+        return id;
+    }
+
+    private Object get(Serializable id, Session session) {
 		return session.get(getRespresentedClass(), id);
 	}
 	private Collection<Object> queryByProperties(
@@ -300,7 +392,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 
 	private Map<String, Entry<EntityIndexConfig, Object>> createPropertyNameToValueMap(
 			final Map<String, Object> propertyNameValueMap) {
-		final Map<String, Entry<EntityIndexConfig, Object>> propertyNameEntityIndexConfigValueMap = 
+		return
 			Transform.toOrderedMap(
 				new Unary<String, Entry<String, Entry<EntityIndexConfig, Object>>>() {
 					public Entry<String, Entry<EntityIndexConfig, Object>> f(String propertyName) {
@@ -314,32 +406,39 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 								new Pair<EntityIndexConfig, Object>(resolvedEntityIndexConfig, propertyNameValueMap.get(propertyName)));
 					}
 			}, propertyNameValueMap.keySet());
-		return propertyNameEntityIndexConfigValueMap;
 	}
 	
 
 	@SuppressWarnings("unchecked")
-	protected Collection<Object> queryWithHQL(Session session, Map<String, Object> propertyNameValueMap, Integer firstResult, Integer maxResult) {
-		String queryString = createHQLQuery(session, propertyNameValueMap);
+	protected Collection<Object> queryWithHQL(Session session, Map<String, Object> propertyNameValueMap, Integer firstResult, Integer maxResults) {
+		String queryString = createHQLQuery(propertyNameValueMap);
 		Query query = session.createQuery(queryString);
-		for (Entry<String, Object> entry : propertyNameValueMap.entrySet())
+        if (maxResults != 0) {
+            query.setFirstResult(firstResult);
+            query.setMaxResults(maxResults);
+        }
+        for (Entry<String, Object> entry : propertyNameValueMap.entrySet())
 			query.setParameter(entry.getKey(), entry.getValue());
 		return query.list();
 	}
 	@SuppressWarnings("unchecked")
-	protected Collection<Object> queryWithHQLRowCount(Session session, Map<String, Object> propertyNameValueMap, Integer firstResult, Integer maxResult) {
+	protected Collection<Object> queryWithHQLRowCount(Session session, Map<String, Object> propertyNameValueMap, Integer firstResult, Integer maxResults) {
 		String queryString = String.format("select count(%s) %s",
 			config.getIdPropertyName(),
-			createHQLQuery(session, propertyNameValueMap));
+			createHQLQuery(propertyNameValueMap));
 		
 		Query query = session.createQuery(queryString);
-		for (Entry<String, Object> entry : propertyNameValueMap.entrySet())
+        if (maxResults != 0) {
+            query.setFirstResult(firstResult);
+            query.setMaxResults(maxResults);
+        }
+        for (Entry<String, Object> entry : propertyNameValueMap.entrySet())
 			query.setParameter(entry.getKey(), entry.getValue());
 		return query.list();
 	}
 
-	private String createHQLQuery(Session session, Map<String, Object> propertyNameValueMap) {
-		final String queryString = String.format("from %s as x where", GeneratedClassFactory.getGeneratedClass(config.getRepresentedInterface()).getSimpleName())
+	private String createHQLQuery(Map<String, Object> propertyNameValueMap) {
+		return String.format("from %s as x where", GeneratedClassFactory.getGeneratedClass(config.getRepresentedInterface()).getSimpleName())
 			+ Amass.join(
 			new Joiner<Entry<String,Object>, String>() {
 				@Override
@@ -351,8 +450,6 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 					return toHql(entry);
 				}},
 			propertyNameValueMap.entrySet());
-		return queryString;
-		
 	}
 	private String toHql(Entry<String, Object> entry) {
 		String propertyName = entry.getKey();
@@ -363,79 +460,9 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	}
 	
 	
-	public Object save(final Object entity) {
-		final Collection<Object> entities = populateDataIndexDelegates(Collections.singletonList(entity));
-		final Object populatedEntity = Atom.getFirstOrThrow(entities);
-		SessionCallback callback = new SessionCallback(){
-			public void execute(Session session) {
-				session.saveOrUpdate(getRespresentedClass().getName(),entity);
-			}};
-			
-		SessionCallback cleanupCallback = new SessionCallback(){
-			public void execute(Session session) {
-				session.refresh(entity);
-				session.lock(getRespresentedClass().getName(),entity, LockMode.UPGRADE);
-				session.update(getRespresentedClass().getName(),entity);
-				log.warn(String.format("%s with id %s exists in the data node but not on the directory. Data node record was updated and re-indexed.", config.getResourceName(), config.getId(entity)));
-			}};
-			
-		doSave(populatedEntity, callback, cleanupCallback);
-		return entity;
-	}
-	
-	public Collection<Object> saveAll(final Collection<Object> collection) {
-		List<Object> entities = Lists.newList(populateDataIndexDelegates(collection));
-		validateNonNull(entities);
 
-    //o large save operations in manageable sized chunks
-    for(int chunkId = 0; chunkId < entities.size(); chunkId += BaseDataAccessObject.getSaveChunkSize()) {
-      final Collection<Object> chunk =
-        entities.subList(
-          chunkId,
-          chunkId + getSaveChunkSize() <= entities.size() ? chunkId + getSaveChunkSize(): entities.size());
-      
-      SessionCallback callback = new SessionCallback(){
-			  public void execute(Session session) {
-				  for(Object entity : chunk) {
-					  session.saveOrUpdate(getRespresentedClass().getName(),entity);
-				  }
-			}};
-		  SessionCallback cleanupCallback = new SessionCallback(){
-			  public void execute(Session session) {
-				  for(Object entity : chunk) {
-            try {
-              session.refresh(entity);
-            } catch(RuntimeException e) {
-              //Damned Hibernate
-            }
-            if(!exists(config.getId(entity))){
-              if(existsInSession(session, config.getId(entity))){
-                session.lock(getRespresentedClass().getName(),entity, LockMode.UPGRADE);
-                session.update(getRespresentedClass().getName(),entity);
-                log.warn(String.format("%s with id %s exists in the data node but not on the directory. Data node record was updated and re-indexed.", config.getResourceName(), config.getId(entity)));
-              } else {
-                session.saveOrUpdate(getRespresentedClass().getName(), entity);
-              }
-            } else {
-              if(!existsInSession(session, config.getId(entity))){
-                try {
-                  getHive().directory().deleteResourceId(config.getResourceName(), config.getId(entity));
-                } catch (HiveLockableException e) {
-                  log.warn(String.format("%s with id %s exists in the directory but not on the data node.  Unable to cleanup record because Hive was read-only.", config.getResourceName(), config.getId(entity)));
-                }
-                log.warn(String.format("%s with id %s exists in the directory but not on the data node.  Directory record removed.", config.getResourceName(), config.getId(entity)));
-              }
-              session.saveOrUpdate(getRespresentedClass().getName(), entity);
-            }
-          }
-      }};
-		  doSaveAll(chunk, callback, cleanupCallback);
-    }
 
-		return collection;
-	}
-
-  public static int getSaveChunkSize() {
+  private static int getSaveChunkSize() {
     return BaseDataAccessObject.CHUNK_SIZE;
   }
 
@@ -484,7 +511,6 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		return results;
 	}
 	
-	// This operation needs to be generalized with an attribute and push down to a lower layer
 	public Collection<Object> populateDataIndexDelegates(Collection<Object> instances) {
 		return Transform.map(new Unary<Object, Object>() { 
 			public Object f(final Object instance) {
@@ -510,13 +536,10 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			&& !ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName);
 	}
 	
-	
-	
 	protected EntityIndexConfig resolveEntityIndexConfig(String propertyName) {
-		EntityIndexConfig indexConfig = config.getPrimaryIndexKeyPropertyName().equals(propertyName)
+		return config.getPrimaryIndexKeyPropertyName().equals(propertyName)
 			? createEntityIndexConfigForPartitionIndex(config)
 			: config.getEntityIndexConfig(propertyName);
-		return indexConfig;
 	}
 
 	private EntityIndexConfig createEntityIndexConfigForPartitionIndex(EntityConfig entityConfig) {
@@ -553,7 +576,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			return factory.openSession(propertyValue);
 		throw new RuntimeException(String.format("Unknown IndexType: %s", indexConfig.getIndexType()));
 	}
-	private void addPropertyRangeRestriction(EntityIndexConfig indexConfig, Criteria criteria, String propertyName, Object minValue, Object maxValue) {
+	private void addPropertyRangeRestriction(Criteria criteria, String propertyName, Object minValue, Object maxValue) {
 		if (ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName))
 			if (ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName)) {
 				criteria.createAlias(propertyName, "x")
@@ -601,6 +624,10 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			doInTransaction(cleanupCallback, factory.openSession(config.getPrimaryIndexKey(Atom.getFirstOrThrow(entities))));
 		}
 	}
+	 public void deleteAll(final Collection<Object> entities, SessionCallback callback) {
+		doInTransaction(callback, getSession());
+	 }
+
 	
 	private Boolean existsInSession(Session session, Serializable id) {
 		return null != session.get(getRespresentedClass(), id);

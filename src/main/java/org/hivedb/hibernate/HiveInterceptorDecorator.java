@@ -111,10 +111,11 @@ public class HiveInterceptorDecorator extends InterceptorDecorator implements In
 	@Override
 	public void postFlush(Iterator entities) throws CallbackException {
 		while(entities.hasNext()) {
-      Object entity = entities.next();
+			Object entity = entities.next();
 			Class<?> resolvedClass = resolveEntityClass(entity.getClass());
 			if(resolvedClass != null) {
-				if(indexer.exists(hiveConfig.getEntityConfig(resolvedClass), entity))
+				final EntityConfig entityConfig = hiveConfig.getEntityConfig(resolvedClass);
+				if(indexer.exists(entityConfig, entity))
 					updateIndexes(entity);
 				else
 					insertIndexes(entity);
@@ -126,8 +127,12 @@ public class HiveInterceptorDecorator extends InterceptorDecorator implements In
 	private void updateIndexes(Object entity) {
 		try {
 			final Class<?> resolvedEntityClass = resolveEntityClass(entity.getClass());
-			if (resolvedEntityClass != null)
-				indexer.update(hiveConfig.getEntityConfig(entity.getClass()), entity);
+			if (resolvedEntityClass != null) {
+				final EntityConfig entityConfig = hiveConfig.getEntityConfig(entity.getClass());
+				if (indexer.idExists(entityConfig, entityConfig.getId(entity)))
+					indexer.updatePartitionDimensionIndexIfNeeded(hiveConfig.getEntityConfig(resolvedEntityClass), entity);
+				indexer.update(entityConfig, entity);
+			}
 		} catch (HiveLockableException e) {
 			throw new CallbackException(e);
 		}

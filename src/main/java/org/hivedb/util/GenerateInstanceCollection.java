@@ -16,6 +16,8 @@ public class GenerateInstanceCollection<T> implements Generator<Collection<T>> {
 	}
 	@SuppressWarnings("unchecked")
 	public Collection<T> generate() {
-		return Generate.create(new GenerateInstance<T>(this.collectionItemClazz), new NumberIterator(size));
+		return PrimitiveUtils.isPrimitiveClass(collectionItemClazz)
+			? new GeneratePrimitiveCollection(collectionItemClazz, size).generate()
+			: Generate.create(new GenerateInstance<T>(this.collectionItemClazz), new NumberIterator(size));
 	}
 }

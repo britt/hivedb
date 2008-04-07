@@ -47,6 +47,7 @@ import org.hivedb.services.Service;
 import org.hivedb.services.ServiceContainer;
 import org.hivedb.services.ServiceResponse;
 import org.hivedb.util.GenerateInstance;
+import org.hivedb.util.GenerateInstanceCollection;
 import org.hivedb.util.GeneratePrimitiveValue;
 import org.hivedb.util.GeneratedClassFactory;
 import org.hivedb.util.GeneratedImplementation;
@@ -55,6 +56,7 @@ import org.hivedb.util.Lists;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2TestCase;
+import org.hivedb.util.database.test.MysqlTestCase;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Pair;
@@ -68,7 +70,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 
-public abstract class ClassServiceTest<T,S> extends H2TestCase {
+public abstract class ClassServiceTest<T,S> extends H2TestCase  {
 
 	protected Class<T> clazz;
 	protected Class serviceClass;
@@ -94,7 +96,13 @@ public abstract class ClassServiceTest<T,S> extends H2TestCase {
 		if (init)
 			return;
 		init = true;
-		
+		for(String name : getDatabaseNames()){
+			if(databaseExists(name)) {
+				deleteDatabase(name);
+				createDatabase(name);
+			} else
+				createDatabase(name);
+		}
 		this.cleanupAfterEachTest = false;
 		ConfigurationReader reader = new ConfigurationReader(ConfigurationReader.extractPartitionDimension(clazz));
 		reader.install(getConnectString(getHiveDatabaseName()));
@@ -137,7 +145,7 @@ public abstract class ClassServiceTest<T,S> extends H2TestCase {
 	public void saveAndRetrieve() throws Exception {
 		Object instance = getPersistentInstance();
 		final EntityConfig entityConfig = config.getEntityConfig(clazz);
-		validate(createServiceResponse(Arrays.asList(instance)), invoke(getClient(), "get", entityConfig.getId(instance)));
+		validate(createServiceResponse(Arrays.asList(instance)), invoke(getClient(), "get", entityConfig.getId(instance)), Arrays.asList(new String[] {}));
 	}
 	protected ServiceResponse invokeWithArrayArgument(Service client, String methodName, T[] args) {
 		try {
@@ -200,7 +208,35 @@ public abstract class ClassServiceTest<T,S> extends H2TestCase {
 		for(Object original : instances)
 			validate(
 					createServiceResponse(Arrays.asList(original)),
-					invoke(s, "get", entityConfig.getId(original)));
+					invoke(s, "get", entityConfig.getId(original)),
+					Arrays.asList(new String[] {}));
+	}
+	
+	@Test(groups={"service"})
+	public void update() throws Exception {
+		final EntityConfig entityConfig = config.getEntityConfig(clazz);
+		Collection<T> instances = Lists.newArrayList();
+		for(int i=0; i<5; i++) {
+			final T instance = getInstance();
+			instances.add(instance);
+		}
+		Service s = getClient();
+		invokeWithArrayArgument(s, "saveAll", collectionToArray(clazz, instances));
+		for(Object original : instances) {
+			for (EntityIndexConfig entityIndexConfig :config.getEntityConfig(clazz).getEntityIndexConfigs()) {
+				Object newValue = ReflectionTools.isCollectionProperty(clazz, entityIndexConfig.getPropertyName())
+					? new GenerateInstanceCollection(ReflectionTools.getCollectionItemType(clazz, entityIndexConfig.getPropertyName()), 3).generate()
+					: new GenerateInstance(entityIndexConfig.getIndexClass()).generate();
+				GeneratedInstanceInterceptor.setProperty(original, entityIndexConfig.getPropertyName(), newValue);
+			}
+		}
+		invokeWithArrayArgument(s, "saveAll", collectionToArray(clazz, instances));
+		for(Object updated : instances) {
+			validate(
+					createServiceResponse(Arrays.asList(updated)),
+					invoke(s, "get", entityConfig.getId(updated)),
+					Arrays.asList(new String[] {}));
+		}
 	}
 	
 	@Test(groups={"service"})
@@ -209,7 +245,7 @@ public abstract class ClassServiceTest<T,S> extends H2TestCase {
 		final EntityConfig entityConfig = config.getEntityConfig(clazz);
 		Service s = getClient();
 		final Serializable id = entityConfig.getId(instance);
-		validate(createServiceResponse(Arrays.asList(instance)), invoke(s, "get",id));
+		validate(createServiceResponse(Arrays.asList(instance)), invoke(s, "get",id), Arrays.asList(new String[] {}));
 		invoke(s, "delete", id);
 		AssertJUnit.assertFalse(invokeExists(s, "exists", id));
 	}
@@ -233,21 +269,27 @@ public abstract class ClassServiceTest<T,S> extends H2TestCase {
 		for (EntityIndexConfig entityIndexConfig : entityConfig.getEntityIndexConfigs()) {
 			if (entityIndexConfig.getIndexClass().equals(Date.class))
 				continue; // I can't figure out what format CXF likes
-			validate(
-					createServiceResponse(Arrays.asList(instance)),
-					invoke(
-							client, 
-							"findByProperty", 
-							entityIndexConfig.getPropertyName(), 
-							Atom.getFirstOrThrow(entityIndexConfig.getIndexValues(instance)).toString()));
-			Assert.assertEquals(
-					(Integer)1,
-					invokeByCount(
-							client, 
-							"getCountByProperty", 
-							entityIndexConfig.getPropertyName(), 
-							Atom.getFirstOrThrow(entityIndexConfig.getIndexValues(instance)).toString()));
+			try {
+				validate(
+						createServiceResponse(Arrays.asList(instance)),
+						invoke(
+								client, 
+								"findByProperty", 
+								entityIndexConfig.getPropertyName(), 
+								Atom.getFirstOrThrow(entityIndexConfig.getIndexValues(instance)).toString()),
+						Arrays.asList(new String[] {entityIndexConfig.getPropertyName()}));
+				Assert.assertEquals(
+						(Integer)1,
+						invokeByCount(
+								client, 
+								"getCountByProperty", 
+								entityIndexConfig.getPropertyName(), 
+								Atom.getFirstOrThrow(entityIndexConfig.getIndexValues(instance)).toString()));
+			} catch (Exception e) {
+				System.err.println(String.format("Error finding by properties %s", entityIndexConfig.getPropertyName()));
+			}
 		}
+		
 	}
 	
 	@Test(groups={"service"})
@@ -265,6 +307,7 @@ public abstract class ClassServiceTest<T,S> extends H2TestCase {
 			EntityIndexConfig entityIndexConfig2 = entityIndexConfigIterator2.next();
 			EntityIndexConfig entityIndexConfig3 = entityIndexConfigIterator3.next();
 		
+			try {
 			validate(
 					createServiceResponse(Arrays.asList(instance)),
 					invoke(
@@ -274,7 +317,12 @@ public abstract class ClassServiceTest<T,S> extends H2TestCase {
 							Atom.getFirstOrThrow(entityIndexConfig1.getIndexValues(instance)).toString(),
 							entityIndexConfig2.getPropertyName(), 
 							Atom.getFirstOrThrow(entityIndexConfig2.getIndexValues(instance)).toString()
-					));
+					),
+					Arrays.asList(new String[] {entityIndexConfig1.getPropertyName(), entityIndexConfig2.getPropertyName()}));
+			} catch (Exception e) {
+				System.err.println(String.format("Error finding by properties %s and %s", entityIndexConfig1.getPropertyName(), entityIndexConfig2.getPropertyName()));
+			}
+			try {
 			validate(
 					createServiceResponse(Arrays.asList(instance)),
 					invoke(
@@ -286,7 +334,11 @@ public abstract class ClassServiceTest<T,S> extends H2TestCase {
 							Atom.getFirstOrThrow(entityIndexConfig2.getIndexValues(instance)).toString(),
 							entityIndexConfig3.getPropertyName(), 
 							Atom.getFirstOrThrow(entityIndexConfig3.getIndexValues(instance)).toString()
-					));
+					),
+					Arrays.asList(new String[] {entityIndexConfig1.getPropertyName(), entityIndexConfig2.getPropertyName(), entityIndexConfig3.getPropertyName()}));
+			} catch (Exception e) {
+				System.err.println(String.format("Error finding by properties %s and %s and %s", entityIndexConfig1.getPropertyName(), entityIndexConfig2.getPropertyName(), entityIndexConfig3.getPropertyName()));
+			}
 		}
 	}
 	
@@ -302,8 +354,10 @@ public abstract class ClassServiceTest<T,S> extends H2TestCase {
 	abstract protected Collection<Schema> getSchemata();
 	abstract protected List<Class<?>> getEntityClasses();
 	
-	protected void validate(ServiceResponse expected, ServiceResponse actual) {
-		assertEquals(expected.getContainers().size(), actual.getContainers().size());		
+	protected void validate(ServiceResponse expected, ServiceResponse actual, Collection<String> arguments) {
+		assertEquals(
+				String.format("Testing using the following arguments: %s", arguments),
+				expected.getContainers().size(), actual.getContainers().size());		
 		Map<Object, ServiceContainer> expectedMap = getInstanceHashCodeMap(expected);
 		Map<Object, ServiceContainer> actualMap = getInstanceHashCodeMap(actual);
 
@@ -311,18 +365,18 @@ public abstract class ClassServiceTest<T,S> extends H2TestCase {
 			assertTrue(
 					String.format("Expected results did not contian a ServiceContainer with hashCode %s", key), 
 					expectedMap.containsKey(key));
-			validate(expectedMap.get(key), actualMap.get(key));
+			validate(expectedMap.get(key), actualMap.get(key), arguments);
 		}
 	}
 	
-	protected void validate(ServiceContainer expected, ServiceContainer actual) {
+	protected void validate(ServiceContainer expected, ServiceContainer actual, Collection<String> arguments) {
 		final EntityConfig entityConfig = config.getEntityConfig(clazz);
 		AssertJUnit.assertEquals(expected.getVersion(), actual.getVersion());
 		AssertJUnit.assertEquals(
 				ReflectionTools.getDifferingFields(expected.getInstance(), actual.getInstance(), (Class<Object>)clazz).toString(),
 				expected.getInstance().hashCode(), 
 				actual.getInstance().hashCode());
-		AssertJUnit.assertEquals(entityConfig.getId(expected.getInstance()), entityConfig.getId(actual.getInstance()));
+		AssertJUnit.assertEquals(String.format("Testing using the following arguments: %s", arguments), entityConfig.getId(expected.getInstance()), entityConfig.getId(actual.getInstance()));
 		//AssertJUnit.assertEquals(expected.getInstance().getDescription(), actual.getInstance().getDescription());
 	}
 	
@@ -444,8 +498,8 @@ public abstract class ClassServiceTest<T,S> extends H2TestCase {
 	
 	private HiveSessionFactory getSessionFactory() {
 		return new HiveSessionFactoryBuilderImpl(
-				getConnectString(getHiveDatabaseName()), 
-				getEntityClasses(), 
+				config,
+				getHive(),
 				new SequentialShardAccessStrategy());
 	}
 	

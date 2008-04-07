@@ -52,8 +52,7 @@ public class WeatherServiceTest extends ClassServiceTest<WeatherReport,WeatherRe
 
 	protected List<Class<?>> getEntityClasses() {
 		return Arrays.asList(new Class<?>[]{
-				WeatherReport.class, 
-				WeatherEvent.class});
+				WeatherReport.class});
 	}
 	
 	protected Service createService(ConfigurationReader reader) {

@@ -136,7 +136,7 @@ public class ClassDaoServiceTest extends H2TestCase implements SchemaInitializer
 	public void saveAndRetrieveInstance(ClassDaoService service) throws Exception {
 		Object original = getPersistentInstance(service);
 		Object response = service.get(getId(original));
-		validateRetrieval(original, response);
+		validateRetrieval(original, response, Arrays.asList(new String[] {}));
 	}
 	
 // We currently do allow null properties to save because the only validation is on retrieve
@@ -204,7 +204,7 @@ public class ClassDaoServiceTest extends H2TestCase implements SchemaInitializer
 				// test retrieval with the single value or each item of the list of values
 				for (Object value : entityIndexConfig.getIndexValues(original)) {		
 					Object response = service.getByReference(indexPropertyName, value);
-					validateRetrieval(Collections.singletonList(original), response);
+					validateRetrieval(Collections.singletonList(original), response, Arrays.asList(new String[] {indexPropertyName}));
 				}
 			}
 		}
@@ -255,7 +255,7 @@ public class ClassDaoServiceTest extends H2TestCase implements SchemaInitializer
 				}},
 				(Iterable<? extends Annotation[]>)Arrays.asList(finder.getParameterAnnotations()));
 			ServiceResponse response = (ServiceResponse) finder.invoke(service, argumentValues.toArray());
-			validateRetrieval(original, response);
+			validateRetrieval(original, response, Arrays.asList(new Method[] {finder}));
 		}
 	}
 	
@@ -278,7 +278,8 @@ public class ClassDaoServiceTest extends H2TestCase implements SchemaInitializer
 		for(Object instance : instances)
 			validateRetrieval(
 					instance, 
-					service.get(getId(instance)));
+					service.get(getId(instance)),
+					Collections.emptyList());
 	}
 
 	
@@ -370,11 +371,11 @@ public class ClassDaoServiceTest extends H2TestCase implements SchemaInitializer
 		return config.getEntityConfig(instance.getClass()).getId(instance);
 	}
 	
-	protected void validateRetrieval(Object original, Object response) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+	protected void validateRetrieval(Object original, Object response, Collection arguments) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {
 		if (original instanceof Collection)
-			Assert.assertEquals(new HashSet((Collection)response).hashCode(), new HashSet((Collection)original).hashCode());
+			Assert.assertEquals(new HashSet((Collection)response).hashCode(), new HashSet((Collection)original).hashCode(), String.format("Validation failed for arguments %s", arguments));
 		else
-			Assert.assertEquals(response.hashCode(), original.hashCode());
+			Assert.assertEquals(response.hashCode(), original.hashCode(), String.format("Validation failed for arguments %s", arguments));
 	}
 	
 	@Override

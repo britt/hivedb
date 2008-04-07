@@ -26,6 +26,8 @@ public class GenerateInstance<T> implements Generator<T> {
 	}
 	
 	public T generateAndCopyProperties(Object templateInstance) {
+		if (PrimitiveUtils.isPrimitiveClass(clazz))
+			throw new RuntimeException(String.format("Attempt to generate instance and copy properties of a primitive class: %s", clazz.getName()));
 		T instance = newInstance();
 		for( Method getter : ReflectionTools.getGetters(clazz)) {
 			
@@ -71,6 +73,8 @@ public class GenerateInstance<T> implements Generator<T> {
 	static QuickCache primitiveGenerators = new QuickCache(); // cache generators for sequential randomness
 	@SuppressWarnings("unchecked")
 	public T generate() {
+		if (PrimitiveUtils.isPrimitiveClass(clazz))
+			return new GeneratePrimitiveValue<T>(clazz).generate();
 		T instance = newInstance();
 			
 	    for (Method getter : ReflectionTools.getGetters(clazz))

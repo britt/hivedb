@@ -69,12 +69,11 @@ public class HiveIndexer {
 								return null;
 							return new Pair<String, Collection<Object>>(entityIndexConfig.getIndexName(), entityIndexConfig.getIndexValues(entity));
 						}
-					}, getHiveIndexConfigs(config))));
+					}, getSecondaryIndexConfigs(config))));
 		hive.directory().insertSecondaryIndexKeys(config.getResourceName(), secondaryIndexMap, config.getId(entity));
 	}
 
-	private Collection<EntityIndexConfig> getHiveIndexConfigs(
-			final EntityConfig config) {
+	private Collection<EntityIndexConfig> getSecondaryIndexConfigs(final EntityConfig config) {
 		return Filter.grep(new Predicate<EntityIndexConfig>() {
 			public boolean f(EntityIndexConfig entityIndexConfig) {
 				return entityIndexConfig.getIndexType().equals(IndexType.Hive);
@@ -85,7 +84,7 @@ public class HiveIndexer {
 	private Map<String, Collection<Object>> getAllSecondaryIndexValues(EntityConfig config, Object entity) {
 		Map<String, Collection<Object>> secondaryIndexMap = new HashMap<String, Collection<Object>>();
 		for(EntityIndexConfig indexConfig : 
-			getHiveIndexConfigs(config))
+			getSecondaryIndexConfigs(config))
 			secondaryIndexMap.put(
 					indexConfig.getIndexName(), 
 					hive.directory().getSecondaryIndexKeysWithResourceId(
@@ -95,20 +94,7 @@ public class HiveIndexer {
 		return secondaryIndexMap;
 	}
 	
-	@SuppressWarnings("unchecked")
-	public void update(EntityConfig config, Object entity) throws HiveLockableException {
-		Map<String, Collection<Object>> secondaryIndexValues = getAllSecondaryIndexValues(config, entity);
-		Map<String, Collection<Object>> toDelete = Maps.newHashMap();
-		Map<String, Collection<Object>> toInsert = Maps.newHashMap();
-		
-		conditionallyInsertDelegatedResourceIndexes(config, entity);
-		for(EntityIndexConfig indexConfig : getHiveIndexConfigs(config)) {
-			Pair<Collection<Object>, Collection<Object>> diff = 
-				Collect.diff(secondaryIndexValues.get(indexConfig.getIndexName()), indexConfig.getIndexValues(entity));
-			toDelete.put(indexConfig.getIndexName(), diff.getKey());
-			toInsert.put(indexConfig.getIndexName(), diff.getValue());
-		}
-		
+	public void updatePartitionDimensionIndexIfNeeded(EntityConfig config, Object entity) throws HiveLockableException {
 		//Detect partition key changes
 		Object originalPartitionKey = 
 			hive.directory().getPrimaryIndexKeyOfResourceId(config.getResourceName(), config.getId(entity));
@@ -116,6 +102,24 @@ public class HiveIndexer {
 			conditionallyInsertPrimaryIndexKey(config, entity);
 			hive.directory().updatePrimaryIndexKeyOfResourceId(config.getResourceName(), config.getId(entity), config.getPrimaryIndexKey(entity));
 		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void update(EntityConfig config, Object entity) throws HiveLockableException {
+		Map<String, Collection<Object>> secondaryIndexValues = getAllSecondaryIndexValues(config, entity);
+		Map<String, Collection<Object>> toDelete = Maps.newHashMap();
+		Map<String, Collection<Object>> toInsert = Maps.newHashMap();
+		
+		conditionallyInsertDelegatedResourceIndexes(config, entity);
+		// Delete and insert secondary index values that have changed
+		for(EntityIndexConfig indexConfig : getSecondaryIndexConfigs(config)) {
+			Pair<Collection<Object>, Collection<Object>> diff = 
+				Collect.diff(secondaryIndexValues.get(indexConfig.getIndexName()), indexConfig.getIndexValues(entity));
+			toDelete.put(indexConfig.getIndexName(), diff.getKey());
+			toInsert.put(indexConfig.getIndexName(), diff.getValue());
+		}
+		
+		
 		hive.directory().insertSecondaryIndexKeys(config.getResourceName(), toInsert, config.getId(entity));
 		hive.directory().deleteSecondaryIndexKeys(config.getResourceName(), toDelete, config.getId(entity));
 	}

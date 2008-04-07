@@ -4,10 +4,9 @@
     "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <hibernate-mapping package="org.hivedb.util.database.test">
 	<class name="WeatherEventGenerated" table="WEATHER_EVENT">
-		<id name="eventId" column="EVENT_ID"/>
-		<property name="continent" column="CONTINENT"/>
-    	<property name="name" column="NAME"/>
-    	<bag name="statistics" table="EVENT_STATISTIC" lazy="false">
+		<id name="eventId" column="EVENT_ID" access="org.hivedb.hibernate.GeneratedAccessor"/>
+    	<property name="name" column="NAME" access="org.hivedb.hibernate.GeneratedAccessor"/>
+    	<bag name="statistics" table="EVENT_STATISTIC" lazy="false" access="org.hivedb.hibernate.GeneratedAccessor">
     	 	<key column="EVENT_ID" />
 			<element type="integer" column="STAT"/>
 		</bag>
