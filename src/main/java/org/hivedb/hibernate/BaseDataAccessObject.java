@@ -654,4 +654,17 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			criteria.setMaxResults(maxResults);
 		}
 	}
+
+	/***
+	 * for debugging only
+	 */
+	public Collection<Object> getAll() {
+		QueryCallback query = new QueryCallback(){
+			public Collection<Object> execute(Session session) {
+				Criteria criteria = session.createCriteria(config.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+				return criteria.list();
+			}};
+		
+		return queryInTransaction(query, factory.openAllShardsSession());
+	}
 }

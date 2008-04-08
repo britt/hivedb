@@ -142,8 +142,12 @@ public class GeneratedServiceInterceptor implements MethodInterceptor, Service {
 	}
 	public ServiceContainer createServiceContainer(Object instance, Integer version) {
 		ServiceContainer serviceContainer = (ServiceContainer) GeneratedClassFactory.newInstance(serviceContainerClass);
+		// Fill the ServiceContainer methods
 		GeneratedInstanceInterceptor.setProperty(serviceContainer, "instance", instance); 
 		GeneratedInstanceInterceptor.setProperty(serviceContainer, "version", version);
+		// Create a getter for ServiceContainer implementors (e.g. getWeatherReport() for the WeatherReport class)
+		// A strongly-typed method like this is needed by SOAP clients, otherwise getInstance() would suffice.
+		GeneratedInstanceInterceptor.setProperty(serviceContainer,  clazz.getSimpleName().substring(0,1).toLowerCase()+clazz.getSimpleName().substring(1), instance);
 		return serviceContainer;
 	}
 	

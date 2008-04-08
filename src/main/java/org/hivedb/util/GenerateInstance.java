@@ -117,7 +117,7 @@ public class GenerateInstance<T> implements Generator<T> {
 	private T newInstance() {
 		T instance;
 		try {
-			instance = clazz.isInterface() 
+			instance = clazz.isInterface() || ReflectionTools.doesImplementOrExtend(clazz, GeneratedImplementation.class)
 				? (T)GeneratedClassFactory.newInstance( clazz )
 				: clazz.newInstance();
 		} catch (InstantiationException e) {

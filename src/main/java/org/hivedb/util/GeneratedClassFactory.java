@@ -16,8 +16,17 @@ public class GeneratedClassFactory {
 	public static<T> Class<? extends T> getGeneratedClass(final Class<T> clazz, MethodInterceptor interceptor) {
 		// Only generate for interfaces.
 		// Implementations can add whatever functionality they need, and so don't warrant a generated class
-		if (!clazz.isInterface())	
-			return clazz;
+		if (!clazz.isInterface())
+			if (ReflectionTools.doesImplementOrExtend(clazz, GeneratedImplementation.class))
+				// clazz is a generated class then retrieve the underlying interface and regenerate the class. This gives us a fresh interceptor
+				try {
+					return GeneratedClassFactory.getGeneratedClass(((GeneratedImplementation)clazz.newInstance()).retrieveUnderlyingInterface(), interceptor);
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+			else
+				// clazz is normal class, don't generate
+				return clazz;
 		Enhancer e = new Enhancer();
 		e.setCallbackType(interceptor.getClass());
 		e.setNamingPolicy(new ImplNamer(clazz));

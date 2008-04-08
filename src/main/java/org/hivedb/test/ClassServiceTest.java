@@ -72,6 +72,7 @@ import org.testng.annotations.Test;
 
 public abstract class ClassServiceTest<T,S> extends H2TestCase  {
 
+	final HiveDbDialect DATABASE_DIALECT = HiveDbDialect.H2;
 	protected Class<T> clazz;
 	protected Class serviceClass;
 	protected Class responseClass;
@@ -82,6 +83,7 @@ public abstract class ClassServiceTest<T,S> extends H2TestCase  {
 	protected Hive hive;
 	protected EntityHiveConfig config;
 	protected HiveSessionFactory factory;
+	
 	
 	public ClassServiceTest(Class<T> clazz, Class serviceClass, Class responseClass, Class containerClass, String serviceUrl) {
 		this.clazz = clazz;
@@ -110,7 +112,7 @@ public abstract class ClassServiceTest<T,S> extends H2TestCase  {
 		new HiveInstaller(getConnectString(getHiveDatabaseName())).run();
 		for(String nodeName : getDataNodeNames())
 			try {
-				hive.addNode(new Node(nodeName, nodeName, "" , HiveDbDialect.H2));
+				hive.addNode(new Node(nodeName, nodeName, "" , DATABASE_DIALECT));
 			}
 			catch (HiveLockableException e) {
 				throw new HiveRuntimeException("Hive was read-only", e);
@@ -436,8 +438,11 @@ public abstract class ClassServiceTest<T,S> extends H2TestCase  {
 	
 	
 	protected Object getPersistentInstance() {
+		return ((ServiceContainer)Atom.getFirstOrThrow(getPersistentInstanceAsServiceResponse().getContainers())).getInstance();
+	}
+	protected ServiceResponse getPersistentInstanceAsServiceResponse() {
 		Assert.assertTrue(ReflectionTools.doesImplementOrExtend(getClient().getClass(), serviceClass));
-		return ((ServiceContainer)Atom.getFirstOrThrow(invoke(getClient(), "save", getInstance()).getContainers())).getInstance();
+		return  invoke(getClient(), "save", getInstance());
 	}
 	protected T getInstance() {
 		return new GenerateInstance<T>(clazz).generate();
