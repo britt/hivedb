@@ -6,6 +6,7 @@ import java.util.List;
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
 import org.hivedb.HiveLockableException;
+import org.hivedb.meta.KeySemaphore;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.directory.Directory;
@@ -144,10 +145,10 @@ public class HiveMigrator implements Migrator {
 		try {
 			lock(key);
 			Directory dir = new Directory(dimension);
-			Collection<Node> origins = Collect.amass(new Unary<Integer, Node>(){
-				public Node f(Integer item) {
-					return getNode(item);
-				}}, Transform.map(DirectoryWrapper.semaphoreToId(), dir.getKeySemamphoresOfPrimaryIndexKey(key)));
+			Collection<Node> origins = Transform.map(new Unary<KeySemaphore, Node>(){
+				public Node f(KeySemaphore keySemaphore) {
+					return getNode(keySemaphore.getId());
+				}}, dir.getKeySemamphoresOfPrimaryIndexKey(key));
 			
 			//Elect a random origin node as the authority
 			Node authority = Lists.random(origins);
