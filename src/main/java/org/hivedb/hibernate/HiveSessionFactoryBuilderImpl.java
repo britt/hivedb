@@ -36,6 +36,7 @@ import org.hivedb.Hive;
 import org.hivedb.HiveFacade;
 import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.Synchronizeable;
+import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.meta.Node;
 import org.hivedb.util.Combiner;
@@ -54,19 +55,19 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	private static final int NODE_SET_LIMIT = 1;
 	private static Map<HiveDbDialect, Class<?>> dialectMap = buildDialectMap();
 	private Map<Set<Integer>, SessionFactory> nodeSessionFactories;
-	private Collection<Class<?>> mappedClasses;
+	private Collection<Class<?>> hibernateClasses;
 	private EntityHiveConfig config;
 	private ShardAccessStrategy accessStrategy;
 	private Properties overrides = new Properties();
 	private ShardedSessionFactory allNodesSessionFactory = null;
 	private HiveFacade hive;
 	
-	public HiveSessionFactoryBuilderImpl(String hiveUri, List<Class<?>> mappedClasses, ShardAccessStrategy strategy) {
+	public HiveSessionFactoryBuilderImpl(String hiveUri, List<Class<?>> hibernateClasses, ShardAccessStrategy strategy) {
 		hive = Hive.load(hiveUri);
-		this.mappedClasses = mappedClasses;
-		initialize(buildHiveConfiguration(hive, mappedClasses), hive, strategy);
+		this.hibernateClasses = hibernateClasses;
+		initialize(buildHiveConfiguration(hive, hibernateClasses), hive, strategy);
 	}
-	
+
 	public HiveSessionFactoryBuilderImpl(String hiveUri, List<Class<?>> mappedClasses, ShardAccessStrategy strategy, Properties overrides) {
 		this(hiveUri, mappedClasses, strategy);
 		this.overrides = overrides;
@@ -74,14 +75,28 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	
 	public HiveSessionFactoryBuilderImpl(EntityHiveConfig config, HiveFacade hive, ShardAccessStrategy strategy) {
 		this.hive = hive;
-		this.mappedClasses = new EntityResolver(config).getEntityClasses();
+		this.hibernateClasses = flattenWithAssociatedClasses(config);
 		initialize(config, hive, strategy);
 	}
 	
 	public HiveSessionFactoryBuilderImpl(EntityHiveConfig config, Collection<Class<?>> mappedClasses, HiveFacade hive, ShardAccessStrategy strategy) {
 		this.hive = hive;
-		this.mappedClasses = mappedClasses;
+		this.hibernateClasses = mappedClasses;
 		initialize(config, hive, strategy);
+	}
+	
+	private Collection<Class<?>> flattenWithAssociatedClasses(EntityHiveConfig config) {
+		return Filter.getUnique(Transform.flatten(
+			Transform.map(new Unary<EntityConfig, Class<?>>() {
+				public Class<?> f(EntityConfig entityConfig) {
+					return entityConfig.getRepresentedInterface();
+				}
+			},	config.getEntityConfigs()),
+			Transform.flatMap(new Unary<EntityConfig, Collection<Class<?>>>() {
+				public Collection<Class<?>> f(EntityConfig entityConfig) {
+					return entityConfig.getAssociatedClasses();
+				}
+			}, config.getEntityConfigs())));
 	}
 	
 	private void initialize(EntityHiveConfig config, HiveFacade hive, ShardAccessStrategy strategy) {
@@ -104,7 +119,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 				new Transform.IdentityFunction<Integer>(),
 				new Unary<Integer,SessionFactory>() {
 					public SessionFactory f(Integer nodeId) {
-						return hibernateConfigs.get(nodeId).buildSessionFactory();
+   						return hibernateConfigs.get(nodeId).buildSessionFactory();
 					}},
 				hibernateConfigs.keySet());
 	
@@ -172,7 +187,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	}
 
 	private Configuration addClassesToConfig(Configuration hibernateConfig) {
-		for(Class<?> clazz : mappedClasses) 
+		for(Class<?> clazz : hibernateClasses) 
 			hibernateConfig.addClass(EntityResolver.getPersistedImplementation(clazz));
 		return hibernateConfig;
 	}

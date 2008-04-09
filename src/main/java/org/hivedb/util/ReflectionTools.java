@@ -697,12 +697,12 @@ public class ReflectionTools {
 	}
 	
 	public static Collection<String> getPropertiesOfPrimitiveGetters(final Class<?> ofThisInterface) {
-		return getPrimitiveGetters(ofThisInterface);
-	}
-	public static Collection<String> getPrimitiveGetters(final Class<?> ofThisInterface) {
 		return Filter.grep(new Predicate<String>() {
 			public boolean f(String propertyName) {
-				return PrimitiveUtils.isPrimitiveClass(getPropertyType(ofThisInterface, propertyName));
+				final Class<?> propertyType = getPropertyType(ofThisInterface, propertyName);
+				return !ReflectionTools.getOwnerOfMethod(ofThisInterface, propertyName).equals(Object.class) &&
+						!PrimitiveUtils.isClass(propertyType) &&
+						PrimitiveUtils.isPrimitiveClass(propertyType);
 		}},
 		getPropertiesOfGetters(ofThisInterface));
 	}

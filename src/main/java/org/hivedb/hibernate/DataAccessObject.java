@@ -81,4 +81,7 @@ public interface DataAccessObject<T, ID> {
      * @return
      */
     public Class<T> getRespresentedClass();
+
+    // for debugging only
+	public Collection<T> getAll();
 }

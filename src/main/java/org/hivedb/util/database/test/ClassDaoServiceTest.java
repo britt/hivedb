@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,10 +35,13 @@ import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.Node;
 import org.hivedb.services.BaseClassDaoService;
 import org.hivedb.services.ClassDaoService;
+import org.hivedb.services.Service;
 import org.hivedb.services.ServiceResponse;
 import org.hivedb.util.GenerateInstance;
+import org.hivedb.util.GeneratePrimitiveValue;
 import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.Lists;
+import org.hivedb.util.PrimitiveUtils;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.functional.Atom;
@@ -46,12 +50,18 @@ import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Predicate;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
+import org.hivedb.util.functional.Filter.BinaryPredicate;
 import org.hivedb.util.validators.NoValidator;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+/**
+ * This test base class uses ClassDaoService as a thin wrapper around a DataAccessObject. Subclasses may specify what entity classes to test.
+ * @author andylikuski
+ *
+ */
 public class ClassDaoServiceTest extends H2TestCase implements SchemaInitializer {
 	public static int INSTANCE_COUNT = 5;
 	protected EntityHiveConfig config;
@@ -136,7 +146,7 @@ public class ClassDaoServiceTest extends H2TestCase implements SchemaInitializer
 	public void saveAndRetrieveInstance(ClassDaoService service) throws Exception {
 		Object original = getPersistentInstance(service);
 		Object response = service.get(getId(original));
-		validateRetrieval(original, response);
+		validateRetrieval(original, response, Arrays.asList(new String[] {}));
 	}
 	
 // We currently do allow null properties to save because the only validation is on retrieve
@@ -203,8 +213,10 @@ public class ClassDaoServiceTest extends H2TestCase implements SchemaInitializer
 				final String indexPropertyName = entityIndexConfig.getPropertyName();
 				// test retrieval with the single value or each item of the list of values
 				for (Object value : entityIndexConfig.getIndexValues(original)) {		
-					Object response = service.getByReference(indexPropertyName, value);
-					validateRetrieval(Collections.singletonList(original), response);
+					Collection response = service.getByReference(indexPropertyName, value);
+					if (response.size() == 0)
+						System.err.println(String.format("getByReference returned no results for proeprty %s, value %s: here are the entities in the database: %s", indexPropertyName, value, service.getAll()));
+					validateRetrieval(Collections.singletonList(original), response, Arrays.asList(new String[] {indexPropertyName}));
 				}
 			}
 		}
@@ -255,7 +267,7 @@ public class ClassDaoServiceTest extends H2TestCase implements SchemaInitializer
 				}},
 				(Iterable<? extends Annotation[]>)Arrays.asList(finder.getParameterAnnotations()));
 			ServiceResponse response = (ServiceResponse) finder.invoke(service, argumentValues.toArray());
-			validateRetrieval(original, response);
+			validateRetrieval(original, response, Arrays.asList(new Method[] {finder}));
 		}
 	}
 	
@@ -278,65 +290,77 @@ public class ClassDaoServiceTest extends H2TestCase implements SchemaInitializer
 		for(Object instance : instances)
 			validateRetrieval(
 					instance, 
-					service.get(getId(instance)));
+					service.get(getId(instance)),
+					Collections.emptyList());
 	}
 
 	
 	
-//	@Test(dataProvider = "service")
-//	public void testUpdateComplexCollectionItems(ClassDaoService service) throws Exception {
-//		Object original = getPersistentInstance(service);
-//		final EntityConfig entityConfig = config.getEntityConfig(toClass(service.getPersistedClass()));
-//		Object updated = service.get(entityConfig.getId(original));
-//		for (EntityIndexConfig entityIndexConfig : entityConfig.getEntityIndexConfigs()) {
-//			final String propertyName = entityIndexConfig.getPropertyName();
-//			if (ReflectionTools.isComplexCollectionItemProperty(entityConfig.getRepresentedInterface(), propertyName)) {
-//				// Test collection item updates
-//				List<Object> updatedItems = new ArrayList<Object>((Collection<Object>)ReflectionTools.invokeGetter(updated, propertyName));
-//				// Delete the first
-//				updatedItems.remove(0);
-//				// Update the second
-//				final Object updateItem = updatedItems.get(0);
-//				Collection<String> simpleProperties = ReflectionTools.getPropertiesOfPrimitiveGetters(updateItem.getClass());
-//				
-//				Object generatedPrimitiveValue=null;
-//				if (simpleProperties.size() > 0) {
-//					final String firstProperty = Atom.getFirst(
-//							Filter.grepFalseAgainstList(Collections.singleton(entityIndexConfig.getInnerClassPropertyName()), simpleProperties));
-//					generatedPrimitiveValue = new GeneratePrimitiveValue<Object>(
-//							(Class<Object>) ReflectionTools.getPropertyType(updateItem.getClass(), firstProperty)).generate();
-//					ReflectionTools.invokeSetter(updateItem, firstProperty, generatedPrimitiveValue);
-//				}
-//				// Add a third
-//				updatedItems.add(new GenerateInstance<Object>((Class<Object>) updateItem.getClass()).generate());
-//				
-//				GeneratedInstanceInterceptor.setProperty(updated, propertyName, updatedItems);
-//				save(service, updated);
-//				final Object persisted = service.get(entityConfig.getId(updated));
-//				assertFalse(updated.equals(original));
-//				// Check the updated collection
-//					// size should be equal
-//				final Collection<Object> persistedItems = new ArrayList<Object>((Collection<Object>)ReflectionTools.invokeGetter(persisted, propertyName));
-//				assertEquals(entityIndexConfig.getIndexValues(updated).size(), persistedItems.size());
-//					// first item should be removed
-//				final Collection<Object> originalItems = new ArrayList<Object>((Collection<Object>)ReflectionTools.invokeGetter(original, propertyName));
-//				assertFalse(Filter.grepItemAgainstList(Atom.getFirst(originalItems), persistedItems));
-//					// should be an updated item 
-//				if (simpleProperties.size() > 0) {
-//					final String firstProperty = Atom.getFirst(simpleProperties);
-//					
-//					assertTrue(Filter.grepItemAgainstList(generatedPrimitiveValue,
-//						Transform.map(new Unary<Object,Object>() {
-//							public Object f(Object item) {
-//								return ReflectionTools.invokeGetter(item, firstProperty);
-//						}}, persistedItems)));
-//				}
-//					// new item should exist
-//				assertTrue(Filter.grepItemAgainstList(Atom.getLast(updatedItems), persistedItems));
-//			}
-//		}
-//	
-//	}
+	@Test(dataProvider = "service")
+	public void testUpdateComplexCollectionItems(ClassDaoService service) throws Exception {
+		Object original = getPersistentInstance(service);
+		final EntityConfig entityConfig = config.getEntityConfig(toClass(service.getPersistedClass()));
+		Object updated = service.get(entityConfig.getId(original));
+		for (final EntityIndexConfig entityIndexConfig : entityConfig.getEntityIndexConfigs()) {
+			final String propertyName = entityIndexConfig.getPropertyName();
+			if (ReflectionTools.isComplexCollectionItemProperty(entityConfig.getRepresentedInterface(), propertyName)) {
+				// Test collection item updates
+				final List<Object> updatedItems = new ArrayList<Object>((Collection<Object>)ReflectionTools.invokeGetter(updated, propertyName));
+				
+				// We don't delete orphans for many-to-* relationships so we currently can't delete
+				// Delete the first
+				//updatedItems.remove(0);
+					
+				// Update the second
+				final Object updateItem = updatedItems.get(0);
+				final Collection<String> simpleProperties = ReflectionTools.getPropertiesOfPrimitiveGetters(updateItem.getClass());
+				
+				Object generatedPrimitiveValue=null;
+				if (simpleProperties.size() > 0) {
+					final String firstProperty = Atom.getFirst(
+							Filter.grepFalseAgainstList(Collections.singleton(entityIndexConfig.getInnerClassPropertyName()), simpleProperties));
+					generatedPrimitiveValue = new GeneratePrimitiveValue<Object>(
+							(Class<Object>) ReflectionTools.getPropertyType(updateItem.getClass(), firstProperty)).generate();
+					ReflectionTools.invokeSetter(updateItem, firstProperty, generatedPrimitiveValue);
+				}
+				// Add a third
+				final Object generated = new GenerateInstance<Object>((Class<Object>) updateItem.getClass()).generate();
+				updatedItems.add(generated);
+				
+				GeneratedInstanceInterceptor.setProperty(updated, propertyName, updatedItems);
+				save(service, updated);
+				final Object persisted = service.get(entityConfig.getId(updated));
+				// Check the updated collection
+					// size should be equal
+				final Collection<Object> persistedItems = new ArrayList<Object>((Collection<Object>)ReflectionTools.invokeGetter(persisted, propertyName));
+				Assert.assertEquals(persistedItems.size(), entityIndexConfig.getIndexValues(updated).size());
+					// first item should be removed
+	//			final Collection<Object> originalItems = new ArrayList<Object>((Collection<Object>)ReflectionTools.invokeGetter(original, propertyName));
+	//			assertFalse(Filter.grepItemAgainstList(Atom.getFirst(originalItems), persistedItems));
+					// should be an updated item 
+				if (simpleProperties.size() > 0) {
+					final String firstProperty = Atom.getFirst(
+							Filter.grepFalseAgainstList(Collections.singleton(entityIndexConfig.getInnerClassPropertyName()), simpleProperties));
+					assertTrue(Filter.grepItemAgainstList(generatedPrimitiveValue,
+						Transform.map(new Unary<Object,Object>() {
+							public Object f(Object item) {
+								return ReflectionTools.invokeGetter(item, firstProperty);
+						}}, persistedItems)));
+				}
+					// new item should exist, compared the first property to check
+					// we can't do an equality check because our property class may not have an entityId attribute, which we use for comparison
+				assertTrue(Filter.grepItemAgainstList(Atom.getLast(updatedItems), persistedItems, new BinaryPredicate<Object, Object>() {
+					final String firstProperty = Atom.getFirst(
+							Filter.grepFalseAgainstList(Collections.singleton(entityIndexConfig.getInnerClassPropertyName()), simpleProperties));
+					@Override
+					public boolean f(Object item1, Object item2) {
+						return ReflectionTools.invokeGetter(item1, firstProperty).equals(ReflectionTools.invokeGetter(item2, firstProperty));
+					}
+				}));
+			}
+		}
+	
+	}
 	
 	@Test(dataProvider = "service")
 	public void deleteAnInstance(ClassDaoService service) throws Exception {
@@ -370,11 +394,11 @@ public class ClassDaoServiceTest extends H2TestCase implements SchemaInitializer
 		return config.getEntityConfig(instance.getClass()).getId(instance);
 	}
 	
-	protected void validateRetrieval(Object original, Object response) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+	protected void validateRetrieval(Object original, Object response, Collection arguments) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {
 		if (original instanceof Collection)
-			Assert.assertEquals(new HashSet((Collection)response).hashCode(), new HashSet((Collection)original).hashCode());
+			Assert.assertEquals(new HashSet((Collection)response).hashCode(), new HashSet((Collection)original).hashCode(), String.format("Validation failed for arguments %s", arguments));
 		else
-			Assert.assertEquals(response.hashCode(), original.hashCode());
+			Assert.assertEquals(response.hashCode(), original.hashCode(), String.format("Validation failed for arguments %s", arguments));
 	}
 	
 	@Override

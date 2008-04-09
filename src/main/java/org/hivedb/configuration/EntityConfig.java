@@ -30,4 +30,10 @@ public interface EntityConfig {
 	Class<?> getIdClass();	
 	
 	int getVersion(Object instance);
+
+	/**
+	 * Get classes that are properties of this class, singletons or collections, which have a property indexed by the hive
+	 * @return
+	 */
+	Collection<Class<?>> getAssociatedClasses();
 }

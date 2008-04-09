@@ -34,9 +34,8 @@ public class WeatherSchema extends Schema {
 	    new TableInfo("WEATHER_EVENT", "CREATE TABLE WEATHER_EVENT (" + 
 	    	    "EVENT_ID INT NOT NULL ," +
 	    	    "REPORT_ID INT NOT NULL ," +
-	    	    "CONTINENT VARCHAR(50) NOT NULL ," +
 	    	    "NAME VARCHAR(50));"),
-	    // Demonstrates an unindexed data table of an non-entity class (WeatherEvent)
+        // Demonstrates an unindexed data table of an non-entity class (WeatherEvent)
 	    new TableInfo("EVENT_STATISTIC", "CREATE TABLE EVENT_STATISTIC (" + 
 	    	    "EVENT_ID INT NOT NULL," +
 	    	    "STAT INT);"));
