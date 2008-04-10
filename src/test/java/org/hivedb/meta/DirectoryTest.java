@@ -35,7 +35,7 @@ import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class DirectoryTest extends	H2TestCase {
+public class DirectoryTest extends H2TestCase {
 	private PartitionDimension dimension;
 	private SecondaryIndex nameIndex, numIndex;
 	private String secondaryKeyString = "secondary key";

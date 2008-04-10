@@ -27,6 +27,7 @@ import org.hivedb.annotations.Validate;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.EntityIndexConfig;
+import org.hivedb.configuration.HiveConfigurationSchema;
 import org.hivedb.hibernate.BaseDataAccessObject;
 import org.hivedb.hibernate.ConfigurationReader;
 import org.hivedb.hibernate.HiveSessionFactory;
@@ -69,6 +70,11 @@ public class ClassDaoServiceTest extends H2TestCase implements SchemaInitializer
 	protected static Collection<LazyInitializer> services = Lists.newArrayList();
 	protected static Collection<Class> entityClasses = Lists.newArrayList();
 	protected HiveSessionFactory factory;
+	
+	public Collection<Schema> getSchemas() {
+		return Arrays.asList(new Schema[] {
+				new HiveConfigurationSchema(getConnectString(getHiveDatabaseName()))});
+	}
 	
 	@Override
 	protected void beforeMethod() {
