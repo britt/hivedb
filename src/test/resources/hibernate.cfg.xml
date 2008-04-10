@@ -6,20 +6,14 @@
 <hibernate-configuration>
     <session-factory
         name="java:hibernate/SessionFactory">
-		<property name="dbcp.maxActive">32</property>
-        <property name="dbcp.maxIdle">2</property>
-        <property name="dbcp.maxWait">500</property>
-        <property name="dbcp.whenExhaustedAction">1</property>
-        <property name="dbcp.testOnBorrow">true</property>
-        <property name="dbcp.testOnReturn">true</property>
-        <property name="dbcp.validationQuery">
-            select count(1) from information_schema.tables limit 1;
-        </property>
         
-        <property name="dbcp.ps.maxActive">0</property>
-        <property name="dbcp.ps.maxIdle">0</property>
-        <property name="dbcp.ps.maxWait">-1</property>
-        <property name="dbcp.ps.whenExhaustedAction">2</property>
-	    <!-- property name="hibernate.show_sql">true</property -->
+		<property name="hibernate.c3p0.acquire_increment">1</property> 
+		<property name="hibernate.c3p0.idle_test_period">100</property> <!-- seconds --> 
+		<property name="hibernate.c3p0.max_size">64</property> 
+		<property name="hibernate.c3p0.max_statements">0</property> 
+		<property name="hibernate.c3p0.min_size">2</property> 
+		<property name="hibernate.c3p0.timeout">100</property> <!-- seconds --> 
+		<property name="hibernate.c3p0pool.maxIdleTime">3600</property> <!-- seconds -->
+
     </session-factory>
 </hibernate-configuration>

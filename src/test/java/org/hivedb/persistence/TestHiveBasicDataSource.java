@@ -2,6 +2,9 @@ package org.hivedb.persistence;
 
 import static org.testng.AssertJUnit.assertEquals;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.Iterator;
 
 import org.hivedb.meta.persistence.HiveBasicDataSource;
@@ -35,30 +38,29 @@ public class TestHiveBasicDataSource extends ContextAwareTest{
 		validateEquality(ds, clone);
 	}
 	
+	@Test(dataProvider="dbs", groups="database")
+	public void testConnection(String name) throws Exception {
+		HiveBasicDataSource ds = new HiveBasicDataSource(db.getConnectString(name));
+		Connection connection = ds.getConnection();
+		PreparedStatement preparedStatement = connection.prepareStatement("select 1");
+		preparedStatement.execute();
+		ResultSet resultSet = preparedStatement.getResultSet();
+		resultSet.next();
+		assertEquals(new Integer(1), resultSet.getObject(1));
+		resultSet.close();
+		preparedStatement.close();
+		connection.close();
+	}
+	
+	@SuppressWarnings("unused")
 	@DataProvider(name="dbs")
 	private Iterator<Object[]> getNames() {
 		return TestNGTools.makeObjectArrayIterator(db.getDatabaseNames());
 	}
 	
 	private HiveBasicDataSource fiddleProperties(HiveBasicDataSource ds) {
-		ds.setConnectionTimeout(42l);
-		ds.setSocketTimeout(53l);
-		ds.setInitialSize(14);
-		ds.setMinIdle(5);
-		ds.setMaxIdle(6);
 		ds.setMaxActive(9);
-		ds.setMaxWait(99l);
-		ds.setMaxOpenPreparedStatements(22);
-		ds.setDefaultTransactionIsolation(83);
-		ds.setDefaultAutoCommit(!ds.getDefaultAutoCommit());
-		ds.setPoolPreparedStatements(!ds.isPoolPreparedStatements());
-		ds.setMinEvictableIdleTimeMillis(666l);
-		ds.setNumTestsPerEvictionRun(43);
 		ds.setPassword("a password");
-		ds.setTestOnBorrow(!ds.getTestOnBorrow());
-		ds.setTestOnReturn(!ds.getTestOnReturn());
-		ds.setTestWhileIdle(!ds.getTestWhileIdle());
-		ds.setTimeBetweenEvictionRunsMillis(345l);
 		ds.setUrl(ds.getUrl());
 		ds.setUsername("test");
 		ds.setValidationQuery(ds.getValidationQuery());
@@ -66,23 +68,8 @@ public class TestHiveBasicDataSource extends ContextAwareTest{
 	}
 	
 	private void validateEquality(HiveBasicDataSource ds1, HiveBasicDataSource ds2) throws Exception{
-		assertEquals(ds1.getConnectionTimeout(), ds2.getConnectionTimeout());
-		assertEquals(ds1.getSocketTimeout(), ds2.getSocketTimeout());
-		assertEquals(ds1.getInitialSize(), ds2.getInitialSize());
-		assertEquals(ds1.getMinIdle(), ds2.getMinIdle());
-		assertEquals(ds1.getMaxIdle(), ds2.getMaxIdle());
 		assertEquals(ds1.getMaxActive(), ds2.getMaxActive());
-		assertEquals(ds1.getMaxWait(), ds2.getMaxWait());
-		assertEquals(ds1.getMaxOpenPreparedStatements(), ds2.getMaxOpenPreparedStatements());
-		assertEquals(ds1.getDefaultTransactionIsolation(), ds2.getDefaultTransactionIsolation());
-		assertEquals(ds1.isPoolPreparedStatements(), ds2.isPoolPreparedStatements());
-		assertEquals(ds1.getMinEvictableIdleTimeMillis(), ds2.getMinEvictableIdleTimeMillis());
-		assertEquals(ds1.getNumTestsPerEvictionRun(), ds2.getNumTestsPerEvictionRun());
 		assertEquals(ds1.getPassword(), ds2.getPassword());
-		assertEquals(ds1.getTestOnBorrow(), ds2.getTestOnBorrow());
-		assertEquals(ds1.getTestOnReturn(), ds2.getTestOnReturn());
-		assertEquals(ds1.getTestWhileIdle(), ds2.getTestWhileIdle());
-		assertEquals(ds1.getTimeBetweenEvictionRunsMillis(), ds2.getTimeBetweenEvictionRunsMillis());
 		assertEquals(ds1.getUrl(), ds2.getUrl());
 		assertEquals(ds1.getUsername(), ds2.getUsername());
 		assertEquals(ds1.getValidationQuery(), ds2.getValidationQuery());
