@@ -2,20 +2,27 @@ package org.hivedb.util.database.test;
 
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveLockableException;
 import org.hivedb.HiveRuntimeException;
+import org.hivedb.Schema;
 import org.hivedb.Lockable.Status;
 import org.hivedb.configuration.EntityHiveConfig;
+import org.hivedb.configuration.HiveConfigurationSchema;
 import org.hivedb.hibernate.ConfigurationReader;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
+import org.hivedb.meta.PartitionDimensionCreator;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.meta.persistence.IndexSchema;
+import org.hivedb.meta.persistence.TableInfo;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.functional.Unary;
@@ -43,11 +50,13 @@ public class HiveTestCase {
 		this.dataNodeNames = dataNodeNames;
 		this.doInstall = doInstall;
 	}
+	
 	public void beforeClass() {
-		
 	}
+	/**
+	 * Install the hive before each method. This will create tables if needed
+	 */
 	public void beforeMethod() {
-		
 		if (doInstall) {
 			hive = null;
 			String connectString = getConnectString.f(getHiveDatabaseName());
@@ -163,5 +172,13 @@ public class HiveTestCase {
 			password = tokens[1].split("&")[0];
 		}
 		return password;
+	}
+
+	public Collection<Schema> getHiveSchemas() {
+		final String hiveUri = getConnectString.f(hiveDatabaseName);
+		PartitionDimension partitionDimension = PartitionDimensionCreator.create(configurationReader.getHiveConfiguration(), hiveUri);
+		return Arrays.asList(new Schema[] {
+				new HiveConfigurationSchema(hiveUri),
+				new IndexSchema(partitionDimension) });
 	}
 }

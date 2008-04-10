@@ -14,6 +14,7 @@ import org.hivedb.util.HiveUtils;
 import org.hivedb.util.Preconditions;
 import org.hivedb.util.database.DriverLoader;
 import org.hivedb.util.database.HiveDbDialect;
+import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Predicate;
 
@@ -115,13 +116,14 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		dimension.setIndexUri(hiveUri);
 		DataSource ds = provider.getDataSource(hiveUri);
 		PartitionDimensionDao dao = new PartitionDimensionDao(ds);
-		if(dao.loadAll().size() == 0) {
+		final List<PartitionDimension> partitionDimensions = dao.loadAll();
+		if(partitionDimensions.size() == 0) {
 			dao.create(dimension);
 			new IndexSchema(dimension).install();
 			hive.incrementAndPersistHive(ds);
 			return hive;
 		} else
-			throw new HiveRuntimeException("There is already a Hive with a partition dimension intalled at this uri: " + hiveUri);
+			throw new HiveRuntimeException(String.format("There is already a Hive with a partition dimension named %s intalled at this uri: %s", Atom.getFirstOrThrow(partitionDimensions).getName(), hiveUri));
 	}
 	
 	private static Hive prepareHive(String hiveUri, DataSourceProvider provider, Assigner assigner) {

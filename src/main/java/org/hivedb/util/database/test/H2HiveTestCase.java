@@ -22,24 +22,23 @@ import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeSuite;
 
 public class H2HiveTestCase extends H2TestCase {
 	
-	@Override
 	@BeforeClass
 	protected void beforeClass() {
 		cleanupAfterEachTest = true;
+		// Each test class may have its own settings for the HiveTestCase
 		hiveTestCase = createHiveTestCase();
 		hiveTestCase.beforeClass();
-		super.beforeClass();
 	}
 	
 	@Override
 	@BeforeMethod
 	public void beforeMethod() {
 		super.beforeMethod();
-		hiveTestCase = createHiveTestCase();
-		hiveTestCase.beforeMethod();
+		hiveTestCase.beforeMethod();	
 		installDataSchemas();
 	}
 
@@ -76,10 +75,23 @@ public class H2HiveTestCase extends H2TestCase {
 	}
 	
 	protected void installDataSchemas() {
-		for (String dataNodeName : getDataNodeNames()) {
-			new ContinentalSchema(getConnectString(dataNodeName)).install();
-			new WeatherSchema(getConnectString(dataNodeName)).install();
-		}
+		for (Schema schema : getDataNodeSchemas())
+			schema.install();
+	}
+	
+	protected Collection<Schema> getSchemas() {
+		return Transform.flatten(hiveTestCase.getHiveSchemas(), getDataNodeSchemas());
+	}
+	
+	// Gets Schema instances for each entity on each data node
+	protected Collection<Schema> getDataNodeSchemas() {
+		return Transform.flatMap(new Unary<String, Collection<Schema>>() {
+			public Collection<Schema> f(String dataNodeName) {
+				return Arrays.asList(new Schema[] {
+						new ContinentalSchema(getConnectString(dataNodeName)),
+						new WeatherSchema(getConnectString(dataNodeName)) });
+			}
+		}, getDataNodeNames());
 	}
 	
 	@SuppressWarnings("unchecked")

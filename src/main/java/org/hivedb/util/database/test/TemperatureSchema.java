@@ -15,11 +15,13 @@ public class TemperatureSchema extends Schema {
 	public TemperatureSchema(String dbURI) {
 		super("Temperature",dbURI);
 	}
-
+	
 	@Override
 	public Collection<TableInfo> getTables() {
 		return Arrays.asList(new TableInfo("TEMPERATURE", "CREATE TABLE TEMPERATURE (" + 
     "TEMPERATURE_ID INT NOT NULL PRIMARY KEY," +
     "CONTINENT VARCHAR(50));"));	
 	}
+
+	
 }

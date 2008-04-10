@@ -6,20 +6,27 @@ import static org.testng.AssertJUnit.assertNotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import org.hivedb.Hive;
+import org.hivedb.Schema;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.directory.Directory;
 import org.hivedb.meta.directory.DirectoryWrapper;
 import org.hivedb.meta.directory.NodeResolver;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
+import org.hivedb.meta.persistence.TableInfo;
 import org.hivedb.util.database.HiveDbDialect;
+import org.hivedb.util.database.test.ContinentalSchema;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.WeatherSchema;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Pair;
 import org.hivedb.util.functional.Transform;
+import org.hivedb.util.functional.Unary;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -34,11 +41,24 @@ public class TestMigration extends H2HiveTestCase {
 			SimpleJdbcDaoSupport dao = new SimpleJdbcDaoSupport();
 			dao.setDataSource(new HiveBasicDataSource(getConnectString(name)));
 			
-			dao.getJdbcTemplate().update(createPrimaryTableSql());
-			dao.getJdbcTemplate().update(createSecondaryTableSql());
-			dao.getJdbcTemplate().update("SET DB_CLOSE_DELAY 5");
+			try {
+				dao.getJdbcTemplate().update("SET DB_CLOSE_DELAY 5");
+			}
+			catch (Exception e) {} // only protection against multiple calls (create a Schema class to avoid this)
 		}
 	}
+	// Add this test's schema to that of the superclass
+	protected Collection<Schema> getDataNodeSchemas() {
+		return Transform.flatten(super.getDataNodeSchemas(),
+			Transform.flatMap(new Unary<String, Collection<Schema>>() {
+				public Collection<Schema> f(String dataNodeName) {
+					return Arrays.asList(new Schema[] {
+							new TestMigrationSchema(getConnectString(dataNodeName)),
+					});
+				}
+			}, getDataNodeNames()));
+	}
+	
 	
 	@SuppressWarnings("unchecked")
 	@Test
@@ -158,12 +178,18 @@ public class TestMigration extends H2HiveTestCase {
 		return new Pair<Node, Node>(origin, destination);
 	}
 	
-	private String createPrimaryTableSql() {
-		return "create table primary_table (id varchar(50))";
-	}
-	
-	private String createSecondaryTableSql() {
-		return "create table secondary_table  (id integer)";
+	private class TestMigrationSchema extends Schema {
+
+		public TestMigrationSchema(String uri) {
+			super("testMigration", uri);
+		}
+
+		@Override
+		public Collection<TableInfo> getTables() {
+			return Arrays.asList(
+				new TableInfo("primary_table", "create table primary_table (id varchar(50));"),
+				new TableInfo("secondary_table", "create table secondary_table (id integer);"));
+		}
 	}
 	
 	class PrimaryMover implements PartitionKeyMover<String> {

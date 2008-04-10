@@ -6,8 +6,11 @@ import java.util.Collections;
 
 import javax.sql.DataSource;
 
+import org.hivedb.Schema;
+import org.hivedb.meta.persistence.TableInfo;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
@@ -24,19 +27,17 @@ public abstract class DatabaseTestCase {
 	protected abstract String getConnectString(String name);
 	protected abstract Connection getConnection(String name);
 	protected abstract DataSource getDataSource(String name);
-	
-	@BeforeClass
-	protected void beforeClass(){
+	protected abstract Collection<Schema> getSchemas();
 		
-	}
-
+	/**
+	 * At the end of this method all databases and tables must exist and be empty
+	 */
 	@BeforeMethod
 	protected void beforeMethod() {
 		if( cleanupAfterEachTest ) {
 			for(String name : getDatabaseNames()){
 				if(databaseExists(name)) {
-					deleteDatabase(name);
-					createDatabase(name);
+					clearTablesOfDatabase(name);
 				} else
 					createDatabase(name);
 			}
@@ -47,24 +48,27 @@ public abstract class DatabaseTestCase {
 					createDatabase(name);
 	}
 	
-	@AfterClass
-	protected void afterClass() {
-		if( cleanupOnExit ){
-			for(String name : getDatabaseNames()){
-				if(databaseExists(name))
-					deleteDatabase(name);
-			}
-		}
-	}
-	
+	/**
+	 * At the end of this method all databases and tables must exist and be empty
+	 */
 	@AfterMethod
 	protected void afterMethod() {
 		if( cleanupAfterEachTest ){
 			for(String name : getDatabaseNames()){
 				if(databaseExists(name))
-					deleteDatabase(name);
+					clearTablesOfDatabase(name);
 			}
 		}
+	}
+	
+	/**
+	 * At the end of this method all databases must be deleted
+	 */
+	@AfterSuite
+	protected void afterSuite() {
+		for(String name : getDatabaseNames())
+			if(databaseExists(name))
+				deleteDatabase(name);
 	}
 
 	/**
@@ -77,5 +81,10 @@ public abstract class DatabaseTestCase {
 	
 	public void setDatabaseNames(Collection<String> names) {
 		this.databaseNames = names;
+	}
+	
+	protected void clearTablesOfDatabase(String name) {
+		for (Schema schema : getSchemas())
+			schema.emptyTables();
 	}
 }

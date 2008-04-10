@@ -57,13 +57,14 @@ public abstract class Schema extends JdbcDaoSupport {
 		this.name = name;
 	}
 
+	
 	public Schema(String name) {this.name = name;}
 	
 	public Schema(String name, String dbURI){
 		this(name);
 		setUri(dbURI);
 	}
-
+	
 	protected Context getContext() {
 		Context context = new VelocityContext();
 		context.put("dialect", dialect);
@@ -98,6 +99,9 @@ public abstract class Schema extends JdbcDaoSupport {
 	
 	public void emptyTables(String uri) {
 		this.uri = uri;
+		emptyTables();
+	}
+	public void emptyTables() {
 		this.setDataSource(new HiveBasicDataSource(uri));
 		this.dialect = DriverLoader.discernDialect(uri);
 		for (TableInfo table : getTables())
