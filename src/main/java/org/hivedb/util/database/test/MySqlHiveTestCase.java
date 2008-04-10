@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hivedb.Hive;
+import org.hivedb.Schema;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.hibernate.BaseDataAccessObjectFactory;
 import org.hivedb.hibernate.DataAccessObject;
@@ -20,18 +21,25 @@ import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeSuite;
 
-public abstract class MySqlHiveTestCase extends MysqlTestCase {
+public class MySqlHiveTestCase extends MysqlTestCase {
+	
+	@BeforeClass
+	protected void beforeClass() {
+		cleanupAfterEachTest = true;
+		// Each test class may have its own settings for the HiveTestCase
+		hiveTestCase = createHiveTestCase();
+		hiveTestCase.beforeClass();
+	}
 	
 	@Override
 	@BeforeMethod
 	public void beforeMethod() {
 		super.beforeMethod();
-		hiveTestCase = createHiveTestCase();
 		hiveTestCase.beforeMethod();
 		installDataSchemas();
 	}
-
 	private HiveTestCase createHiveTestCase() {
 		return new HiveTestCase(
 				getHiveDatabaseName(),
@@ -61,10 +69,23 @@ public abstract class MySqlHiveTestCase extends MysqlTestCase {
 	}
 	
 	protected void installDataSchemas() {
-		for (String dataNodeName : getDataNodeNames()) {
-			new ContinentalSchema(getConnectString(dataNodeName)).install();
-			new WeatherSchema(getConnectString(dataNodeName)).install();
-		}
+		for (Schema schema : getDataNodeSchemas())
+			schema.install();
+	}
+	
+	protected Collection<Schema> getSchemas() {
+		return Transform.flatten(hiveTestCase.getHiveSchemas(), getDataNodeSchemas());
+	}
+	
+	// Gets Schema instances for each entity on each data node
+	protected Collection<Schema> getDataNodeSchemas() {
+		return Transform.flatMap(new Unary<String, Collection<Schema>>() {
+			public Collection<Schema> f(String dataNodeName) {
+				return Arrays.asList(new Schema[] {
+						new ContinentalSchema(getConnectString(dataNodeName)),
+						new WeatherSchema(getConnectString(dataNodeName)) });
+			}
+		}, getDataNodeNames());
 	}
 	
 	public Collection<String> getDatabaseNames() {

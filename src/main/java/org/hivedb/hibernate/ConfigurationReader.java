@@ -73,7 +73,7 @@ public class ConfigurationReader {
 		else
 			if(!dimension.getName().equals(config.getPartitionDimensionName()))
 				throw new UnsupportedOperationException(
-						String.format("You are trying to configure on object from partition dimension %s into a Hive configured to use partition dimension %s. THis is not supported. Use a separate configuration for each dimension.", config.getPartitionDimensionName(), dimension.getName()));
+						String.format("You are trying to configure on object from partition dimension %s into a Hive configured to use partition dimension %s. This is not supported. Use a separate configuration for each dimension.", config.getPartitionDimensionName(), dimension.getName()));
 		
 		hiveConfigs.put(clazz.getName(), config);
 		return config;

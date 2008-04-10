@@ -3,14 +3,27 @@ package org.hivedb.util.database.test;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Hashtable;
+import java.util.Map;
 
 import javax.sql.DataSource;
 
 import org.h2.tools.DeleteDbFiles;
+import org.hivedb.Schema;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
+import org.hivedb.meta.persistence.TableInfo;
 
+/**
+ *  This class adds and overrides behaviour of DatabaseTestCase
+ *  specific to the needs of H2
+ * @author andylikuski
+ *
+ */
 public class H2TestCase extends DatabaseTestCase {
 	public static final String TEST_DB = "testDb";
+	private static Map<String, Boolean> databaseCreated = new Hashtable<String, Boolean>();
 	
 	static {
 		try {
@@ -20,9 +33,14 @@ public class H2TestCase extends DatabaseTestCase {
 		}
 	}
 	
+	protected Collection<Schema> getSchemas() {
+		return Collections.emptyList();
+	}
+	
 	@Override
 	protected void createDatabase(String name) {
 		try {
+			databaseCreated.put(name, true);
 			getConnection(name).close();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -31,7 +49,7 @@ public class H2TestCase extends DatabaseTestCase {
 
 	@Override
 	protected boolean databaseExists(String name) {
-		return true;
+		return databaseCreated.containsKey(name);
 	}
 
 	@Override

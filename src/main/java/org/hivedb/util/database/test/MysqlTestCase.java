@@ -3,25 +3,30 @@ package org.hivedb.util.database.test;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Collection;
+import java.util.Collections;
 
 import javax.sql.DataSource;
 
 import org.hivedb.HiveRuntimeException;
+import org.hivedb.Schema;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
-import org.testng.annotations.BeforeClass;
 
 public class MysqlTestCase extends DatabaseTestCase {
 	
 	protected String userName = "test";
 	protected String password = "test";
-	@BeforeClass
-	protected void beforeClass() {
+	
+	static {
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
 		} catch (ClassNotFoundException e) {
 			throw new RuntimeException(e);
 		}
-		super.beforeClass();
+	}
+	
+	protected Collection<Schema> getSchemas() {
+		return Collections.emptyList();
 	}
 	
 	@Override

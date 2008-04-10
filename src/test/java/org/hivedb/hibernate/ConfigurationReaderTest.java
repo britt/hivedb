@@ -1,14 +1,17 @@
 package org.hivedb.hibernate;
 
 import java.sql.Types;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveFacade;
+import org.hivedb.Schema;
 import org.hivedb.annotations.IndexType;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityIndexConfig;
+import org.hivedb.configuration.HiveConfigurationSchema;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.util.GenerateInstance;
 import org.hivedb.util.GeneratedInstanceInterceptor;
@@ -26,6 +29,11 @@ import org.testng.annotations.Test;
 import static org.testng.AssertJUnit.*;
 
 public class ConfigurationReaderTest extends H2TestCase {
+	
+	public Collection<Schema> getSchemas() {
+		return Arrays.asList(new Schema[] {
+				new HiveConfigurationSchema(getConnectString(H2TestCase.TEST_DB))});
+	}
 	
 	@Test
 	public void testGetResourceName() throws Exception {

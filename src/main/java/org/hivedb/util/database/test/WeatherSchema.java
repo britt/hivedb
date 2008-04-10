@@ -15,6 +15,9 @@ public class WeatherSchema extends Schema {
 	public WeatherSchema(String dbURI) {
 		super("WeatherReport",dbURI);
 	}
+	public Schema createSchemaForURI(String dbURI) {
+		return new WeatherSchema(dbURI);
+	}
 
 	@Override
 	public Collection<TableInfo> getTables() {

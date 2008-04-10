@@ -96,7 +96,7 @@ public class HiveScenarioTest {
 		private void validateHiveMetadata() throws HiveException, SQLException
 		{
 			final String resourceName = entityHiveConfig.getEntityConfig(representedInterface).getResourceName();
-			Resource expectedResource = PartitionDimensionCreator.create(entityHiveConfig,hive).getResource(resourceName);
+			Resource expectedResource = PartitionDimensionCreator.create(entityHiveConfig, hive.getUri()).getResource(resourceName);
 			Resource actualResource = hive.getPartitionDimension().getResource(entityHiveConfig.getEntityConfig(representedInterface).getResourceName());
 			
 			// Validate our PartitionDimension in memory against those that are in the persistence

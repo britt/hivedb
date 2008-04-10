@@ -18,16 +18,18 @@ import org.hivedb.util.functional.Unary;
 
 public class PartitionDimensionCreator {
 
-	public static PartitionDimension create(final EntityHiveConfig entityHiveConfig, Hive hive) {
+	public static PartitionDimension create(final EntityHiveConfig entityHiveConfig, String indexUri) {
 		EntityConfig firstEntityConfig = Atom.getFirstOrThrow(entityHiveConfig.getEntityConfigs());
 		String partitionDimensionName = firstEntityConfig.getPartitionDimensionName();
 				
 		PartitionDimension dimension = new PartitionDimension(
+			0,
 			partitionDimensionName,
 			JdbcTypeMapper.primitiveTypeToJdbcType(
 					ReflectionTools.getPropertyType(
 							firstEntityConfig.getRepresentedInterface(), 
 							firstEntityConfig.getPrimaryIndexKeyPropertyName())),
+			indexUri,
 			cloneResources(
 				Transform.map(new Unary<EntityConfig, Resource>() {
 					public Resource f(EntityConfig entityConfig) {
@@ -35,7 +37,6 @@ public class PartitionDimensionCreator {
 					}
 				}, entityHiveConfig.getEntityConfigs()))); // clone because resources are given the new partition dimension id
 	
-		dimension.updateId(hive.getPartitionDimension().getId());
 		return dimension;
 	}
 	private static Resource createResource(final EntityConfig entityConfig) {

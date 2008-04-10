@@ -15,6 +15,9 @@ public class ContinentalSchema extends Schema {
 	public ContinentalSchema(String dbURI) {
 		super("Continent",dbURI);
 	}
+	public Schema createSchemaForURI(String dbURI) {
+		return new ContinentalSchema(dbURI);
+	}
 
 	public Collection<TableInfo> getTables() {
 		return Arrays.asList(new TableInfo("CONTINENT", "CREATE TABLE CONTINENT (" + 
