@@ -1,0 +1,20 @@
+<c3p0-config>
+	
+	<default-config>
+		<property name="testConnectionOnCheckout">true</property>
+	</default-config> 
+	
+	<!-- sample named config incl. user-overrides
+	
+	<named-config name="intergalactoApp">
+		<property name="testConnectionOnCheckout">true</property>
+		</user-overrides user="master-of-the-universe">
+		<property name="maxStatementsPerConnection">50</property>
+		</user-overrides>
+	</named-config>
+	
+	see hibernate.cfg.xml for hibernate-specific c3p0 settings
+	
+	-->
+	
+</c3p0-config>
