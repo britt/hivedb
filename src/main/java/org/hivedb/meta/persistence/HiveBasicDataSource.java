@@ -75,7 +75,6 @@ public class HiveBasicDataSource implements DataSource, Cloneable {
 		);
 	}
 	
-	private static Set<String> cons = new HashSet<String>();
 	public Connection getConnection() throws SQLException {
 		Connection connection = comboPooledDataSource.getConnection();
 		log.debug("Loaned connection, current active connections: " + this.getNumActive());
