@@ -28,11 +28,6 @@
 	<properties>
 		<cxf.version>2.0.3-incubator</cxf.version>
 	</properties>
-	<scm>
-		<connection>scm:svn:svn://svn.hivedb.org/hivedb/trunk</connection>
-		<developerConnection>scm:svn:svn+ssh://svn.hivedb.org/svn/hivedb/trunk</developerConnection>
-		<tag>HEAD</tag>
-	</scm>
 	<distributionManagement>
 		<repository>
 			<id>HiveDB</id>
