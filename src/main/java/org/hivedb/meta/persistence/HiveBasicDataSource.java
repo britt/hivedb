@@ -29,6 +29,7 @@ public class HiveBasicDataSource implements DataSource, Cloneable {
 		comboPooledDataSource.setJdbcUrl(hiveUri);
 		comboPooledDataSource.setTestConnectionOnCheckout(true);
 		comboPooledDataSource.setMaxPoolSize(getDefaultPoolSize());
+		comboPooledDataSource.setMaxIdleTime(3600);
 		log.debug(String.format("HiveBasicDataSource created for %s.  Max pool size: %s", this.getUrl(), this.getMaxActive()));
 	}
 	
