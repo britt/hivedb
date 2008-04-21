@@ -15,7 +15,7 @@ import org.hivedb.util.HiveUtils;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import com.mchange.v2.c3p0.impl.AbstractPoolBackedDataSource;
 
-public class HiveBasicDataSource extends AbstractPoolBackedDataSource implements Cloneable {
+public class HiveBasicDataSource<T> extends AbstractPoolBackedDataSource implements Cloneable {
 	private Log log = LogFactory.getLog(HiveBasicDataSource.class);
 	public static final String CONNECTION_POOL_SIZE = "HiveDataSourceConnectionPoolSize";
 	public static final int DEFAULT_POOL_SIZE = 32;
@@ -148,5 +148,5 @@ public class HiveBasicDataSource extends AbstractPoolBackedDataSource implements
     return false;
   }
 
-  public Object unwrap(Class<Object> iface) { throw new UnsupportedOperationException();}
+  public T unwrap(Class<T> iface) { throw new UnsupportedOperationException();}
 }
