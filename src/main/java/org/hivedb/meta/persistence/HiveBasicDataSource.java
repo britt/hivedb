@@ -13,19 +13,22 @@ import org.apache.commons.logging.LogFactory;
 import org.hivedb.util.HiveUtils;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
+import com.mchange.v2.c3p0.impl.AbstractPoolBackedDataSource;
 
-public class HiveBasicDataSource implements DataSource, Cloneable {
+public class HiveBasicDataSource extends AbstractPoolBackedDataSource implements Cloneable {
 	private Log log = LogFactory.getLog(HiveBasicDataSource.class);
 	public static final String CONNECTION_POOL_SIZE = "HiveDataSourceConnectionPoolSize";
 	public static final int DEFAULT_POOL_SIZE = 32;
 	private ComboPooledDataSource comboPooledDataSource;
-	
+	                   
 	public HiveBasicDataSource() {
-		comboPooledDataSource = new ComboPooledDataSource();
+    super(true);
+    comboPooledDataSource = new ComboPooledDataSource();
 	}
 	
 	public HiveBasicDataSource(String hiveUri, int poolSize){
-		comboPooledDataSource = new ComboPooledDataSource();
+    super(true);
+    comboPooledDataSource = new ComboPooledDataSource();
 		comboPooledDataSource.setJdbcUrl(hiveUri);
 		comboPooledDataSource.setTestConnectionOnCheckout(true);
 		comboPooledDataSource.setMaxPoolSize(getDefaultPoolSize());
@@ -36,8 +39,8 @@ public class HiveBasicDataSource implements DataSource, Cloneable {
 	public HiveBasicDataSource(String hiveUri) {
 		this(hiveUri, getDefaultPoolSize());	
 	}
-	
-	private static Integer getDefaultPoolSize() {
+
+  private static Integer getDefaultPoolSize() {
 		try {
 			String poolSize = System.getProperty(CONNECTION_POOL_SIZE);
 			return Integer.parseInt(poolSize);
