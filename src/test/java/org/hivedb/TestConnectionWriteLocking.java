@@ -19,13 +19,13 @@ import org.testng.annotations.Test;
 
 public class TestConnectionWriteLocking extends H2HiveTestCase {
 	
-	@BeforeMethod
+//	@BeforeMethod
 	public void setUp() throws Exception {
 		super.beforeMethod();
 		getHive().addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", HiveDbDialect.H2));
 	}
 
-	@Test
+//	@Test
 	public void testHiveLockingInMemory() throws Exception {
 		final Hive hive = getHive();
 		final String key = new String("North America");
@@ -40,7 +40,7 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 			}}, HiveLockableException.class);
 	}
 
-	@Test
+//	@Test
 	public void testHiveLockingPersistent() throws Exception {
 		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		final String key = new String("Stoatia");
@@ -58,7 +58,7 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 			}}, HiveLockableException.class);
 	}
 
-	@Test
+//	@Test
 	public void testNodeLockingInMemory() throws Exception {
 		final Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		final String key = new String("Antarctica");
@@ -75,7 +75,7 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 			}}, HiveLockableException.class);
 	}
 
-	@Test
+//	@Test
 	public void testNodeLockingPersistent() throws Exception {
 		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		final String key = new String("Asia");
@@ -97,7 +97,7 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 
 	}
 
-	@Test
+//	@Test
 	public void testRecordLockingInMemory() throws Exception {
 		final Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		final String key = new String("Atlantis");
@@ -112,7 +112,7 @@ public class TestConnectionWriteLocking extends H2HiveTestCase {
 			}}, HiveLockableException.class);
 	}
 
-	@Test
+//	@Test
 	public void testRecordLockingPersistent() throws Exception {
 		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 		final String key = new String("Africa");
