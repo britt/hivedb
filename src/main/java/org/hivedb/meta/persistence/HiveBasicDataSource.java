@@ -3,8 +3,6 @@ package org.hivedb.meta.persistence;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.sql.DataSource;
 
@@ -13,21 +11,18 @@ import org.apache.commons.logging.LogFactory;
 import org.hivedb.util.HiveUtils;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
-import com.mchange.v2.c3p0.impl.AbstractPoolBackedDataSource;
 
-public class HiveBasicDataSource<T> extends AbstractPoolBackedDataSource implements Cloneable {
+public class HiveBasicDataSource implements DataSource, Cloneable {
 	private Log log = LogFactory.getLog(HiveBasicDataSource.class);
 	public static final String CONNECTION_POOL_SIZE = "HiveDataSourceConnectionPoolSize";
 	public static final int DEFAULT_POOL_SIZE = 32;
 	private ComboPooledDataSource comboPooledDataSource;
 	                   
 	public HiveBasicDataSource() {
-    super(true);
     comboPooledDataSource = new ComboPooledDataSource();
 	}
 	
 	public HiveBasicDataSource(String hiveUri, int poolSize){
-    super(true);
     comboPooledDataSource = new ComboPooledDataSource();
 		comboPooledDataSource.setJdbcUrl(hiveUri);
 		comboPooledDataSource.setTestConnectionOnCheckout(true);
@@ -147,6 +142,4 @@ public class HiveBasicDataSource<T> extends AbstractPoolBackedDataSource impleme
   public boolean isWrapperFor(Class<?> iface) {
     return false;
   }
-
-  public T unwrap(Class<T> iface) { throw new UnsupportedOperationException();}
 }
