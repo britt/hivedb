@@ -140,4 +140,10 @@ public class HiveBasicDataSource implements DataSource, Cloneable {
 	public void setValidationQuery(String validationQuery) {
 		comboPooledDataSource.setPreferredTestQuery(validationQuery);
 	}
+
+  public boolean isWrapperFor(Class<?> iface) {
+    return false;
+  }
+
+  public Object unwrap(Class<Object> iface) { throw new UnsupportedOperationException();}
 }
