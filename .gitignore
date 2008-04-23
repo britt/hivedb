@@ -1,0 +1,10 @@
+.DS_Store
+.classpath
+.project
+.settings
+hivedb.iml
+hivedb.ipr
+hivedb.iws
+target
+test-output
+velocity.log
