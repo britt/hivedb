@@ -83,9 +83,9 @@ public class GenerateInstance<T> implements Generator<T> {
 	    		continue;
 	    	String propertyName = ReflectionTools.getPropertyNameOfAccessor(getter);
 	    	Class methodOwner = ReflectionTools.getOwnerOfMethod(clazz, propertyName);
-	    	Method method = ReflectionTools.getGetterOfProperty(methodOwner, propertyName);
-	    	
-	    	if (method.getAnnotation(GeneratorIgnore.class) != null)
+	    	Method method =  ReflectionTools.getGetterOfProperty(methodOwner, propertyName);
+
+	    	if (ReflectionTools.getMethodOfOwner(method).getAnnotation(GeneratorIgnore.class) != null)
 	    		continue; 
 	    	
 	    	final Class<Object> returnType = (Class<Object>) getter.getReturnType();
