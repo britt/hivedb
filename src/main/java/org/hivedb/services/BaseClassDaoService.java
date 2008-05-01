@@ -78,4 +78,8 @@ public class BaseClassDaoService<T,ID extends Serializable> implements ClassDaoS
 	public Collection<T> queryDataIndex(String joinTableName, Object primaryIndexKey) {
 		return (Collection<T>)dao.queryDataIndex(joinTableName, primaryIndexKey);
 	}
+
+	public Integer getCountByReference(String property, Object referenceKey) {
+		return dao.getCount(property, referenceKey);
+	}
 }

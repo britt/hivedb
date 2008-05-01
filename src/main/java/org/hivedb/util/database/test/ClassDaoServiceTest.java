@@ -284,6 +284,22 @@ public class ClassDaoServiceTest extends H2TestCase implements SchemaInitializer
 	}
 	
 	@Test(dataProvider = "service")
+	public void testGetByCount(final ClassDaoService service) throws Exception {
+		final Object original = getPersistentInstance(service);
+		if (original != null) {
+			final EntityConfig entityConfig = config.getEntityConfig(toClass(service.getPersistedClass()));			
+			for(EntityIndexConfig entityIndexConfig : entityConfig.getEntityIndexConfigs()) {
+				final String indexPropertyName = entityIndexConfig.getPropertyName();
+				// test retrieval with the single value or each item of the list of values
+				for (Object value : entityIndexConfig.getIndexValues(original)) {	
+					Assert.assertEquals((Integer)1, service.getCountByReference(indexPropertyName, value));
+				}
+				
+			}
+		}
+	}
+	
+	@Test(dataProvider = "service")
 	public void notDetectTheExistenceOfNonPersistentEntities(ClassDaoService service) throws Exception {
 		assertFalse(service.exists(getId(getInstance(toClass(service.getPersistedClass())))));
 	}

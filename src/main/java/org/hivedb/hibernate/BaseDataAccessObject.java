@@ -388,7 +388,8 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 						criteria.setProjection( Projections.rowCount() );
 					return criteria.list();
 			}};
-		return queryInTransaction(query, session);
+		final Collection<Object> queryInTransaction = queryInTransaction(query, session);
+		return queryInTransaction;
 	}
 
 	private Map<String, Entry<EntityIndexConfig, Object>> createPropertyNameToValueMap(
@@ -435,7 +436,11 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
         }
         for (Entry<String, Object> entry : propertyNameValueMap.entrySet())
 			query.setParameter(entry.getKey(), entry.getValue());
-		return query.list();
+		return Transform.map(new Unary<Long, Integer>() {
+			public Integer f(Long item) {
+				return item.intValue();
+			}
+		}, query.list());
 	}
 
 	private String createHQLQuery(Map<String, Object> propertyNameValueMap) {
