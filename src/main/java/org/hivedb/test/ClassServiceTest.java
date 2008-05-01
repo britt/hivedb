@@ -173,6 +173,22 @@ public abstract class ClassServiceTest<T,S> extends H2TestCase  {
 			throw new RuntimeException(e);
 		}
 	}
+	protected Long invokeDelete(Service client, String methodName, Object... args) {
+		try {
+			Collection<Class> argClasses = Transform.map(new Unary<Object, Class>() {
+				public Class f(Object arg) {
+					return (arg instanceof GeneratedImplementation) ? ((GeneratedImplementation)arg).retrieveUnderlyingInterface() : arg.getClass();
+				}
+			}, Arrays.asList(args));
+			Class[] argClassArray = new Class[argClasses.size()];
+			argClasses.toArray(argClassArray);
+				
+			Method method = client.getClass().getMethod(methodName, argClassArray);
+			return (Long) method.invoke(client, args);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
 	protected Integer invokeByCount(Service client, String methodName, Object... args) {
 		try {
 			Collection<Class> argClasses = Transform.map(new Unary<Object, Class>() {
@@ -248,7 +264,7 @@ public abstract class ClassServiceTest<T,S> extends H2TestCase  {
 		Service s = getClient();
 		final Serializable id = entityConfig.getId(instance);
 		validate(createServiceResponse(Arrays.asList(instance)), invoke(s, "get",id), Arrays.asList(new String[] {}));
-		invoke(s, "delete", id);
+		invokeDelete(s, "delete", id);
 		AssertJUnit.assertFalse(invokeExists(s, "exists", id));
 	}
 	
