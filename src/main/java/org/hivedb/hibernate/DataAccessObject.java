@@ -84,4 +84,5 @@ public interface DataAccessObject<T, ID> {
 
     // for debugging only
 	public Collection<T> getAll();
+	public Collection<Object> queryDataIndex(final String joinTableName, Object primaryIndexKey);
 }

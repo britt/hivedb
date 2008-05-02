@@ -45,11 +45,6 @@ public class BaseClassDaoService<T,ID extends Serializable> implements ClassDaoS
 	public T get(ID id) {
 		return (T) dao.get(id);
 	}
-	
-	@SuppressWarnings("unchecked")
-	public Collection<T> getAll() {
-		return (Collection<T>)dao.getAll();
-	}
 
 	@SuppressWarnings("unchecked")
 	public Collection<T> getByReference(String property, Object referenceKey) {
@@ -73,5 +68,18 @@ public class BaseClassDaoService<T,ID extends Serializable> implements ClassDaoS
 	@SuppressWarnings("unchecked")
 	public Collection<T> saveAll(Collection<T> instances) {
 		return (Collection<T>) dao.saveAll((Collection<Object>)instances);
+	}
+
+	//Debugging
+	@SuppressWarnings("unchecked")
+	public Collection<T> getAll() {
+		return (Collection<T>)dao.getAll();
+	}
+	public Collection<T> queryDataIndex(String joinTableName, Object primaryIndexKey) {
+		return (Collection<T>)dao.queryDataIndex(joinTableName, primaryIndexKey);
+	}
+
+	public Integer getCountByReference(String property, Object referenceKey) {
+		return dao.getCount(property, referenceKey);
 	}
 }

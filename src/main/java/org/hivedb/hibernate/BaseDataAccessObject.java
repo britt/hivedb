@@ -16,6 +16,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
 import org.hibernate.Query;
+import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Order;
@@ -41,6 +42,7 @@ import org.hivedb.util.functional.Pair;
 import org.hivedb.util.functional.Predicate;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
+import org.springframework.jdbc.object.SqlQuery;
 
 public class BaseDataAccessObject implements DataAccessObject<Object, Serializable>{
 	private final Log log = LogFactory.getLog(BaseDataAccessObject.class);
@@ -234,20 +236,19 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		return queryInTransaction(callback, session);
 	}
 
-    public Object save(final Object entity) {
-		final Collection<Object> entities = populateDataIndexDelegates(Collections.singletonList(entity));
-		final Object populatedEntity = Atom.getFirstOrThrow(entities);
+    public Object save(Object entity) {
+		final Object populatedEntity = Atom.getFirstOrThrow(populateDataIndexDelegates(Collections.singletonList(entity)));
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {
-				session.saveOrUpdate(getRespresentedClass().getName(),entity);
+				session.saveOrUpdate(getRespresentedClass().getName(),populatedEntity);
 			}};
 
 		SessionCallback cleanupCallback = new SessionCallback(){
 			public void execute(Session session) {
-				session.refresh(entity);
-				session.lock(getRespresentedClass().getName(),entity, LockMode.UPGRADE);
-				session.update(getRespresentedClass().getName(),entity);
-				log.warn(String.format("%s with id %s exists in the data node but not on the directory. Data node record was updated and re-indexed.", config.getResourceName(), config.getId(entity)));
+				session.refresh(populatedEntity);
+				session.lock(getRespresentedClass().getName(),populatedEntity, LockMode.UPGRADE);
+				session.update(getRespresentedClass().getName(),populatedEntity);
+				log.warn(String.format("%s with id %s exists in the data node but not on the directory. Data node record was updated and re-indexed.", config.getResourceName(), config.getId(populatedEntity)));
 			}};
 
 		if (partionDimensionKeyHasChanged(entity))
@@ -261,7 +262,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 				!config.getPrimaryIndexKey(entity).equals(getHive().directory().getPrimaryIndexKeyOfResourceId(config.getResourceName(), config.getId(entity)));
 	}
 
-	public Collection<Object> saveAll(final Collection<Object> collection) {
+	public Collection<Object> saveAll(Collection<Object> collection) {
 		List<Object> entities = Lists.newList(populateDataIndexDelegates(collection));
 		validateNonNull(entities);
 		final boolean partitionDimensionKeyHasChanged = partionDimensionKeyHasChanged(Atom.getFirstOrThrow(entities));
@@ -387,7 +388,8 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 						criteria.setProjection( Projections.rowCount() );
 					return criteria.list();
 			}};
-		return queryInTransaction(query, session);
+		final Collection<Object> queryInTransaction = queryInTransaction(query, session);
+		return queryInTransaction;
 	}
 
 	private Map<String, Entry<EntityIndexConfig, Object>> createPropertyNameToValueMap(
@@ -434,7 +436,11 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
         }
         for (Entry<String, Object> entry : propertyNameValueMap.entrySet())
 			query.setParameter(entry.getKey(), entry.getValue());
-		return query.list();
+		return Transform.map(new Unary<Long, Integer>() {
+			public Integer f(Long item) {
+				return item.intValue();
+			}
+		}, query.list());
 	}
 
 	private String createHQLQuery(Map<String, Object> propertyNameValueMap) {
@@ -525,7 +531,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 					GeneratedInstanceInterceptor.setProperty(
 						modified,
 						delegatePropertyName,
-						PrimitiveUtils.getPrimitiveEquivalent(Filter.grepUnique(entityIndexConfig.getIndexValues(modified))));
+						Filter.grepUnique(entityIndexConfig.getIndexValues(modified)));
 				}
 				return modified;
 			}}, instances);
@@ -666,5 +672,14 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			}};
 		
 		return queryInTransaction(query, factory.openAllShardsSession());
+	}
+	public Collection<Object> queryDataIndex(final String joinTableName, Object primaryIndexKey) {
+		QueryCallback query = new QueryCallback(){
+			public Collection<Object> execute(Session session) {
+				SQLQuery query = session.createSQLQuery("select * from " + joinTableName);
+				return query.list();
+			}};
+		
+		return queryInTransaction(query, factory.openSession(primaryIndexKey));
 	}
 }
