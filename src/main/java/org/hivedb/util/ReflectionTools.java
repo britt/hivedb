@@ -144,6 +144,9 @@ public class ReflectionTools {
 
 		private String formPropertyNameFromGetter(Method getter) {
 			String name = getter.getName();
+			if (name.startsWith("is")) {
+				return name.substring(2, 3).toLowerCase().concat(name.length() > 3 ? name.substring(3) : "");
+			}
 			return name.substring(3, 4).toLowerCase().concat(name.length() > 4 ? name.substring(4) : "");
 		}
 		
