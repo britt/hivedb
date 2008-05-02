@@ -59,10 +59,18 @@ public class ReflectionTools {
 				}
 			}
 			
+			Map<String, Class<?>> cache = new HashMap<String, Class<?>>();
 			accessors = new HashMap<Method, SetterWrapper>();
 			for (final Method method : clazz.getMethods()) {
 				if (ReflectionTools.isGetter(method)) {
 					final String propertyName = formPropertyNameFromGetter(method);
+					if (cache.containsKey(propertyName)) {
+						// We always want to return the most derived version of the same method
+						if (method.getDeclaringClass().isAssignableFrom(cache.get(propertyName))) {
+							continue;
+						}
+					}
+					cache.put(propertyName, method.getDeclaringClass());
 					// Interface has no setter, create a wrapper setter
 					SetterWrapper propertySetterWrapper = new SetterWrapper() {
 						public void invoke(Object instance, Object value) {
