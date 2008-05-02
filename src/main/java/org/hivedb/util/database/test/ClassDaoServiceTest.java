@@ -219,13 +219,19 @@ public class ClassDaoServiceTest extends H2TestCase implements SchemaInitializer
 				final String indexPropertyName = entityIndexConfig.getPropertyName();
 				// test retrieval with the single value or each item of the list of values
 				for (Object value : entityIndexConfig.getIndexValues(original)) {		
-					Collection response = service.getByReference(indexPropertyName, value);
-					if (response.size() == 0)
-						System.err.println(String.format("getByReference returned no results for proeprty %s, value %s: here are the entities in the database: %s", indexPropertyName, value, service.getAll()));
-					validateRetrieval(Collections.singletonList(original), response, Arrays.asList(new String[] {indexPropertyName}));
+					validateEnityIndexValue(service, original, indexPropertyName, value);
 				}
 			}
 		}
+	}
+
+	private void validateEnityIndexValue(final ClassDaoService service,
+			final Object original, final String indexPropertyName, Object value)
+			throws IllegalAccessException, InvocationTargetException {
+		Collection response = service.getByReference(indexPropertyName, value);
+		if (response.size() == 0)
+			System.err.println(String.format("getByReference returned no results for proeprty %s, value %s: here are the entities in the database: %s", indexPropertyName, value, service.getAll()));
+		validateRetrieval(Collections.singletonList(original), response, Arrays.asList(new String[] {indexPropertyName}));
 	}
 	
 	@Test(dataProvider = "service")
@@ -274,6 +280,22 @@ public class ClassDaoServiceTest extends H2TestCase implements SchemaInitializer
 				(Iterable<? extends Annotation[]>)Arrays.asList(finder.getParameterAnnotations()));
 			ServiceResponse response = (ServiceResponse) finder.invoke(service, argumentValues.toArray());
 			validateRetrieval(original, response, Arrays.asList(new Method[] {finder}));
+		}
+	}
+	
+	@Test(dataProvider = "service")
+	public void testGetByCount(final ClassDaoService service) throws Exception {
+		final Object original = getPersistentInstance(service);
+		if (original != null) {
+			final EntityConfig entityConfig = config.getEntityConfig(toClass(service.getPersistedClass()));			
+			for(EntityIndexConfig entityIndexConfig : entityConfig.getEntityIndexConfigs()) {
+				final String indexPropertyName = entityIndexConfig.getPropertyName();
+				// test retrieval with the single value or each item of the list of values
+				for (Object value : entityIndexConfig.getIndexValues(original)) {	
+					Assert.assertEquals((Integer)1, service.getCountByReference(indexPropertyName, value));
+				}
+				
+			}
 		}
 	}
 	

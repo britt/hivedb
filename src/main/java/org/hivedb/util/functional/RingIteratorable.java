@@ -18,6 +18,7 @@ public class RingIteratorable<T> implements Iterator<T>, Iterable<T>
 		this.collection = collection;
 		this.iterator = collection.iterator();
 	}
+
 	public RingIteratorable(Collection<? extends T> collection, int stopAfterThisManyCalls)
 	{
 		this.collection = collection;
