@@ -58,7 +58,7 @@ public class DirectoryTest extends H2TestCase {
 			hive.setPartitionDimension(dimension);
 			resource = Atom.getFirstOrThrow(dimension.getResources());
 			hive.addResource(resource);
-			numIndex = resource.getSecondaryIndex("num");
+      numIndex = resource.getSecondaryIndex("num");
 			nameIndex = resource.getSecondaryIndex("name");
 			for (SecondaryIndex secondaryIndex: resource.getSecondaryIndexes())
 				hive.addSecondaryIndex(resource, secondaryIndex);

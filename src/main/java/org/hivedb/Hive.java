@@ -510,7 +510,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	 */
 	public Resource deleteResource(Resource resource) throws HiveLockableException {
 		Preconditions.isWritable(this);
-		Preconditions.idIsPresentInList(resource.getPartitionDimension().getResources(), resource);
+		Preconditions.idIsPresentInList(this.getPartitionDimension().getResources(), resource);
 		
 		ResourceDao resourceDao = new ResourceDao(hiveDataSource);
 		resourceDao.delete(resource);
