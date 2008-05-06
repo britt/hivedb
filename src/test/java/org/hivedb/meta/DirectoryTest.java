@@ -21,14 +21,13 @@ import org.hivedb.configuration.HiveConfigurationSchema;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.directory.Directory;
 import org.hivedb.meta.directory.DirectoryWrapper;
+import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.meta.persistence.IndexSchema;
-import org.hivedb.meta.persistence.TableInfo;
 import org.hivedb.util.AssertUtils;
 import org.hivedb.util.Lists;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2TestCase;
-import org.hivedb.util.database.test.MysqlTestCase;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Transform;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
@@ -53,7 +52,7 @@ public class DirectoryTest extends H2TestCase {
 		super.beforeMethod();
 		try {
 			new HiveInstaller(getConnectString(H2TestCase.TEST_DB)).run();
-			Hive hive = Hive.create(getConnectString(H2TestCase.TEST_DB), partitionDimensionName(), Types.INTEGER);
+			Hive hive = Hive.create(getConnectString(H2TestCase.TEST_DB), partitionDimensionName(), Types.INTEGER, CachingDataSourceProvider.getInstance(), null);
 			dimension = createPopulatedPartitionDimension();
 			dimension.setId(hive.getPartitionDimension().getId());
 			hive.setPartitionDimension(dimension);
@@ -109,7 +108,7 @@ public class DirectoryTest extends H2TestCase {
 	}
 	
 	private Hive getHive() {
-		return Hive.load(getConnectString(H2TestCase.TEST_DB));
+		return Hive.load(getConnectString(H2TestCase.TEST_DB), CachingDataSourceProvider.getInstance());
 	}
 
   @Test
@@ -165,10 +164,7 @@ public class DirectoryTest extends H2TestCase {
 		for(String key : getPrimaryIndexOrResourceKeys())
 			assertEquals(1, d.getKeySemamphoresOfPrimaryIndexKey(key).size());
 	}
-
-
 	
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testGetNodeIdsOfSecondaryIndexKeys() throws Exception {
 		insertKeys(getHive());
@@ -193,7 +189,7 @@ public class DirectoryTest extends H2TestCase {
 	
 	@Test
 	public void testGetKeySemaphoresOfPartitioningResourceIds() throws Exception{
-		HiveFacade hive = Hive.load(getConnectString(H2TestCase.TEST_DB));
+		HiveFacade hive = Hive.load(getConnectString(H2TestCase.TEST_DB), CachingDataSourceProvider.getInstance());
 		hive.deleteResource(resource);
 		resource = Atom.getFirstOrNull(dimension.getResources());
 		resource.setIsPartitioningResource(true);
@@ -214,7 +210,6 @@ public class DirectoryTest extends H2TestCase {
 		assertEquals(getPrimaryIndexOrResourceKeys().size(), d.getPrimaryIndexKeysOfSecondaryIndexKey(nameIndex, secondaryKeyString).size());
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testGetPrimaryIndexKeysOfResourceId() throws Exception {
 		Directory d = getDirectory();
@@ -436,7 +431,7 @@ public class DirectoryTest extends H2TestCase {
 	}
 	
 	private Directory getDirectory() {
-		return new Directory(dimension, new HiveBasicDataSource(dimension.getIndexUri()));
+		return new Directory(dimension, CachingDataSourceProvider.getInstance().getDataSource(dimension.getIndexUri()));
 	}
 	
 	@Override

@@ -39,6 +39,7 @@ import org.hivedb.Synchronizeable;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.meta.Node;
+import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.Combiner;
 import org.hivedb.util.database.DriverLoader;
 import org.hivedb.util.database.HiveDbDialect;
@@ -63,7 +64,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	private HiveFacade hive;
 	
 	public HiveSessionFactoryBuilderImpl(String hiveUri, List<Class<?>> hibernateClasses, ShardAccessStrategy strategy) {
-		hive = Hive.load(hiveUri);
+		hive = Hive.load(hiveUri, CachingDataSourceProvider.getInstance());
 		this.hibernateClasses = hibernateClasses;
 		initialize(buildHiveConfiguration(hive, hibernateClasses), hive, strategy);
 	}

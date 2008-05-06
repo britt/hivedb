@@ -22,20 +22,16 @@ public class HiveBasicDataSource implements DataSource, Cloneable {
     comboPooledDataSource = new ComboPooledDataSource();
 	}
 	
-	public HiveBasicDataSource(String hiveUri, int poolSize){
-    comboPooledDataSource = new ComboPooledDataSource();
+	public HiveBasicDataSource(String hiveUri, int poolSize) {
+		comboPooledDataSource = new ComboPooledDataSource();
 		comboPooledDataSource.setJdbcUrl(hiveUri);
 		comboPooledDataSource.setTestConnectionOnCheckout(true);
 		comboPooledDataSource.setMaxPoolSize(getDefaultPoolSize());
 		comboPooledDataSource.setMaxIdleTime(3600);
 		log.debug(String.format("HiveBasicDataSource created for %s.  Max pool size: %s", this.getUrl(), this.getMaxActive()));
 	}
-	
-	public HiveBasicDataSource(String hiveUri) {
-		this(hiveUri, getDefaultPoolSize());	
-	}
 
-  private static Integer getDefaultPoolSize() {
+	public static Integer getDefaultPoolSize() {
 		try {
 			String poolSize = System.getProperty(CONNECTION_POOL_SIZE);
 			return Integer.parseInt(poolSize);

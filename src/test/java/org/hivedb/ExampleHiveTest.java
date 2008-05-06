@@ -11,6 +11,7 @@ import org.hivedb.meta.AccessType;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.H2TestCase;
@@ -52,7 +53,7 @@ public class ExampleHiveTest extends H2HiveTestCase {
 		String dimensionName = "ProductType";
 		
 		//Create a Hive
-		Hive hive = Hive.create(getConnectString(H2TestCase.TEST_DB), dimensionName, Types.VARCHAR);
+		Hive hive = Hive.create(getConnectString(H2TestCase.TEST_DB), dimensionName, Types.VARCHAR, CachingDataSourceProvider.getInstance(), null);
 		
 		//Create a Data Node
 		Node dataNode = new Node(Hive.NEW_OBJECT_ID,"aNode",H2TestCase.TEST_DB, "", HiveDbDialect.H2);

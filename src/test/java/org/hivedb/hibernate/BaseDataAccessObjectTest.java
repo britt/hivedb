@@ -14,16 +14,12 @@ import java.util.List;
 import java.util.Random;
 import java.util.Map.Entry;
 
-import org.apache.commons.logging.LogFactory;
-import org.hibernate.Session;
 import org.hivedb.Hive;
 import org.hivedb.HiveLockableException;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.util.*;
 import org.hivedb.util.database.test.H2HiveTestCase;
-import org.hivedb.util.database.test.MySqlHiveTestCase;
 import org.hivedb.util.database.test.WeatherReport;
-import org.hivedb.util.database.test.WeatherEvent;
 import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
@@ -48,6 +44,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		this.config = getEntityHiveConfig();
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testGet() throws Exception {
 		DataAccessObject<WeatherReport, Integer> dao = (DataAccessObject<WeatherReport, Integer>)getDao(getGeneratedClass());
@@ -56,6 +53,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		assertEquals(ReflectionTools.getDifferingFields(original, report, WeatherReport.class).toString(), original.hashCode(), report.hashCode());
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testGetMissingRecord() throws Exception {
 		DataAccessObject<WeatherReport, Integer> dao = (DataAccessObject<WeatherReport, Integer>)getDao(getGeneratedClass());
@@ -69,6 +67,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 //		assertEquals(ReflectionTools.getDifferingFields(original, report, WeatherReport.class).toString(), original.hashCode(), report.hashCode());
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testFindByProperty() throws Exception {
 		DataAccessObject<WeatherReport, Integer> dao = (DataAccessObject<WeatherReport, Integer>) getDao(getGeneratedClass());
@@ -96,6 +95,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		assertEquals(report.hashCode(), found.hashCode());
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testFindByPropertyPaged() throws Exception {
 		final DataAccessObject<WeatherReport, Integer> dao = (DataAccessObject<WeatherReport, Integer>) getDao(getGeneratedClass());
@@ -123,6 +123,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testFindByPropertyRange() throws Exception {
 		
@@ -134,7 +135,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		
 		DataAccessObject<WeatherReport,Integer> dao = (DataAccessObject<WeatherReport, Integer>) getDao(getGeneratedClass());
 		dao.saveAll(reports);
-		Collection<WeatherReport> x = dao.findByProperty("temperature", Atom.getFirst(reports).getTemperature());
+		//Collection<WeatherReport> x = dao.findByProperty("temperature", Atom.getFirst(reports).getTemperature());
 		Integer min = Amass.min(
 				new Unary<WeatherReport, Integer>() {
 					public Integer f(WeatherReport weatherReport) {
@@ -157,6 +158,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		assertEquals(1, smallerRange.size());
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testFindByPropertyRangePaged() throws Exception {
 		final DataAccessObject<WeatherReport, Integer> dao = (DataAccessObject<WeatherReport, Integer>) getDao(getGeneratedClass());
@@ -184,6 +186,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 				set.hashCode());
 	}
 		
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testGetCount() throws Exception {
 		
@@ -216,6 +219,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 				}))), (Integer)5);
 	}
 		
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testDelete() throws Exception {
 		DataAccessObject<WeatherReport, Integer> dao = (DataAccessObject<WeatherReport, Integer>) getDao(getGeneratedClass());
@@ -224,6 +228,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		assertNull(dao.get(original.getReportId()));
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Test 
 	public void testInsert() {			
 		DataAccessObject<WeatherReport, Integer> dao = (DataAccessObject<WeatherReport, Integer>) getDao(getGeneratedClass());
@@ -234,6 +239,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		assertEquals(report.hashCode(), savedReport.hashCode());
 	}
 
+	@SuppressWarnings("unchecked")
 	private Class getGeneratedClass() {
 		return GeneratedClassFactory.newInstance(WeatherReport.class).getClass();
 	}
@@ -246,6 +252,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		return dao.save(getInstance(WeatherReport.class));
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testUpdate() throws Exception {
 		DataAccessObject<WeatherReport, Integer> dao = (DataAccessObject<WeatherReport, Integer>) getDao(getGeneratedClass());
@@ -268,7 +275,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		GeneratedInstanceInterceptor.setProperty(updated, "weatherEvents", weatherEvents);
 	*/
 		dao.save(updated);
-		final WeatherReport persisted = dao.get(updated.getReportId());
+		//final WeatherReport persisted = dao.get(updated.getReportId());
 		assertFalse(updated.getLatitude().equals(original.getLatitude()));
 		// Check the updated collection
 			// size should be equal
@@ -311,6 +318,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		return new Integer(i).toString();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testSaveAll() throws Exception {
 		Collection<WeatherReport> reports = new ArrayList<WeatherReport>();
@@ -326,6 +334,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 			assertEquals(report, dao.get(report.getReportId()));
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testHealDataNodeOnlyRecord() throws Exception {
 		WeatherReport report = new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
@@ -341,6 +350,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		assertEquals(report, dao.get(report.getReportId()));
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testHealDataNodeOnlyRecordSaveAll() throws Exception {
 		Collection<WeatherReport> reports = new ArrayList<WeatherReport>();
@@ -378,6 +388,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	}
 	
 	
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testUpdateAll() throws Exception {
 		Collection<WeatherReport> reports = new ArrayList<WeatherReport>();
@@ -420,6 +431,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testExists() throws Exception {
 		DataAccessObject<WeatherReport, Integer> dao = (DataAccessObject<WeatherReport, Integer>) getDao(getGeneratedClass());
@@ -428,6 +440,7 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		assertTrue(dao.exists(original.getReportId()));
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testAllShardsQuery() {
 		final DataAccessObject<WeatherReport,Integer> dao = (DataAccessObject<WeatherReport, Integer>) getDao(getGeneratedClass());

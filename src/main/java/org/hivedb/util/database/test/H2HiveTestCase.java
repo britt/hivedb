@@ -17,6 +17,7 @@ import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
@@ -53,7 +54,8 @@ public class H2HiveTestCase extends H2TestCase {
 					}
 				},
 				getDataNodeNames(),
-				cleanupAfterEachTest || createDatabaseIfNoCleanup);
+				cleanupAfterEachTest || createDatabaseIfNoCleanup,
+				CachingDataSourceProvider.getInstance());
 	}
 	
 	protected HiveTestCase hiveTestCase;

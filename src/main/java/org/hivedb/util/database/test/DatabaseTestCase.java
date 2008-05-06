@@ -1,5 +1,6 @@
 package org.hivedb.util.database.test;
 
+import java.lang.management.ManagementFactory;
 import java.sql.Connection;
 import java.util.Collection;
 import java.util.Collections;

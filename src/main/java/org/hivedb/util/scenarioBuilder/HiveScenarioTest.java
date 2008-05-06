@@ -32,6 +32,7 @@ import org.hivedb.meta.PartitionDimensionCreator;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.directory.Directory;
+import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.meta.persistence.ColumnInfo;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.AssertUtils;
@@ -112,7 +113,7 @@ public class HiveScenarioTest {
 			final PartitionDimension partitionDimension = hive.getPartitionDimension();
 			final Resource resource = hive.getPartitionDimension().getResource(entityHiveConfig.getEntityConfig(representedInterface).getResourceName());
 			Collection<Object> primaryIndexKeys = getGeneratedPrimaryIndexKeys();
-			Directory directory = new Directory(partitionDimension,new HiveBasicDataSource(hive.getUri()));
+			Directory directory = new Directory(partitionDimension, CachingDataSourceProvider.getInstance().getDataSource(hive.getUri()));
 			for (Object primaryindexKey : primaryIndexKeys)
 				assertTrue(directory.getKeySemamphoresOfPrimaryIndexKey(primaryindexKey).size() > 0);
 			

@@ -10,13 +10,12 @@ import org.hivedb.Schema;
 import org.hivedb.Lockable.Status;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.Node;
+import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.meta.persistence.TableInfo;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.ContinentalSchema;
 import org.hivedb.util.database.test.H2TestCase;
 import org.hivedb.util.database.test.WeatherSchema;
-import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
-import org.springframework.jdbc.core.support.JdbcDaoSupport;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -27,7 +26,7 @@ public class InstallServiceTest extends H2TestCase {
 	@BeforeMethod
 	public void setup() throws Exception {
 		new HiveInstaller(uri()).run();
-		Hive.create(uri(), "split", Types.INTEGER);
+		Hive.create(uri(), "split", Types.INTEGER, CachingDataSourceProvider.getInstance(), null);
 	}
 	
 	@Test
@@ -35,12 +34,12 @@ public class InstallServiceTest extends H2TestCase {
 		Schema schema = new WeatherSchema();
 		String nodeName = "aNewNode";
 		getService().install(schema.getName(), nodeName, H2TestCase.TEST_DB, "unecessary for H2", "H2", "na", "na");
-		validateSchema(schema, Hive.load(uri()).getNode(nodeName));
+		validateSchema(schema, Hive.load(uri(), CachingDataSourceProvider.getInstance()).getNode(nodeName));
 	}
 	
 	@Test
 	public void installASchemaOnAnExistingNode() throws Exception {
-		Hive hive = Hive.load(uri());
+		Hive hive = Hive.load(uri(), CachingDataSourceProvider.getInstance());
 		String nodeName = "anExistingNode";
 		Node node = new Node(nodeName, H2TestCase.TEST_DB, "unecessary", HiveDbDialect.H2);
 		hive.addNode(node);
@@ -51,7 +50,7 @@ public class InstallServiceTest extends H2TestCase {
 	
 	@Test(expectedExceptions=HiveRuntimeException.class)
 	public void tryToInstallToAReadOnlyHive() throws Exception {
-		Hive hive = Hive.load(uri());
+		Hive hive = Hive.load(uri(), CachingDataSourceProvider.getInstance());
 		hive.updateHiveStatus(Status.readOnly);
 		getService().install(new WeatherSchema().getName(), "aNewNode", H2TestCase.TEST_DB, "unecessary for H2", "H2", "na", "na");
 	}
@@ -74,7 +73,7 @@ public class InstallServiceTest extends H2TestCase {
 	}
 	
 	private InstallServiceImpl getService() {
-		return new InstallServiceImpl(getSchemata(), Hive.load(uri()));
+		return new InstallServiceImpl(getSchemata(), Hive.load(uri(), CachingDataSourceProvider.getInstance()));
 	}
 
 	@Override

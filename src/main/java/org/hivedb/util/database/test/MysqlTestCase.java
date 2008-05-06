@@ -10,6 +10,7 @@ import javax.sql.DataSource;
 
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.Schema;
+import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 
 public class MysqlTestCase extends DatabaseTestCase {
@@ -93,7 +94,7 @@ public class MysqlTestCase extends DatabaseTestCase {
 
 	@Override
 	protected DataSource getDataSource(String name) {
-		return new HiveBasicDataSource(getConnectString(name));
+		return CachingDataSourceProvider.getInstance().getDataSource(getConnectString(name));
 	}
 
 	protected String getDatabaseAgnosticConnectString() {

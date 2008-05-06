@@ -8,6 +8,7 @@ import org.hivedb.HiveException;
 import org.hivedb.HiveFacade;
 import org.hivedb.HiveSyncDaemon;
 import org.hivedb.meta.Node;
+import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.meta.persistence.IndexSchema;
 import org.hivedb.util.database.test.H2HiveTestCase;
 import org.testng.Assert;
@@ -57,6 +58,6 @@ public class TestSyncHive extends H2HiveTestCase {
 	}
 	
 	private Hive loadHive() throws HiveException {
-		return Hive.load(getConnectString(getHiveDatabaseName()));
+		return Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
 	}
 }

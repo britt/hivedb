@@ -30,6 +30,7 @@ import org.hivedb.configuration.PluralHiveConfig;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.Lists;
 import org.hivedb.util.PrimitiveUtils;
 import org.hivedb.util.ReflectionTools;
@@ -175,20 +176,19 @@ public class ConfigurationReader {
 	
 	public void install(String uri) {
 		new HiveInstaller(uri).run();
-		install(Hive.load(uri));
+		install(Hive.load(uri, CachingDataSourceProvider.getInstance()));
 	}
 	
 	public void install(HiveFacade hive) {
 		HiveFacade target = hive;
 		if(hive.getPartitionDimension() == null) {
-			target = Hive.create(hive.getUri(), dimension.getName(), dimension.getColumnType());
+			target = Hive.create(hive.getUri(), dimension.getName(), dimension.getColumnType(), CachingDataSourceProvider.getInstance(), null);
 		}
 		
 		for(EntityConfig config : hiveConfigs.values())
 			installConfiguration(config,target);
 	}
 	
-	@SuppressWarnings("unchecked")
 	public void installConfiguration(EntityConfig config, HiveFacade hive) {
 		try {
 			// Duplicate installations are possible due to delegated indexes

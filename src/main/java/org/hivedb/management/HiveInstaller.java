@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.configuration.HiveConfigurationSchema;
-import org.hivedb.meta.persistence.HiveBasicDataSource;
+import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
 import org.hivedb.util.GetOpt;
 
@@ -20,7 +20,7 @@ public class HiveInstaller implements Runnable {
 	public void run() {
 		try {
 			new HiveConfigurationSchema(uri).install();
-			new HiveSemaphoreDao(new HiveBasicDataSource(uri)).create();
+			new HiveSemaphoreDao(CachingDataSourceProvider.getInstance().getDataSource(uri)).create();
 		} catch(Exception e) {
 			throw new HiveRuntimeException(e.getMessage(), e);
 		}

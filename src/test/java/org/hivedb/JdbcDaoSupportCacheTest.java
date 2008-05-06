@@ -10,6 +10,7 @@ import java.util.Collection;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.Node;
+import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.functional.Transform;
@@ -40,7 +41,7 @@ public class JdbcDaoSupportCacheTest extends H2HiveTestCase {
 	
 	@Test
 	public void testDataSourceCacheCreation() throws HiveException, SQLException{
-		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
+		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
 		JdbcDaoSupportCacheImpl cache = (JdbcDaoSupportCacheImpl) hive.connection().daoSupport();
 		Collection<SimpleJdbcDaoSupport> read = cache.get(intKey(), AccessType.Read);
 		Collection<SimpleJdbcDaoSupport> readWrite = cache.get(intKey(), AccessType.ReadWrite);
@@ -51,7 +52,7 @@ public class JdbcDaoSupportCacheTest extends H2HiveTestCase {
 	
 	@Test
 	public void testGetAllUnsafe() {
-		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
+		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
 		JdbcDaoSupportCacheImpl cache = (JdbcDaoSupportCacheImpl) hive.connection().daoSupport();
 		assertEquals(3, cache.getAllUnsafe().size());
 	}

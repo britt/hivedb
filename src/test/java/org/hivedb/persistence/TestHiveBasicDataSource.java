@@ -22,17 +22,17 @@ public class TestHiveBasicDataSource extends ContextAwareTest{
 	
 	@Test(dataProvider="dbs", groups="database")
 	public void testPoolSize(String name) {
-		HiveBasicDataSource ds = new HiveBasicDataSource(db.getConnectString(name));
+		HiveBasicDataSource ds = new HiveBasicDataSource(db.getConnectString(name), HiveBasicDataSource.getDefaultPoolSize());
 		assertEquals(HiveBasicDataSource.DEFAULT_POOL_SIZE, ds.getMaxActive());
 		
 		System.setProperty(HiveBasicDataSource.CONNECTION_POOL_SIZE, "20");
-		HiveBasicDataSource ds20 = new HiveBasicDataSource(db.getConnectString(name));
+		HiveBasicDataSource ds20 = new HiveBasicDataSource(db.getConnectString(name), HiveBasicDataSource.getDefaultPoolSize());
 		assertEquals(20, ds20.getMaxActive());
 	}
 	
 	@Test(dataProvider="dbs", groups="database")
 	public void testCloning(String name) throws Exception {
-		HiveBasicDataSource ds = new HiveBasicDataSource(db.getConnectString(name));
+		HiveBasicDataSource ds = new HiveBasicDataSource(db.getConnectString(name), HiveBasicDataSource.getDefaultPoolSize());
 		fiddleProperties(ds);
 		HiveBasicDataSource clone = ds.clone();
 		validateEquality(ds, clone);
@@ -40,7 +40,7 @@ public class TestHiveBasicDataSource extends ContextAwareTest{
 	
 	@Test(dataProvider="dbs", groups="database")
 	public void testConnection(String name) throws Exception {
-		HiveBasicDataSource ds = new HiveBasicDataSource(db.getConnectString(name));
+		HiveBasicDataSource ds = new HiveBasicDataSource(db.getConnectString(name), HiveBasicDataSource.getDefaultPoolSize());
 		Connection connection = ds.getConnection();
 		PreparedStatement preparedStatement = connection.prepareStatement("select 1");
 		preparedStatement.execute();

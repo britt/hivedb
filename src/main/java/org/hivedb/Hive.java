@@ -52,15 +52,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 			return Arrays.asList(new Node[]{chooseNode(nodes, value)});
 		}		
 	};
-
-	/**
-	 *  Calls {@see #load(String, DataSourceProvider, Assigner)} with the
-	 *  default DataSourceProvider and Assigner.
-	 */
-	public static Hive load(String hiveDatabaseUri) {
-		return load(hiveDatabaseUri, new HiveBasicDataSourceProvider(DEFAULT_JDBC_TIMEOUT));
-	}
-
+	
 	/**
 	 *  Calls {@see #load(String, DataSourceProvider, Assigner)} with the
 	 *  default DataSourceProvider.
@@ -83,14 +75,6 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		hive.sync();
 		return hive;
 		
-	}
-	
-	/**
-	 * Calls {@see #create(String, String, int, DataSourceProvider, Assigner)} with the default
-	 * DataSourceProvider and Assigner.
-	 */
-	public static Hive create(String hiveUri, String dimensionName, int indexType) {
-		return create(hiveUri, dimensionName, indexType, new HiveBasicDataSourceProvider(DEFAULT_JDBC_TIMEOUT), null);
 	}
 	
 	/**
@@ -603,5 +587,9 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	 */
 	public String getName() {
 		return "hive";
+	}
+	
+	public static DataSourceProvider getNewDefaultDataSourceProvider() {
+		return new HiveBasicDataSourceProvider(DEFAULT_JDBC_TIMEOUT);
 	}
 }

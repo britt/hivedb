@@ -4,7 +4,6 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveLockableException;
@@ -21,8 +20,9 @@ import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.PartitionDimensionCreator;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.meta.persistence.CachingDataSourceProvider;
+import org.hivedb.meta.persistence.DataSourceProvider;
 import org.hivedb.meta.persistence.IndexSchema;
-import org.hivedb.meta.persistence.TableInfo;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.functional.Unary;
@@ -35,6 +35,7 @@ public class HiveTestCase {
 	private Collection<String> dataNodeNames;
 	private String hiveDatabaseName;
 	private boolean doInstall;
+	private DataSourceProvider dataSourceProvider;
 	HiveTestCase(
 			String hiveDatabaseName,
 			Collection<Class<?>> entityClasses,
@@ -43,12 +44,25 @@ public class HiveTestCase {
 			Collection<String> dataNodeNames,
 			boolean doInstall)
 	{
+		this(hiveDatabaseName, entityClasses, hiveDbDialect, getConnectString, dataNodeNames, doInstall, Hive.getNewDefaultDataSourceProvider());
+	}
+	
+	HiveTestCase(
+			String hiveDatabaseName,
+			Collection<Class<?>> entityClasses,
+			HiveDbDialect hiveDbDialect, 
+			Unary<String,String> getConnectString,
+			Collection<String> dataNodeNames,
+			boolean doInstall,
+			DataSourceProvider dataSourceProvider)
+	{
 		this.hiveDatabaseName = hiveDatabaseName;
 		this.getConnectString = getConnectString;
 		this.hiveDbDialect = hiveDbDialect;
 		this.configurationReader = new ConfigurationReader(entityClasses);
 		this.dataNodeNames = dataNodeNames;
 		this.doInstall = doInstall;
+		this.dataSourceProvider = dataSourceProvider;
 	}
 	
 	public void beforeClass() {
@@ -97,17 +111,18 @@ public class HiveTestCase {
 	}
 	
 	Hive hive = null;
+	@SuppressWarnings("unchecked")
 	protected Hive getOrCreateHive(final String dimensionName, final Class primaryIndexKeyType) {
-		if (hive == null)
+		if (hive == null)		
 			hive = Hive.create(
 						getConnectString.f(getHiveDatabaseName()),
 						dimensionName,
-						JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKeyType));
+						JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKeyType), dataSourceProvider, null);
 		return hive;
 	}
 	protected Hive getOrLoadHive() {
 		if (hive == null)
-			hive = Hive.load(getConnectString.f(getHiveDatabaseName()));
+			hive = Hive.load(getConnectString.f(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
 		return hive;
 	}
 	public Hive getHive() { 

@@ -43,6 +43,7 @@ import org.hivedb.hibernate.HiveSessionFactory;
 import org.hivedb.hibernate.HiveSessionFactoryBuilderImpl;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.Node;
+import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.services.Service;
 import org.hivedb.services.ServiceContainer;
 import org.hivedb.services.ServiceResponse;
@@ -517,7 +518,7 @@ public abstract class ClassServiceTest<T,S> extends H2TestCase  {
 	}	
 	
 	private Hive getHive() {
-		return Hive.load(getConnectString(getHiveDatabaseName()));
+		return Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
 	}
 	
 	private HiveSessionFactory getSessionFactory() {

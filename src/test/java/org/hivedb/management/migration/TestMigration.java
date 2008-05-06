@@ -6,8 +6,6 @@ import static org.testng.AssertJUnit.assertNotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import org.hivedb.Hive;
@@ -16,12 +14,9 @@ import org.hivedb.meta.Node;
 import org.hivedb.meta.directory.Directory;
 import org.hivedb.meta.directory.DirectoryWrapper;
 import org.hivedb.meta.directory.NodeResolver;
-import org.hivedb.meta.persistence.HiveBasicDataSource;
+import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.meta.persistence.TableInfo;
-import org.hivedb.util.database.HiveDbDialect;
-import org.hivedb.util.database.test.ContinentalSchema;
 import org.hivedb.util.database.test.H2HiveTestCase;
-import org.hivedb.util.database.test.WeatherSchema;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Pair;
@@ -39,7 +34,7 @@ public class TestMigration extends H2HiveTestCase {
 		
 		for(String name: getDatabaseNames()) {
 			SimpleJdbcDaoSupport dao = new SimpleJdbcDaoSupport();
-			dao.setDataSource(new HiveBasicDataSource(getConnectString(name)));
+			dao.setDataSource(CachingDataSourceProvider.getInstance().getDataSource(getConnectString(name)));
 			
 			try {
 				dao.getJdbcTemplate().update("SET DB_CLOSE_DELAY 5");
@@ -47,7 +42,9 @@ public class TestMigration extends H2HiveTestCase {
 			catch (Exception e) {} // only protection against multiple calls (create a Schema class to avoid this)
 		}
 	}
+	
 	// Add this test's schema to that of the superclass
+	@SuppressWarnings("unchecked")
 	protected Collection<Schema> getDataNodeSchemas() {
 		return Transform.flatten(super.getDataNodeSchemas(),
 			Transform.flatMap(new Unary<String, Collection<Schema>>() {
@@ -59,18 +56,16 @@ public class TestMigration extends H2HiveTestCase {
 			}, getDataNodeNames()));
 	}
 	
-	
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testMigration() throws Exception {
-		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
+		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
 		String primaryKey = new String("Asia");
 		Integer secondaryKey = new Integer(7);
 		
 		Pair<Node, Node> nodes = initializeTestData(hive, primaryKey, secondaryKey);
 		Node origin = nodes.getKey();
 		Node destination = nodes.getValue();
-		NodeResolver dir = new Directory(hive.getPartitionDimension(), new HiveBasicDataSource(getConnectString(getHiveDatabaseName())));
+		NodeResolver dir = new Directory(hive.getPartitionDimension(), CachingDataSourceProvider.getInstance().getDataSource(getConnectString(getHiveDatabaseName())));
 		PartitionKeyMover<String> pMover = new PrimaryMover(origin.getUri());
 		Mover<Integer> secMover = new SecondaryMover();
 		
@@ -85,16 +80,17 @@ public class TestMigration extends H2HiveTestCase {
 		assertEquals(secondaryKey, secMover.get(secondaryKey, destination));
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testFailDuringCopy() throws Exception {
-		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
+		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
 		String primaryKey = new String("Oceana");
 		Integer secondaryKey = new Integer(7);
 		
 		Pair<Node, Node> nodes = initializeTestData(hive, primaryKey, secondaryKey);
 		Node origin = nodes.getKey();
 		Node destination = nodes.getValue();
-		NodeResolver dir = new Directory(hive.getPartitionDimension(), new HiveBasicDataSource(getConnectString(getHiveDatabaseName())));
+		NodeResolver dir = new Directory(hive.getPartitionDimension(), CachingDataSourceProvider.getInstance().getDataSource(getConnectString(getHiveDatabaseName())));
 		PartitionKeyMover<String> pMover = new PrimaryMover(origin.getUri());
 		//This mover just craps out on copy
 		Mover<Integer> failingMover = new Mover<Integer>() {
@@ -120,9 +116,10 @@ public class TestMigration extends H2HiveTestCase {
 		assertEquals(secondaryKey, new SecondaryMover().get(secondaryKey, origin));
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testFailDuringDelete() throws Exception {
-		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
+		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
 		String primaryKey = new String("Asia");
 		Integer secondaryKey = new Integer(7);
 		
@@ -136,13 +133,13 @@ public class TestMigration extends H2HiveTestCase {
 		Mover<Integer> failingMover = new Mover<Integer>() {
 			public void copy(Integer item, Node node) {
 				SimpleJdbcDaoSupport dao = new SimpleJdbcDaoSupport();
-				dao.setDataSource(new HiveBasicDataSource(node.getUri()));
+				dao.setDataSource(CachingDataSourceProvider.getInstance().getDataSource(node.getUri()));
 				dao.getJdbcTemplate().update("insert into secondary_table values (?)", new Object[]{item});
 			}
 			public void delete(Integer item, Node node) {throw new RuntimeException("Ach!");}
 			public Integer get(Object id, Node node) {
 				SimpleJdbcDaoSupport dao = new SimpleJdbcDaoSupport();
-				dao.setDataSource(new HiveBasicDataSource(node.getUri()));
+				dao.setDataSource(CachingDataSourceProvider.getInstance().getDataSource(node.getUri()));
 				return dao.getJdbcTemplate().queryForInt("select id from secondary_table where id = ?", new Object[]{id});
 			}
 		};
@@ -193,34 +190,37 @@ public class TestMigration extends H2HiveTestCase {
 	}
 	
 	class PrimaryMover implements PartitionKeyMover<String> {
+		@SuppressWarnings("unchecked")
 		private Collection<Entry<Mover, KeyLocator>> movers;
 		private String originUri;
 		
+		@SuppressWarnings("unchecked")
 		public PrimaryMover(String uri) {
 			this.originUri = uri;
 			movers =  new ArrayList<Entry<Mover,KeyLocator>>();
 			movers.add(new Pair<Mover, KeyLocator>(new SecondaryMover(), new SecondaryKeyLocator(originUri)) );
 		}
 		
+		@SuppressWarnings("unchecked")
 		public Collection<Entry<Mover, KeyLocator>> getDependentMovers() {
 			return movers;
 		}
 
 		public void copy(String item, Node node) {
 			SimpleJdbcDaoSupport dao = new SimpleJdbcDaoSupport();
-			dao.setDataSource(new HiveBasicDataSource(node.getUri()));
+			dao.setDataSource(CachingDataSourceProvider.getInstance().getDataSource(node.getUri()));
 			dao.getJdbcTemplate().update("insert into primary_table values (?)", new Object[]{item});
 		}
 
 		public void delete(String item, Node node) {
 			SimpleJdbcDaoSupport dao = new SimpleJdbcDaoSupport();
-			dao.setDataSource(new HiveBasicDataSource(node.getUri()));
+			dao.setDataSource(CachingDataSourceProvider.getInstance().getDataSource(node.getUri()));
 			dao.getJdbcTemplate().update("delete from primary_table where id = ?", new Object[]{item});
 		}
 
 		public String get(Object id, Node node) {
 			SimpleJdbcDaoSupport dao = new SimpleJdbcDaoSupport();
-			dao.setDataSource(new HiveBasicDataSource(node.getUri()));
+			dao.setDataSource(CachingDataSourceProvider.getInstance().getDataSource(node.getUri()));
 			return (String) dao.getJdbcTemplate().queryForObject("select id from primary_table where id = ?", new Object[]{id}, String.class);
 		}
 		
@@ -236,7 +236,7 @@ public class TestMigration extends H2HiveTestCase {
 		@SuppressWarnings("unchecked")
 		public Collection<Integer> findAll(String parent) {
 			SimpleJdbcDaoSupport dao = new SimpleJdbcDaoSupport();
-			dao.setDataSource(new HiveBasicDataSource(uri));
+			dao.setDataSource(CachingDataSourceProvider.getInstance().getDataSource(uri));
 			return dao.getJdbcTemplate().queryForList("select id from secondary_table", Integer.class);
 		}
 		
@@ -246,19 +246,19 @@ public class TestMigration extends H2HiveTestCase {
 
 		public void copy(Integer item, Node node) {
 			SimpleJdbcDaoSupport dao = new SimpleJdbcDaoSupport();
-			dao.setDataSource(new HiveBasicDataSource(node.getUri()));
+			dao.setDataSource(CachingDataSourceProvider.getInstance().getDataSource(node.getUri()));
 			dao.getJdbcTemplate().update("insert into secondary_table values (?)", new Object[]{item});
 		}
 
 		public void delete(Integer item, Node node) {
 			SimpleJdbcDaoSupport dao = new SimpleJdbcDaoSupport();
-			dao.setDataSource(new HiveBasicDataSource(node.getUri()));
+			dao.setDataSource(CachingDataSourceProvider.getInstance().getDataSource(node.getUri()));
 			dao.getJdbcTemplate().update("delete from secondary_table where id = ?", new Object[]{item});
 		}
 
 		public Integer get(Object id, Node node) {
 			SimpleJdbcDaoSupport dao = new SimpleJdbcDaoSupport();
-			dao.setDataSource(new HiveBasicDataSource(node.getUri()));
+			dao.setDataSource(CachingDataSourceProvider.getInstance().getDataSource(node.getUri()));
 			return dao.getJdbcTemplate().queryForInt("select id from secondary_table where id = ?", new Object[]{id});
 		}
 		

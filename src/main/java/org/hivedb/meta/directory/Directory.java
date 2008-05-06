@@ -15,6 +15,7 @@ import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.meta.persistence.IndexSchema;
 import org.hivedb.util.QuickCache;
@@ -48,7 +49,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	
 	public Directory(PartitionDimension dimension) {
 		this.partitionDimension = dimension;
-		this.setDataSource(new HiveBasicDataSource(dimension.getIndexUri()));
+		this.setDataSource(CachingDataSourceProvider.getInstance().getDataSource(dimension.getIndexUri()));
 	}
 	
 	public PartitionDimension getPartitionDimension() {

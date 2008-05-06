@@ -1,14 +1,12 @@
 package org.hivedb;
 
-import static org.hivedb.util.database.DialectTools.getNumericPrimaryKeySequenceModifier;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
 
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.context.Context;
-import org.hivedb.meta.persistence.HiveBasicDataSource;
+import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.meta.persistence.TableInfo;
 import org.hivedb.util.database.DialectTools;
 import org.hivedb.util.database.DriverLoader;
@@ -29,7 +27,7 @@ import org.springframework.jdbc.core.support.JdbcDaoSupport;
 public abstract class Schema extends JdbcDaoSupport {
 	protected String uri;
 	protected HiveDbDialect dialect = HiveDbDialect.MySql;
-	private String name;	
+	private String name;
 	
 	public String getUri() {
 		return uri;
@@ -37,7 +35,7 @@ public abstract class Schema extends JdbcDaoSupport {
 
 	public void setUri(String dbURI) {
 		this.uri = dbURI;
-		this.setDataSource(new HiveBasicDataSource(dbURI));
+		this.setDataSource(CachingDataSourceProvider.getInstance().getDataSource(uri));
 		this.dialect = DriverLoader.discernDialect(dbURI);
 	}
 
@@ -92,7 +90,7 @@ public abstract class Schema extends JdbcDaoSupport {
 	
 	public void install(String uri){
 		this.uri = uri;
-		this.setDataSource(new HiveBasicDataSource(uri));
+		this.setDataSource(CachingDataSourceProvider.getInstance().getDataSource(uri));
 		this.dialect = DriverLoader.discernDialect(uri);
 		install();
 	}
@@ -102,7 +100,7 @@ public abstract class Schema extends JdbcDaoSupport {
 		emptyTables();
 	}
 	public void emptyTables() {
-		this.setDataSource(new HiveBasicDataSource(uri));
+		this.setDataSource(CachingDataSourceProvider.getInstance().getDataSource(uri));
 		this.dialect = DriverLoader.discernDialect(uri);
 		for (TableInfo table : getTables())
 			emptyTable(table);
