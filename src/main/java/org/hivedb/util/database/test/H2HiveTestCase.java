@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 
 import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hivedb.Hive;
@@ -77,23 +78,20 @@ public class H2HiveTestCase extends H2TestCase {
 	}
 	
 	protected void installDataSchemas() {
-		for (Schema schema : getDataNodeSchemas())
-			schema.install();
+		for (Schema schema : getDataNodeSchemas()) {
+			for (Node node : hiveTestCase.getOrLoadHive().getNodes()) {
+				schema.install(node);
+			}
+		}
 	}
 	
 	protected Collection<Schema> getSchemas() {
-		return Transform.flatten(hiveTestCase.getHiveSchemas(), getDataNodeSchemas());
+		return Transform.flatten(hiveTestCase == null ? new HashSet<Schema>() : hiveTestCase.getHiveSchemas(), getDataNodeSchemas());
 	}
 	
 	// Gets Schema instances for each entity on each data node
 	protected Collection<Schema> getDataNodeSchemas() {
-		return Transform.flatMap(new Unary<String, Collection<Schema>>() {
-			public Collection<Schema> f(String dataNodeName) {
-				return Arrays.asList(new Schema[] {
-						new ContinentalSchema(getConnectString(dataNodeName)),
-						new WeatherSchema(getConnectString(dataNodeName)) });
-			}
-		}, getDataNodeNames());
+		return Arrays.asList(new Schema[] { ContinentalSchema.getInstance(), WeatherSchema.getInstance() });
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -108,7 +106,7 @@ public class H2HiveTestCase extends H2TestCase {
 	}
 	
 	public Hive getHive() { 
-		return hiveTestCase.getHive();
+		return hiveTestCase == null ? null : hiveTestCase.getHive();
 	}
 	
 	public EntityHiveConfig getEntityHiveConfig()
@@ -156,4 +154,8 @@ public class H2HiveTestCase extends H2TestCase {
 				getHive()).create();
 	}
 	
+	@Override
+	protected Collection<Node> getDataNodes() {
+		return getHive() == null ? new HashSet<Node>() : getHive().getNodes();
+	}
 }

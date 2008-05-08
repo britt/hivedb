@@ -9,8 +9,12 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class TestResourcePersistence extends H2HiveTestCase {
+
 	@BeforeMethod
+	@Override
 	public void beforeMethod() {
+		deleteDatabasesAfterEachTest = true;
+		super.afterMethod();
 		super.beforeMethod();
 	}
 	

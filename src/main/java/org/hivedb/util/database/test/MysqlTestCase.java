@@ -10,6 +10,7 @@ import javax.sql.DataSource;
 
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.Schema;
+import org.hivedb.meta.Node;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 
@@ -114,5 +115,10 @@ public class MysqlTestCase extends DatabaseTestCase {
 	
 	private Connection getControlConnection() {
 		return getMysqlConnection(getDatabaseAgnosticConnectString());
+	}
+	
+	@Override
+	protected Collection<Node> getDataNodes() {
+		return Collections.emptyList();
 	}
 }

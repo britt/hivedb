@@ -22,11 +22,18 @@ import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Predicate;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import static org.testng.AssertJUnit.*;
 
 public class ConfigurationReaderTest extends H2TestCase {
+	
+	@BeforeMethod
+	public void beforeMethod() {
+		super.beforeMethod();
+		deleteDatabasesAfterEachTest = true;
+	}
 	
 	public Collection<Schema> getSchemas() {
 		return Arrays.asList(new Schema[] {

@@ -17,8 +17,11 @@ import java.util.Map.Entry;
 import org.hivedb.Hive;
 import org.hivedb.HiveLockableException;
 import org.hivedb.configuration.EntityHiveConfig;
+import org.hivedb.management.HiveInstaller;
+import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.*;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.H2TestCase;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.Atom;
@@ -37,9 +40,13 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 	private EntityHiveConfig config;
 
 	private static Random random = new Random();
-
-    @BeforeMethod
-	public void setup() throws Exception {
+    
+	@BeforeMethod
+	@Override
+	public void beforeMethod() {
+		deleteDatabasesAfterEachTest = true;
+		super.afterMethod();
+		super.beforeMethod();
 		this.cleanupAfterEachTest = true;
 		this.config = getEntityHiveConfig();
 	}

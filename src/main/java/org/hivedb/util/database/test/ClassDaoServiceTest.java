@@ -55,7 +55,9 @@ import org.hivedb.util.functional.Unary;
 import org.hivedb.util.functional.Filter.BinaryPredicate;
 import org.hivedb.util.validators.NoValidator;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -76,13 +78,15 @@ public class ClassDaoServiceTest extends H2TestCase implements SchemaInitializer
 		return Arrays.asList(new Schema[] {
 				new HiveConfigurationSchema(getConnectString(getHiveDatabaseName()))});
 	}
-	
-	@Override
-	protected void beforeMethod() {
-	}
 
 	protected void superClassBeforeMethod() {
 		super.beforeMethod();
+	}
+	
+	@AfterMethod
+	@Override
+	public void afterMethod() {
+		deleteDatabase("hive");
 	}
 	
 	public void initialize(Collection<Schema> schemaList) {

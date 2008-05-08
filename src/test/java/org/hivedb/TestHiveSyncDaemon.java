@@ -6,11 +6,23 @@ import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
 
+import org.hivedb.management.HiveInstaller;
+import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.H2TestCase;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class TestHiveSyncDaemon extends H2HiveTestCase {
+	
+	@BeforeMethod
+	@Override
+	public void beforeMethod() {
+		deleteDatabasesAfterEachTest = true;
+		super.afterMethod();
+		super.beforeMethod();
+	}
 	
 	@Test
 	public void testHiveSyncDaemon() {

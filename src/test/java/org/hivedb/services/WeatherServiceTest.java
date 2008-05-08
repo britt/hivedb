@@ -46,7 +46,7 @@ public class WeatherServiceTest extends ClassServiceTest<WeatherReport,WeatherRe
 	protected Collection<Schema> getSchemata() {
 		return Arrays.asList(
 				new Schema[]{
-						new WeatherSchema(),
+						WeatherSchema.getInstance(),
 				});
 	}
 

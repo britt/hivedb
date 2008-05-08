@@ -26,10 +26,19 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class HiveIndexerTest extends H2HiveTestCase {
+	
 	@BeforeMethod
-	public void setup() throws Exception {
+	@Override
+	public void beforeMethod() {
+		deleteDatabasesAfterEachTest = true;
+		super.afterMethod();
+		super.beforeMethod();
 		HiveFacade hive = getHive();
-		hive.addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", HiveDbDialect.H2));
+		try {
+			hive.addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", HiveDbDialect.H2));
+		} catch (Exception ex) {
+			throw new RuntimeException(ex);
+		}
 	}
 
 	
@@ -38,7 +47,7 @@ public class HiveIndexerTest extends H2HiveTestCase {
 	public void insertTest() throws Exception {
 		Hive hive = getHive();
 		HiveIndexer indexer = new HiveIndexer(hive);
-		WeatherReport report = generateIntance();
+		WeatherReport report = generateInstance();
 		indexer.insert(getWeatherReportConfig(report), report);
 		assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
 		assertTrue(hive.directory().doesResourceIdExist("Temperature", report.getTemperature()));
@@ -51,7 +60,7 @@ public class HiveIndexerTest extends H2HiveTestCase {
 	public void updateTest() throws Exception {
 		Hive hive = getHive();
 		HiveIndexer indexer = new HiveIndexer(hive);
-		WeatherReport report = generateIntance();
+		WeatherReport report = generateInstance();
 		Integer oldTemp = report.getTemperature();
 		indexer.insert(getWeatherReportConfig(report), report);
 		assertEquals(1, hive.directory().getResourceIdsOfPrimaryIndexKey("WeatherReport", report.getContinent()).size());
@@ -65,7 +74,7 @@ public class HiveIndexerTest extends H2HiveTestCase {
 	public void changePartitionKeyTest() throws Exception {
 		Hive hive = getHive();
 		HiveIndexer indexer = new HiveIndexer(hive);
-		WeatherReport report = generateIntance();
+		WeatherReport report = generateInstance();
 		GeneratedInstanceInterceptor.setProperty(report, "continent", "Asia");
 		Integer oldTemp = report.getTemperature();
 		indexer.insert(getWeatherReportConfig(report), report);
@@ -85,7 +94,7 @@ public class HiveIndexerTest extends H2HiveTestCase {
 	}
 
 
-	private WeatherReport generateIntance() {
+	private WeatherReport generateInstance() {
 		return new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
 	}
 	
@@ -94,7 +103,7 @@ public class HiveIndexerTest extends H2HiveTestCase {
 	public void deleteTest() throws Exception {
 		Hive hive = getHive();
 		HiveIndexer indexer = new HiveIndexer(hive);
-		WeatherReport report = generateIntance();
+		WeatherReport report = generateInstance();
 		indexer.insert(getWeatherReportConfig(report), report);
 		assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
 		assertTrue(hive.directory().doesResourceIdExist("Temperature", report.getTemperature()));
@@ -110,7 +119,7 @@ public class HiveIndexerTest extends H2HiveTestCase {
 	public void existsTest() throws Exception {
 		Hive hive = getHive();
 		HiveIndexer indexer = new HiveIndexer(hive);
-		WeatherReport report = generateIntance();
+		WeatherReport report = generateInstance();
 		assertFalse(indexer.exists(getWeatherReportConfig(report), report));
 		indexer.insert(getWeatherReportConfig(report), report);
 		assertTrue(indexer.exists(getWeatherReportConfig(report), report));

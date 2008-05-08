@@ -13,9 +13,19 @@ import org.hivedb.meta.persistence.NodeDao;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.JdbcUriFormatter;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class TestNodePersistence extends H2HiveTestCase {	  
+	
+	@BeforeMethod
+	@Override
+	public void beforeMethod() {
+		deleteDatabasesAfterEachTest = true;
+		super.afterMethod();
+		super.beforeMethod();
+	}
+	
 	@Test
 	public void testCreate() throws Exception {
 		int count = getHive().getNodes().size();

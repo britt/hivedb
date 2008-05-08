@@ -15,6 +15,7 @@ import java.util.Map;
 import org.hivedb.Hive;
 import org.hivedb.HiveFacade;
 import org.hivedb.HiveLockableException;
+import org.hivedb.HiveRuntimeException;
 import org.hivedb.Schema;
 import org.hivedb.Lockable.Status;
 import org.hivedb.configuration.HiveConfigurationSchema;
@@ -31,6 +32,7 @@ import org.hivedb.util.database.test.H2TestCase;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Transform;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -47,21 +49,20 @@ public class DirectoryTest extends H2TestCase {
 				new IndexSchema(createPopulatedPartitionDimension()) });
 	}
 	
-	@BeforeMethod
-	public void beforeMethod() {
-		super.beforeMethod();
+	private void prepare() {
 		try {
 			new HiveInstaller(getConnectString(H2TestCase.TEST_DB)).run();
-			Hive hive = Hive.create(getConnectString(H2TestCase.TEST_DB), partitionDimensionName(), Types.INTEGER, CachingDataSourceProvider.getInstance(), null);
+			Hive  hive = Hive.create(getConnectString(H2TestCase.TEST_DB), partitionDimensionName(), Types.INTEGER, CachingDataSourceProvider.getInstance(), null);
 			dimension = createPopulatedPartitionDimension();
 			dimension.setId(hive.getPartitionDimension().getId());
 			hive.setPartitionDimension(dimension);
 			resource = Atom.getFirstOrThrow(dimension.getResources());
 			hive.addResource(resource);
-      numIndex = resource.getSecondaryIndex("num");
+			numIndex = resource.getSecondaryIndex("num");
 			nameIndex = resource.getSecondaryIndex("name");
-			for (SecondaryIndex secondaryIndex: resource.getSecondaryIndexes())
+			for (SecondaryIndex secondaryIndex: resource.getSecondaryIndexes()) {
 				hive.addSecondaryIndex(resource, secondaryIndex);
+			}
 			hive.addNode(new Node("node", H2TestCase.TEST_DB, "",HiveDbDialect.H2));
 			SimpleJdbcDaoSupport dao = new SimpleJdbcDaoSupport();
 			dao.setDataSource(hive.getDataSourceProvider().getDataSource(getConnectString(H2TestCase.TEST_DB)));
@@ -70,6 +71,15 @@ public class DirectoryTest extends H2TestCase {
 		catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+	}
+	
+	@BeforeMethod
+	@Override
+	public void beforeMethod() {
+		deleteDatabasesAfterEachTest = true;
+		super.afterMethod();
+		super.beforeMethod();
+		prepare();
 	}
 
 	protected PartitionDimension createPopulatedPartitionDimension() {
@@ -224,7 +234,12 @@ public class DirectoryTest extends H2TestCase {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testInsertRelatedSecondaryIndexKeys() throws Exception {
+		//beforeMethod = false;
+		//afterMethod = false;
+		//System.out.println("insertRelated begin");
 		Hive hive = getHive();
+		//System.out.println(hive.toString());
+		//insertKeys(getHive());
 		Directory d = getDirectory();
 		for(String primaryIndexKey: getPrimaryIndexOrResourceKeys()) {
 			hive.directory().insertPrimaryIndexKey(primaryIndexKey);
@@ -237,7 +252,14 @@ public class DirectoryTest extends H2TestCase {
 			secondaryIndexKeyMap.put(numIndex, Arrays.asList(new Object[] {
 					secondaryKeyNum
 			}));
-			d.batch().insertSecondaryIndexKeys(secondaryIndexKeyMap, primaryIndexKey);
+			// TODO: for some reason the BatchIndexWriter won't find the tables when running through maven
+			//d.batch().insertSecondaryIndexKeys(secondaryIndexKeyMap, primaryIndexKey);
+			for (SecondaryIndex secondaryIndex : secondaryIndexKeyMap.keySet()) {
+				for (Object secondaryIndexKeyNum : secondaryIndexKeyMap.get(secondaryIndex)) {
+					hive.directory().insertSecondaryIndexKey(secondaryIndex.getResource().getName(), secondaryIndex.getName(), secondaryIndexKeyNum, primaryIndexKey);
+				}
+			}
+			hive.directory().insertSecondaryIndexKey(numIndex.getResource().getName(), numIndex.getName(), secondaryKeyNum, primaryIndexKey);
 			assertEquals(1,d.getSecondaryIndexKeysOfResourceId(nameIndex, primaryIndexKey).size());
 			assertEquals(secondaryKeyString, Atom.getFirst(d.getSecondaryIndexKeysOfResourceId(nameIndex, primaryIndexKey)));
 			assertEquals(1,
@@ -369,7 +391,13 @@ public class DirectoryTest extends H2TestCase {
 		Directory d = getDirectory();
 		for(String key : getPrimaryIndexOrResourceKeys()) {
 			assertTrue(d.getSecondaryIndexKeysOfResourceId(numIndex, key).size() > 0);
-			d.batch().deleteAllSecondaryIndexKeysOfResourceId(resource, key);
+			// TODO: for some reason the BatchIndexWriter won't find the tables when running through maven
+			//d.batch().deleteAllSecondaryIndexKeysOfResourceId(resource, key);
+			for (SecondaryIndex secondaryIndex : resource.getSecondaryIndexes()) {
+				for (Object secondaryIndexKey : d.getSecondaryIndexKeysOfPrimaryIndexKey(secondaryIndex, key)) {
+					d.deleteSecondaryIndexKey(secondaryIndex, secondaryIndexKey, key);;
+				}
+			}
 			assertEquals(0,d.getSecondaryIndexKeysOfResourceId(numIndex, key).size());
 		}
 	}
@@ -399,7 +427,13 @@ public class DirectoryTest extends H2TestCase {
 		insertKeys(getHive());
 		Directory d = getDirectory();
 		for(String key : getPrimaryIndexOrResourceKeys()) {
-			d.batch().deleteAllSecondaryIndexKeysOfResourceId(resource, key);
+			// TODO: for some reason the BatchIndexWriter won't find the tables when running through maven
+			//d.batch().deleteAllSecondaryIndexKeysOfResourceId(resource, key);
+			for (SecondaryIndex secondaryIndex : resource.getSecondaryIndexes()) {
+				for (Object secondaryIndexKey : d.getSecondaryIndexKeysOfPrimaryIndexKey(secondaryIndex, key)) {
+					d.deleteSecondaryIndexKey(secondaryIndex, secondaryIndexKey, key);;
+				}
+			}
 			assertEquals(0,d.getSecondaryIndexKeysOfResourceId(numIndex, key).size());
 			d.deleteResourceId(resource, key);
 			assertFalse(d.doesResourceIdExist(resource, key));

@@ -16,31 +16,28 @@ import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class JdbcDaoSupportCacheTest extends H2HiveTestCase {
 	protected boolean cleanupDbAfterEachTest = true;
 	
-	@BeforeMethod
-	public void setUp() throws Exception{
-		new HiveInstaller(getConnectString(getHiveDatabaseName())).run();
-		
-		getHive().directory().insertPrimaryIndexKey(intKey());
-	}
-	protected Collection<Node> getDataNodes() {
-		return Transform.map(new Unary<String, Node>() {
-			public Node f(String dataNodeName) {
-				return new Node(0, dataNodeName, dataNodeName, "", HiveDbDialect.H2);
-		}},
-		getDataNodeNames());
-	}
 	protected Collection<String> getDataNodeNames() {
 		return Arrays.asList(new String[]{"data1","data2","data3"});
 	}
 	
+	@BeforeMethod
+	@Override
+	public void beforeMethod() {
+		deleteDatabasesAfterEachTest = true;
+		super.afterMethod();
+		super.beforeMethod();
+	}
+	
 	@Test
 	public void testDataSourceCacheCreation() throws HiveException, SQLException{
+		getHive().directory().insertPrimaryIndexKey(intKey());
 		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
 		JdbcDaoSupportCacheImpl cache = (JdbcDaoSupportCacheImpl) hive.connection().daoSupport();
 		Collection<SimpleJdbcDaoSupport> read = cache.get(intKey(), AccessType.Read);
@@ -51,11 +48,13 @@ public class JdbcDaoSupportCacheTest extends H2HiveTestCase {
 	}
 	
 	@Test
-	public void testGetAllUnsafe() {
+	public void testGetAllUnsafe() throws Exception {
+		getHive().directory().insertPrimaryIndexKey(intKey());
 		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
 		JdbcDaoSupportCacheImpl cache = (JdbcDaoSupportCacheImpl) hive.connection().daoSupport();
 		assertEquals(3, cache.getAllUnsafe().size());
 	}
+	
 	private Integer intKey() {
 		return new Integer(23);
 	}

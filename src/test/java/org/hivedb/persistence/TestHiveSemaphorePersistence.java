@@ -4,9 +4,18 @@ import static org.testng.AssertJUnit.assertEquals;
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class TestHiveSemaphorePersistence extends H2HiveTestCase {
+	
+	@BeforeMethod
+	@Override
+	public void beforeMethod() {
+		deleteDatabasesAfterEachTest = true;
+		super.afterMethod();
+		super.beforeMethod();
+	}
 	
 	@Test
 	public void testUpdate() throws Exception {

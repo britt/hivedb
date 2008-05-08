@@ -7,22 +7,21 @@ import org.hivedb.Schema;
 import org.hivedb.meta.persistence.TableInfo;
 
 public class ContinentalSchema extends Schema {
-
-	public ContinentalSchema() {
+	
+	private static ContinentalSchema INSTANCE = new ContinentalSchema();
+	
+	private ContinentalSchema() {
 		super("Continent");
 	}
-	
-	public ContinentalSchema(String dbURI) {
-		super("Continent",dbURI);
-	}
-	public Schema createSchemaForURI(String dbURI) {
-		return new ContinentalSchema(dbURI);
-	}
 
-	public Collection<TableInfo> getTables() {
+	public Collection<TableInfo> getTables(String uri) {
 		return Arrays.asList(new TableInfo("CONTINENT", "CREATE TABLE CONTINENT (" + 
 				"NAME VARCHAR(64) NOT NULL PRIMARY KEY," +
 				"POPULATION INT);")
 		);
+	}
+	
+	public static ContinentalSchema getInstance() {
+		return INSTANCE;
 	}
 }

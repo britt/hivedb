@@ -103,7 +103,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		final List<PartitionDimension> partitionDimensions = dao.loadAll();
 		if(partitionDimensions.size() == 0) {
 			dao.create(dimension);
-			new IndexSchema(dimension).install();
+			new IndexSchema(dimension).install(dimension.getIndexUri());
 			hive.incrementAndPersistHive(ds);
 			return hive;
 		} else
@@ -397,7 +397,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		ResourceDao resourceDao = new ResourceDao(hiveDataSource);
 		resourceDao.create(resource);
 		incrementAndPersistHive(hiveDataSource);
-		new IndexSchema(dimension).install();
+		new IndexSchema(dimension).install(dimension.getIndexUri());
 		return dimension.getResource(resource.getName());
 	}
 
@@ -413,7 +413,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		SecondaryIndexDao secondaryIndexDao = new SecondaryIndexDao(hiveDataSource);
 		secondaryIndexDao.create(secondaryIndex);
 		incrementAndPersistHive(hiveDataSource);
-		new IndexSchema(dimension).install();
+		new IndexSchema(dimension).install(dimension.getIndexUri());
 		return secondaryIndex;
 	}
 

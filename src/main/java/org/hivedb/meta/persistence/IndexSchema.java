@@ -38,19 +38,19 @@ public class IndexSchema extends Schema{
 	 * @param dialect Data definition language dialect
 	 */
 	public IndexSchema(PartitionDimension partitionDimension) {
-		super("Hive index schema",partitionDimension.getIndexUri());
+		super("Hive index schema");
 		this.partitionDimension = partitionDimension;
 	}
 	
 	protected String getCreatePrimaryIndex() {
-		Context context = getContext();
+		Context context = getContext(partitionDimension.getIndexUri());
 		context.put("tableName", getPrimaryIndexTableName(partitionDimension));
 		context.put("indexType", addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(partitionDimension.getColumnType())));
 		return Templater.render("sql/primary_index.vsql", context);
 	}
 	
 	protected String getCreateSecondaryIndex(SecondaryIndex secondaryIndex) {
-		Context context = getContext();
+		Context context = getContext(partitionDimension.getIndexUri());
 		context.put("tableName", getSecondaryIndexTableName(secondaryIndex));
 		context.put("indexType", addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(secondaryIndex.getColumnInfo().getColumnType())));
 		context.put("resourceType", addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(secondaryIndex.getResource().getColumnType())));
@@ -58,7 +58,7 @@ public class IndexSchema extends Schema{
 	}
 	
 	protected String getCreateResourceIndex(Resource resource) {
-		Context context = getContext();
+		Context context = getContext(partitionDimension.getIndexUri());
 		context.put("tableName", getResourceIndexTableName(resource));
 		context.put("indexType", addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(resource.getIdIndex().getColumnInfo().getColumnType())));
 		context.put("primaryIndexType", addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(resource.getPartitionDimension().getColumnType())));
@@ -88,7 +88,7 @@ public class IndexSchema extends Schema{
 	}
 	
 	@Override
-	public Collection<TableInfo> getTables() {
+	public Collection<TableInfo> getTables(String uri) {
 		Collection<TableInfo> TableInfos = new ArrayList<TableInfo>();
 		TableInfos.add(new TableInfo(getPrimaryIndexTableName(partitionDimension), getCreatePrimaryIndex()));
 		for (Resource resource : partitionDimension.getResources()) {

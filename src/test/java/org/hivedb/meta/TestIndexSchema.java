@@ -13,7 +13,7 @@ public class TestIndexSchema extends H2TestCase {
 		PartitionDimension dimension = new PartitionDimension("aDimension", Types.INTEGER);
 		dimension.setIndexUri(getConnectString("testDb"));
 		IndexSchema schema = new IndexSchema( dimension );
-		schema.install();
+		schema.install(dimension.getIndexUri());
 	}
 	
 	@Override

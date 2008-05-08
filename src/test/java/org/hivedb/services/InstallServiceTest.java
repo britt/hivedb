@@ -31,7 +31,7 @@ public class InstallServiceTest extends H2TestCase {
 	
 	@Test
 	public void installANewNodeWithSchema() throws Exception {
-		Schema schema = new WeatherSchema();
+		Schema schema = WeatherSchema.getInstance();
 		String nodeName = "aNewNode";
 		getService().install(schema.getName(), nodeName, H2TestCase.TEST_DB, "unecessary for H2", "H2", "na", "na");
 		validateSchema(schema, Hive.load(uri(), CachingDataSourceProvider.getInstance()).getNode(nodeName));
@@ -43,7 +43,7 @@ public class InstallServiceTest extends H2TestCase {
 		String nodeName = "anExistingNode";
 		Node node = new Node(nodeName, H2TestCase.TEST_DB, "unecessary", HiveDbDialect.H2);
 		hive.addNode(node);
-		WeatherSchema weatherSchema = new WeatherSchema();
+		WeatherSchema weatherSchema = WeatherSchema.getInstance();
 		getService().install(weatherSchema.getName(), nodeName);
 		validateSchema(weatherSchema, node);
 	}
@@ -52,13 +52,12 @@ public class InstallServiceTest extends H2TestCase {
 	public void tryToInstallToAReadOnlyHive() throws Exception {
 		Hive hive = Hive.load(uri(), CachingDataSourceProvider.getInstance());
 		hive.updateHiveStatus(Status.readOnly);
-		getService().install(new WeatherSchema().getName(), "aNewNode", H2TestCase.TEST_DB, "unecessary for H2", "H2", "na", "na");
+		getService().install(WeatherSchema.getInstance().getName(), "aNewNode", H2TestCase.TEST_DB, "unecessary for H2", "H2", "na", "na");
 	}
 	
 	private void validateSchema(Schema schema, Node node) {
-		schema.setUri(node.getUri());
-		for(TableInfo t :schema.getTables())
-			assertTrue(schema.tableExists(t.getName()));
+		for(TableInfo t :schema.getTables(node.getUri()))
+			assertTrue(schema.tableExists(t.getName(), node.getUri()));
 	}
 	
 	private String uri() {
@@ -67,8 +66,8 @@ public class InstallServiceTest extends H2TestCase {
 	
 	private Collection<Schema> getSchemata() {
 		return Arrays.asList(new Schema[]{
-				new WeatherSchema(),
-				new ContinentalSchema()
+				WeatherSchema.getInstance(),
+				ContinentalSchema.getInstance()
 		});
 	}
 	

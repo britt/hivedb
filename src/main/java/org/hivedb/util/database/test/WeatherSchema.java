@@ -7,20 +7,14 @@ import org.hivedb.Schema;
 import org.hivedb.meta.persistence.TableInfo;
 
 public class WeatherSchema extends Schema {
+	private static WeatherSchema INSTANCE = new WeatherSchema();
 
-	public WeatherSchema(){
+	private WeatherSchema(){
 		super("WeatherReport");
-	}
-	
-	public WeatherSchema(String dbURI) {
-		super("WeatherReport",dbURI);
-	}
-	public Schema createSchemaForURI(String dbURI) {
-		return new WeatherSchema(dbURI);
 	}
 
 	@Override
-	public Collection<TableInfo> getTables() {
+	public Collection<TableInfo> getTables(String uri) {
 		return Arrays.asList(new TableInfo("WEATHER_REPORT", "CREATE TABLE WEATHER_REPORT (" + 
     "REPORT_ID VARCHAR(50) NOT NULL PRIMARY KEY," +
     "CONTINENT VARCHAR(50)," +
@@ -42,5 +36,9 @@ public class WeatherSchema extends Schema {
 	    new TableInfo("EVENT_STATISTIC", "CREATE TABLE EVENT_STATISTIC (" + 
 	    	    "EVENT_ID INT NOT NULL," +
 	    	    "STAT INT);"));
+	}
+	
+	public static WeatherSchema getInstance() {
+		return INSTANCE;
 	}
 }

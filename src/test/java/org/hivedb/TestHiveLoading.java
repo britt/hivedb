@@ -18,14 +18,18 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class TestHiveLoading extends H2TestCase {
-
 	Hive hive;
+	
 	@BeforeMethod
+	@Override
 	public void beforeMethod() {
+		deleteDatabasesAfterEachTest = true;
+		super.afterMethod();
 		super.beforeMethod();
 		new HiveInstaller(getConnectString(H2TestCase.TEST_DB)).run();
 		hive = Hive.load(getConnectString(H2TestCase.TEST_DB), CachingDataSourceProvider.getInstance());
 	}
+	
 	public Collection<Schema> getSchemas() {
 		return Arrays.asList(new Schema[] {
 				new HiveConfigurationSchema(getConnectString(H2TestCase.TEST_DB))});

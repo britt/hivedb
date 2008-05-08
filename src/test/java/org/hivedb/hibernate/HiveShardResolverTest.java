@@ -9,6 +9,7 @@ import org.hibernate.shards.ShardId;
 import org.hibernate.shards.strategy.selection.ShardResolutionStrategyData;
 import org.hibernate.shards.strategy.selection.ShardResolutionStrategyDataImpl;
 import org.hivedb.Hive;
+import org.hivedb.HiveLockableException;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.meta.Node;
 import org.hivedb.util.database.HiveDbDialect;
@@ -20,10 +21,18 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class HiveShardResolverTest extends H2HiveTestCase {
-
+	
 	@BeforeMethod
-	public void setUp() throws Exception {
-		getHive().addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", HiveDbDialect.H2));
+	@Override
+	public void beforeMethod() {
+		deleteDatabasesAfterEachTest = true;
+		super.afterMethod();
+		super.beforeMethod();
+		try {
+			getHive().addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", HiveDbDialect.H2));
+		} catch (HiveLockableException ex) {
+			throw new RuntimeException(ex);
+		}
 	}
 	
 	@Test

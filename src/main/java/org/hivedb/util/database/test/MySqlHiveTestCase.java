@@ -69,8 +69,11 @@ public class MySqlHiveTestCase extends MysqlTestCase {
 	}
 	
 	protected void installDataSchemas() {
-		for (Schema schema : getDataNodeSchemas())
-			schema.install();
+		for (Schema schema : getDataNodeSchemas()) {
+			for (Node node : hiveTestCase.getOrLoadHive().getNodes()) {
+				schema.install(node);
+			}
+		}
 	}
 	
 	protected Collection<Schema> getSchemas() {
@@ -79,13 +82,7 @@ public class MySqlHiveTestCase extends MysqlTestCase {
 	
 	// Gets Schema instances for each entity on each data node
 	protected Collection<Schema> getDataNodeSchemas() {
-		return Transform.flatMap(new Unary<String, Collection<Schema>>() {
-			public Collection<Schema> f(String dataNodeName) {
-				return Arrays.asList(new Schema[] {
-						new ContinentalSchema(getConnectString(dataNodeName)),
-						new WeatherSchema(getConnectString(dataNodeName)) });
-			}
-		}, getDataNodeNames());
+		return Arrays.asList(new Schema[] { ContinentalSchema.getInstance(), WeatherSchema.getInstance() });
 	}
 	
 	public Collection<String> getDatabaseNames() {
@@ -141,4 +138,8 @@ public class MySqlHiveTestCase extends MysqlTestCase {
 				getHive()).create();
 	}
 	
+	@Override
+	protected Collection<Node> getDataNodes() {
+		return hiveTestCase.getOrLoadHive().getNodes();
+	}	
 }

@@ -4,6 +4,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveLockableException;
@@ -152,6 +153,7 @@ public class HiveTestCase {
 	protected Node createNode(String name) {
 		return new Node(0, name, name, "", hiveDbDialect);
 	}
+	
 	protected PartitionDimension createPopulatedPartitionDimension() {
 		return new PartitionDimension(Hive.NEW_OBJECT_ID, partitionDimensionName(), Types.INTEGER,
 				getConnectString.f(getHiveDatabaseName()), createResources());

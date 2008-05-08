@@ -49,7 +49,10 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 	private EntityHiveConfig config;
 	
 	@BeforeMethod
+	@Override
 	public void beforeMethod() {
+		deleteDatabasesAfterEachTest = true;
+		super.afterMethod();
 		super.beforeMethod();
 		this.config = getEntityHiveConfig();
 	}
@@ -123,7 +126,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
 		final WeatherReport report = newInstance();
 		for (Node node : getHive().getNodes())
-			if (!new WeatherSchema(node.getUri()).tableExists("WEATHER_REPORT"))
+			if (!WeatherSchema.getInstance().tableExists("WEATHER_REPORT", node.getUri()))
 				throw new RuntimeException("Can't find WEATHER_REPORT table on node " + node.getUri());
 		save(factoryBuilder, report);
 		Hive hive = getHive();
@@ -143,7 +146,7 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 				session.saveOrUpdate(report);
 			}};
 		for (Node node : getHive().getNodes())
-			if (!new WeatherSchema(node.getUri()).tableExists("WEATHER_REPORT"))
+			if (!WeatherSchema.getInstance().tableExists("WEATHER_REPORT", node.getUri()))
 				throw new RuntimeException("Can't find WEATHER_REPORT table on node " + node.getUri());
 		doInTransactionAndFailBeforeCommit(callback, session);
 		

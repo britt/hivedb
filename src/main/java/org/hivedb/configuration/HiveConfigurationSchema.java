@@ -24,7 +24,8 @@ import org.hivedb.util.Templater;
  * @author Justin McCarthy (jmccarthy@cafepress.com)
  * @author Britt Crawford (bcrawford@cafepress.com)
  */
-public class HiveConfigurationSchema extends Schema {	
+public class HiveConfigurationSchema extends Schema {
+	private String dbURI;
 	/**
 	 * GlobalSchema is constructed against a JDBC URI, which will be the destination
 	 * for the schema tables.
@@ -32,33 +33,34 @@ public class HiveConfigurationSchema extends Schema {
 	 * @param dbURI Empty target database connect string, including username, password & catalog
 	 */
 	public HiveConfigurationSchema(String dbURI){
-		super("Hive configuration schema",dbURI);
+		super("Hive configuration schema");
+		this.dbURI = dbURI;
 	}
 	
 	private String getCreateNode() {
-		return Templater.render("sql/node_configuration.vsql", getContext());
+		return Templater.render("sql/node_configuration.vsql", getContext(dbURI));
 	}
 
 	private String getCreateHive() {
-		return Templater.render("sql/hive_semaphore.vsql", getContext());
+		return Templater.render("sql/hive_semaphore.vsql", getContext(dbURI));
 	}
 	
 	private String getCreatePartitionDimension() {
-		return Templater.render("sql/partition_dimension_configuration.vsql", getContext());
+		return Templater.render("sql/partition_dimension_configuration.vsql", getContext(dbURI));
 	}
 
 	private String getCreateSecondaryIndex() {
-		return Templater.render("sql/secondary_index_configuration.vsql", getContext());
+		return Templater.render("sql/secondary_index_configuration.vsql", getContext(dbURI));
 	}
 	
 	private String getCreateResource() {
-		return Templater.render("sql/resource_configuration.vsql", getContext());
+		return Templater.render("sql/resource_configuration.vsql", getContext(dbURI));
 	}
 	
 	public void install() {
-		super.install();
+		super.install(dbURI);
 		BasicDataSource ds = new BasicDataSource();
-		ds.setUrl(this.uri);
+		ds.setUrl(dbURI);
 	}
 
 	public String[] getCreateStatements() {
@@ -71,7 +73,7 @@ public class HiveConfigurationSchema extends Schema {
 	}
 
 	@Override
-	public Collection<TableInfo> getTables() {
+	public Collection<TableInfo> getTables(String uri) {
 		Collection<TableInfo> TableInfos = new ArrayList<TableInfo>();
 		TableInfos.add(new TableInfo("semaphore_metadata", getCreateHive()));
 		TableInfos.add(new TableInfo("node_metadata", getCreateNode()));

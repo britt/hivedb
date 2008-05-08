@@ -6,6 +6,7 @@ import static org.testng.AssertJUnit.assertNotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map.Entry;
 
 import org.hivedb.Hive;
@@ -29,9 +30,11 @@ import org.testng.annotations.Test;
 public class TestMigration extends H2HiveTestCase {
 
 	@BeforeMethod
+	@Override
 	public void beforeMethod() {
+		deleteDatabasesAfterEachTest = true;
+		super.afterMethod();
 		super.beforeMethod();
-		
 		for(String name: getDatabaseNames()) {
 			SimpleJdbcDaoSupport dao = new SimpleJdbcDaoSupport();
 			dao.setDataSource(CachingDataSourceProvider.getInstance().getDataSource(getConnectString(name)));
@@ -44,16 +47,10 @@ public class TestMigration extends H2HiveTestCase {
 	}
 	
 	// Add this test's schema to that of the superclass
-	@SuppressWarnings("unchecked")
 	protected Collection<Schema> getDataNodeSchemas() {
-		return Transform.flatten(super.getDataNodeSchemas(),
-			Transform.flatMap(new Unary<String, Collection<Schema>>() {
-				public Collection<Schema> f(String dataNodeName) {
-					return Arrays.asList(new Schema[] {
-							new TestMigrationSchema(getConnectString(dataNodeName)),
-					});
-				}
-			}, getDataNodeNames()));
+		Collection<Schema> schemas = new ArrayList<Schema>(super.getDataNodeSchemas());
+		schemas.add(TestMigrationSchema.getInstance());
+		return schemas;
 	}
 	
 	@Test
@@ -175,17 +172,22 @@ public class TestMigration extends H2HiveTestCase {
 		return new Pair<Node, Node>(origin, destination);
 	}
 	
-	private class TestMigrationSchema extends Schema {
+	private static class TestMigrationSchema extends Schema {
+		private static TestMigrationSchema INSTANCE = new TestMigrationSchema();
 
-		public TestMigrationSchema(String uri) {
-			super("testMigration", uri);
+		private TestMigrationSchema() {
+			super("testMigration");
 		}
 
 		@Override
-		public Collection<TableInfo> getTables() {
+		public Collection<TableInfo> getTables(String uri) {
 			return Arrays.asList(
 				new TableInfo("primary_table", "create table primary_table (id varchar(50));"),
 				new TableInfo("secondary_table", "create table secondary_table (id integer);"));
+		}
+		
+		public static TestMigrationSchema getInstance() {
+			return INSTANCE;
 		}
 	}
 	

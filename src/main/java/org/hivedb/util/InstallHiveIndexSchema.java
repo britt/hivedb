@@ -19,7 +19,7 @@ public class InstallHiveIndexSchema {
 		
 		try {
 			// Create any missing index tables
-			new IndexSchema(hive.getPartitionDimension()).install();
+			new IndexSchema(hive.getPartitionDimension()).install(hive.getPartitionDimension().getIndexUri());
 		}
 		catch (Exception exception)
 		{

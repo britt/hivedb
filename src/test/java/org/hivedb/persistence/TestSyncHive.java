@@ -22,7 +22,7 @@ public class TestSyncHive extends H2HiveTestCase {
 		HiveFacade hive = getHive();
 		Node node = createNode("firstNode");
 		hive.addNode(node);
-		new IndexSchema(hive.getPartitionDimension()).install();
+		new IndexSchema(hive.getPartitionDimension()).install(hive.getPartitionDimension().getIndexUri());
 	}
 	
 	/**

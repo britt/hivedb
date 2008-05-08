@@ -3,9 +3,12 @@ package org.hivedb;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.context.Context;
+import org.hivedb.meta.Node;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.meta.persistence.TableInfo;
 import org.hivedb.util.database.DialectTools;
@@ -25,27 +28,8 @@ import org.springframework.jdbc.core.support.JdbcDaoSupport;
  *
  */
 public abstract class Schema extends JdbcDaoSupport {
-	protected String uri;
-	protected HiveDbDialect dialect = HiveDbDialect.MySql;
 	private String name;
-	
-	public String getUri() {
-		return uri;
-	}
-
-	public void setUri(String dbURI) {
-		this.uri = dbURI;
-		this.setDataSource(CachingDataSourceProvider.getInstance().getDataSource(uri));
-		this.dialect = DriverLoader.discernDialect(dbURI);
-	}
-
-	public HiveDbDialect getDialect() {
-		return dialect;
-	}
-
-	public void setDialect(HiveDbDialect dialect) {
-		this.dialect = dialect;
-	}
+	private Collection<String> uris = new HashSet<String>();
 
 	public String getName() {
 		return name;
@@ -56,20 +40,22 @@ public abstract class Schema extends JdbcDaoSupport {
 	}
 
 	
-	public Schema(String name) {this.name = name;}
-	
-	public Schema(String name, String dbURI){
-		this(name);
-		setUri(dbURI);
+	public Schema(String name) {
+		this.name = name;
 	}
 	
-	protected Context getContext() {
+	protected Context getContext(Node node) {
+		return getContext(node.getUri());
+	}
+	
+	protected Context getContext(String uri) {
 		Context context = new VelocityContext();
-		context.put("dialect", dialect);
-		for(HiveDbDialect d : HiveDbDialect.values())
+		context.put("dialect", DriverLoader.discernDialect(uri));
+		for (HiveDbDialect d : HiveDbDialect.values()) {
 			context.put(DialectTools.dialectToString(d).toLowerCase(), d);
-		context.put("booleanType", DialectTools.getBooleanTypeForDialect(dialect));
-		context.put("sequenceModifier", DialectTools.getNumericPrimaryKeySequenceModifier(dialect));
+		}
+		context.put("booleanType", DialectTools.getBooleanTypeForDialect(DriverLoader.discernDialect(uri)));
+		context.put("sequenceModifier", DialectTools.getNumericPrimaryKeySequenceModifier(DriverLoader.discernDialect(uri)));
 		return context;
 	}
 	
@@ -78,32 +64,30 @@ public abstract class Schema extends JdbcDaoSupport {
 	 * 
 	 * @return SQL create statements for tables and indexes
 	 */
-	public abstract Collection<TableInfo> getTables();
+	public abstract Collection<TableInfo> getTables(String uri);
 	
-	/**
-	 * Create the schema in the database.
-	 */
-	public void install() {
-		for (TableInfo table : getTables())
-			createTable(table);
+	public void install(Node node) {
+		install(node.getUri());
 	}
 	
-	public void install(String uri){
-		this.uri = uri;
-		this.setDataSource(CachingDataSourceProvider.getInstance().getDataSource(uri));
-		this.dialect = DriverLoader.discernDialect(uri);
-		install();
+	public void install(String uri) {
+		setDataSource(CachingDataSourceProvider.getInstance().getDataSource(uri));
+		for (TableInfo table : getTables(uri)) {
+			createTable(table, uri);
+		}
+		uris.add(uri);
+	}
+	
+	public void emptyTables(Node node) {
+		emptyTables(node.getUri());
 	}
 	
 	public void emptyTables(String uri) {
-		this.uri = uri;
-		emptyTables();
-	}
-	public void emptyTables() {
-		this.setDataSource(CachingDataSourceProvider.getInstance().getDataSource(uri));
-		this.dialect = DriverLoader.discernDialect(uri);
-		for (TableInfo table : getTables())
-			emptyTable(table);
+		setDataSource(CachingDataSourceProvider.getInstance().getDataSource(uri));
+		for (TableInfo table : getTables(uri)) {
+			emptyTable(table, uri);
+		}
+		uris.remove(uri);
 	}
 
 	public static String addLengthForVarchar(String type)
@@ -119,11 +103,12 @@ public abstract class Schema extends JdbcDaoSupport {
 	 * @param tableName
 	 * @return
 	 */
-	public boolean tableExists(String tableName)
+	public boolean tableExists(String tableName, String uri)
 	{
+		setDataSource(CachingDataSourceProvider.getInstance().getDataSource(uri));
 		JdbcTemplate t = getJdbcTemplate();
 		try {
-			t.query( "select * from " + tableName + ifMySql(" LIMIT 1", dialect), new TrueRowMapper());
+			t.query( "select * from " + tableName + ifMySql(" LIMIT 1",DriverLoader.discernDialect(uri)), new TrueRowMapper());
 			//System.err.println("Table " + tableName + " exists for database " + dbURI);
 			return true;
 		}
@@ -140,9 +125,10 @@ public abstract class Schema extends JdbcDaoSupport {
 	 * @param createStatement
 	 * @throws SQLException
 	 */
-	private void createTable(TableInfo table) {
+	private void createTable(TableInfo table, String uri) {
+		setDataSource(CachingDataSourceProvider.getInstance().getDataSource(uri));
 		JdbcTemplate j = getJdbcTemplate();
-		if(!tableExists(table.getName())) {
+		if(!tableExists(table.getName(), uri)) {
 			final String createStatement = table.getCreateStatement();
 			PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
 					createStatement);
@@ -155,9 +141,10 @@ public abstract class Schema extends JdbcDaoSupport {
 		}
 	}
 	
-	private void emptyTable(TableInfo table) {
+	private void emptyTable(TableInfo table, String uri) {
+		setDataSource(CachingDataSourceProvider.getInstance().getDataSource(uri));
 		JdbcTemplate j = getJdbcTemplate();
-		if(tableExists(table.getName())) {
+		if(tableExists(table.getName(), uri)) {
 			final String createStatement = table.getDeleteAllStatement();
 			PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
 					createStatement);
@@ -174,5 +161,9 @@ public abstract class Schema extends JdbcDaoSupport {
 	
 	public String ifMySql(String sql, HiveDbDialect dialect) {
 		return (dialect.equals(HiveDbDialect.MySql) ? sql : "");
+	}
+	
+	public Collection<String> getURIs() {
+		return Collections.unmodifiableCollection(uris);
 	}
 }

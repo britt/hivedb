@@ -12,6 +12,7 @@ import javax.sql.DataSource;
 
 import org.h2.tools.DeleteDbFiles;
 import org.hivedb.Schema;
+import org.hivedb.meta.Node;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.meta.persistence.TableInfo;
@@ -81,5 +82,10 @@ public class H2TestCase extends DatabaseTestCase {
 	@Override
 	protected DataSource getDataSource(String name) {
 		return CachingDataSourceProvider.getInstance().getDataSource(getConnectString(name));
+	}
+
+	@Override
+	protected Collection<Node> getDataNodes() {
+		return Collections.emptyList();
 	}
 }
