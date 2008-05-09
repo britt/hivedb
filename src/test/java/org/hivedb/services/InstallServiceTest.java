@@ -8,6 +8,7 @@ import org.hivedb.Hive;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.Schema;
 import org.hivedb.Lockable.Status;
+import org.hivedb.hibernate.ConfigurationReader;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
@@ -16,6 +17,7 @@ import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.ContinentalSchema;
 import org.hivedb.util.database.test.H2TestCase;
 import org.hivedb.util.database.test.WeatherSchema;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -23,8 +25,12 @@ import static org.testng.AssertJUnit.*;
 
 public class InstallServiceTest extends H2TestCase {
 	
+	@Override
 	@BeforeMethod
-	public void setup() throws Exception {
+	public void beforeMethod() {
+		this.deleteDatabasesAfterEachTest = true;
+		super.afterMethod();
+		super.beforeMethod();
 		new HiveInstaller(uri()).run();
 		Hive.create(uri(), "split", Types.INTEGER, CachingDataSourceProvider.getInstance(), null);
 	}

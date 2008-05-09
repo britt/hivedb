@@ -86,7 +86,7 @@ public class HiveIndexerTest extends H2HiveTestCase {
 		indexer.update(getWeatherReportConfig(report), report);
 		GeneratedInstanceInterceptor.setProperty(report, "temperature", 32);
 		indexer.update(getWeatherReportConfig(report), report);
-    assertTrue(hive.directory().getResourceIdsOfPrimaryIndexKey("continent", report.getContinent()).toString(), hive.directory().getResourceIdsOfPrimaryIndexKey("continent", report.getContinent()).contains(report.getTemperature()));
+		assertTrue(hive.directory().getResourceIdsOfPrimaryIndexKey("continent", report.getContinent()).toString(), hive.directory().getResourceIdsOfPrimaryIndexKey("continent", report.getContinent()).contains(report.getTemperature()));
 		Collection<Object> asiatics = hive.directory().getResourceIdsOfPrimaryIndexKey("WeatherReport", "Asia");
 		Collection<Object> europeans = hive.directory().getResourceIdsOfPrimaryIndexKey("WeatherReport", "Europe");
 		

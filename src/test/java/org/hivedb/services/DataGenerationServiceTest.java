@@ -32,12 +32,30 @@ import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Unary;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class DataGenerationServiceTest extends H2HiveTestCase {
 
+	@Override
+	@BeforeMethod
+	public void beforeMethod() {
+		afterMethod();
+		super.beforeMethod();
+		new HiveInstaller(getConnectString(getHiveDatabaseName())).run();	
+		ConfigurationReader reader = new ConfigurationReader(getMappedClasses());
+		reader.install(getConnectString(getHiveDatabaseName()));
+	}
+	
+	@AfterMethod
+	@Override
+	public void afterMethod() {
+		super.afterMethod();
+		deleteDatabase("hive");
+	}
+	
 	@Test
 	public void testGeneration() throws Exception {
 		Collection<Class<?>> classes = getMappedClasses();
@@ -95,14 +113,6 @@ public class DataGenerationServiceTest extends H2HiveTestCase {
 			assertNotNull(io);
 			System.out.println(io + " " + io.getClass().getName());
 		}
-	}
-	
-	@BeforeMethod
-	public void setup() throws Exception {
-		super.beforeMethod();
-		new HiveInstaller(getConnectString(getHiveDatabaseName())).run();	
-		ConfigurationReader reader = new ConfigurationReader(getMappedClasses());
-		reader.install(getConnectString(getHiveDatabaseName()));
 	}
 	
 	@BeforeClass
