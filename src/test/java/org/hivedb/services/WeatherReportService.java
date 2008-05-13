@@ -5,6 +5,8 @@ import java.util.Collection;
 import javax.jws.WebMethod;
 import javax.jws.WebResult;
 import javax.jws.WebService;
+import javax.xml.ws.RequestWrapper;
+import javax.xml.ws.ResponseWrapper;
 
 import org.hivedb.annotations.GeneratedClass;
 import org.hivedb.annotations.IndexParamPagingPair;
@@ -66,10 +68,10 @@ public interface WeatherReportService extends Service<WeatherReport, WeatherServ
 	
 	@WebMethod
 	@WebResult
-	public WeatherServiceResponse get(Long id);
+	public WeatherServiceResponse get(Integer id);
 	@WebMethod
 	@WebResult
-	public boolean exists(Long id);
+	public boolean exists(Integer id);
 	@WebMethod
 	@WebResult
 	public WeatherServiceResponse save(WeatherReport obj);
@@ -78,7 +80,7 @@ public interface WeatherReportService extends Service<WeatherReport, WeatherServ
 	public WeatherServiceResponse saveAll(WeatherReport[] instances);
 	@WebMethod
 	@WebResult
-	public Object delete(Long id);
+	public Object delete(Integer id);
 	@WebMethod
 	@WebResult
 	public String getPersistedClass();

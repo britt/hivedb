@@ -158,6 +158,7 @@ public abstract class ClassServiceTest<T,S> extends H2TestCase  {
 			throw new RuntimeException(e);
 		}
 	}
+	
 	protected ServiceResponse invoke(Service client, String methodName, Object... args) {
 		try {
 			Collection<Class> argClasses = Transform.map(new Unary<Object, Class>() {
@@ -178,7 +179,8 @@ public abstract class ClassServiceTest<T,S> extends H2TestCase  {
 			throw new RuntimeException(e);
 		}
 	}
-	protected Long invokeDelete(Service client, String methodName, Object... args) {
+	
+	protected Object invokeDelete(Service client, String methodName, Object... args) {
 		try {
 			Collection<Class> argClasses = Transform.map(new Unary<Object, Class>() {
 				public Class f(Object arg) {
@@ -189,11 +191,12 @@ public abstract class ClassServiceTest<T,S> extends H2TestCase  {
 			argClasses.toArray(argClassArray);
 				
 			Method method = client.getClass().getMethod(methodName, argClassArray);
-			return (Long) method.invoke(client, args);
+			return method.invoke(client, args);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
+	
 	protected Integer invokeByCount(Service client, String methodName, Object... args) {
 		try {
 			Collection<Class> argClasses = Transform.map(new Unary<Object, Class>() {
@@ -458,7 +461,9 @@ public abstract class ClassServiceTest<T,S> extends H2TestCase  {
 	
 	
 	protected Object getPersistentInstance() {
-		return ((ServiceContainer)Atom.getFirstOrThrow(getPersistentInstanceAsServiceResponse().getContainers())).getInstance();
+		Object obj = Atom.getFirstOrThrow(getPersistentInstanceAsServiceResponse().getContainers());
+		return ((ServiceContainer) obj).getInstance();
+		//return ((ServiceContainer)Atom.getFirstOrThrow(getPersistentInstanceAsServiceResponse().getContainers())).getInstance();
 	}
 	protected ServiceResponse getPersistentInstanceAsServiceResponse() {
 		Assert.assertTrue(ReflectionTools.doesImplementOrExtend(getClient().getClass(), serviceClass));
