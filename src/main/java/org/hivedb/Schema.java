@@ -42,6 +42,8 @@ public abstract class Schema extends JdbcDaoSupport {
 	
 	public Schema(String name) {
 		this.name = name;
+		// necessary to quell spring
+		setJdbcTemplate(new JdbcTemplate());
 	}
 	
 	protected Context getContext(Node node) {
