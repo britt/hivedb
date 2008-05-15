@@ -6,6 +6,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 
+import javax.sql.DataSource;
+
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.context.Context;
 import org.hivedb.meta.Node;
@@ -27,7 +29,7 @@ import org.springframework.jdbc.core.support.JdbcDaoSupport;
  * @author Britt Crawford (bcrawford@cafepress.com)
  *
  */
-public abstract class Schema extends JdbcDaoSupport {
+public abstract class Schema {
 	private String name;
 	private Collection<String> uris = new HashSet<String>();
 
@@ -42,8 +44,6 @@ public abstract class Schema extends JdbcDaoSupport {
 	
 	public Schema(String name) {
 		this.name = name;
-		// necessary to quell spring
-		setJdbcTemplate(new JdbcTemplate());
 	}
 	
 	protected Context getContext(Node node) {
@@ -73,7 +73,6 @@ public abstract class Schema extends JdbcDaoSupport {
 	}
 	
 	public void install(String uri) {
-		setDataSource(CachingDataSourceProvider.getInstance().getDataSource(uri));
 		for (TableInfo table : getTables(uri)) {
 			createTable(table, uri);
 		}
@@ -85,7 +84,6 @@ public abstract class Schema extends JdbcDaoSupport {
 	}
 	
 	public void emptyTables(String uri) {
-		setDataSource(CachingDataSourceProvider.getInstance().getDataSource(uri));
 		for (TableInfo table : getTables(uri)) {
 			emptyTable(table, uri);
 		}
@@ -105,10 +103,9 @@ public abstract class Schema extends JdbcDaoSupport {
 	 * @param tableName
 	 * @return
 	 */
-	public boolean tableExists(String tableName, String uri)
-	{
-		setDataSource(CachingDataSourceProvider.getInstance().getDataSource(uri));
-		JdbcTemplate t = getJdbcTemplate();
+	public boolean tableExists(String tableName, String uri) {
+		Dao dao = new Dao((CachingDataSourceProvider.getInstance().getDataSource(uri)));
+		JdbcTemplate t = dao.getJdbcTemplate();
 		try {
 			t.query( "select * from " + tableName + ifMySql(" LIMIT 1",DriverLoader.discernDialect(uri)), new TrueRowMapper());
 			//System.err.println("Table " + tableName + " exists for database " + dbURI);
@@ -128,13 +125,13 @@ public abstract class Schema extends JdbcDaoSupport {
 	 * @throws SQLException
 	 */
 	private void createTable(TableInfo table, String uri) {
-		setDataSource(CachingDataSourceProvider.getInstance().getDataSource(uri));
-		JdbcTemplate j = getJdbcTemplate();
+		Dao dao = new Dao((CachingDataSourceProvider.getInstance().getDataSource(uri)));
+		JdbcTemplate t = dao.getJdbcTemplate();
 		if(!tableExists(table.getName(), uri)) {
 			final String createStatement = table.getCreateStatement();
 			PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
 					createStatement);
-			j.update(creatorFactory.newPreparedStatementCreator(new Object[] {}));
+			t.update(creatorFactory.newPreparedStatementCreator(new Object[] {}));
 			/* try {
 				System.out.println("Table " + table.getName() + " created for for database " + j.getDataSource().getConnection().toString());
 			} catch (SQLException e) {
@@ -144,13 +141,13 @@ public abstract class Schema extends JdbcDaoSupport {
 	}
 	
 	private void emptyTable(TableInfo table, String uri) {
-		setDataSource(CachingDataSourceProvider.getInstance().getDataSource(uri));
-		JdbcTemplate j = getJdbcTemplate();
+		Dao dao = new Dao((CachingDataSourceProvider.getInstance().getDataSource(uri)));
+		JdbcTemplate t = dao.getJdbcTemplate();
 		if(tableExists(table.getName(), uri)) {
 			final String createStatement = table.getDeleteAllStatement();
 			PreparedStatementCreatorFactory creatorFactory = new PreparedStatementCreatorFactory(
 					createStatement);
-			j.update(creatorFactory.newPreparedStatementCreator(new Object[] {}));
+			t.update(creatorFactory.newPreparedStatementCreator(new Object[] {}));
 			//System.err.println("Table " + table.getName() + " created for for database " + dbURI);
 		}
 	}
@@ -167,5 +164,11 @@ public abstract class Schema extends JdbcDaoSupport {
 	
 	public Collection<String> getURIs() {
 		return Collections.unmodifiableCollection(uris);
+	}
+	
+	private class Dao extends JdbcDaoSupport {
+		private Dao(DataSource dataSource) {
+			setDataSource(dataSource);
+		}
 	}
 }
