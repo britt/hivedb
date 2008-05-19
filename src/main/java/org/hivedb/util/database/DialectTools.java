@@ -64,4 +64,12 @@ public class DialectTools {
 		else
 			throw new UnsupportedDialectException("Unkown database dialect.  HiveDB supports MySQL, H2 and Derby.");
 	}
+	
+	public static String getDropDatabase(HiveDbDialect dialect, String name) {
+		switch (dialect) {
+			case H2: return "SHUTDOWN";
+			case MySql: return String.format("drop database %s", name);
+			default: return String.format("drop database %s", name);
+		}
+	}
 }
