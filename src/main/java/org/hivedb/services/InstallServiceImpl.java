@@ -15,6 +15,7 @@ import org.hivedb.Schema;
 import org.hivedb.meta.Node;
 import org.hivedb.util.database.DialectTools;
 import org.hivedb.util.database.HiveDbDialect;
+import org.hivedb.util.database.Schemas;
 import org.hivedb.util.functional.Maps;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
@@ -69,7 +70,7 @@ public class InstallServiceImpl implements InstallService {
 	public Boolean install(String schemaName, String nodeName) {
 		Schema s = schemata.get(schemaName);
 		String uri = hive.getNode(nodeName).getUri();
-		s.install(uri);
+		Schemas.install(s, uri);
 		return true;
 	}
 

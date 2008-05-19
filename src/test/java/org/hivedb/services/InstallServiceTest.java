@@ -14,6 +14,7 @@ import org.hivedb.meta.Node;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.meta.persistence.TableInfo;
 import org.hivedb.util.database.HiveDbDialect;
+import org.hivedb.util.database.Schemas;
 import org.hivedb.util.database.test.ContinentalSchema;
 import org.hivedb.util.database.test.H2TestCase;
 import org.hivedb.util.database.test.WeatherSchema;
@@ -63,7 +64,7 @@ public class InstallServiceTest extends H2TestCase {
 	
 	private void validateSchema(Schema schema, Node node) {
 		for(TableInfo t :schema.getTables(node.getUri()))
-			assertTrue(schema.tableExists(t.getName(), node.getUri()));
+			assertTrue(Schemas.tableExists(t.getName(), node.getUri()));
 	}
 	
 	private String uri() {

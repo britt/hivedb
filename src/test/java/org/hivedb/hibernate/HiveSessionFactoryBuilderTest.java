@@ -30,6 +30,7 @@ import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.Lists;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.HiveDbDialect;
+import org.hivedb.util.database.Schemas;
 import org.hivedb.util.database.test.Continent;
 import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.WeatherEvent;
@@ -125,9 +126,11 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 	public void testInsert() throws Exception {
 		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
 		final WeatherReport report = newInstance();
-		for (Node node : getHive().getNodes())
-			if (!WeatherSchema.getInstance().tableExists("WEATHER_REPORT", node.getUri()))
+		for (Node node : getHive().getNodes()) {
+			if (! Schemas.tableExists("WEATHER_REPORT", node.getUri())) {
 				throw new RuntimeException("Can't find WEATHER_REPORT table on node " + node.getUri());
+			}
+		}
 		save(factoryBuilder, report);
 		Hive hive = getHive();
 		assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
@@ -145,9 +148,11 @@ public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
 			public void execute(Session session) {
 				session.saveOrUpdate(report);
 			}};
-		for (Node node : getHive().getNodes())
-			if (!WeatherSchema.getInstance().tableExists("WEATHER_REPORT", node.getUri()))
+		for (Node node : getHive().getNodes()) {
+			if (! Schemas.tableExists("WEATHER_REPORT", node.getUri())) {
 				throw new RuntimeException("Can't find WEATHER_REPORT table on node " + node.getUri());
+			}
+		}
 		doInTransactionAndFailBeforeCommit(callback, session);
 		
 		Hive hive = getHive();

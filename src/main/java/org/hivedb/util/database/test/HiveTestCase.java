@@ -194,8 +194,9 @@ public class HiveTestCase {
 	public Collection<Schema> getHiveSchemas() {
 		final String hiveUri = getConnectString.f(hiveDatabaseName);
 		PartitionDimension partitionDimension = PartitionDimensionCreator.create(configurationReader.getHiveConfiguration(), hiveUri);
+		partitionDimension.installIndexSchema();
 		return Arrays.asList(new Schema[] {
 				new HiveConfigurationSchema(hiveUri),
-				new IndexSchema(partitionDimension) });
+				partitionDimension.getIndexSchema() });
 	}
 }

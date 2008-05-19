@@ -5,6 +5,7 @@ import org.hivedb.meta.Resource;
 import org.hivedb.meta.ResourceIndex;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.IndexSchema;
+import org.hivedb.util.database.Schemas;
 
 /***
  * Methods for generating SQL strings used to read and write from the HiveDB directory.
@@ -20,27 +21,27 @@ public class IndexSqlFormatter {
 	public String insertPrimaryIndexKey(PartitionDimension partitionDimension) {
 		return String.format(
 				"insert into %s (id, node, status) values(?, ?, 0)", 
-				IndexSchema.getPrimaryIndexTableName(partitionDimension));
+				Schemas.getPrimaryIndexTableName(partitionDimension));
 	}
 	
 	public String selectKeySemaphoreOfPrimaryIndexKey(PartitionDimension partitionDimension) {
-		return String.format("select node,status from %s where id = ?", IndexSchema.getPrimaryIndexTableName(partitionDimension)); 
+		return String.format("select node,status from %s where id = ?", Schemas.getPrimaryIndexTableName(partitionDimension)); 
 	}
 	
 	public String selectResourceIdsOfPrimaryIndexKey(ResourceIndex resourceIndex) {
-		return String.format("select id from %s where pkey = ?", IndexSchema.getResourceIndexTableName(resourceIndex.getResource()));
+		return String.format("select id from %s where pkey = ?", Schemas.getResourceIndexTableName(resourceIndex.getResource()));
 	}
 
 	public String checkExistenceOfPrimaryKey(PartitionDimension partitionDimension) {
-		return String.format("select id from %s where id =  ?", IndexSchema.getPrimaryIndexTableName(partitionDimension));
+		return String.format("select id from %s where id =  ?", Schemas.getPrimaryIndexTableName(partitionDimension));
 	}
 	
 	public String updateReadOnlyOfPrimaryIndexKey(PartitionDimension partitionDimension) {
-		return String.format("update %s set status = ? where id = ?", IndexSchema.getPrimaryIndexTableName(partitionDimension));
+		return String.format("update %s set status = ? where id = ?", Schemas.getPrimaryIndexTableName(partitionDimension));
 	}
 	
 	public String deletePrimaryIndexKey(PartitionDimension partitionDimension) {
-		return String.format("delete from %s where id = ?", IndexSchema.getPrimaryIndexTableName(partitionDimension));
+		return String.format("delete from %s where id = ?", Schemas.getPrimaryIndexTableName(partitionDimension));
 	}
 	
 	/**
@@ -49,7 +50,7 @@ public class IndexSqlFormatter {
 	 * 
 	 */
 	public String insertSecondaryIndexKey(SecondaryIndex secondaryIndex) {
-		return String.format("insert into %s (id, pkey) values(?, ?)", IndexSchema.getSecondaryIndexTableName(secondaryIndex));
+		return String.format("insert into %s (id, pkey) values(?, ?)", Schemas.getSecondaryIndexTableName(secondaryIndex));
 	}
 	
 	public String selectSecondaryIndexKeysOfPrimaryKey(SecondaryIndex secondaryIndex) {
@@ -60,14 +61,14 @@ public class IndexSqlFormatter {
 		 	// secondary index of a resource that is also the partition dimension
 		 	return String.format(
 				"select s.id from %s s where s.pkey = ?", 
-				IndexSchema.getSecondaryIndexTableName(secondaryIndex));
+				Schemas.getSecondaryIndexTableName(secondaryIndex));
 		else
 			// secondary index of a resource with a different partition dimension
 			return String.format(
 				"select s.id from %s p join %s r on r.pkey = p.id join %s s on s.pkey = r.id where p.id = ?", 
-				IndexSchema.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
-				IndexSchema.getResourceIndexTableName(secondaryIndex.getResource()),
-				IndexSchema.getSecondaryIndexTableName(secondaryIndex));
+				Schemas.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
+				Schemas.getResourceIndexTableName(secondaryIndex.getResource()),
+				Schemas.getSecondaryIndexTableName(secondaryIndex));
 	}
 	
 	public String selectKeySemaphoresOfSecondaryIndexKey(SecondaryIndex secondaryIndex) {
@@ -75,21 +76,21 @@ public class IndexSqlFormatter {
 			// index of a resource
 			return String.format(
 				"select distinct p.node,p.status from %s p join %s r on r.pkey = p.id where r.id = ?", 
-				IndexSchema.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
-				IndexSchema.getSecondaryIndexTableName(secondaryIndex.getResource().getIdIndex()));
+				Schemas.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
+				Schemas.getSecondaryIndexTableName(secondaryIndex.getResource().getIdIndex()));
 		else if (secondaryIndex.getResource().isPartitioningResource())
 			 // secondary index of a resource that is also the partition dimension
 			 return String.format(
 				"select distinct p.node,p.status from %s p join %s s on s.pkey = p.id where s.id = ?", 
-				IndexSchema.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
-				IndexSchema.getSecondaryIndexTableName(secondaryIndex));
+				Schemas.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
+				Schemas.getSecondaryIndexTableName(secondaryIndex));
 		else 
 			// secondary index of a resource that is not also the partition dimension
 			return String.format(
 				"select distinct p.node,p.status from %s p join %s r on r.pkey = p.id join %s s on s.pkey = r.id where s.id = ?", 
-				IndexSchema.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
-				IndexSchema.getResourceIndexTableName(secondaryIndex.getResource()),
-				IndexSchema.getSecondaryIndexTableName(secondaryIndex));
+				Schemas.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
+				Schemas.getResourceIndexTableName(secondaryIndex.getResource()),
+				Schemas.getSecondaryIndexTableName(secondaryIndex));
 	}
 	
 	public String selectPrimaryIndexKeysOfSecondaryIndexKey( SecondaryIndex secondaryIndex) {
@@ -97,48 +98,48 @@ public class IndexSqlFormatter {
 			// index of a resource
 			return 	String.format(
 				"select p.id from %s p join %s r on r.pkey = p.id where r.id = ?", 
-				IndexSchema.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
-				IndexSchema.getResourceIndexTableName(secondaryIndex.getResource()));
+				Schemas.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
+				Schemas.getResourceIndexTableName(secondaryIndex.getResource()));
 		else if (secondaryIndex.getResource().isPartitioningResource())
 			// secondary index of a resource that is also the partition dimension
 			return String.format(
 				"select p.id from %s p join %s s on s.pkey = p.id where s.id = ?", 
-				IndexSchema.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
-				IndexSchema.getSecondaryIndexTableName(secondaryIndex));
+				Schemas.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
+				Schemas.getSecondaryIndexTableName(secondaryIndex));
 		else
 			// secondary index of a resource that is not also the partition dimension
 			return String.format(
 				"select p.id from %s p join %s r on r.pkey = p.id join %s s on s.pkey = r.id where s.id = ?", 
-				IndexSchema.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
-				IndexSchema.getResourceIndexTableName(secondaryIndex.getResource()),
-				IndexSchema.getSecondaryIndexTableName(secondaryIndex));
+				Schemas.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
+				Schemas.getResourceIndexTableName(secondaryIndex.getResource()),
+				Schemas.getSecondaryIndexTableName(secondaryIndex));
 	}
 	
 	public String checkExistenceOfSecondaryIndexSql( SecondaryIndex secondaryIndex) {
-		return String.format("select id from %s where id = ? and pkey = ? limit 1", IndexSchema.getSecondaryIndexTableName(secondaryIndex));
+		return String.format("select id from %s where id = ? and pkey = ? limit 1", Schemas.getSecondaryIndexTableName(secondaryIndex));
 	}
 	
 	public String checkExistenceOfResourceIndexSql( ResourceIndex secondaryIndex) {
-		return String.format("select id from %s where id = ? limit 1", IndexSchema.getResourceIndexTableName(secondaryIndex.getResource()));
+		return String.format("select id from %s where id = ? limit 1", Schemas.getResourceIndexTableName(secondaryIndex.getResource()));
 	}
 	
 	public String updateSecondaryIndexKey( SecondaryIndex secondaryIndex) {
-		return String.format("update %s set pkey = ? where id = ? and pkey = ?", IndexSchema.getSecondaryIndexTableName(secondaryIndex));
+		return String.format("update %s set pkey = ? where id = ? and pkey = ?", Schemas.getSecondaryIndexTableName(secondaryIndex));
 	}
 	
 	public String deleteAllSecondaryIndexKeysForResourceId(SecondaryIndex secondaryIndex) {
-		return String.format("delete from %s where pkey = ?", IndexSchema.getSecondaryIndexTableName(secondaryIndex));
+		return String.format("delete from %s where pkey = ?", Schemas.getSecondaryIndexTableName(secondaryIndex));
 	}
 	
 	public String deleteSingleSecondaryIndexKey(SecondaryIndex secondaryIndex) {
-		return String.format("delete from %s where id =? and pkey = ?", IndexSchema.getSecondaryIndexTableName(secondaryIndex));
+		return String.format("delete from %s where id =? and pkey = ?", Schemas.getSecondaryIndexTableName(secondaryIndex));
 	}
 	
 	/***
 	 * Resource methods
 	 */
 	public String insertResourceId(Resource resource) {
-		return String.format("insert into %s (id, pkey) values(?, ?)", IndexSchema.getResourceIndexTableName(resource));
+		return String.format("insert into %s (id, pkey) values(?, ?)", Schemas.getResourceIndexTableName(resource));
 	}
 	
 	public String selectResourceIdsOfSecondaryIndexKey(SecondaryIndex secondaryIndex) {
@@ -147,37 +148,37 @@ public class IndexSqlFormatter {
 			return selectPrimaryIndexKeysOfSecondaryIndexKey(secondaryIndex);
 		return String.format(
 				"select r.id from %s r join %s s on s.pkey = r.id where s.id = ?",
-				IndexSchema.getResourceIndexTableName(resource),
-				IndexSchema.getSecondaryIndexTableName(secondaryIndex));
+				Schemas.getResourceIndexTableName(resource),
+				Schemas.getSecondaryIndexTableName(secondaryIndex));
 	}
 	
 	public String selectKeySemaphoresOfResourceId(Resource resource) {
 		return String.format(
 				"select p.node,p.status from %s p join %s r on r.pkey = p.id where r.id = ?", 
-				IndexSchema.getPrimaryIndexTableName(resource.getPartitionDimension()),
-				IndexSchema.getResourceIndexTableName(resource));
+				Schemas.getPrimaryIndexTableName(resource.getPartitionDimension()),
+				Schemas.getResourceIndexTableName(resource));
 	}
 	
 	public String selectPrimaryIndexKeysOfResourceId(Resource resource) {
 		return String.format(
 				"select p.id from %s p join %s r on r.pkey = p.id where r.id = ?", 
-				IndexSchema.getPrimaryIndexTableName(resource.getPartitionDimension()),
-				IndexSchema.getResourceIndexTableName(resource));
+				Schemas.getPrimaryIndexTableName(resource.getPartitionDimension()),
+				Schemas.getResourceIndexTableName(resource));
 	}
 	
 	public String selectSecondaryIndexKeyOfResourceId(SecondaryIndex secondaryIndex) {
 		return String.format(
 				"select s.id from %s s where s.pkey = ?", 
-				IndexSchema.getSecondaryIndexTableName(secondaryIndex),
-				IndexSchema.getResourceIndexTableName(secondaryIndex.getResource()));
+				Schemas.getSecondaryIndexTableName(secondaryIndex),
+				Schemas.getResourceIndexTableName(secondaryIndex.getResource()));
 	}
 	
 	public String updateResourceId( Resource resource) {
-		return String.format("update %s set pkey = ? where id = ?", IndexSchema.getResourceIndexTableName(resource));
+		return String.format("update %s set pkey = ? where id = ?", Schemas.getResourceIndexTableName(resource));
 	}
 	
 	public String deleteResourceId(Resource resource) {
-		return String.format("delete from %s where id = ?", IndexSchema.getResourceIndexTableName(resource));
+		return String.format("delete from %s where id = ?", Schemas.getResourceIndexTableName(resource));
 	}
 	
 	public String selectForUpdateLock(String table, String column) {

@@ -10,6 +10,7 @@ import javax.sql.DataSource;
 import org.hivedb.Schema;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.persistence.TableInfo;
+import org.hivedb.util.database.Schemas;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterSuite;
@@ -94,7 +95,7 @@ public abstract class DatabaseTestCase {
 	protected void clearTablesOfDatabase(String name) {
 		for (Schema schema : getSchemas()) {
 			for (Node node : getDataNodes()) {
-				schema.emptyTables(node);
+				Schemas.emptyTables(schema, node.getUri());
 			}
 		}
 	}

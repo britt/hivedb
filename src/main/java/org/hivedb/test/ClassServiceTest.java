@@ -56,6 +56,7 @@ import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.Lists;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.HiveDbDialect;
+import org.hivedb.util.database.Schemas;
 import org.hivedb.util.database.test.H2TestCase;
 import org.hivedb.util.database.test.MysqlTestCase;
 import org.hivedb.util.functional.Atom;
@@ -126,9 +127,11 @@ public abstract class ClassServiceTest<T,S> extends H2TestCase  {
 		classes.addAll(getEntityClasses());
 		ConfigurationReader reader = new ConfigurationReader(getEntityClasses());
 		reader.install(hive);
-		for(String nodeName : getDataNodeNames())
-			for(Schema s : getSchemata())
-				s.install(getConnectString(nodeName));
+		for (String nodeName : getDataNodeNames()) {
+			for (Schema s : getSchemata()) {
+				Schemas.install(s,getConnectString(nodeName));
+			}
+		}
 		config = reader.getHiveConfiguration();
 		factory = getSessionFactory();
 		server = createService(reader);
@@ -137,9 +140,11 @@ public abstract class ClassServiceTest<T,S> extends H2TestCase  {
 	
 	@BeforeMethod
 	public void beforeMethod() {
-		for(String nodeName : getDataNodeNames())
-			for(Schema s : getSchemata()) 
-				s.emptyTables(getConnectString(nodeName));
+		for (String nodeName : getDataNodeNames()) {
+			for (Schema s : getSchemata()) {
+				Schemas.emptyTables(s, getConnectString(nodeName));
+			}
+		}
 	}
 	
 	protected abstract Service createService(ConfigurationReader reader);

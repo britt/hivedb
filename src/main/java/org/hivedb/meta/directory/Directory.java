@@ -21,6 +21,7 @@ import org.hivedb.meta.persistence.IndexSchema;
 import org.hivedb.util.QuickCache;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.database.RowMappers;
+import org.hivedb.util.database.Schemas;
 import org.hivedb.util.database.Statements;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Delay;
@@ -326,25 +327,25 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	}
 	
 	private boolean lockPrimaryKeyForInsert(PartitionDimension dimension, Object primaryIndexKey, Node node) {
-		return doRead(sql.selectCompositeKeyForUpdateLock(IndexSchema.getPrimaryIndexTableName(partitionDimension), "id", "node"), 
+		return doRead(sql.selectCompositeKeyForUpdateLock(Schemas.getPrimaryIndexTableName(partitionDimension), "id", "node"), 
 				new Object[]{primaryIndexKey, node.getId()},
 				RowMappers.newTrueRowMapper()).size() == 0;
 	}
 	
 	private boolean lockPrimaryKeyForUpdate(PartitionDimension dimension, Object primaryIndexKey) {
-		return doRead(sql.selectForUpdateLock(IndexSchema.getPrimaryIndexTableName(partitionDimension), "id"), 
+		return doRead(sql.selectForUpdateLock(Schemas.getPrimaryIndexTableName(partitionDimension), "id"), 
 				new Object[]{primaryIndexKey},
 				RowMappers.newTrueRowMapper()).size() == 0;
 	}
 	
 	private boolean lockSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey, Object resourceId){
-		return doRead(sql.selectCompositeKeyForUpdateLock(IndexSchema.getSecondaryIndexTableName(secondaryIndex), "id", "pkey"), 
+		return doRead(sql.selectCompositeKeyForUpdateLock(Schemas.getSecondaryIndexTableName(secondaryIndex), "id", "pkey"), 
 				new Object[]{secondaryIndexKey, resourceId},
 				RowMappers.newTrueRowMapper()).size() == 0;
 	}
 	
 	private boolean lockResourceId(Resource resource, Object resourceId) {
-		return doRead(sql.selectForUpdateLock(IndexSchema.getResourceIndexTableName(resource), "id"),
+		return doRead(sql.selectForUpdateLock(Schemas.getResourceIndexTableName(resource), "id"),
 				new Object[]{resourceId},
 				RowMappers.newTrueRowMapper()).size() == 0;
 	}

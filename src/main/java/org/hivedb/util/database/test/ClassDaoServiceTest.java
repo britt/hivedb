@@ -46,6 +46,7 @@ import org.hivedb.util.Lists;
 import org.hivedb.util.PrimitiveUtils;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.HiveDbDialect;
+import org.hivedb.util.database.Schemas;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Delay;
 import org.hivedb.util.functional.Filter;
@@ -98,8 +99,9 @@ public class ClassDaoServiceTest extends H2TestCase implements SchemaInitializer
 		for(String nodeName : getDataNodeNames())
 			try {
 				hive.addNode(new Node(nodeName, nodeName, "" , HiveDbDialect.H2));
-				for (Schema schema : schemaList)
-					schema.install(getConnectString(nodeName));
+				for (Schema schema : schemaList) {
+					Schemas.install(schema, getConnectString(nodeName));
+				}
 			} catch (HiveLockableException e) {
 				throw new HiveRuntimeException("Hive was read-only", e);
 			}

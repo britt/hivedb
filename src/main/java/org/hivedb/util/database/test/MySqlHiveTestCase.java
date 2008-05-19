@@ -17,6 +17,7 @@ import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.database.HiveDbDialect;
+import org.hivedb.util.database.Schemas;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.testng.annotations.BeforeClass;
@@ -71,7 +72,7 @@ public class MySqlHiveTestCase extends MysqlTestCase {
 	protected void installDataSchemas() {
 		for (Schema schema : getDataNodeSchemas()) {
 			for (Node node : hiveTestCase.getOrLoadHive().getNodes()) {
-				schema.install(node);
+				node.installSchema(schema);
 			}
 		}
 	}
