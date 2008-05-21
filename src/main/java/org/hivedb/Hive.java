@@ -14,6 +14,7 @@ import org.hivedb.util.HiveUtils;
 import org.hivedb.util.Preconditions;
 import org.hivedb.util.database.DriverLoader;
 import org.hivedb.util.database.HiveDbDialect;
+import org.hivedb.util.database.Schemas;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Predicate;
@@ -103,7 +104,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		final List<PartitionDimension> partitionDimensions = dao.loadAll();
 		if(partitionDimensions.size() == 0) {
 			dao.create(dimension);
-			dimension.installIndexSchema();
+			Schemas.install(new IndexSchema(dimension), dimension.getIndexUri());
 			hive.incrementAndPersistHive(ds);
 			return hive;
 		} else
@@ -397,7 +398,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		ResourceDao resourceDao = new ResourceDao(hiveDataSource);
 		resourceDao.create(resource);
 		incrementAndPersistHive(hiveDataSource);
-		dimension.installIndexSchema();
+		Schemas.install(dimension);
 		return dimension.getResource(resource.getName());
 	}
 
@@ -413,7 +414,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		SecondaryIndexDao secondaryIndexDao = new SecondaryIndexDao(hiveDataSource);
 		secondaryIndexDao.create(secondaryIndex);
 		incrementAndPersistHive(hiveDataSource);
-		dimension.installIndexSchema();
+		Schemas.install(dimension);
 		return secondaryIndex;
 	}
 

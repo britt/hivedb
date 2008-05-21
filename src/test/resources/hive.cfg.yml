@@ -1,0 +1,18 @@
+--- 
+hive: 
+  resources:
+    - name: Resource1
+      type: Integer
+    - name: Resource2
+      indexes:
+        - name: Secondary_Index21
+          type: String
+      type: Integer
+  nodes: 
+    - name: A node
+      schema: org.hivedb.util.database.test.WeatherSchema
+    - name: Another node
+      schema: org.hivedb.util.database.test.WeatherSchema
+  dimension: 
+    name: member
+    type: Integer

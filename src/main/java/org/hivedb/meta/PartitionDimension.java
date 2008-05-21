@@ -27,7 +27,6 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	private int columnType;
 	private String indexUri;
 	private Collection<Resource> resources;
-	private IndexSchema indexSchema;
 
 	/**
 	 * 
@@ -184,21 +183,5 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	}
 	public void setId(Integer id) {
 		this.id = id;
-	}
-	
-	public void installIndexSchema() {
-		if (indexSchema == null) {
-			indexSchema = new IndexSchema(this);
-		}
-		Schemas.install(indexSchema);
-	}
-	
-	public void uninstallIndexSchema() {
-		Schemas.uninstall(indexSchema);
-		indexSchema = null;
-	}
-	
-	public IndexSchema getIndexSchema() {
-		return indexSchema;
 	}
 }

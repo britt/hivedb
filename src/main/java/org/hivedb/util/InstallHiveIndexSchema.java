@@ -4,6 +4,7 @@ import org.hivedb.Hive;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.persistence.IndexSchema;
+import org.hivedb.util.database.Schemas;
 
 public class InstallHiveIndexSchema {
 	
@@ -19,7 +20,7 @@ public class InstallHiveIndexSchema {
 		
 		try {
 			// Create any missing index tables
-			hive.getPartitionDimension().installIndexSchema();
+			Schemas.install(hive.getPartitionDimension());
 		}
 		catch (Exception exception)
 		{

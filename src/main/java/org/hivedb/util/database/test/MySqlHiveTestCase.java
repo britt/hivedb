@@ -72,7 +72,7 @@ public class MySqlHiveTestCase extends MysqlTestCase {
 	protected void installDataSchemas() {
 		for (Schema schema : getDataNodeSchemas()) {
 			for (Node node : hiveTestCase.getOrLoadHive().getNodes()) {
-				node.installSchema(schema);
+				Schemas.install(schema, node.getUri());
 			}
 		}
 	}

@@ -81,7 +81,7 @@ public class H2HiveTestCase extends H2TestCase {
 	protected void installDataSchemas() {
 		for (Schema schema : getDataNodeSchemas()) {
 			for (Node node : hiveTestCase.getOrLoadHive().getNodes()) {
-				node.installSchema(schema);
+				Schemas.install(schema, node.getUri());
 			}
 		}
 	}

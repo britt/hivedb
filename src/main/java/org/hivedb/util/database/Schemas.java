@@ -7,6 +7,11 @@ package org.hivedb.util.database;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.context.Context;
@@ -27,6 +32,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 
 public class Schemas {
+	
+	private static Map<String, Set<Schema>> dataSchemas = new HashMap<String, Set<Schema>>();
+	private static Map<String, IndexSchema> indexSchemas = new HashMap<String, IndexSchema>();
 	
 	public static Context getContext(String uri) {
 		Context context = new VelocityContext();
@@ -114,24 +122,43 @@ public class Schemas {
 		for (TableInfo table : schema.getTables(uri)) {
 			createTable(table, uri);
 		}
+		if (dataSchemas.get(uri) == null) {
+			dataSchemas.put(uri, new HashSet<Schema>());
+		}
+		dataSchemas.get(uri).add(schema);
 	}
 	
 	public static void uninstall(Schema schema, String uri) {
 		for (TableInfo table : schema.getTables(uri)) {
 			emptyTable(table, uri);
 		}
-	}
-	
-	public static void install(IndexSchema indexSchema) {
-		for (TableInfo table : getTables(indexSchema.getPartitionDimension())) {
-			createTable(table, indexSchema.getPartitionDimension().getIndexUri());
+		if (dataSchemas.get(uri) != null) {
+			dataSchemas.get(uri).remove(schema);
 		}
 	}
 	
-	public static void uninstall(IndexSchema indexSchema) {
-		for (TableInfo table : getTables(indexSchema.getPartitionDimension())) {
-			emptyTable(table, indexSchema.getPartitionDimension().getIndexUri());
+	public static void install(PartitionDimension partitionDimension) {
+		for (TableInfo table : getTables(partitionDimension)) {
+			createTable(table, partitionDimension.getIndexUri());
 		}
+		if (indexSchemas.get(partitionDimension.getIndexUri()) == null) {
+			indexSchemas.put(partitionDimension.getIndexUri(), new IndexSchema(partitionDimension));
+		}
+	}
+	
+	public static void uninstall(PartitionDimension partitionDimension) {
+		for (TableInfo table : getTables(partitionDimension)) {
+			emptyTable(table, partitionDimension.getIndexUri());
+		}
+		indexSchemas.remove(partitionDimension.getIndexUri());
+	}
+	
+	public static Collection<Schema> getDataSchemas(String uri) {
+		return Collections.unmodifiableCollection(dataSchemas.get(uri));
+	}
+	
+	public static IndexSchema getIndexSchema(String uri) {
+		return indexSchemas.get(uri);
 	}
 	
 	/**

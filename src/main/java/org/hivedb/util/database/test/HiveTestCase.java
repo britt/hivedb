@@ -26,6 +26,7 @@ import org.hivedb.meta.persistence.DataSourceProvider;
 import org.hivedb.meta.persistence.IndexSchema;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.JdbcTypeMapper;
+import org.hivedb.util.database.Schemas;
 import org.hivedb.util.functional.Unary;
 
 public class HiveTestCase {
@@ -194,9 +195,9 @@ public class HiveTestCase {
 	public Collection<Schema> getHiveSchemas() {
 		final String hiveUri = getConnectString.f(hiveDatabaseName);
 		PartitionDimension partitionDimension = PartitionDimensionCreator.create(configurationReader.getHiveConfiguration(), hiveUri);
-		partitionDimension.installIndexSchema();
+		Schemas.install(partitionDimension);
 		return Arrays.asList(new Schema[] {
 				new HiveConfigurationSchema(hiveUri),
-				partitionDimension.getIndexSchema() });
+				Schemas.getIndexSchema(partitionDimension.getIndexUri()) });
 	}
 }

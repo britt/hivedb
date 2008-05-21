@@ -28,7 +28,6 @@ public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable<
 	private Status status = Status.writable;
 	private double capacity;
 	private HiveDbDialect dialect;
-	private Collection<Schema> schemas = new HashSet<Schema>();
 
 	public Node(int id, String name, String databaseName, String host, HiveDbDialect dialect) {
 		this(name, databaseName, host, dialect);
@@ -164,19 +163,5 @@ public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable<
 
 	public int compareTo(Node o) {
 		return getUri().compareTo(o.getUri());
-	}
-	
-	public void installSchema(Schema schema) {
-		Schemas.install(schema, getUri());
-		schemas.add(schema);
-	}
-	
-	public void uninstallSchema(Schema schema) {
-		Schemas.uninstall(schema, getUri());
-		schemas.remove(schema);
-	}
-	
-	public Collection<Schema> getSchemas() {
-		return Collections.unmodifiableCollection(schemas);
 	}
 }

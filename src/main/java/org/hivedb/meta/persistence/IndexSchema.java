@@ -52,4 +52,12 @@ public class IndexSchema extends Schema {
 	public Collection<TableInfo> getTables(String uri) {
 		return Schemas.getTables(partitionDimension);
 	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof IndexSchema) {
+			return super.equals(obj) && partitionDimension.equals(((IndexSchema) obj).getPartitionDimension());
+		}
+		return false;
+	}
 }
