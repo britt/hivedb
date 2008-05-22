@@ -31,6 +31,11 @@ import org.hivedb.util.database.JdbcTypeMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 
+/**
+ * Utility class for installing and removing Schemas
+ * 
+ * @author mellwanger
+ */
 public class Schemas {
 	
 	private static Map<String, Set<Schema>> dataSchemas = new HashMap<String, Set<Schema>>();
@@ -154,7 +159,7 @@ public class Schemas {
 	}
 	
 	public static Collection<Schema> getDataSchemas(String uri) {
-		return Collections.unmodifiableCollection(dataSchemas.get(uri));
+		return dataSchemas.get(uri) == null ? new HashSet<Schema>() : Collections.unmodifiableCollection(new HashSet<Schema>(dataSchemas.get(uri)));
 	}
 	
 	public static IndexSchema getIndexSchema(String uri) {

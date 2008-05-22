@@ -1,9 +1,9 @@
 package org.hivedb.util;
 
-import java.io.File;
 import java.io.FileReader;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Collection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -11,27 +11,51 @@ import java.util.Map.Entry;
 import org.hivedb.Hive;
 import org.hivedb.Schema;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.PartitionDimension;
-import org.hivedb.meta.Resource;
-import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.HiveCreator;
-import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.database.Schemas;
-import org.hivedb.util.database.test.H2TestCase;
 import org.ho.yaml.Yaml;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+/**
+ * Tests HiveCreator and HiveDestructor functionality
+ * 
+ * @author mellwanger 
+ */
 public class HiveCreatorTest {
 	private static String HIVE_CONFIG_FILE = "src/test/resources/hive.cfg.yml";
-
+	
+	private Hive hive;
 	
 	@Test
 	public void testCreateHive() throws Exception {
 		HiveCreator hiveCreator = new HiveCreator();
-		Hive hive = hiveCreator.load(HIVE_CONFIG_FILE);
+		hive = hiveCreator.load(HIVE_CONFIG_FILE);
 		validateHive(hive, HIVE_CONFIG_FILE);
+	}
+	
+	@Test
+	public void testDestroyHive() throws Exception {
+		HiveDestructor hiveDestructor = new HiveDestructor();
+		hiveDestructor.destroy(hive);
+		for (Node node : hive.getNodes()) {
+			try {
+				// We have to verify by running a select to since H2 automatically starts the mem db on getConnection
+				DriverManager.getConnection(node.getUri()).prepareStatement("select * from weather_report").execute();
+				throw new RuntimeException(String.format("Node %s not destroyed", node.getName()));
+			} catch (SQLException ex) {
+				// expected
+			}
+		}
+		try {
+			DriverManager.getConnection(hive.getUri());
+			// We have to verify by running a select to since H2 automatically starts the mem db on getConnection
+			DriverManager.getConnection(hive.getUri()).prepareStatement("select * from hive_primary_member").execute();
+			throw new RuntimeException(String.format("Hive %s not destroyed", hive.getName()));
+		} catch (SQLException ex) {
+			// expected
+		} 
 	}
 	
 	@SuppressWarnings("unchecked")
