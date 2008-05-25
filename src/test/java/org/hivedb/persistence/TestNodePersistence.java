@@ -13,23 +13,16 @@ import org.hivedb.meta.persistence.NodeDao;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.JdbcUriFormatter;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.HiveTest;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class TestNodePersistence extends H2HiveTestCase {	  
-	
-	@BeforeMethod
-	@Override
-	public void beforeMethod() {
-		deleteDatabasesAfterEachTest = true;
-		super.afterMethod();
-		super.beforeMethod();
-	}
+public class TestNodePersistence extends HiveTest {
 	
 	@Test
 	public void testCreate() throws Exception {
 		int count = getHive().getNodes().size();
-		NodeDao dao = new NodeDao(getDataSource(getHiveDatabaseName()));
+		NodeDao dao = new NodeDao(getDataSource(getConnectString(getHiveDatabaseName())));
 		assertEquals(count,dao.loadAll().size());
 		
 		Node full = createFullyPopulatedNode();
@@ -63,7 +56,7 @@ public class TestNodePersistence extends H2HiveTestCase {
 	@Test
 	public void testUpdate() {
 		int count = getHive().getNodes().size();
-		NodeDao dao = new NodeDao(getDataSource(getHiveDatabaseName()));
+		NodeDao dao = new NodeDao(getDataSource(getConnectString(getHiveDatabaseName())));
 		assertEquals(count,dao.loadAll().size());
 		
 		Node full = createFullyPopulatedNode();
@@ -105,7 +98,7 @@ public class TestNodePersistence extends H2HiveTestCase {
 	@Test
 	public void testDelete() {
 		int count = getHive().getNodes().size();
-		NodeDao dao = new NodeDao(getDataSource(getHiveDatabaseName()));
+		NodeDao dao = new NodeDao(getDataSource(getConnectString(getHiveDatabaseName())));
 		assertEquals(count,dao.loadAll().size());
 		
 		Node full = createFullyPopulatedNode();

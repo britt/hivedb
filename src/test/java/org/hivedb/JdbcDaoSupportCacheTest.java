@@ -13,6 +13,7 @@ import org.hivedb.meta.Node;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
@@ -20,20 +21,8 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class JdbcDaoSupportCacheTest extends H2HiveTestCase {
+public class JdbcDaoSupportCacheTest extends HiveTest {
 	protected boolean cleanupDbAfterEachTest = true;
-	
-	protected Collection<String> getDataNodeNames() {
-		return Arrays.asList(new String[]{"data1","data2","data3"});
-	}
-	
-	@BeforeMethod
-	@Override
-	public void beforeMethod() {
-		deleteDatabasesAfterEachTest = true;
-		super.afterMethod();
-		super.beforeMethod();
-	}
 	
 	@Test
 	public void testDataSourceCacheCreation() throws HiveException, SQLException{

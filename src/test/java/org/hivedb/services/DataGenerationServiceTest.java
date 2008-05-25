@@ -29,6 +29,7 @@ import org.hivedb.hibernate.DataAccessObject;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.util.Lists;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Unary;
@@ -37,24 +38,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class DataGenerationServiceTest extends H2HiveTestCase {
-
-	@Override
-	@BeforeMethod
-	public void beforeMethod() {
-		afterMethod();
-		super.beforeMethod();
-		new HiveInstaller(getConnectString(getHiveDatabaseName())).run();	
-		ConfigurationReader reader = new ConfigurationReader(getMappedClasses());
-		reader.install(getConnectString(getHiveDatabaseName()));
-	}
-	
-	@AfterMethod
-	@Override
-	public void afterMethod() {
-		super.afterMethod();
-		deleteDatabase("hive");
-	}
+public class DataGenerationServiceTest extends HiveTest {
 	
 	@Test
 	public void testGeneration() throws Exception {

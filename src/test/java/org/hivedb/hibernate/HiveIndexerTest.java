@@ -19,28 +19,20 @@ import org.hivedb.util.GenerateInstance;
 import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.WeatherEvent;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.validators.Validator;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class HiveIndexerTest extends H2HiveTestCase {
+public class HiveIndexerTest extends HiveTest {
 	
-	@BeforeMethod
-	@Override
-	public void beforeMethod() {
-		deleteDatabasesAfterEachTest = true;
-		super.afterMethod();
-		super.beforeMethod();
-		HiveFacade hive = getHive();
-		try {
-			hive.addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", HiveDbDialect.H2));
-		} catch (Exception ex) {
-			throw new RuntimeException(ex);
-		}
+	private static String HIVE_CONFIG_FILE = "src/test/resources/hive_HiveIndexerTest.cfg.yml";
+	
+	protected String getHiveConfigurationFile() {
+		return HIVE_CONFIG_FILE;
 	}
-
 	
 	// Test for HiveIndexer.insert(final EntityIndexConfiguration config, final Object entity)
 	@Test

@@ -11,18 +11,11 @@ import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
 import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.H2TestCase;
+import org.hivedb.util.database.test.HiveTest;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class TestHiveSyncDaemon extends H2HiveTestCase {
-	
-	@BeforeMethod
-	@Override
-	public void beforeMethod() {
-		deleteDatabasesAfterEachTest = true;
-		super.afterMethod();
-		super.beforeMethod();
-	}
+public class TestHiveSyncDaemon extends HiveTest {
 	
 	@Test
 	public void testHiveSyncDaemon() {
@@ -37,7 +30,7 @@ public class TestHiveSyncDaemon extends H2HiveTestCase {
 			((DumbObserver) o).setChanged(false);
 		}
 		
-		HiveSemaphoreDao hsd = new HiveSemaphoreDao(getDataSource(getHiveDatabaseName()));
+		HiveSemaphoreDao hsd = new HiveSemaphoreDao(getDataSource(getConnectString(getHiveDatabaseName())));
 		hsd.incrementAndPersist();
 		
 		daemon.detectChanges();

@@ -15,11 +15,12 @@ import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.meta.Node;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.functional.Atom;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class DynamicMapDataAccessObjectTest extends H2HiveTestCase {
+public class DynamicMapDataAccessObjectTest extends HiveTest {
 //	private EntityHiveConfig config;
 //
 //	@BeforeMethod

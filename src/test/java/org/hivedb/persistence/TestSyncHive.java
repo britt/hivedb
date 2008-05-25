@@ -12,19 +12,12 @@ import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.meta.persistence.IndexSchema;
 import org.hivedb.util.database.Schemas;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.HiveTest;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class TestSyncHive extends H2HiveTestCase {
-
-	@BeforeMethod
-	public void setUp() throws Exception {
-		HiveFacade hive = getHive();
-		Node node = createNode("firstNode");
-		hive.addNode(node);
-		Schemas.install(hive.getPartitionDimension());
-	}
+public class TestSyncHive extends HiveTest {
 	
 	/**
 	 * Load two Hive instances, use one to update the hive, and have the other listen for updates

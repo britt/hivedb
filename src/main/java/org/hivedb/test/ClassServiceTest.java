@@ -58,6 +58,7 @@ import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.Schemas;
 import org.hivedb.util.database.test.H2TestCase;
+import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.MysqlTestCase;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
@@ -72,7 +73,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 
-public abstract class ClassServiceTest<T,S> extends H2TestCase  {
+public abstract class ClassServiceTest<T,S> extends HiveTest {
 
 	final HiveDbDialect DATABASE_DIALECT = HiveDbDialect.H2;
 	protected Class<T> clazz;
@@ -82,10 +83,7 @@ public abstract class ClassServiceTest<T,S> extends H2TestCase  {
 	protected String serviceUrl;
 	protected Service client;
 	protected Service server;
-	protected Hive hive;
-	protected EntityHiveConfig config;
 	protected HiveSessionFactory factory;
-	
 	
 	public ClassServiceTest(Class<T> clazz, Class serviceClass, Class responseClass, Class containerClass, String serviceUrl) {
 		this.clazz = clazz;
@@ -95,56 +93,10 @@ public abstract class ClassServiceTest<T,S> extends H2TestCase  {
 		this.serviceUrl = serviceUrl;
 	}
 	
-	private boolean init; // can't figure out how to do this with testng
-	public void init() {
-		if (init)
-			return;
-		init = true;
-		for(String name : getDatabaseNames()){
-			if(databaseExists(name)) {
-				deleteDatabase(name);
-				createDatabase(name);
-			} else
-				createDatabase(name);
-		}
-		this.cleanupAfterEachTest = false;
-		ConfigurationReader reader = new ConfigurationReader(ConfigurationReader.extractPartitionDimension(clazz));
-		reader.install(getConnectString(getHiveDatabaseName()));
-		hive = getHive();
-		new HiveInstaller(getConnectString(getHiveDatabaseName())).run();
-		for(String nodeName : getDataNodeNames())
-			try {
-				hive.addNode(new Node(nodeName, nodeName, "" , DATABASE_DIALECT));
-			}
-			catch (HiveLockableException e) {
-				throw new HiveRuntimeException("Hive was read-only", e);
-			}
-	}
-	@BeforeClass
-	public void setup() throws Exception {
-		init();
-		Collection<Class> classes = Lists.newArrayList();
-		classes.addAll(getEntityClasses());
-		ConfigurationReader reader = new ConfigurationReader(getEntityClasses());
-		reader.install(hive);
-		for (String nodeName : getDataNodeNames()) {
-			for (Schema s : getSchemata()) {
-				Schemas.install(s,getConnectString(nodeName));
-			}
-		}
-		config = reader.getHiveConfiguration();
+	public void setup() {
 		factory = getSessionFactory();
-		server = createService(reader);
+		server = createService(configurationReader);
 		startServer(server);
-	}
-	
-	@BeforeMethod
-	public void beforeMethod() {
-		for (String nodeName : getDataNodeNames()) {
-			for (Schema s : getSchemata()) {
-				Schemas.emptyTables(s, getConnectString(nodeName));
-			}
-		}
 	}
 	
 	protected abstract Service createService(ConfigurationReader reader);
@@ -507,28 +459,6 @@ public abstract class ClassServiceTest<T,S> extends H2TestCase  {
 				return createServiceContainer(g.generateAndCopyProperties(item.getInstance()), item.getVersion());
 			}}, 
 		expected.getContainers());
-	}
-
-	@Override
-	public Collection<String> getDatabaseNames() {
-		Collection<String> dbs = Lists.newArrayList();
-		dbs.addAll(getDataNodeNames());
-		if(!dbs.contains(getHiveDatabaseName()))
-			dbs.add(getHiveDatabaseName());
-		return dbs;
-	}
-
-	
-	private Collection<String> getDataNodeNames() {
-		return Collections.singletonList(getHiveDatabaseName());
-	}
-
-	public String getHiveDatabaseName() {
-		return "hive";
-	}	
-	
-	private Hive getHive() {
-		return Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
 	}
 	
 	private HiveSessionFactory getSessionFactory() {

@@ -18,6 +18,7 @@ import org.hivedb.meta.directory.NodeResolver;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.meta.persistence.TableInfo;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Pair;
@@ -27,30 +28,18 @@ import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class TestMigration extends H2HiveTestCase {
-
-	@BeforeMethod
-	@Override
-	public void beforeMethod() {
-		deleteDatabasesAfterEachTest = true;
-		super.afterMethod();
-		super.beforeMethod();
+public class TestMigration extends HiveTest {
+	
+	public void setup() {
 		for(String name: getDatabaseNames()) {
 			SimpleJdbcDaoSupport dao = new SimpleJdbcDaoSupport();
-			dao.setDataSource(CachingDataSourceProvider.getInstance().getDataSource(getConnectString(name)));
+			dao.setDataSource(getDataSource(getConnectString(name)));
 			
 			try {
 				dao.getJdbcTemplate().update("SET DB_CLOSE_DELAY 5");
 			}
 			catch (Exception e) {} // only protection against multiple calls (create a Schema class to avoid this)
 		}
-	}
-	
-	// Add this test's schema to that of the superclass
-	protected Collection<Schema> getDataNodeSchemas() {
-		Collection<Schema> schemas = new ArrayList<Schema>(super.getDataNodeSchemas());
-		schemas.add(TestMigrationSchema.getInstance());
-		return schemas;
 	}
 	
 	@Test
@@ -87,7 +76,7 @@ public class TestMigration extends H2HiveTestCase {
 		Pair<Node, Node> nodes = initializeTestData(hive, primaryKey, secondaryKey);
 		Node origin = nodes.getKey();
 		Node destination = nodes.getValue();
-		NodeResolver dir = new Directory(hive.getPartitionDimension(), CachingDataSourceProvider.getInstance().getDataSource(getConnectString(getHiveDatabaseName())));
+		NodeResolver dir = new Directory(hive.getPartitionDimension(), getDataSource(getConnectString(getHiveDatabaseName())));
 		PartitionKeyMover<String> pMover = new PrimaryMover(origin.getUri());
 		//This mover just craps out on copy
 		Mover<Integer> failingMover = new Mover<Integer>() {
@@ -124,7 +113,7 @@ public class TestMigration extends H2HiveTestCase {
 		Node origin = nodes.getKey();
 		Node destination = nodes.getValue();
 		
-		NodeResolver dir = new Directory(hive.getPartitionDimension(), getDataSource(getHiveDatabaseName()));
+		NodeResolver dir = new Directory(hive.getPartitionDimension(), getDataSource(getConnectString(getHiveDatabaseName())));
 		PartitionKeyMover<String> pMover = new PrimaryMover(origin.getUri());
 //		This mover just craps out on delete
 		Mover<Integer> failingMover = new Mover<Integer>() {
@@ -160,7 +149,7 @@ public class TestMigration extends H2HiveTestCase {
 	private Pair<Node, Node> initializeTestData(Hive hive, String primaryKey, Integer secondaryKey) throws Exception {
 		hive.directory().insertPrimaryIndexKey(primaryKey);
 		//Setup the test data on one node
-		NodeResolver dir = new Directory(hive.getPartitionDimension(), getDataSource(getHiveDatabaseName()));
+		NodeResolver dir = new Directory(hive.getPartitionDimension(), getDataSource(getConnectString(getHiveDatabaseName())));
 		int originId = Atom.getFirst(dir.getKeySemamphoresOfPrimaryIndexKey(primaryKey)).getId();
 		Node origin = hive.getNode(originId);
 		Node destination = origin.getName().equals("data1") ? hive.getNode("data2") : 
@@ -172,7 +161,7 @@ public class TestMigration extends H2HiveTestCase {
 		return new Pair<Node, Node>(origin, destination);
 	}
 	
-	private static class TestMigrationSchema extends Schema {
+	public static class TestMigrationSchema extends Schema {
 		private static TestMigrationSchema INSTANCE = new TestMigrationSchema();
 
 		private TestMigrationSchema() {
@@ -264,15 +253,5 @@ public class TestMigration extends H2HiveTestCase {
 			return dao.getJdbcTemplate().queryForInt("select id from secondary_table where id = ?", new Object[]{id});
 		}
 		
-	}
-	
-	@Override
-	public Collection<String> getDatabaseNames() {
-		return Arrays.asList(new String[]{getHiveDatabaseName(), "data1","data2"});
-	}
-	
-	@Override
-	public String getHiveDatabaseName() {
-		return "hive";
 	}
 }

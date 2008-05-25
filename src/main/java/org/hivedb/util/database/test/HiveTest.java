@@ -1,0 +1,157 @@
+package org.hivedb.util.database.test;
+
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertNotNull;
+import static org.testng.AssertJUnit.assertNull;
+import static org.testng.AssertJUnit.assertTrue;
+
+import java.io.Serializable;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
+import java.util.Map.Entry;
+
+import javax.sql.DataSource;
+
+import org.hivedb.Hive;
+import org.hivedb.HiveLockableException;
+import org.hivedb.configuration.EntityHiveConfig;
+import org.hivedb.hibernate.BaseDataAccessObjectFactory;
+import org.hivedb.hibernate.ConfigurationReader;
+import org.hivedb.hibernate.DataAccessObject;
+import org.hivedb.management.HiveInstaller;
+import org.hivedb.meta.Node;
+import org.hivedb.meta.PartitionDimension;
+import org.hivedb.meta.Resource;
+import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.meta.persistence.CachingDataSourceProvider;
+import org.hivedb.util.*;
+import org.hivedb.util.database.HiveDbDialect;
+import org.hivedb.util.database.test.Continent;
+import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.H2TestCase;
+import org.hivedb.util.database.test.WeatherEvent;
+import org.hivedb.util.database.test.WeatherReport;
+import org.hivedb.util.functional.Amass;
+import org.hivedb.util.functional.Atom;
+import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Generate;
+import org.hivedb.util.functional.Generator;
+import org.hivedb.util.functional.NumberIterator;
+import org.hivedb.util.functional.Pair;
+import org.hivedb.util.functional.Transform;
+import org.hivedb.util.functional.Unary;
+import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+public abstract class HiveTest {
+	protected EntityHiveConfig config;
+	protected Hive hive;
+	protected ConfigurationReader configurationReader;
+
+	protected String getHiveConfigurationFile() {
+		return String.format("src/test/resources/hive_%s.cfg.yml", getClass().getSimpleName());
+	}
+	
+	protected void setup() {
+		// override if needed;
+	}
+    
+	@BeforeMethod
+	public void beforeMethod() throws Exception {
+		hive = new HiveCreator().load(getHiveConfigurationFile());
+		configurationReader = new ConfigurationReader(getMappedClasses());
+		configurationReader.install(hive);
+		config = getEntityHiveConfig();
+		setup();
+	}
+	
+	@AfterMethod
+	public void afterMethod() {
+		new HiveDestructor().destroy(hive);
+	}
+	
+	public DataAccessObject<? extends Object, ? extends Serializable> getDao(Class clazz) {	
+		return new BaseDataAccessObjectFactory<Object,Serializable>(
+				getEntityHiveConfig(),
+				getMappedClasses(),
+				clazz,
+				getHive()).create();
+	}
+	
+	public Hive getHive() { 
+		return hive;
+	}
+	
+	public EntityHiveConfig getEntityHiveConfig() {
+		return configurationReader.getHiveConfiguration();
+	}
+	
+	@SuppressWarnings("unchecked")
+	protected Collection<Class<?>> getMappedClasses() {
+		return Arrays.asList(
+				getPartitionDimensionClass(),
+				WeatherReport.class, 
+				WeatherEvent.class);
+	}
+	
+	protected Class<?> getPartitionDimensionClass() {
+		return Continent.class;
+	}
+	
+	protected String getHiveDatabaseName() {
+		//return "hive";
+		return H2TestCase.TEST_DB;
+	}
+	
+	protected String getConnectString(String name) {
+		return String.format("jdbc:h2:mem:%s;LOCK_MODE=3", name);
+	}
+	
+	protected DataSource getDataSource(String uri) {
+		return CachingDataSourceProvider.getInstance().getDataSource(uri);
+	}
+	
+	protected Collection<String> getDatabaseNames() {
+		Collection<String> names = new ArrayList<String>();
+		names.add(hive.getPartitionDimension().getName());
+		for (Node node : hive.getNodes()) {
+			names.add(node.getName());
+		}
+		return names;
+	}
+	
+	protected PartitionDimension createEmptyPartitionDimension() {
+		return new PartitionDimension(Hive.NEW_OBJECT_ID, getHive().getPartitionDimension().getName(), Types.INTEGER,
+				getConnectString(getHiveDatabaseName()), new ArrayList<Resource>());
+	}
+	
+	protected Resource createResource() {
+		final Resource resource = new Resource("FOO", Types.INTEGER, false);
+		resource.setPartitionDimension(createEmptyPartitionDimension());
+		return resource;
+	}
+	
+	protected SecondaryIndex createSecondaryIndex() {
+		SecondaryIndex index = new SecondaryIndex("FOO",java.sql.Types.VARCHAR);
+		index.setResource(createResource());
+		return index;
+	}
+	
+	protected SecondaryIndex createSecondaryIndex(int id) {
+		SecondaryIndex index = new SecondaryIndex(id, "FOO",java.sql.Types.VARCHAR);
+		index.setResource(createResource());
+		return index;
+	}
+	
+	protected Node createNode(String name) {
+		return new Node(0, name, name, "", HiveDbDialect.H2);
+	}
+}

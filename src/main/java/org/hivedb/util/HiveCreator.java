@@ -26,7 +26,6 @@ public class HiveCreator {
 		} catch (Exception e) {
 			throw new RuntimeException("Error initalizing the h2 server.", e);
 		}
-		new HiveInstaller(String.format("jdbc:h2:mem:%s;LOCK_MODE=3", H2TestCase.TEST_DB)).run();
 	}
 	
 	public static void main(String[] argz) throws FileNotFoundException {
@@ -50,7 +49,7 @@ public class HiveCreator {
 	@SuppressWarnings("unchecked")
 	private Hive load(Map<String, ?> config) {
 		Map<String, String> dimension = (Map<String, String>) config.get("dimension");
-		List<Map<String, String>> nodes = (List<Map<String, String>>) config.get("nodes");
+		List<Map<String, ?>> nodes = (List<Map<String, ?>>) config.get("nodes");
 		List<Map<String, ?>> resources = (List<Map<String, ?>>) config.get("resources");
 		return new BourneHive(dimension, dataSourceProvider).addNodes(nodes).addResources(resources).getHive();
 	}

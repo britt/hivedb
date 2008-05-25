@@ -37,8 +37,7 @@ public class WeatherServiceTest extends ClassServiceTest<WeatherReport,WeatherRe
 		super(WeatherReport.class, WeatherReportService.class, WeatherServiceResponse.class, WeatherServiceContainer.class, WEATHER_SERVICE_URL);
 	}
 	
-	@BeforeClass
-	public void setup() throws Exception {
+	public void setup() {
 		super.setup();
 		Assert.assertTrue(server instanceof WeatherReportService);
 		final ServiceResponse createServiceResponse = getPersistentInstanceAsServiceResponse(); 
@@ -59,7 +58,7 @@ public class WeatherServiceTest extends ClassServiceTest<WeatherReport,WeatherRe
 	}
 	
 	protected Service createService(ConfigurationReader reader) {
-		return GeneratedServiceInterceptor.load(WeatherReport.class, WeatherReportService.class, WeatherServiceResponse.class, WeatherServiceContainer.class, hive, reader.getHiveConfiguration(), getAccessStrategy());
+		return GeneratedServiceInterceptor.load(WeatherReport.class, WeatherReportService.class, WeatherServiceResponse.class, WeatherServiceContainer.class, getHive(), reader.getHiveConfiguration(), getAccessStrategy());
 	}
 
 	private SequentialShardAccessStrategy getAccessStrategy() {

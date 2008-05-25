@@ -1,10 +1,11 @@
 package org.hivedb;
 
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.HiveTest;
 
-public class TestJdbcDaoSupportWriteLocking extends H2HiveTestCase {
-//	@BeforeMethod
-//	public void setUp() throws Exception {
+public class TestJdbcDaoSupportWriteLocking extends HiveTest {
+//
+//	public void setup() throws Exception {
 //		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()));
 //		hive.addPartitionDimension(createPopulatedPartitionDimension());
 //		hive.addNode(Atom.getFirst(hive.getPartitionDimensions()), createNode(getHiveDatabaseName()));

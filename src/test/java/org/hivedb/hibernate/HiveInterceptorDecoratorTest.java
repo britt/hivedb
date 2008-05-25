@@ -21,16 +21,12 @@ import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.Continent;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.WeatherReport;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class HiveInterceptorDecoratorTest extends H2HiveTestCase {
-	
-	@BeforeMethod
-	public void setUp() throws Exception {
-		getHive().addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", HiveDbDialect.H2));
-	}
+public class HiveInterceptorDecoratorTest extends HiveTest {
 	
 	@Test
 	public void testInstantiate() throws Exception {

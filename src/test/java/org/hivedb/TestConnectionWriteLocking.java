@@ -12,16 +12,11 @@ import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.util.AssertUtils;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.functional.Toss;
 import org.hivedb.util.functional.Transform;
 
-public class TestConnectionWriteLocking extends H2HiveTestCase {
-	
-//	@BeforeMethod
-	public void setUp() throws Exception {
-		super.beforeMethod();
-		getHive().addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", HiveDbDialect.H2));
-	}
+public class TestConnectionWriteLocking extends HiveTest {
 
 //	@Test
 	public void testHiveLockingInMemory() throws Exception {

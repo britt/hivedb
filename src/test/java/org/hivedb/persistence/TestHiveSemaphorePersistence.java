@@ -4,22 +4,15 @@ import static org.testng.AssertJUnit.assertEquals;
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.HiveTest;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class TestHiveSemaphorePersistence extends H2HiveTestCase {
-	
-	@BeforeMethod
-	@Override
-	public void beforeMethod() {
-		deleteDatabasesAfterEachTest = true;
-		super.afterMethod();
-		super.beforeMethod();
-	}
+public class TestHiveSemaphorePersistence extends HiveTest {
 	
 	@Test
 	public void testUpdate() throws Exception {
-		HiveSemaphoreDao hsd = new HiveSemaphoreDao(getDataSource(getHiveDatabaseName()));
+		HiveSemaphoreDao hsd = new HiveSemaphoreDao(getDataSource(getConnectString(getHiveDatabaseName())));
 		HiveSemaphore hs = hsd.create();
 		hs.incrementRevision();
 		hsd.update(hs);

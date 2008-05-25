@@ -12,6 +12,7 @@ import org.hivedb.meta.Node;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.Continent;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.database.test.WeatherReportImpl;
 import org.hivedb.util.functional.Filter;
@@ -24,11 +25,7 @@ import org.testng.annotations.Test;
  * @author bcrawford
  *
  */
-public class HiveShardSelectorTest extends H2HiveTestCase {
-	@BeforeMethod
-	public void setUp() throws Exception {
-		getHive().addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", HiveDbDialect.H2));
-	}
+public class HiveShardSelectorTest extends HiveTest {
 
 	@Test
 	public void testSelectNode() throws Exception {

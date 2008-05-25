@@ -15,25 +15,13 @@ import org.hivedb.meta.Node;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.Continent;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.database.test.WeatherReportImpl;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class HiveShardResolverTest extends H2HiveTestCase {
-	
-	@BeforeMethod
-	@Override
-	public void beforeMethod() {
-		deleteDatabasesAfterEachTest = true;
-		super.afterMethod();
-		super.beforeMethod();
-		try {
-			getHive().addNode(new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", HiveDbDialect.H2));
-		} catch (HiveLockableException ex) {
-			throw new RuntimeException(ex);
-		}
-	}
+public class HiveShardResolverTest extends HiveTest {
 	
 	@Test
 	public void testShardResolution() throws Exception{

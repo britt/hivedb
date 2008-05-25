@@ -33,6 +33,7 @@ import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.Schemas;
 import org.hivedb.util.database.test.Continent;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.WeatherEvent;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.database.test.WeatherSchema;
@@ -46,17 +47,7 @@ import org.testng.annotations.Test;
 
 import sun.security.x509.RFC822Name;
 
-public class HiveSessionFactoryBuilderTest extends H2HiveTestCase {
-	private EntityHiveConfig config;
-	
-	@BeforeMethod
-	@Override
-	public void beforeMethod() {
-		deleteDatabasesAfterEachTest = true;
-		super.afterMethod();
-		super.beforeMethod();
-		this.config = getEntityHiveConfig();
-	}
+public class HiveSessionFactoryBuilderTest extends HiveTest {
 	
 	@Test
 	public void testCreateConfigurationFromNode() throws Exception {

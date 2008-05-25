@@ -6,6 +6,7 @@ import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertNull;
 import static org.testng.AssertJUnit.assertTrue;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -20,8 +21,11 @@ import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.*;
+import org.hivedb.util.database.test.Continent;
 import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.H2TestCase;
+import org.hivedb.util.database.test.HiveTest;
+import org.hivedb.util.database.test.WeatherEvent;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.Atom;
@@ -33,24 +37,20 @@ import org.hivedb.util.functional.Pair;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class BaseDataAccessObjectTest extends H2HiveTestCase {
-	private EntityHiveConfig config;
+public class BaseDataAccessObjectTest extends HiveTest {
+	
+	private static String HIVE_CONFIG_FILE = "src/test/resources/hive_BaseDataAccessObjectTest.cfg.yml";
+	
+	protected String getHiveConfigurationFile() {
+		return HIVE_CONFIG_FILE;
+	}
 
 	private static Random random = new Random();
     
-	@BeforeMethod
-	@Override
-	public void beforeMethod() {
-		deleteDatabasesAfterEachTest = true;
-		super.afterMethod();
-		super.beforeMethod();
-		this.cleanupAfterEachTest = true;
-		this.config = getEntityHiveConfig();
-	}
-	
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testGet() throws Exception {
@@ -468,5 +468,4 @@ public class BaseDataAccessObjectTest extends H2HiveTestCase {
 		// Make sure all instances are found across nodes
 		Assert.assertEquals(INSTANCES, dao.findByProperty("latitude", 1d).size());
 	}
-
 }

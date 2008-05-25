@@ -15,11 +15,12 @@ import org.hivedb.util.GenerateInstance;
 import org.hivedb.util.GeneratedInstanceInterceptor;
 import org.hivedb.util.PropertyAccessor;
 import org.hivedb.util.database.test.H2HiveTestCase;
+import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.functional.Atom;
 import org.testng.AssertJUnit;
 import org.testng.annotations.Test;
 
-public class TestHibernateDynamicMapping extends H2HiveTestCase {
+public class TestHibernateDynamicMapping extends HiveTest {
 //	
 //	@Test
 //	public void testMapping() throws Exception {
