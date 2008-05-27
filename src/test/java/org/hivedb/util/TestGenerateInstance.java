@@ -5,6 +5,7 @@ import java.util.HashSet;
 
 import org.hivedb.annotations.GeneratedClass;
 import org.hivedb.annotations.GeneratorIgnore;
+import org.hivedb.util.classgen.GenerateInstance;
 import org.hivedb.util.functional.Atom;
 import org.testng.Assert;
 import org.testng.annotations.Test;

@@ -1,4 +1,4 @@
-package org.hivedb.util;
+package org.hivedb.util.classgen;
 
 import java.util.Map;
 

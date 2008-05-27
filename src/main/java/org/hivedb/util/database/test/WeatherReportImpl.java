@@ -9,11 +9,11 @@ import org.hivedb.annotations.EntityId;
 import org.hivedb.annotations.Index;
 import org.hivedb.annotations.PartitionIndex;
 import org.hivedb.annotations.Resource;
-import org.hivedb.util.GenerateInstance;
-import org.hivedb.util.GenerateInstanceCollection;
-import org.hivedb.util.GeneratePrimitiveCollection;
 import org.hivedb.util.HiveUtils;
 import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.classgen.GenerateInstance;
+import org.hivedb.util.classgen.GenerateInstanceCollection;
+import org.hivedb.util.classgen.GeneratePrimitiveCollection;
 import org.hivedb.util.functional.Amass;
 
 @Resource("WeatherReport")

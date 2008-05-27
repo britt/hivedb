@@ -11,6 +11,7 @@ import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.hibernate.DataAccessObject;
 import org.hivedb.meta.EntityGenerator;
 import org.hivedb.meta.EntityGeneratorImpl;
+import org.hivedb.util.classgen.GeneratePrimitiveValue;
 import org.hivedb.util.functional.Delay;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Generate;

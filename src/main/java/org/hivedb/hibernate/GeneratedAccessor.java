@@ -7,7 +7,7 @@ import org.hibernate.PropertyNotFoundException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.property.BasicPropertyAccessor;
 import org.hibernate.property.Setter;
-import org.hivedb.util.GeneratedInstanceInterceptor;
+import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
 
 public class GeneratedAccessor extends BasicPropertyAccessor {
 	

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.hivedb.util;
+package org.hivedb.util.classgen;
 
 import net.sf.cglib.core.DefaultNamingPolicy;
 import net.sf.cglib.core.Predicate;

@@ -1,8 +1,8 @@
 package org.hivedb.meta;
 
 import org.hivedb.configuration.EntityConfig;
-import org.hivedb.util.GeneratePrimitiveValue;
 import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.classgen.GeneratePrimitiveValue;
 import org.hivedb.util.functional.Generator;
 
 public class PrimaryIndexKeyGenerator implements Generator<Object>{

@@ -1,7 +1,8 @@
-package org.hivedb.util;
+package org.hivedb.util.classgen;
 
 import java.util.Collection;
 
+import org.hivedb.util.PrimitiveUtils;
 import org.hivedb.util.functional.Generate;
 import org.hivedb.util.functional.Generator;
 import org.hivedb.util.functional.NumberIterator;

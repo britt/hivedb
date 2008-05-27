@@ -1,8 +1,8 @@
 package org.hivedb.configuration;
 
 import org.hivedb.annotations.IndexType;
-import org.hivedb.util.GeneratedClassFactory;
-import org.hivedb.util.GeneratedInstanceInterceptor;
+import org.hivedb.util.classgen.GeneratedClassFactory;
+import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
 
 public class EntityIndexConfigProxy extends EntityIndexConfigImpl implements EntityIndexConfigDelegator {
 		

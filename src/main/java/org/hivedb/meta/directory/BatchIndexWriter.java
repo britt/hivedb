@@ -41,11 +41,7 @@ public class BatchIndexWriter extends SimpleJdbcDaoSupport {
 					public Collection<Object> f(final Entry<SecondaryIndex, Collection<Object>> secondaryIndexKeysEntry) {
 						return Transform.map(new Unary<Object, Object>() { 
 							 public Object f(Object secondaryIndexKey) {
-								 directory.insertSecondaryIndexKey(
-											secondaryIndexKeysEntry.getKey(),
-											secondaryIndexKey,
-											resourceId);
-								 return secondaryIndexKey;
+								 return directory.insertSecondaryIndexKeyNoTransaction(secondaryIndexKeysEntry.getKey(), secondaryIndexKey, resourceId);
 							}}, secondaryIndexKeysEntry.getValue());
 					}},
 					secondaryIndexValueMap.entrySet()).size();
@@ -60,8 +56,7 @@ public class BatchIndexWriter extends SimpleJdbcDaoSupport {
 					public Collection<Object> f(final Entry<SecondaryIndex, Collection<Object>> secondaryIndexKeysEntry) {
 						return Transform.map(new Unary<Object, Object>() { 
 							 public Object f(Object secondaryIndexKey) {
-								 directory.deleteSecondaryIndexKey(secondaryIndexKeysEntry.getKey(), secondaryIndexKey, resourceId);
-								 return secondaryIndexKey;
+								 return directory.deleteSecondaryIndexKeyNoTransaction(secondaryIndexKeysEntry.getKey(), secondaryIndexKey, resourceId);
 							}}, secondaryIndexKeysEntry.getValue());
 					}},
 					secondaryIndexValueMap.entrySet()).size();

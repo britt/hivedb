@@ -1,8 +1,8 @@
 package org.hivedb.meta;
 
 import org.hivedb.configuration.EntityConfig;
-import org.hivedb.util.GenerateInstance;
 import org.hivedb.util.PropertyAccessor;
+import org.hivedb.util.classgen.GenerateInstance;
 
 public class GenerateEntityInstance<R> {
 	private EntityConfig entityConfig;

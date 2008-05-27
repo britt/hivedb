@@ -14,7 +14,7 @@ import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.configuration.HiveConfigurationSchema;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
-import org.hivedb.util.GenerateInstance;
+import org.hivedb.util.classgen.GenerateInstance;
 import org.hivedb.util.database.test.Continent;
 import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.H2TestCase;

@@ -2,8 +2,8 @@ package org.hivedb.meta;
 
 import java.util.Collection;
 
-import org.hivedb.util.GeneratedClassFactory;
-import org.hivedb.util.GeneratedInstanceInterceptor;
+import org.hivedb.util.classgen.GeneratedClassFactory;
+import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

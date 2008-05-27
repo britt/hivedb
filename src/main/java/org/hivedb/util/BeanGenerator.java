@@ -3,6 +3,8 @@ package org.hivedb.util;
 import java.lang.reflect.Method;
 import java.util.Collection;
 
+import org.hivedb.util.classgen.GeneratePrimitiveCollection;
+import org.hivedb.util.classgen.GeneratePrimitiveValue;
 import org.hivedb.util.functional.Generate;
 import org.hivedb.util.functional.Generator;
 import org.hivedb.util.functional.NumberIterator;

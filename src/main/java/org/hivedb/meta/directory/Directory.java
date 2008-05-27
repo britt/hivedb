@@ -73,14 +73,18 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	public void insertSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey, final Object resourceId) {
 		newTransaction().execute(new TransactionCallback(){
 			public Object doInTransaction(TransactionStatus arg0) {
-				Object[] parameters = new Object[] {secondaryIndexKey, resourceId};
-				int[] types = new int[]{secondaryIndex.getColumnInfo().getColumnType(), secondaryIndex.getResource().getColumnType()};
-				
-				if(lockSecondaryIndexKey(secondaryIndex, secondaryIndexKey, resourceId))
-					doUpdate(sql.insertSecondaryIndexKey(secondaryIndex), types, parameters);
-				return secondaryIndexKey;
+				return insertSecondaryIndexKeyNoTransaction(secondaryIndex, secondaryIndexKey, resourceId);
 			}
 		});
+	}
+	
+	Object insertSecondaryIndexKeyNoTransaction(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey, final Object resourceId) {
+		Object[] parameters = new Object[] {secondaryIndexKey, resourceId};
+		int[] types = new int[]{secondaryIndex.getColumnInfo().getColumnType(), secondaryIndex.getResource().getColumnType()};
+		
+		if(lockSecondaryIndexKey(secondaryIndex, secondaryIndexKey, resourceId))
+			doUpdate(sql.insertSecondaryIndexKey(secondaryIndex), types, parameters);
+		return secondaryIndexKey;
 	}
 
 	public void updatePrimaryIndexKeyReadOnly(final Object primaryIndexKey, final boolean isReadOnly) {
@@ -127,16 +131,20 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	public void deleteSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey, final Object resourceId) {
 		newTransaction().execute(new TransactionCallback(){
 			public Object doInTransaction(TransactionStatus arg0) {
-				Object[] parameters = new Object[] {secondaryIndexKey, resourceId };
-				int[] types = new int[] {
-					secondaryIndex.getColumnInfo().getColumnType(),
-					JdbcTypeMapper.primitiveTypeToJdbcType(resourceId.getClass())	
-				};
-				lockSecondaryIndexKey(secondaryIndex, secondaryIndexKey, resourceId);
-				doUpdate(sql.deleteSingleSecondaryIndexKey(secondaryIndex), types, parameters);
-				return secondaryIndexKey;
+				return deleteSecondaryIndexKeyNoTransaction(secondaryIndex, secondaryIndexKey, resourceId);
 			}
 		});
+	}
+	
+	Object deleteSecondaryIndexKeyNoTransaction(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey, final Object resourceId) {
+		Object[] parameters = new Object[] {secondaryIndexKey, resourceId };
+		int[] types = new int[] {
+			secondaryIndex.getColumnInfo().getColumnType(),
+			JdbcTypeMapper.primitiveTypeToJdbcType(resourceId.getClass())	
+		};
+		lockSecondaryIndexKey(secondaryIndex, secondaryIndexKey, resourceId);
+		doUpdate(sql.deleteSingleSecondaryIndexKey(secondaryIndex), types, parameters);
+		return secondaryIndexKey;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -191,8 +199,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 			new Object[] {resourceId}, 
 			new KeySemaphoreRowMapper()));
 	}
-
-	@SuppressWarnings("unchecked")
+	
 	public Collection<Object> getPrimaryIndexKeysOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey)
 	{
 		return doRead(
@@ -200,8 +207,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 			new Object[] {secondaryIndexKey}, 
 			RowMappers.newObjectRowMapper(secondaryIndex.getResource().getPartitionDimension().getColumnType()));
 	}
-
-	@SuppressWarnings("unchecked")
+	
 	public Collection<Object> getSecondaryIndexKeysOfPrimaryIndexKey(SecondaryIndex secondaryIndex, Object primaryIndexKey)
 	{
 		return doRead(

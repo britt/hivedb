@@ -1,4 +1,4 @@
-package org.hivedb.util;
+package org.hivedb.util.classgen;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -7,6 +7,11 @@ import java.util.Collection;
 import net.sf.cglib.proxy.Factory;
 
 import org.hivedb.annotations.GeneratorIgnore;
+import org.hivedb.util.Lists;
+import org.hivedb.util.MapBacked;
+import org.hivedb.util.PrimitiveUtils;
+import org.hivedb.util.QuickCache;
+import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.functional.Delay;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Generator;

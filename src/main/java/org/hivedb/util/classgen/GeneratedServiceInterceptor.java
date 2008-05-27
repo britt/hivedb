@@ -1,4 +1,4 @@
-package org.hivedb.util;
+package org.hivedb.util.classgen;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
@@ -33,9 +33,10 @@ import org.hivedb.hibernate.HiveSessionFactoryBuilderImpl;
 import org.hivedb.services.Service;
 import org.hivedb.services.ServiceContainer;
 import org.hivedb.services.ServiceResponse;
-import org.hivedb.util.GenerateInstance;
-import org.hivedb.util.GeneratedClassFactory;
-import org.hivedb.util.GeneratedInstanceInterceptor;
+import org.hivedb.util.PrimitiveUtils;
+import org.hivedb.util.classgen.GenerateInstance;
+import org.hivedb.util.classgen.GeneratedClassFactory;
+import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
 import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;

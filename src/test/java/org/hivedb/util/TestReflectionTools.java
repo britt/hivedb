@@ -7,6 +7,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 import org.hivedb.util.ReflectionTools.SetterWrapper;
+import org.hivedb.util.classgen.GenerateInstance;
+import org.hivedb.util.classgen.GeneratedClassFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

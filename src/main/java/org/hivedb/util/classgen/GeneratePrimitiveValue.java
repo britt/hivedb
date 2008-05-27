@@ -1,4 +1,4 @@
-package org.hivedb.util;
+package org.hivedb.util.classgen;
 
 import java.math.BigDecimal;
 import java.util.Calendar;
@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Random;
 
+import org.hivedb.util.PrimitiveUtils;
 import org.hivedb.util.functional.Generator;
 
 public class GeneratePrimitiveValue<F> implements Generator<F> {
