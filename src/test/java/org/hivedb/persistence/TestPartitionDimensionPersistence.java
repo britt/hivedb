@@ -10,7 +10,6 @@ import org.hivedb.Hive;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.persistence.PartitionDimensionDao;
-import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.HiveTest;
 import org.testng.annotations.Test;
 

@@ -1,30 +1,18 @@
 package org.hivedb.util.database.test;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertNotNull;
-import static org.testng.AssertJUnit.assertNull;
-import static org.testng.AssertJUnit.assertTrue;
-
 import java.io.Serializable;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-import java.util.Map.Entry;
 
 import javax.sql.DataSource;
 
 import org.hivedb.Hive;
-import org.hivedb.HiveLockableException;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.hibernate.BaseDataAccessObjectFactory;
 import org.hivedb.hibernate.ConfigurationReader;
 import org.hivedb.hibernate.DataAccessObject;
-import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
@@ -33,23 +21,11 @@ import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.*;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.Continent;
-import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.H2TestCase;
 import org.hivedb.util.database.test.WeatherEvent;
 import org.hivedb.util.database.test.WeatherReport;
-import org.hivedb.util.functional.Amass;
-import org.hivedb.util.functional.Atom;
-import org.hivedb.util.functional.Filter;
-import org.hivedb.util.functional.Generate;
-import org.hivedb.util.functional.Generator;
-import org.hivedb.util.functional.NumberIterator;
-import org.hivedb.util.functional.Pair;
-import org.hivedb.util.functional.Transform;
-import org.hivedb.util.functional.Unary;
-import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
 
 public abstract class HiveTest {
 	protected EntityHiveConfig config;

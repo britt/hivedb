@@ -1,6 +1,5 @@
 package org.hivedb;
 
-import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.HiveTest;
 
 public class TestJdbcDaoSupportWriteLocking extends HiveTest {

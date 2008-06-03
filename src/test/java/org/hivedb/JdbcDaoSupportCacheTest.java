@@ -4,21 +4,12 @@ import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertTrue;
 
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.Collection;
 
-import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.AccessType;
-import org.hivedb.meta.Node;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
-import org.hivedb.util.database.HiveDbDialect;
-import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.HiveTest;
-import org.hivedb.util.functional.Transform;
-import org.hivedb.util.functional.Unary;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class JdbcDaoSupportCacheTest extends HiveTest {

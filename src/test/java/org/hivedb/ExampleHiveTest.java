@@ -14,7 +14,6 @@ import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.HiveDestructor;
 import org.hivedb.util.database.HiveDbDialect;
-import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.H2TestCase;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.functional.Atom;

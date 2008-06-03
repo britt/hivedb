@@ -4,26 +4,15 @@ import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertTrue;
 
-import java.util.Arrays;
 import java.util.Collection;
 
 import org.hivedb.Hive;
-import org.hivedb.HiveFacade;
-import org.hivedb.annotations.IndexType;
 import org.hivedb.configuration.EntityConfig;
-import org.hivedb.configuration.EntityConfigImpl;
-import org.hivedb.configuration.EntityIndexConfig;
-import org.hivedb.configuration.EntityIndexConfigImpl;
-import org.hivedb.meta.Node;
 import org.hivedb.util.classgen.GenerateInstance;
 import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
-import org.hivedb.util.database.HiveDbDialect;
-import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.WeatherEvent;
 import org.hivedb.util.database.test.WeatherReport;
-import org.hivedb.util.validators.Validator;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class HiveIndexerTest extends HiveTest {

@@ -6,7 +6,6 @@ import static org.testng.AssertJUnit.assertNotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Map.Entry;
 
 import org.hivedb.Hive;
@@ -17,15 +16,12 @@ import org.hivedb.meta.directory.DirectoryWrapper;
 import org.hivedb.meta.directory.NodeResolver;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.meta.persistence.TableInfo;
-import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Pair;
 import org.hivedb.util.functional.Transform;
-import org.hivedb.util.functional.Unary;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class TestMigration extends HiveTest {

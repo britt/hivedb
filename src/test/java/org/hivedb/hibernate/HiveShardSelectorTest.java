@@ -3,22 +3,18 @@ package org.hivedb.hibernate;
 import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertTrue;
 
-import java.sql.Types;
 import java.util.Collection;
 
 import org.hibernate.shards.ShardId;
 import org.hivedb.Hive;
 import org.hivedb.meta.Node;
-import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.Continent;
-import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.database.test.WeatherReportImpl;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 /***
  * More complex and useful tests will be added when dynamic shard configuration is added.

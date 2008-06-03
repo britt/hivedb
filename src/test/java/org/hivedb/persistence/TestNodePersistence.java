@@ -11,10 +11,7 @@ import org.hivedb.Lockable.Status;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.persistence.NodeDao;
 import org.hivedb.util.database.HiveDbDialect;
-import org.hivedb.util.database.JdbcUriFormatter;
-import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.HiveTest;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class TestNodePersistence extends HiveTest {

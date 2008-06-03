@@ -14,7 +14,6 @@ import org.hivedb.meta.Node;
 import org.hivedb.util.PropertyAccessor;
 import org.hivedb.util.classgen.GenerateInstance;
 import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
-import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.functional.Atom;
 import org.testng.AssertJUnit;

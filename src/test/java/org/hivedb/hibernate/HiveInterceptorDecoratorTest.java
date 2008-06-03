@@ -14,16 +14,12 @@ import org.hivedb.Hive;
 import org.hivedb.HiveLockableException;
 import org.hivedb.Lockable.Status;
 import org.hivedb.configuration.EntityHiveConfig;
-import org.hivedb.meta.Node;
 import org.hivedb.util.classgen.GenerateInstance;
 import org.hivedb.util.classgen.GeneratedClassFactory;
 import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
-import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.Continent;
-import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.WeatherReport;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class HiveInterceptorDecoratorTest extends HiveTest {

@@ -5,47 +5,30 @@ import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertNotNull;
 
-import java.util.Collection;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.Properties;
-import java.util.Random;
 
-import org.hibernate.CallbackException;
-import org.hibernate.EmptyInterceptor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
-import org.hibernate.shards.util.InterceptorDecorator;
 import org.hivedb.Hive;
-import org.hivedb.HiveLockableException;
-import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.meta.Node;
 import org.hivedb.util.Lists;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.classgen.GenerateInstance;
 import org.hivedb.util.classgen.GeneratedClassFactory;
-import org.hivedb.util.classgen.GeneratedImplementation;
 import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.Schemas;
 import org.hivedb.util.database.test.Continent;
-import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.WeatherEvent;
 import org.hivedb.util.database.test.WeatherReport;
-import org.hivedb.util.database.test.WeatherSchema;
 import org.hivedb.util.functional.Atom;
-import org.hivedb.util.functional.Generate;
-import org.hivedb.util.functional.Generator;
-import org.hivedb.util.functional.NumberIterator;
 import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import sun.security.x509.RFC822Name;
 
 public class HiveSessionFactoryBuilderTest extends HiveTest {
 	

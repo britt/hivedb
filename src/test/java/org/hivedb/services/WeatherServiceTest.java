@@ -40,9 +40,6 @@ public class WeatherServiceTest extends ClassServiceTest<WeatherReport,WeatherRe
 	public void setup() {
 		super.setup();
 		Assert.assertTrue(server instanceof WeatherReportService);
-		final ServiceResponse createServiceResponse = getPersistentInstanceAsServiceResponse(); 
-		WeatherServiceContainer weatherReportContainer = (WeatherServiceContainer) Atom.getFirstOrThrow(createServiceResponse.getContainers());
-		Assert.assertNotNull(weatherReportContainer.getWeatherReport());
 	}
 	
 	protected Collection<Schema> getSchemata() {

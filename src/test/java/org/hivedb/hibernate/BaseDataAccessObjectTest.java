@@ -6,7 +6,6 @@ import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertNull;
 import static org.testng.AssertJUnit.assertTrue;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -17,18 +16,11 @@ import java.util.Map.Entry;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveLockableException;
-import org.hivedb.configuration.EntityHiveConfig;
-import org.hivedb.management.HiveInstaller;
-import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.*;
 import org.hivedb.util.classgen.GenerateInstance;
 import org.hivedb.util.classgen.GeneratedClassFactory;
 import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
-import org.hivedb.util.database.test.Continent;
-import org.hivedb.util.database.test.H2HiveTestCase;
-import org.hivedb.util.database.test.H2TestCase;
 import org.hivedb.util.database.test.HiveTest;
-import org.hivedb.util.database.test.WeatherEvent;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.Atom;
@@ -40,8 +32,6 @@ import org.hivedb.util.functional.Pair;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class BaseDataAccessObjectTest extends HiveTest {

@@ -21,21 +21,14 @@ import org.apache.cxf.transport.DestinationFactoryManager;
 import org.apache.cxf.transport.local.LocalTransportFactory;
 import org.apache.cxf.wsdl.WSDLManager;
 import org.apache.cxf.wsdl11.WSDLManagerImpl;
-import org.hivedb.Hive;
 import org.hivedb.configuration.EntityConfig;
-import org.hivedb.configuration.EntityHiveConfig;
-import org.hivedb.hibernate.ConfigurationReader;
 import org.hivedb.hibernate.DataAccessObject;
-import org.hivedb.management.HiveInstaller;
 import org.hivedb.util.Lists;
-import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Unary;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class DataGenerationServiceTest extends HiveTest {

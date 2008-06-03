@@ -9,16 +9,11 @@ import org.hibernate.shards.ShardId;
 import org.hibernate.shards.strategy.selection.ShardResolutionStrategyData;
 import org.hibernate.shards.strategy.selection.ShardResolutionStrategyDataImpl;
 import org.hivedb.Hive;
-import org.hivedb.HiveLockableException;
 import org.hivedb.configuration.EntityHiveConfig;
-import org.hivedb.meta.Node;
-import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.Continent;
-import org.hivedb.util.database.test.H2HiveTestCase;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.database.test.WeatherReportImpl;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class HiveShardResolverTest extends HiveTest {
