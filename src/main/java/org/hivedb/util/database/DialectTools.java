@@ -1,6 +1,7 @@
 package org.hivedb.util.database;
 
 import org.hivedb.UnsupportedDialectException;
+import org.hivedb.util.database.test.H2TestCase;
 
 public class DialectTools {
 	
@@ -70,6 +71,22 @@ public class DialectTools {
 			case H2: return "SHUTDOWN";
 			case MySql: return String.format("drop database %s", name);
 			default: return String.format("drop database %s", name);
+		}
+	}
+	
+	public static String getDriver(HiveDbDialect dialect) {
+		switch (dialect) {
+			case H2: return "org.h2.Driver";
+			case MySql: return "com.mysql.jdbc.Driver";
+			default: throw new RuntimeException("Unsupported Dialect: " + dialect);
+		}
+	}
+	
+	public static String getHiveTestUri(HiveDbDialect dialect) {
+		switch (dialect) {
+			case H2: return "jdbc:h2:mem:testDb;LOCK_MODE=3";
+			case MySql: return "jdbc:mysql://localhost/?user=test&password=test";
+			default: throw new RuntimeException("Unsupported Dialect: " + dialect);
 		}
 	}
 }

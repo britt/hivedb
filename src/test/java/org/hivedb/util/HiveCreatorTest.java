@@ -52,7 +52,7 @@ public class HiveCreatorTest extends HiveTest {
 		} catch (SQLException ex) {
 			// expected
 		}
-		new HiveCreator().load(getHiveConfigurationFile());
+		new HiveCreator(dialect).load(getHiveConfigurationFile());
 	}
 	
 	@SuppressWarnings("unchecked")

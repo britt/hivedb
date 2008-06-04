@@ -16,6 +16,7 @@ import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.DataSourceProvider;
 import org.hivedb.meta.persistence.HiveBasicDataSourceProvider;
+import org.hivedb.util.database.DialectTools;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.database.Schemas;
@@ -27,17 +28,23 @@ import org.hivedb.util.database.test.H2TestCase;
  * @author mellwanger
  */
 public class BourneHive {
+	private HiveDbDialect dialect;
 	private Hive hive;
 	
 	public Hive getHive() {
 		return hive;
 	}
-	
+		
 	public BourneHive(Map<String, String> dimension, DataSourceProvider dataSourceProvider) {
-		new HiveInstaller(String.format("jdbc:h2:mem:%s;LOCK_MODE=3", H2TestCase.TEST_DB)).run();
+		this(dimension, dataSourceProvider, HiveDbDialect.H2);
+	}
+	
+	public BourneHive(Map<String, String> dimension, DataSourceProvider dataSourceProvider, HiveDbDialect dialect) {
+		this.dialect = dialect;
+		new HiveInstaller(DialectTools.getHiveTestUri(dialect)).run();
 		String name = dimension.get("name");
 		int type = JdbcTypeMapper.parseJdbcType(stringToVarchar(dimension.get("type")));
-		hive = Hive.create(String.format("jdbc:h2:mem:%s;LOCK_MODE=3", H2TestCase.TEST_DB), name, type, dataSourceProvider, null);
+		hive = Hive.create(DialectTools.getHiveTestUri(dialect), name, type, dataSourceProvider, null);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -45,7 +52,7 @@ public class BourneHive {
 		for (Map<String, ?> node : nodes) {
 			String name = (String) node.get("name");
 			try {
-				hive.addNode(new Node(name, String.format("%s%s", name, ";LOCK_MODE=3"), "mem", HiveDbDialect.H2));
+				hive.addNode(getNode(name));
 			} catch (HiveLockableException ex) {
 				throw new RuntimeException(ex);
 			}
@@ -118,5 +125,13 @@ public class BourneHive {
 	
 	private String stringToVarchar(String type) {
 		return type.equalsIgnoreCase("String") ? "VARCHAR" : type;
-	}	
+	}
+	
+	private Node getNode(String name) {
+		switch (dialect) {
+			case H2: return new Node(name, String.format("%s;LOCK_MODE=3", name), "mem", dialect);
+			case MySql: return new Node(name, name, "localhost", dialect);
+			default: throw new RuntimeException("Unsupported dialect: " + dialect);
+		}
+	}
 }

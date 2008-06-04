@@ -27,10 +27,11 @@ import org.hivedb.util.database.test.WeatherReport;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
-public abstract class HiveTest {
+public class HiveTest {
 	protected EntityHiveConfig config;
 	protected Hive hive;
 	protected ConfigurationReader configurationReader;
+	protected HiveDbDialect dialect;
 
 	protected String getHiveConfigurationFile() {
 		return String.format("src/test/resources/hive_%s.cfg.yml", getClass().getSimpleName());
@@ -39,10 +40,16 @@ public abstract class HiveTest {
 	protected void setup() {
 		// override if needed;
 	}
-    
+	
+	protected HiveDbDialect getDialect() {
+		// override if needed
+		return HiveDbDialect.H2;
+	}
+	
 	@BeforeMethod
 	public void beforeMethod() throws Exception {
-		hive = new HiveCreator().load(getHiveConfigurationFile());
+		dialect = getDialect();
+		hive = new HiveCreator(dialect).load(getHiveConfigurationFile());
 		configurationReader = new ConfigurationReader(getMappedClasses());
 		configurationReader.install(hive);
 		config = getEntityHiveConfig();

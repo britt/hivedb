@@ -2,36 +2,27 @@ package org.hivedb;
 
 import static org.testng.AssertJUnit.assertTrue;
 
-import java.util.Arrays;
-import java.util.Collection;
-
 import javax.sql.DataSource;
 
 import org.hivedb.management.KeyAuthority;
 import org.hivedb.management.MySqlKeyAuthority;
-import org.hivedb.util.database.test.MySqlHiveTestCase;
-import org.testng.annotations.Test;
+import org.hivedb.util.database.HiveDbDialect;
+import org.hivedb.util.database.test.HiveTest;
 
-public class TestMysqlKeyAuthority extends MySqlHiveTestCase{
+public class TestMysqlKeyAuthority extends HiveTest {
 	DataSource ds = null;
 
-//	@Test(groups={"mysql"})
+	public HiveDbDialect getDialect() {
+		return HiveDbDialect.MySql;
+	}
+	
+	//@Test(groups={"mysql"})
 	@SuppressWarnings("unchecked")
 	public void testAssign() throws Exception {
 		KeyAuthority authority = new MySqlKeyAuthority(
-				getDataSource(getHiveDatabaseName()), this.getClass(), Integer.class);
+				getDataSource(getHive().getUri()), this.getClass(), Integer.class);
 		int firstKey = (Integer) authority.nextAvailableKey();
 		int secondKey = (Integer) authority.nextAvailableKey();
 		assertTrue(secondKey > firstKey);
-	}
-	
-	@Override
-	public Collection<String> getDatabaseNames() {
-		return Arrays.asList(new String[]{getHiveDatabaseName()});
-	}
-
-	@Override
-	public String getHiveDatabaseName() {
-		return "storage_test";
 	}
 }
