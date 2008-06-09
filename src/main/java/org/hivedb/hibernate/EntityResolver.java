@@ -3,10 +3,8 @@ package org.hivedb.hibernate;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
-import org.hivedb.annotations.AnnotationHelper;
 import org.hivedb.annotations.GeneratedClass;
 import org.hivedb.annotations.IndexDelegate;
 import org.hivedb.annotations.IndexType;
@@ -16,7 +14,6 @@ import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.classgen.GeneratedClassFactory;
 import org.hivedb.util.classgen.GeneratedImplementation;
-import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Pair;
 import org.hivedb.util.functional.Predicate;
@@ -91,6 +88,7 @@ public class EntityResolver {
 			throw new RuntimeException(e);
 		}
 	}
+	@SuppressWarnings("unchecked")
 	public Class resolveEntityInterface(Class clazz) {
 		return ReflectionTools.whichIsImplemented(
 				clazz, 
@@ -103,6 +101,7 @@ public class EntityResolver {
 	
 	// Given a class that is not an entity itself, see it is the type of
 	// of a delegated index of an entity
+	@SuppressWarnings("unchecked")
 	private Method getIndexDelegateAnnotatedMethod(Class clazz) {
 		Method annotatedMethod = Filter.grepSingleOrNull(new Predicate<Method>() {
 			public boolean f(Method method) {

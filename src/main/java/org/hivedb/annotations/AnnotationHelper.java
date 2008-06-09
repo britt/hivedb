@@ -18,18 +18,23 @@ import org.hivedb.util.functional.Maps;
 import org.hivedb.util.functional.Predicate;
 
 public class AnnotationHelper {
+	@SuppressWarnings("unchecked")
 	public static<T extends Annotation> T getFirstInstanceOfAnnotation(Class entityClass, Class<T> annotationClass) {
 		Method m = getFirstMethodWithAnnotation(entityClass, annotationClass);
 		return m == null ? null : m.getAnnotation(annotationClass);
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static<T extends Annotation> Method getFirstMethodWithAnnotation(Class entityClass, Class<T> annotationClass) {
 		return Atom.getFirstOrNull(getAllMethodsWithAnnotation(entityClass, annotationClass));
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static List<Method> getAllMethodsWithAnnotation(Class entityClass, Class annotationClass) {
 		return getAllMethodsWithAnnotations(entityClass, Collections.singleton(annotationClass));
 	}
+	
+	@SuppressWarnings("unchecked")
 	public static List<Method> getAllMethodsWithAnnotations(Class entityClass, Collection<Class> annotationClasses) {
 		List<Method> methods = Lists.newArrayList();
 		for(Method method : entityClass.getMethods()) {
@@ -52,6 +57,7 @@ public class AnnotationHelper {
 		return methods;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static Map<Annotation, Object> getAllAnnotatedElements(Class clazz) {
 		Map<Annotation, Object> elements = Maps.newHashMap();
 		for(Annotation a : clazz.getAnnotations())
@@ -62,6 +68,7 @@ public class AnnotationHelper {
 		return elements;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static Map<? extends Annotation, ? extends Object> getAllAnnotatedMethods(Class clazz) {
 		Map<Annotation, Object> elements = Maps.newHashMap();
 		for(Method m : clazz.getMethods())
@@ -70,6 +77,7 @@ public class AnnotationHelper {
 		return elements;
 	}
 
+	@SuppressWarnings("unchecked")
 	public static Map<Annotation, Object> getAllAnnotatedConstructors(Class clazz) {
 		Map<Annotation, Object> elements = Maps.newHashMap();
 		for(Constructor c : clazz.getConstructors())
@@ -78,6 +86,7 @@ public class AnnotationHelper {
 		return elements;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static Map<? extends Annotation, ? extends Object> getAllAnnotatedFields(Class clazz) {
 		Map<Annotation, Object> elements = Maps.newHashMap();
 		for(Field f : clazz.getDeclaredFields())
@@ -86,9 +95,11 @@ public class AnnotationHelper {
 		return elements;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static<T> T getAnnotationDeeply(Class clazz, String property, Class<? extends T> annotationClass) {
 		return getAnnotationDeeply(ReflectionTools.getGetterOfProperty(clazz, property), annotationClass);
 	}
+	@SuppressWarnings("unchecked")
 	public static<T> T getAnnotationDeeply(Method method, Class<? extends T> annotationClass) {
 		if (method.getAnnotation((Class)annotationClass) != null)
 			return (T)method.getAnnotation((Class)annotationClass);
@@ -99,6 +110,7 @@ public class AnnotationHelper {
 		return null;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static<T> T  getMethodArgumentAnnotationDeeply(Method method, int argumentIndex, final Class<? extends T> annotationClass) {
 		return (T)Filter.grepSingleOrNull(
 				new Predicate<Annotation>() {

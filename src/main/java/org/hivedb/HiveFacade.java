@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.Observer;
 
 import org.hivedb.Lockable.Status;
-import org.hivedb.hibernate.HiveSessionFactoryBuilderImpl;
 import org.hivedb.meta.Assigner;
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.Node;

@@ -45,12 +45,11 @@ import org.hivedb.util.functional.Pair;
 import org.hivedb.util.functional.Predicate;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
-import org.springframework.jdbc.object.SqlQuery;
 
 public class BaseDataAccessObject implements DataAccessObject<Object, Serializable>{
 	private final Log log = LogFactory.getLog(BaseDataAccessObject.class);
 	private static int CHUNK_SIZE = 10;
-  private final HiveSessionFactory factory;
+	private final HiveSessionFactory factory;
 	private final EntityConfig config;
 	private final Class<?> clazz;
 	private Interceptor defaultInterceptor = EmptyInterceptor.INSTANCE;
@@ -190,7 +189,6 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	
 	public Integer getCountByRange(final String propertyName, final Object minValue, final Object maxValue) {
 		// Use an AllShardsresolutionStrategy + Criteria
-		final EntityIndexConfig indexConfig = config.getEntityIndexConfig(propertyName);
 		Session session = factory.openAllShardsSession();
 		QueryCallback query = new QueryCallback(){
 			@SuppressWarnings("unchecked")
@@ -522,6 +520,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	
 	public Collection<Object> populateDataIndexDelegates(Collection<Object> instances) {
 		return Transform.map(new Unary<Object, Object>() { 
+			@SuppressWarnings("unchecked")
 			public Object f(final Object instance) {
 				final List<Method> allMethodsWithAnnotation = AnnotationHelper.getAllMethodsWithAnnotation(clazz, DataIndexDelegate.class);
 				if (allMethodsWithAnnotation.size()==0)
@@ -669,6 +668,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	 */
 	public Collection<Object> getAll() {
 		QueryCallback query = new QueryCallback(){
+			@SuppressWarnings("unchecked")
 			public Collection<Object> execute(Session session) {
 				Criteria criteria = session.createCriteria(config.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
 				return criteria.list();
@@ -678,6 +678,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	}
 	public Collection<Object> queryDataIndex(final String joinTableName, Object primaryIndexKey) {
 		QueryCallback query = new QueryCallback(){
+			@SuppressWarnings("unchecked")
 			public Collection<Object> execute(Session session) {
 				SQLQuery query = session.createSQLQuery("select * from " + joinTableName);
 				return query.list();

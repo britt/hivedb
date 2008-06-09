@@ -21,6 +21,7 @@ public class EntityIndexConfigImpl implements EntityIndexConfig {
 	/**
 	 *  Constructor for a primitive type property or collection or primitive types
 	 */
+	@SuppressWarnings("unchecked")
 	public EntityIndexConfigImpl(
 			final Class entityInterface,
 			final String propertyName) {
@@ -54,6 +55,7 @@ public class EntityIndexConfigImpl implements EntityIndexConfig {
 		this.indexName = SqlUtils.singularize(propertyName) + ReflectionTools.capitalize(innerClassPropertyName); 
 		this.indexType = ReflectionTools.getGetterOfProperty(entityInterface, propertyName).getAnnotation(Index.class).type();
 		this.secondaryIndexCollectionGetter = new InstanceCollectionValueGetter() {
+			@SuppressWarnings("unchecked")
 			public Collection<Object> get(Object instance) {
 				if (!getValidator().isValid(instance, propertyName))
 					getValidator().throwInvalid(instance, propertyName);
@@ -69,6 +71,7 @@ public class EntityIndexConfigImpl implements EntityIndexConfig {
 		this.validator = resolveValidator(entityInterface, propertyName);
 	}
 	
+	@SuppressWarnings("unchecked")
 	private IndexType resolveIndexType(final Class entityInterface, final String propertyName) {
 		Index annotation = ReflectionTools.getGetterOfProperty(entityInterface, propertyName).getAnnotation(Index.class);
 		if (annotation != null)
@@ -78,6 +81,7 @@ public class EntityIndexConfigImpl implements EntityIndexConfig {
 		return IndexType.None;
 	}
 	
+	@SuppressWarnings("unchecked")
 	private Validator resolveValidator(final Class entityInterface, final String propertyName) {
 		Validate annotation = (Validate) ReflectionTools.getGetterOfProperty(entityInterface, propertyName).getAnnotation(Validate.class);
 		if (annotation != null)

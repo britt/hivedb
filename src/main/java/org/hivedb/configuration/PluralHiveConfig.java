@@ -5,13 +5,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.hivedb.Hive;
 import org.hivedb.HiveRuntimeException;
-import org.hivedb.meta.Node;
 import org.hivedb.util.Lists;
-import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.functional.DebugMap;
-import org.hivedb.util.functional.Maps;
 
 public class PluralHiveConfig implements EntityHiveConfig {
 	private Map<String,EntityConfig> indexConfigurations = new DebugMap<String, EntityConfig>();
@@ -39,6 +35,7 @@ public class PluralHiveConfig implements EntityHiveConfig {
 		return config;
 	}
 
+	@SuppressWarnings("unchecked")
 	public EntityConfig getEntityConfig(String className) {
 		Class clazz = null;
 		try {
@@ -49,7 +46,7 @@ public class PluralHiveConfig implements EntityHiveConfig {
 		return getEntityConfig(clazz);
 	}
 	
-	@SuppressWarnings("unused")
+	@SuppressWarnings("unchecked")
 	private List<Class> getAncestors(Class<?> clazz) {
 		List<Class> ancestors = Lists.newArrayList();
 		if (!clazz.isInterface())

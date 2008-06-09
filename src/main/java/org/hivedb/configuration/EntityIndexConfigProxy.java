@@ -12,6 +12,7 @@ public class EntityIndexConfigProxy extends EntityIndexConfigImpl implements Ent
 	 * @param secondaryIndexKeyPropertyName
 	 * @param isManyToMultiplicity - is the property a collection
 	 */
+	@SuppressWarnings("unchecked")
 	public EntityIndexConfigProxy(
 			final Class entityInterface,
 			final String propertyName,

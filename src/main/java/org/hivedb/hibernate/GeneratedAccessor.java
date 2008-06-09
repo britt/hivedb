@@ -11,6 +11,7 @@ import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
 
 public class GeneratedAccessor extends BasicPropertyAccessor {
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public Setter getSetter(Class theClass, String propertyName) throws PropertyNotFoundException {
 		return new GeneratedInstanceSetter(propertyName);

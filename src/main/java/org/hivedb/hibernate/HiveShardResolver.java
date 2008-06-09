@@ -1,8 +1,6 @@
 package org.hivedb.hibernate;
 
 
-import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -10,16 +8,11 @@ import org.hibernate.shards.ShardId;
 import org.hibernate.shards.strategy.resolution.ShardResolutionStrategy;
 import org.hibernate.shards.strategy.selection.ShardResolutionStrategyData;
 import org.hibernate.shards.util.Lists;
-import org.hivedb.Hive;
 import org.hivedb.HiveFacade;
-import org.hivedb.annotations.IndexDelegate;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.EntityIndexConfig;
-import org.hivedb.util.PrimitiveUtils;
 import org.hivedb.util.ReflectionTools;
-import org.hivedb.util.functional.Filter;
-import org.hivedb.util.functional.Predicate;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 
@@ -32,6 +25,7 @@ public class HiveShardResolver implements ShardResolutionStrategy {
 		this.hive = hive;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public List<ShardId> selectShardIdsFromShardResolutionStrategyData(ShardResolutionStrategyData data) {
 		
 		final Class clazz;
@@ -43,10 +37,6 @@ public class HiveShardResolver implements ShardResolutionStrategy {
 		final Class<?> resolvedEntityInterface = new EntityResolver(hiveConfig).resolveToEntityOrRelatedEntity(clazz);
 		if (resolvedEntityInterface != null) {
 			EntityConfig config = hiveConfig.getEntityConfig(resolvedEntityInterface);
-			Object id =  PrimitiveUtils.isPrimitiveClass(data.getId().getClass())
-					? data.getId()
-					: config.getId(data.getId());
-			
 			Collection<Integer> ids = (config.isPartitioningResource())
 				? hive.directory().getNodeIdsOfPrimaryIndexKey(data.getId())
 				: hive.directory().getNodeIdsOfResourceId(config.getResourceName(), data.getId());

@@ -44,7 +44,6 @@ import org.hivedb.util.Combiner;
 import org.hivedb.util.database.DriverLoader;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.functional.Atom;
-import org.hivedb.util.functional.Binary;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
@@ -86,6 +85,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 		initialize(config, hive, strategy);
 	}
 	
+	@SuppressWarnings("unchecked")
 	private Collection<Class<?>> flattenWithAssociatedClasses(EntityHiveConfig config) {
 		return Filter.getUnique(Transform.flatten(
 			Transform.map(new Unary<EntityConfig, Class<?>>() {
@@ -316,6 +316,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 				interceptor);
 	}
 	
+	@SuppressWarnings("unchecked")
 	private Session openSession(Collection<Integer> nodeIds, Interceptor interceptor) {
 		// We only create SessionFactories for 1 to NODE_SET_LIMIT nodes.
 		// If more are requested then we delegate to the allNodesSessionFactory
@@ -332,6 +333,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 		return new HiveInterceptorDecorator(config, hive);
 	}
 	
+	@SuppressWarnings("unchecked")
 	public SessionFactory getSessionFactory(Integer nodeId) {
 		return nodeSessionFactories.get(new HashSet(Arrays.asList(nodeId)));
 	}

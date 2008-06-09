@@ -4,7 +4,6 @@ import java.util.Collection;
 
 import org.hibernate.shards.ShardId;
 import org.hibernate.shards.strategy.selection.ShardSelectionStrategy;
-import org.hivedb.Hive;
 import org.hivedb.HiveFacade;
 import org.hivedb.HiveLockableException;
 import org.hivedb.HiveRuntimeException;

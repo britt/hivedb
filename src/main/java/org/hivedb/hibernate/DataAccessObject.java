@@ -2,24 +2,23 @@ package org.hivedb.hibernate;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.hivedb.HiveKeyNotFoundException;
 
 public interface DataAccessObject<T, ID> {
 	/**
-	 *  Retrieve the object with the given id
+	 * Retrieve the object with the given id
 	 * @param id
-	 * @return
+	 * @return The object with the given id
 	 * @throws HiveKeyNotFoundException Throws is the id does not exist
 	 */
     public T get(ID id);
     
     /**
-     *  Retrieve an object(s) by one of its indexed properties.
+     * Retrieve objects by one of their indexed properties.
      * @param propertyName
      * @param value
-     * @return
+     * @return A collection of matching objects
      */
     public Collection<T> findByProperty(String propertyName, Object value);
    
@@ -30,12 +29,12 @@ public interface DataAccessObject<T, ID> {
     public Collection<T> findByPropertyRange(String propertyName, Object minValue, Object maxValue, Integer firstResult, Integer maxResults);
     
     /**
-     *  Queries by one or more properties of the instance. partitioningPropertyName specified the property value
-     *  used to resolve the hive shard(s). propertyNameValue map includes all properties and their value to 
-     *  specify in the generated query. The partitioningPropertyName must be in the map.
+     * Queries by one or more properties of the instance. partitioningPropertyName specified the property value
+     * used to resolve the hive shard(s). propertyNameValue map includes all properties and their value to 
+     * specify in the generated query. The partitioningPropertyName must be in the map.
      * @param partitioningPropertyName
      * @param propertyNameValueMap
-     * @return
+     * @return A collection of matching objects
      */
     public Collection<T> findByProperties(String partitioningPropertyName, Map<String,Object> propertyNameValueMap);
     public Collection<T> findByProperties(String partitioningPropertyName, Map<String,Object> propertyNameValueMap, Integer firstResult, Integer maxResults);

@@ -122,7 +122,7 @@ public class EntityConfigImpl implements EntityConfig {
 	public String getIdPropertyName() {
 		return this.idPropertyName;
 	}
-	@SuppressWarnings("unchecked")
+	
 	public Serializable getId(Object instance) {
 		return (Serializable) ReflectionTools.invokeGetter(instance, idPropertyName);
 	}

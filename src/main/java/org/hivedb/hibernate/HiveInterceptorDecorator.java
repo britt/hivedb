@@ -11,7 +11,6 @@ import org.hibernate.EntityMode;
 import org.hibernate.Interceptor;
 import org.hibernate.shards.util.InterceptorDecorator;
 import org.hibernate.type.Type;
-import org.hivedb.Hive;
 import org.hivedb.HiveFacade;
 import org.hivedb.HiveLockableException;
 import org.hivedb.annotations.AnnotationHelper;

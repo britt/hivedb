@@ -63,9 +63,6 @@ public class ConfigurationReader {
 	private boolean isHiveEntity(Class<?> clazz) {
 		return clazz.isAnnotationPresent(Resource.class); 
 	}
-	private boolean isAssociatedClass(Class<?> clazz) {
-		return AnnotationHelper.getAllMethodsWithAnnotation(clazz, Index.class).size() > 0;
-	}
 
 	public EntityConfig configure(Class<?> clazz) {
 		EntityConfig config = readConfiguration(clazz) ;
@@ -80,6 +77,7 @@ public class ConfigurationReader {
 		return config;
 	}
 
+	@SuppressWarnings("unchecked")
 	public static PartitionDimension extractPartitionDimension(Class clazz) {
 		Method partitionIndexMethod = AnnotationHelper.getFirstMethodWithAnnotation(clazz, PartitionIndex.class);
 		return new PartitionDimension(getPartitionDimensionName(clazz), JdbcTypeMapper.primitiveTypeToJdbcType(partitionIndexMethod.getReturnType()));
@@ -129,6 +127,7 @@ public class ConfigurationReader {
 		return indexes;
 	}
 	
+	@SuppressWarnings("unchecked")
 	private static Collection<Method> getIndexMethods(Class<?> clazz, final Method resourceIdMethod) {
 		return Filter.grep(new Predicate<Method>() {
 			public boolean f(Method method) {

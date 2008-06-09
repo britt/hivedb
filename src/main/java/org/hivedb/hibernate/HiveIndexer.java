@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.hivedb.Hive;
 import org.hivedb.HiveFacade;
 import org.hivedb.HiveLockableException;
 import org.hivedb.annotations.IndexType;
@@ -57,7 +56,6 @@ public class HiveIndexer {
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
 	private void insertSecondaryIndexes(final EntityConfig config, final Object entity) throws HiveLockableException {
 		Map<String, Collection<Object>> secondaryIndexMap = Transform.toMap(
 			Filter.grep(
@@ -101,7 +99,6 @@ public class HiveIndexer {
 		return secondaryIndexMap;
 	}
 	
-	@SuppressWarnings("unchecked")
 	private Map<String, Object> getAllPartitionIndexValues(EntityConfig config, Object entity) {
 		Map<String, Object> partitionIndexMap = new HashMap<String, Object>();
 		for(EntityIndexConfig indexConfig : 
@@ -125,7 +122,6 @@ public class HiveIndexer {
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
 	public void update(EntityConfig config, Object entity) throws HiveLockableException {
 		Map<String, Collection<Object>> secondaryIndexValues = getAllSecondaryIndexValues(config, entity);
 		Map<String, Object> partitionIndexValues = getAllPartitionIndexValues(config, entity);

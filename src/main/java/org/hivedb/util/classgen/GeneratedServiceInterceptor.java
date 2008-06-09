@@ -271,6 +271,9 @@ public class GeneratedServiceInterceptor implements MethodInterceptor, Service {
 			if (entry1.getKey().equals(entry2.getKey()))
 				return findByPropertyRange(entry1.getKey(), entry1.getValue(), entry2.getValue());
 		}
+		if (method.getName().startsWith("getCountBy") && method.getName().endsWith("Properties")) {
+			return this.getCountByProperties(Atom.getFirstOrThrow(entries).getKey(), Transform.toOrderedMap(entries), pagingPair.getKey(), pagingPair.getValue());
+		}
 		// TODO assumes the first parameter is the partitioning parameter. Use the annotation to specify
 		return findByProperties(Atom.getFirstOrThrow(entries).getKey(), Transform.toOrderedMap(entries), pagingPair.getKey(), pagingPair.getValue());
 	}

@@ -4,7 +4,6 @@
  */
 package org.hivedb;
 
-import org.hivedb.Lockable.Status;
 import org.hivedb.meta.*;
 import org.hivedb.meta.directory.Directory;
 import org.hivedb.meta.directory.DirectoryFacade;
