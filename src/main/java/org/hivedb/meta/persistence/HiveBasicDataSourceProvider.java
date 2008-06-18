@@ -34,11 +34,7 @@ public class HiveBasicDataSourceProvider implements DataSourceProvider {
 	}
 
 	public DataSource getDataSource(String uri) {
-		HiveBasicDataSource ds = new HiveBasicDataSource(uri, HiveBasicDataSource.getDefaultPoolSize());
-		//ds.setPoolPreparedStatements(true);
-		//ds.setConnectionTimeout(connectionTimeoutInMillis);
-		//ds.setSocketTimeout(socketTimeoutInMillis);
-		//ds.setMinEvictableIdleTimeMillis(socketTimeoutInMillis);
+		HiveBasicDataSource ds = new HiveBasicDataSource(uri);
 		return new LazyConnectionDataSourceProxy(ds);
 	}
 

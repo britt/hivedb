@@ -29,7 +29,7 @@ public class CachingDataSourceProvider implements DataSourceProvider {
 		LazyConnectionDataSourceProxy ds = cache.get(uri);
 		//DataSource ds = cache.get(uri);
 		if (ds == null) {
-			ds = new LazyConnectionDataSourceProxy(new HiveBasicDataSource(uri, HiveBasicDataSource.getDefaultPoolSize()));
+			ds = new LazyConnectionDataSourceProxy(new HiveBasicDataSource(uri));
 			//ds = new HiveBasicDataSource(uri);
 			cache.put(uri, ds);
 		}

@@ -51,7 +51,7 @@ public class HiveSyncDaemon extends Thread {
 	private DataSource cachedDataSource = null;
 	private DataSource getDataSource() {
 		if (cachedDataSource == null) {
-			cachedDataSource = new HiveBasicDataSource(hiveUri, HiveBasicDataSource.getDefaultPoolSize());
+			cachedDataSource = new HiveBasicDataSource(hiveUri);
 		}
 		return cachedDataSource;
 	}

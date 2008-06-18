@@ -14,30 +14,16 @@ import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 public class HiveBasicDataSource implements DataSource, Cloneable {
 	private Log log = LogFactory.getLog(HiveBasicDataSource.class);
-	public static final String CONNECTION_POOL_SIZE = "HiveDataSourceConnectionPoolSize";
-	public static final int DEFAULT_POOL_SIZE = 32;
 	private ComboPooledDataSource comboPooledDataSource;
 	                   
 	public HiveBasicDataSource() {
-    comboPooledDataSource = new ComboPooledDataSource();
+		comboPooledDataSource = new ComboPooledDataSource();
 	}
 	
-	public HiveBasicDataSource(String hiveUri, int poolSize) {
-		comboPooledDataSource = new ComboPooledDataSource();
+	public HiveBasicDataSource(String hiveUri) {
+		this();
 		comboPooledDataSource.setJdbcUrl(hiveUri);
-		comboPooledDataSource.setTestConnectionOnCheckout(true);
-		comboPooledDataSource.setMaxPoolSize(getDefaultPoolSize());
-		comboPooledDataSource.setMaxIdleTime(3600);
-		log.debug(String.format("HiveBasicDataSource created for %s.  Max pool size: %s", this.getUrl(), this.getMaxActive()));
-	}
-
-	public static Integer getDefaultPoolSize() {
-		try {
-			String poolSize = System.getProperty(CONNECTION_POOL_SIZE);
-			return Integer.parseInt(poolSize);
-		} catch (Exception e) {
-			return DEFAULT_POOL_SIZE;
-		}
+		log.debug(String.format("HiveBasicDataSource created: %s", comboPooledDataSource.toString()));
 	}
 	
 	public String getUrl() { //publicize for testing

@@ -2,6 +2,12 @@
 	
 	<default-config>
 		<property name="testConnectionOnCheckout">true</property>
+		<property name="minPoolSize">6</property>
+		<property name="initialPoolSize">6</property>
+		<property name="maxPoolSize">30</property>
+		<property name="maxIdleTime">3600</property>
+		<property name="acquireRetryAttempts">60</property>
+		<property name="idleConnectionTestPeriod">360</property>
 	</default-config> 
 	
 	<!-- sample named config incl. user-overrides
