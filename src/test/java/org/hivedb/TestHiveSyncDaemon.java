@@ -8,8 +8,10 @@ import java.util.Observer;
 
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
 import org.hivedb.util.database.test.HiveTest;
+import org.hivedb.util.database.test.HiveTest.Config;
 import org.testng.annotations.Test;
 
+@Config(file="hive_default")
 public class TestHiveSyncDaemon extends HiveTest {
 	
 	@Test
@@ -33,6 +35,7 @@ public class TestHiveSyncDaemon extends HiveTest {
 			assertTrue(((DumbObserver) o).isChanged());
 		}
 	}
+	
 	class DumbObserver implements Observer {
 		private boolean changed = false;
 		public boolean isChanged() {

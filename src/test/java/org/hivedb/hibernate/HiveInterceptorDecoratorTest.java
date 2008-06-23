@@ -20,8 +20,10 @@ import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
 import org.hivedb.util.database.test.Continent;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.WeatherReport;
+import org.hivedb.util.database.test.HiveTest.Config;
 import org.testng.annotations.Test;
 
+@Config(file="hive_default")
 public class HiveInterceptorDecoratorTest extends HiveTest {
 	
 	@Test

@@ -1,11 +1,14 @@
 package org.hivedb.persistence;
+
 import static org.testng.AssertJUnit.assertEquals;
 
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
 import org.hivedb.util.database.test.HiveTest;
+import org.hivedb.util.database.test.HiveTest.Config;
 import org.testng.annotations.Test;
 
+@Config(file="hive_default")
 public class TestHiveSemaphorePersistence extends HiveTest {
 	
 	@Test

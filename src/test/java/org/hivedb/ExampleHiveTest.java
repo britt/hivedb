@@ -16,6 +16,7 @@ import org.hivedb.util.HiveDestructor;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2TestCase;
 import org.hivedb.util.database.test.HiveTest;
+import org.hivedb.util.database.test.HiveTest.Config;
 import org.hivedb.util.functional.Atom;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.RowMapper;
@@ -38,11 +39,13 @@ import org.testng.annotations.Test;
  * @author Britt Crawford (bcrawford@cafepress.com)
  *
  */
+@Config(file="hive_default")
 public class ExampleHiveTest extends HiveTest {
 	private static final String dataTableCreateSql = "CREATE TABLE products (id integer PRIMARY KEY, name varchar(255), type varchar(255))";
 	private static final String productInsertSql = "INSERT INTO products VALUES (?,?,?)";
 	private static final String selectProductById = "SELECT * FROM products WHERE id = ?";
 	private static final String selectProductByName = "SELECT * FROM products WHERE name = ?";
+	
 	
 	public void setup() {
 		// we create a new one!

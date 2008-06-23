@@ -26,11 +26,13 @@ import org.hivedb.hibernate.DataAccessObject;
 import org.hivedb.util.Lists;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.WeatherReport;
+import org.hivedb.util.database.test.HiveTest.Config;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Unary;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+@Config(file="hive_default")
 public class DataGenerationServiceTest extends HiveTest {
 	
 	@Test

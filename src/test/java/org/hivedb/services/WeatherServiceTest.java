@@ -23,12 +23,14 @@ import org.hivedb.util.classgen.GeneratedServiceInterceptor;
 import org.hivedb.util.database.test.WeatherEvent;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.database.test.WeatherSchema;
+import org.hivedb.util.database.test.HiveTest.Config;
 import org.hivedb.util.functional.Atom;
 import org.testng.AssertJUnit;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 @Test(groups={"service"})
+@Config(file="hive_default")
 public class WeatherServiceTest extends ClassServiceTest<WeatherReport,WeatherReportService> {
 
 	private static final String WEATHER_SERVICE_URL = "local://weather";

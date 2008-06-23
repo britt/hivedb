@@ -9,9 +9,11 @@ import org.hivedb.meta.directory.NodeResolver;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.AssertUtils;
 import org.hivedb.util.database.test.HiveTest;
+import org.hivedb.util.database.test.HiveTest.Config;
 import org.hivedb.util.functional.Toss;
 import org.hivedb.util.functional.Transform;
 
+@Config(file="hive_default")
 public class TestConnectionWriteLocking extends HiveTest {
 
 //	@Test

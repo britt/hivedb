@@ -1,6 +1,10 @@
 package org.hivedb.util.database.test;
 
 import java.io.Serializable;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,10 +38,16 @@ public class HiveTest {
 	protected HiveDbDialect dialect;
 
 	protected String getHiveConfigurationFile() {
-		return String.format("src/test/resources/hive_%s.cfg.yml", getClass().getSimpleName());
+		return getClass().isAnnotationPresent(Config.class) ?
+				String.format("src/test/resources/%s.cfg.yml", getClass().getAnnotation(Config.class).file()) :
+				String.format("src/test/resources/hive_%s.cfg.yml", getClass().getSimpleName());
 	}
 	
 	protected void setup() {
+		// override if needed;
+	}
+	
+	protected void teardown() {
 		// override if needed;
 	}
 	
@@ -58,9 +68,11 @@ public class HiveTest {
 	
 	@AfterMethod
 	public void afterMethod() {
+		teardown();
 		new HiveDestructor().destroy(hive);
 	}
 	
+	@SuppressWarnings("unchecked")
 	public DataAccessObject<? extends Object, ? extends Serializable> getDao(Class clazz) {	
 		return new BaseDataAccessObjectFactory<Object,Serializable>(
 				getEntityHiveConfig(),
@@ -136,5 +148,11 @@ public class HiveTest {
 	
 	protected Node createNode(String name) {
 		return new Node(0, name, name, "", HiveDbDialect.H2);
+	}
+	
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.TYPE)
+	public @interface Config {
+		String file();
 	}
 }

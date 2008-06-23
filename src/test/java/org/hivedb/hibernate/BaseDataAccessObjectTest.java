@@ -22,6 +22,7 @@ import org.hivedb.util.classgen.GeneratedClassFactory;
 import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.WeatherReport;
+import org.hivedb.util.database.test.HiveTest.Config;
 import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
@@ -34,13 +35,8 @@ import org.hivedb.util.functional.Unary;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+@Config(file="hive_default")
 public class BaseDataAccessObjectTest extends HiveTest {
-	
-	private static String HIVE_CONFIG_FILE = "src/test/resources/hive_BaseDataAccessObjectTest.cfg.yml";
-	
-	protected String getHiveConfigurationFile() {
-		return HIVE_CONFIG_FILE;
-	}
 
 	private static Random random = new Random();
     

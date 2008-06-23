@@ -12,8 +12,10 @@ import org.hivedb.meta.Node;
 import org.hivedb.meta.persistence.NodeDao;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.HiveTest;
+import org.hivedb.util.database.test.HiveTest.Config;
 import org.testng.annotations.Test;
 
+@Config(file="hive_default")
 public class TestNodePersistence extends HiveTest {
 	
 	@Test
@@ -110,16 +112,6 @@ public class TestNodePersistence extends HiveTest {
 			dao.delete(n);
 		
 		assertEquals(0,dao.loadAll().size());
-	}
-
-	@Test
-	public void testStringyness() {
-		Node full = createFullyPopulatedNode();
-		Node minimal = createMinimalNode();
-		
-		//System.out.println(new JdbcUriFormatter(full).getUri());
-		//System.out.println(new JdbcUriFormatter(minimal).getUri());
-
 	}
 	
 	public Node createFullyPopulatedNode() {

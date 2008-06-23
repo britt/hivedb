@@ -39,6 +39,7 @@ public class TestHiveScenario {
 				.performTest(2,resourceInstanceCount);
 		}
 	}
+	@SuppressWarnings("unchecked")
 	public DataAccessObject<Object, Serializable> getDao(Class clazz) {	
 		return new BaseDataAccessObjectFactory<Object,Serializable>(
 				this.entityHiveConfig,

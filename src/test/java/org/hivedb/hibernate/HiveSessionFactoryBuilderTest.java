@@ -26,10 +26,12 @@ import org.hivedb.util.database.test.Continent;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.WeatherEvent;
 import org.hivedb.util.database.test.WeatherReport;
+import org.hivedb.util.database.test.HiveTest.Config;
 import org.hivedb.util.functional.Atom;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+@Config(file="hive_default")
 public class HiveSessionFactoryBuilderTest extends HiveTest {
 	
 	@Test
@@ -41,7 +43,6 @@ public class HiveSessionFactoryBuilderTest extends HiveTest {
 		assertEquals(node.getId().toString(), config.getProperty("hibernate.connection.shard_id"));
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testGetSessionFactory() throws Exception {
 		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
@@ -49,7 +50,6 @@ public class HiveSessionFactoryBuilderTest extends HiveTest {
 		factoryBuilder.openSession();
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testOpenSessionByPrimaryKey() throws Exception {
 		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
@@ -60,10 +60,7 @@ public class HiveSessionFactoryBuilderTest extends HiveTest {
 		assertNotNull(factoryBuilder.getSessionFactory());
 		factoryBuilder.openSession(config.getEntityConfig(getGeneratedClass(WeatherReport.class)).getPrimaryIndexKey(report));
 	}
-
 	
-	
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testOpenSessionByResourceId() throws Exception {
 		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
@@ -75,6 +72,7 @@ public class HiveSessionFactoryBuilderTest extends HiveTest {
 		factoryBuilder.openSession("WeatherReport", config.getEntityConfig(getGeneratedClass(WeatherReport.class)).getId(report));
 	}
 
+	@SuppressWarnings("unchecked")
 	private HiveSessionFactoryBuilderImpl getHiveSessionFactoryBuilder() {
 		HiveSessionFactoryBuilderImpl factoryBuilder = 
 			new HiveSessionFactoryBuilderImpl(
@@ -84,7 +82,6 @@ public class HiveSessionFactoryBuilderTest extends HiveTest {
 		return factoryBuilder;
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testOpenSessionBySecondaryIndex() throws Exception {
 		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
@@ -95,7 +92,6 @@ public class HiveSessionFactoryBuilderTest extends HiveTest {
 		factoryBuilder.openSession("WeatherReport", "weatherEventEventId", Atom.getFirstOrThrow(report.getWeatherEvents()).getEventId());
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testInsert() throws Exception {
 		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
@@ -111,7 +107,6 @@ public class HiveSessionFactoryBuilderTest extends HiveTest {
 		assertTrue(hive.directory().doesResourceIdExist("Temperature", report.getTemperature()));		
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testInsertFail() throws Exception {
 		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
@@ -135,8 +130,6 @@ public class HiveSessionFactoryBuilderTest extends HiveTest {
 		assertTrue(factoryBuilder.getDefaultInterceptor().isTransient(report));
 	}
 	
-
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testInsertAndRetrieve() throws Exception {
 		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
@@ -146,10 +139,7 @@ public class HiveSessionFactoryBuilderTest extends HiveTest {
 		WeatherReport fetched = (WeatherReport) factoryBuilder.openSession().get(getGeneratedClass(WeatherReport.class), report.getReportId());
 		Assert.assertEquals(report, fetched, ReflectionTools.getDifferingFields(report, fetched, WeatherReport.class).toString());
 	}
-
 	
-	
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testDelete() throws Exception {
 		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
@@ -165,7 +155,6 @@ public class HiveSessionFactoryBuilderTest extends HiveTest {
 		assertEquals(fetched, null);
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testUpdate() throws Exception {
 		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
@@ -201,7 +190,6 @@ public class HiveSessionFactoryBuilderTest extends HiveTest {
 		Assert.assertEquals(report, fetched, ReflectionTools.getDifferingFields(mutated, fetched, WeatherReport.class).toString());
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testUpdateFail() throws Exception {
 		HiveSessionFactoryBuilderImpl factoryBuilder = getHiveSessionFactoryBuilder();
@@ -248,6 +236,7 @@ public class HiveSessionFactoryBuilderTest extends HiveTest {
 		doInTransaction(callback, session);
 	}
 	
+	@SuppressWarnings("unchecked")
 	private Class<?> getGeneratedClass(Class clazz) {
 		return GeneratedClassFactory.getGeneratedClass(clazz);
 	}

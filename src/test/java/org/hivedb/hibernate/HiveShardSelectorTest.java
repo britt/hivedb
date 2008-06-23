@@ -12,6 +12,7 @@ import org.hivedb.util.database.test.Continent;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.database.test.WeatherReportImpl;
+import org.hivedb.util.database.test.HiveTest.Config;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
@@ -21,6 +22,7 @@ import org.testng.annotations.Test;
  * @author bcrawford
  *
  */
+@Config(file="hive_default")
 public class HiveShardSelectorTest extends HiveTest {
 
 	@Test

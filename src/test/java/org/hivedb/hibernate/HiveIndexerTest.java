@@ -13,15 +13,11 @@ import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.WeatherEvent;
 import org.hivedb.util.database.test.WeatherReport;
+import org.hivedb.util.database.test.HiveTest.Config;
 import org.testng.annotations.Test;
 
+@Config(file="hive_default")
 public class HiveIndexerTest extends HiveTest {
-	
-	private static String HIVE_CONFIG_FILE = "src/test/resources/hive_HiveIndexerTest.cfg.yml";
-	
-	protected String getHiveConfigurationFile() {
-		return HIVE_CONFIG_FILE;
-	}
 	
 	// Test for HiveIndexer.insert(final EntityIndexConfiguration config, final Object entity)
 	@Test

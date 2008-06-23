@@ -15,6 +15,7 @@ import org.hivedb.util.HiveCreator;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.database.Schemas;
 import org.hivedb.util.database.test.HiveTest;
+import org.hivedb.util.database.test.HiveTest.Config;
 import org.ho.yaml.Yaml;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -24,6 +25,7 @@ import org.testng.annotations.Test;
  * 
  * @author mellwanger 
  */
+@Config(file="hive_default")
 public class HiveCreatorTest extends HiveTest {
 	
 	@Test

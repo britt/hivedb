@@ -1,7 +1,9 @@
 package org.hivedb;
 
 import org.hivedb.util.database.test.HiveTest;
+import org.hivedb.util.database.test.HiveTest.Config;
 
+@Config(file="hive_default")
 public class TestJdbcDaoSupportWriteLocking extends HiveTest {
 //
 //	public void setup() throws Exception {

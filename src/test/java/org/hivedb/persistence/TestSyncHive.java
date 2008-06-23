@@ -10,9 +10,11 @@ import org.hivedb.HiveSyncDaemon;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.database.test.HiveTest;
+import org.hivedb.util.database.test.HiveTest.Config;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+@Config(file="hive_default")
 public class TestSyncHive extends HiveTest {
 	
 	/**

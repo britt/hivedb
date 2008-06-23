@@ -5,8 +5,10 @@ import static org.testng.AssertJUnit.assertEquals;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.SecondaryIndexDao;
 import org.hivedb.util.database.test.HiveTest;
+import org.hivedb.util.database.test.HiveTest.Config;
 import org.testng.annotations.Test;
 
+@Config(file="hive_default")
 public class TestSecondaryIndexPersistence extends HiveTest {
 	
 	@Test

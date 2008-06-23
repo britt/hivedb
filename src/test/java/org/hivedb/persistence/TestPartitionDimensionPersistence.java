@@ -11,8 +11,10 @@ import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.persistence.PartitionDimensionDao;
 import org.hivedb.util.database.test.HiveTest;
+import org.hivedb.util.database.test.HiveTest.Config;
 import org.testng.annotations.Test;
 
+@Config(file="hive_default")
 public class TestPartitionDimensionPersistence extends HiveTest {
 	
 	@Test
