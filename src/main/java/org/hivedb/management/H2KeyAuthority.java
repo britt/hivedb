@@ -13,10 +13,10 @@ import org.springframework.jdbc.support.incrementer.DataFieldMaxValueIncrementer
 public class H2KeyAuthority extends JdbcKeyAuthority {
 	public H2KeyAuthority(Class keySpace, Class returnType) {
 		super(keySpace, returnType);
-		setIncrementer(this.getIncrementer(null));
+		setIncrementer(this.getIncrementer());
 	}
 
-	private DataFieldMaxValueIncrementer getIncrementer(DataSource ds) {
+	private DataFieldMaxValueIncrementer getIncrementer() {
 		return new DerbyDataFieldMaxValueIncrementer();
 	}
 	

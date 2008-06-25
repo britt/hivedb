@@ -234,7 +234,6 @@ public abstract class ClassServiceTest<T,S> extends HiveTest {
 	public void findByProperty() throws Exception {
 		Object instance = getPersistentInstance();
 		final EntityConfig entityConfig = config.getEntityConfig(clazz);
-		Service s = getClient();
 		for (EntityIndexConfig entityIndexConfig : getFilteredEntityIndexConfigs(entityConfig)) {
 			if (entityIndexConfig.getIndexValues(instance).size() == 0)
 				continue;

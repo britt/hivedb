@@ -4,17 +4,10 @@
  */
 package org.hivedb.meta;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-
 import org.hivedb.Lockable;
-import org.hivedb.Schema;
-import org.hivedb.Lockable.Status;
 import org.hivedb.util.HiveUtils;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.JdbcUriFormatter;
-import org.hivedb.util.database.Schemas;
 
 /**
  * Node models a database instance suitable for storage of partitioned Data.

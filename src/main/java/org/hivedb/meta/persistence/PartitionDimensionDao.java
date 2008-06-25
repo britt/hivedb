@@ -4,16 +4,7 @@
  */
 package org.hivedb.meta.persistence;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.sql.DataSource;
-
 import org.hivedb.HiveRuntimeException;
-import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.util.database.JdbcTypeMapper;
@@ -23,6 +14,13 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
+
+import javax.sql.DataSource;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Justin McCarthy (jmccarthy@cafepress.com)

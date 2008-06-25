@@ -46,15 +46,15 @@ public class HiveShardResolver implements ShardResolutionStrategy {
 			// Only for Hibernate entities that are not Hive entities, but are used for secondary indexes
 			for (EntityConfig entityConfig : hiveConfig.getEntityConfigs()) {
 				for (EntityIndexConfig entityIndexConfig : entityConfig.getEntityIndexConfigs()) {
-					if (ReflectionTools.isComplexCollectionItemProperty(entityConfig.getRepresentedInterface(), entityIndexConfig.getPropertyName()))
-						if (ReflectionTools.doesImplementOrExtend(clazz, ReflectionTools.getCollectionItemType(entityConfig.getRepresentedInterface(), entityIndexConfig.getPropertyName()))) {
+					if (ReflectionTools.isComplexCollectionItemProperty(entityConfig.getRepresentedInterface(), entityIndexConfig.getPropertyName())
+            && ReflectionTools.doesImplementOrExtend(clazz, ReflectionTools.getCollectionItemType(entityConfig.getRepresentedInterface(), entityIndexConfig.getPropertyName()))) {
 							Collection<Integer> ids = hive.directory().getNodeIdsOfSecondaryIndexKey(
 									entityConfig.getResourceName(),
 									hive.getPartitionDimension().getResource(entityConfig.getResourceName()).getSecondaryIndex(entityIndexConfig.getIndexName()).getName(),
 									data.getId());
 							return Lists.newArrayList(Transform.map(nodeIdToShardIdConverter(), ids));
-						}
-				}
+          }
+        }
 			}
 		}
 		throw new RuntimeException(String.format("Could not resolve class to a Hive entity nor a secondary index Hibernate entity: %s", clazz.getSimpleName()));

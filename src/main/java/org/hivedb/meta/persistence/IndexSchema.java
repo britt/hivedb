@@ -4,18 +4,11 @@
  */
 package org.hivedb.meta.persistence;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-
-import org.apache.velocity.context.Context;
 import org.hivedb.Schema;
 import org.hivedb.meta.PartitionDimension;
-import org.hivedb.meta.Resource;
-import org.hivedb.meta.SecondaryIndex;
-import org.hivedb.util.Templater;
-import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.database.Schemas;
+
+import java.util.Collection;
 
 /**
  * IndexSchema contains tables of primary and secondary indexes in

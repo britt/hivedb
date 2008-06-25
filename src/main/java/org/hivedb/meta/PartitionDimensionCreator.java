@@ -1,9 +1,6 @@
 package org.hivedb.meta;
 
 import java.util.Collection;
-import java.util.EnumSet;
-
-import org.hivedb.Hive;
 import org.hivedb.annotations.IndexType;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;

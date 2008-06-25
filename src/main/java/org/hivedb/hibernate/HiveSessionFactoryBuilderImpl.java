@@ -65,7 +65,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	public HiveSessionFactoryBuilderImpl(String hiveUri, List<Class<?>> hibernateClasses, ShardAccessStrategy strategy) {
 		hive = Hive.load(hiveUri, CachingDataSourceProvider.getInstance());
 		this.hibernateClasses = hibernateClasses;
-		initialize(buildHiveConfiguration(hive, hibernateClasses), hive, strategy);
+		initialize(buildHiveConfiguration(hibernateClasses), hive, strategy);
 	}
 
 	public HiveSessionFactoryBuilderImpl(String hiveUri, List<Class<?>> mappedClasses, ShardAccessStrategy strategy, Properties overrides) {
@@ -193,7 +193,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 		return hibernateConfig;
 	}
 	
-	private EntityHiveConfig buildHiveConfiguration(HiveFacade hive, Collection<Class<?>> classes) {
+	private EntityHiveConfig buildHiveConfiguration(Collection<Class<?>> classes) {
 		return new ConfigurationReader(classes).getHiveConfiguration();
 	}
 	
@@ -216,7 +216,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 		config.setProperty("hibernate.connection.driver_class", DriverLoader.getDriverClass(node.getDialect()));
 		config.setProperty("hibernate.connection.url", node.getUri());
 		
-		config.setProperty("hibernate.connection.shard_id", new Integer(node.getId()).toString());
+		config.setProperty("hibernate.connection.shard_id", node.getId().toString());
 		config.setProperty("hibernate.shard.enable_cross_shard_relationship_checks", "true");
 		for(Entry<Object,Object> prop : overrides.entrySet()) 
 			config.setProperty(prop.getKey().toString(), prop.getValue().toString());

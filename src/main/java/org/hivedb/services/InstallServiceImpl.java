@@ -7,7 +7,6 @@ import java.util.NoSuchElementException;
 
 import javax.jws.WebService;
 
-import org.hivedb.Hive;
 import org.hivedb.HiveFacade;
 import org.hivedb.HiveLockableException;
 import org.hivedb.HiveRuntimeException;

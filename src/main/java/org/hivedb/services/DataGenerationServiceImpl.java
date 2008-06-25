@@ -12,7 +12,6 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hibernate.shards.util.Lists;
 import org.hibernate.shards.util.Maps;
-import org.hivedb.Hive;
 import org.hivedb.HiveFacade;
 import org.hivedb.annotations.Resource;
 import org.hivedb.configuration.EntityConfig;

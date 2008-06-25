@@ -3,8 +3,6 @@ package org.hivedb.hibernate;
 import java.util.Collection;
 import java.util.Map;
 
-import org.hivedb.HiveKeyNotFoundException;
-
 public interface DataAccessObject<T, ID> {
 	/**
 	 * Retrieve the object with the given id

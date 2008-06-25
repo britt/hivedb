@@ -4,15 +4,13 @@
  */
 package org.hivedb.meta;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import org.hivedb.Hive;
 import org.hivedb.HiveKeyNotFoundException;
-import org.hivedb.meta.persistence.IndexSchema;
 import org.hivedb.util.HiveUtils;
 import org.hivedb.util.database.JdbcTypeMapper;
-import org.hivedb.util.database.Schemas;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * PartitionDimension is the value we use to distribute records to data nodes.  It is

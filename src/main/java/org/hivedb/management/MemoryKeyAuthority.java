@@ -3,7 +3,6 @@
  */
 package org.hivedb.management;
 
-import org.hivedb.management.KeyAuthority;
 import org.hivedb.util.functional.Generator;
 
 public class MemoryKeyAuthority implements KeyAuthorityCreator {

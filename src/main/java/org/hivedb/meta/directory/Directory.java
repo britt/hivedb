@@ -1,23 +1,10 @@
 package org.hivedb.meta.directory;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Collection;
-
-import javax.sql.DataSource;
-
 import org.hivedb.DirectoryCorruptionException;
 import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.Lockable.Status;
-import org.hivedb.meta.KeySemaphore;
-import org.hivedb.meta.Node;
-import org.hivedb.meta.PartitionDimension;
-import org.hivedb.meta.Resource;
-import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.meta.*;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
-import org.hivedb.meta.persistence.HiveBasicDataSource;
-import org.hivedb.meta.persistence.IndexSchema;
 import org.hivedb.util.QuickCache;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.database.RowMappers;
@@ -27,7 +14,6 @@ import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Delay;
 import org.hivedb.util.functional.Unary;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.ParameterizedRowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
@@ -36,6 +22,12 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
+
+import javax.sql.DataSource;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Collection;
 
 public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, IndexWriter {
 	private static QuickCache cache = new QuickCache();
