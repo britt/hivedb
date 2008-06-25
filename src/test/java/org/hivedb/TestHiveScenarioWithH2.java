@@ -13,7 +13,7 @@ import org.testng.annotations.Test;
 @Config(file="hive_default")
 public class TestHiveScenarioWithH2 extends HiveTest {
 	
-	//@Test
+	@Test
 	public void test() throws Exception {
 		new TestHiveScenario(getEntityClasses(getEntityHiveConfig().getEntityConfigs()), getEntityHiveConfig(), getMappedClasses(), getHive()).test();
 	}

@@ -12,11 +12,12 @@ import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.HiveTest.Config;
 import org.hivedb.util.functional.Toss;
 import org.hivedb.util.functional.Transform;
+import org.testng.annotations.Test;
 
 @Config(file="hive_default")
 public class TestConnectionWriteLocking extends HiveTest {
 
-//	@Test
+	@Test
 	public void testHiveLockingInMemory() throws Exception {
 		final Hive hive = getHive();
 		final String key = new String("North America");
@@ -31,7 +32,7 @@ public class TestConnectionWriteLocking extends HiveTest {
 			}}, HiveLockableException.class);
 	}
 
-//	@Test
+	@Test
 	public void testHiveLockingPersistent() throws Exception {
 		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
 		final String key = new String("Stoatia");
@@ -49,7 +50,7 @@ public class TestConnectionWriteLocking extends HiveTest {
 			}}, HiveLockableException.class);
 	}
 
-//	@Test
+	@Test
 	public void testNodeLockingInMemory() throws Exception {
 		final Hive hive = Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
 		final String key = new String("Antarctica");
@@ -66,7 +67,7 @@ public class TestConnectionWriteLocking extends HiveTest {
 			}}, HiveLockableException.class);
 	}
 
-//	@Test
+	@Test
 	public void testNodeLockingPersistent() throws Exception {
 		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
 		final String key = new String("Asia");
