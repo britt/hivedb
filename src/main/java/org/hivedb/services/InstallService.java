@@ -5,6 +5,7 @@ import java.util.Collection;
 import javax.jws.WebMethod;
 import javax.jws.WebService;
 
+// TODO revise interface to make it fit with Hive configuration as a service
 @WebService
 public interface InstallService {
 	@WebMethod

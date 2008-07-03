@@ -8,7 +8,8 @@ import org.hivedb.util.HiveUtils;
 import org.hivedb.util.database.JdbcTypeMapper;
 
 /**
- * 
+ *
+ * @author Britt Crawford (bcrawford@cafepress.com)
  * @author Andy Likuski (alikuski@cafepress.com)
  *
  */

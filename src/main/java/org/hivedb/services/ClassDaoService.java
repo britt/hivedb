@@ -3,6 +3,7 @@ package org.hivedb.services;
 import java.io.Serializable;
 import java.util.Collection;
 
+// TODO merge with DataAccessObject
 public interface ClassDaoService<T,ID extends Serializable> {
 	T get(ID id);
 	Collection<T> getAll(); // for debugging

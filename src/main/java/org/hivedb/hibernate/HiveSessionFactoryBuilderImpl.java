@@ -50,6 +50,8 @@ import org.hivedb.util.functional.Unary;
 import org.hivedb.util.functional.Filter.BinaryPredicate;
 import org.hivedb.util.functional.Transform.IdentityFunction;
 
+// TODO Node Set session factories have to go, combinatoric compexity
+
 public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder, HiveSessionFactory, Observer, Synchronizeable {	
 	
 	private static final int NODE_SET_LIMIT = 1;

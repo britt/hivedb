@@ -24,7 +24,6 @@ import java.util.Map.Entry;
  * and the addition or removal of resources and secondary indexes.
  * 
  * @author Andy Likuski
- * TODO rename HiveUpdater
  */
 public class HiveSyncer {
 

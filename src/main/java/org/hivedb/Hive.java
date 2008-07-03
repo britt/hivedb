@@ -247,7 +247,6 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	}
 	
 	/**
-	 * TODO does this method correctly update the hive metadata? It doesn't appear to.
 	 * 
 	 * @param dimension
 	 * @return

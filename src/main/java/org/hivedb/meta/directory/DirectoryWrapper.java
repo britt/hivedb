@@ -6,10 +6,7 @@ import java.util.Map.Entry;
 
 import javax.sql.DataSource;
 
-import org.hivedb.Hive;
-import org.hivedb.HiveKeyNotFoundException;
-import org.hivedb.HiveLockableException;
-import org.hivedb.HiveRuntimeException;
+import org.hivedb.*;
 import org.hivedb.Lockable.Status;
 import org.hivedb.meta.Assigner;
 import org.hivedb.meta.KeySemaphore;
@@ -20,9 +17,7 @@ import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.HiveUtils;
 import org.hivedb.util.Lists;
 import org.hivedb.util.Preconditions;
-import org.hivedb.util.functional.Pair;
-import org.hivedb.util.functional.Transform;
-import org.hivedb.util.functional.Unary;
+import org.hivedb.util.functional.*;
 
 public class DirectoryWrapper implements DirectoryFacade {
 	private Directory directory;
@@ -136,8 +131,12 @@ public class DirectoryWrapper implements DirectoryFacade {
 	}
 
 	public void insertPrimaryIndexKey(Object primaryIndexKey) throws HiveLockableException {
-		//TODO: this should select from the set of WRITABLE nodes
-		Node node = assigner.chooseNode(hive.getNodes(), primaryIndexKey);
+    Collection<Node> writableNodes = Filter.grep(new Predicate<Node>(){
+      public boolean f(Node item) {
+        return item.getStatus() == Lockable.Status.writable;
+      }
+    }, hive.getNodes());
+    Node node = assigner.chooseNode(writableNodes, primaryIndexKey);
 		Preconditions.isWritable(hive, node);
 		directory.insertPrimaryIndexKey(node, primaryIndexKey);
 	}
