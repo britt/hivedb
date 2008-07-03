@@ -37,7 +37,7 @@ public class PrimitiveUtils {
 		if (isFloat(clazz))
 			return (float) 0;
 		if (isBigDecimal(clazz))
-			return new BigDecimal(0);
+			return BigDecimal.ZERO;
 		if (isString(clazz))
 			return "";
 		if (isDate(clazz)) {		

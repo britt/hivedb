@@ -45,6 +45,6 @@ public abstract class Joiner<C,R> {
 			hash = new Long(((Timestamp)item).getTime()).hashCode(); // fixes format hashing problems
 		else
 			hash = item.hashCode();
-		return new Integer(hash).toString();
+		return "" + hash;
 	}
 }

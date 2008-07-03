@@ -1,4 +1,4 @@
-package org.hivedb.configuration;
+package org.hivedb;
 
 import java.util.Collection;
 

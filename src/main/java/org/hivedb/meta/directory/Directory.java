@@ -55,7 +55,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 				int[] types = new int[]{JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass()), Types.INTEGER};
 				Object[] parameters = new Object[] {primaryIndexKey,node.getId() };
 				
-				if(lockPrimaryKeyForInsert(partitionDimension, primaryIndexKey, node))
+				if(lockPrimaryKeyForInsert(primaryIndexKey, node))
 					doUpdate(sql.insertPrimaryIndexKey(partitionDimension), types, parameters);
 				return primaryIndexKey;
 			}
@@ -84,7 +84,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 			public Object doInTransaction(TransactionStatus arg0) {
 				Object[] parameters = new Object[] {isReadOnly,primaryIndexKey};
 				int[] types = new int[]{Types.BOOLEAN, JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass())};
-				lockPrimaryKeyForUpdate(partitionDimension, primaryIndexKey);
+				lockPrimaryKeyForUpdate(primaryIndexKey);
 				doUpdate(sql.updateReadOnlyOfPrimaryIndexKey(partitionDimension), types, parameters);
 				return primaryIndexKey;
 			}
@@ -109,7 +109,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	public void deletePrimaryIndexKey(final Object primaryIndexKey) {
 		newTransaction().execute(new TransactionCallback(){
 			public Object doInTransaction(TransactionStatus arg0) {
-				lockPrimaryKeyForUpdate(partitionDimension, primaryIndexKey);
+				lockPrimaryKeyForUpdate(primaryIndexKey);
 				doUpdate(
 						sql.deletePrimaryIndexKey(partitionDimension), 
 						new int[]{JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass())}, 
@@ -324,13 +324,13 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 		}));
 	}
 	
-	private boolean lockPrimaryKeyForInsert(PartitionDimension dimension, Object primaryIndexKey, Node node) {
+	private boolean lockPrimaryKeyForInsert(Object primaryIndexKey, Node node) {
 		return doRead(sql.selectCompositeKeyForUpdateLock(Schemas.getPrimaryIndexTableName(partitionDimension), "id", "node"), 
 				new Object[]{primaryIndexKey, node.getId()},
 				RowMappers.newTrueRowMapper()).size() == 0;
 	}
 	
-	private boolean lockPrimaryKeyForUpdate(PartitionDimension dimension, Object primaryIndexKey) {
+	private boolean lockPrimaryKeyForUpdate(Object primaryIndexKey) {
 		return doRead(sql.selectForUpdateLock(Schemas.getPrimaryIndexTableName(partitionDimension), "id"), 
 				new Object[]{primaryIndexKey},
 				RowMappers.newTrueRowMapper()).size() == 0;

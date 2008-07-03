@@ -1,39 +1,21 @@
 package org.hivedb.util;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import org.hivedb.Hive;
-import org.hivedb.HiveException;
-import org.hivedb.HiveFacade;
 import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.HiveLockableException;
-import org.hivedb.HiveRuntimeException;
 import org.hivedb.annotations.IndexType;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.EntityIndexConfig;
-import org.hivedb.configuration.SingularHiveConfig;
-import org.hivedb.meta.Finder;
-import org.hivedb.meta.Nameable;
-import org.hivedb.meta.Node;
-import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.database.JdbcTypeMapper;
-import org.hivedb.util.functional.Binary;
-import org.hivedb.util.functional.Filter;
-import org.hivedb.util.functional.Maps;
-import org.hivedb.util.functional.Pair;
-import org.hivedb.util.functional.Predicate;
-import org.hivedb.util.functional.Ternary;
-import org.hivedb.util.functional.Transform;
-import org.hivedb.util.functional.Unary;
-import org.hivedb.util.functional.Filter.BinaryPredicate;
+import org.hivedb.util.functional.*;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * HiveUpdater updates a hive to the configuration of a HiveScenarioConfig. When the HiveScenarioConfig's 

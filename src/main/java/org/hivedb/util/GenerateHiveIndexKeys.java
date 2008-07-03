@@ -64,14 +64,7 @@ public class GenerateHiveIndexKeys {
 		
 		return resourceInstances;
 	}
-	private static Collection<? extends EntityIndexConfig> getHiveIndexes(final EntityConfig entityConfig) {
-		return Filter.grep(new Predicate<EntityIndexConfig>() {
-			public boolean f(EntityIndexConfig entityIndexConfig) {
-				return entityIndexConfig.getIndexType().equals(IndexType.Hive);	
-			}}, entityConfig.getEntityIndexConfigs());
-	}
 	
-
 	static QuickCache primitiveGenerators = new QuickCache(); // cache generators for sequential randomness
 	/**
 	 * @param entityConfig

@@ -44,7 +44,7 @@ public class GeneratePrimitiveValue<F> implements Generator<F> {
 			return (F)calendar.getTime();
 		}
 		else if (PrimitiveUtils.isBoolean(clazz))
-			return (F)new Boolean(random.nextInt() % 2 == 0 ? true : false);
+			return (F)(random.nextInt() % 2 == 0 ? Boolean.TRUE : Boolean.FALSE);
 		else if (PrimitiveUtils.isObject(clazz))
 			return (F)new Integer(-1);
 		throw new RuntimeException(String.format("Class %s not supported", clazz.getSimpleName()));
