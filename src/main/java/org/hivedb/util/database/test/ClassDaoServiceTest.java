@@ -113,7 +113,7 @@ public class ClassDaoServiceTest extends H2TestCase implements SchemaInitializer
 		addEntity(clazz, Lists.newList(schema));
 	}
 	public void addEntity(final Class clazz, Collection<Schema> schemaList) {
-		addEntity(clazz, new LazyInitializer(clazz, schemaList,
+		addEntity(clazz, new LazyInitializer(schemaList,
 				new Delay<ClassDaoService>(){
 					public ClassDaoService f() {
 						return new BaseClassDaoService(
