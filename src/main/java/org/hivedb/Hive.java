@@ -42,7 +42,8 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	
 	private DataSource hiveDataSource;
 	private DataSourceProvider dataSourceProvider;
-	private Assigner assigner = new Assigner() {
+  
+  private Assigner assigner = new Assigner() {
 		private Random random = new Random(new Date().getTime());	
 		public Node chooseNode(Collection<Node> nodes, Object value) {
 			if (nodes.size()==0) throw new HiveRuntimeException("The Hive has no Nodes; the Assigner cannot make a choice.");

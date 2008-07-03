@@ -8,3 +8,4 @@ hivedb.iws
 target
 test-output
 velocity.log
+cobertura.ser
