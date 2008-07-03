@@ -7,7 +7,6 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.Date;
 
-import org.hivedb.HiveException;
 import org.hivedb.HiveRuntimeException;
 
 public class JdbcTypeMapper {

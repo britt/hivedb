@@ -25,12 +25,9 @@ public class LazyInitializer implements Delay<Object> {
 		this.delay = delay;
 		this.schemaList = schemaList;
 	}
-	public LazyInitializer(final Class clazz, Collection<Schema> schemaList, Delay delay){
+	public LazyInitializer(Collection<Schema> schemaList, Delay delay){
 		this.schemaList = schemaList;
 		this.delay = delay; 
-	}
-	public LazyInitializer(final Class clazz, Schema schema, Delay delay){
-		new LazyInitializer(clazz, Collections.singletonList(schema), delay);
 	}
 	public Object f() {
 		test.initialize(schemaList);

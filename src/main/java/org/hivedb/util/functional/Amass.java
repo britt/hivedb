@@ -1,16 +1,11 @@
 package org.hivedb.util.functional;
 
-import java.sql.Timestamp;
+import org.hivedb.util.PrimitiveUtils;
+
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-
-import org.hivedb.util.PrimitiveUtils;
-import org.hivedb.util.ReflectionTools;
-import org.hivedb.util.database.test.WeatherReport;
 
 public class Amass {
 	public static<C,R> R join(Joiner<C,R> joiner, Iterable<C> iterable, R initialValue)

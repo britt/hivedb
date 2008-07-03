@@ -4,15 +4,6 @@
  */
 package org.hivedb.util.database;
 
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.context.Context;
 import org.hivedb.Schema;
@@ -24,12 +15,11 @@ import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.meta.persistence.IndexSchema;
 import org.hivedb.meta.persistence.TableInfo;
 import org.hivedb.util.Templater;
-import org.hivedb.util.database.DialectTools;
-import org.hivedb.util.database.DriverLoader;
-import org.hivedb.util.database.HiveDbDialect;
-import org.hivedb.util.database.JdbcTypeMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
+
+import java.sql.SQLException;
+import java.util.*;
 
 /**
  * Utility class for installing and removing Schemas

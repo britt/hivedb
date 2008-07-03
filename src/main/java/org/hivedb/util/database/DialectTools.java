@@ -1,7 +1,6 @@
 package org.hivedb.util.database;
 
 import org.hivedb.UnsupportedDialectException;
-import org.hivedb.util.database.test.H2TestCase;
 
 public class DialectTools {
 	

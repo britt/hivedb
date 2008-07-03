@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.util.functional.Transform.IdentityFunction;
 
 public abstract class Filter {

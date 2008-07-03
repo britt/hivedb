@@ -3,20 +3,8 @@
  */
 package org.hivedb.util.classgen;
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.Hashtable;
-import java.util.Map;
-
-import net.sf.cglib.proxy.Callback;
-import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
-
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.annotations.AnnotationHelper;
 import org.hivedb.annotations.EntityId;
@@ -27,7 +15,12 @@ import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.DebugMap;
-import org.hivedb.util.functional.Filter;
+
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
+import java.lang.reflect.Method;
+import java.util.Hashtable;
+import java.util.Map;
 
 public class GeneratedInstanceInterceptor implements  MethodInterceptor {
 	

@@ -1,20 +1,18 @@
 package org.hivedb.util.database.test;
 
-import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Random;
-
 import org.hivedb.annotations.EntityId;
 import org.hivedb.annotations.Index;
 import org.hivedb.annotations.PartitionIndex;
 import org.hivedb.annotations.Resource;
-import org.hivedb.util.HiveUtils;
 import org.hivedb.util.ReflectionTools;
-import org.hivedb.util.classgen.GenerateInstance;
 import org.hivedb.util.classgen.GenerateInstanceCollection;
 import org.hivedb.util.classgen.GeneratePrimitiveCollection;
 import org.hivedb.util.functional.Amass;
+
+import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Random;
 
 @Resource("WeatherReport")
 public class WeatherReportImpl implements WeatherReport {

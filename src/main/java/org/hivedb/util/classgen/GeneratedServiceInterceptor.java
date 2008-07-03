@@ -1,21 +1,9 @@
 package org.hivedb.util.classgen;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
-
 import org.hibernate.shards.strategy.access.ShardAccessStrategy;
 import org.hibernate.shards.util.Lists;
-import org.hivedb.Hive;
 import org.hivedb.HiveFacade;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.annotations.AnnotationHelper;
@@ -24,29 +12,17 @@ import org.hivedb.annotations.IndexParamPagingPair;
 import org.hivedb.annotations.IndexParamPairs;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
-import org.hivedb.hibernate.BaseDataAccessObject;
-import org.hivedb.hibernate.ConfigurationReader;
-import org.hivedb.hibernate.DataAccessObject;
-import org.hivedb.hibernate.EntityResolver;
-import org.hivedb.hibernate.HiveSessionFactory;
-import org.hivedb.hibernate.HiveSessionFactoryBuilderImpl;
+import org.hivedb.hibernate.*;
 import org.hivedb.services.Service;
 import org.hivedb.services.ServiceContainer;
 import org.hivedb.services.ServiceResponse;
 import org.hivedb.util.PrimitiveUtils;
-import org.hivedb.util.classgen.GenerateInstance;
-import org.hivedb.util.classgen.GeneratedClassFactory;
-import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
-import org.hivedb.util.functional.Amass;
-import org.hivedb.util.functional.Atom;
-import org.hivedb.util.functional.Filter;
-import org.hivedb.util.functional.Joiner;
-import org.hivedb.util.functional.NumberIterator;
-import org.hivedb.util.functional.Pair;
-import org.hivedb.util.functional.PairIterator;
-import org.hivedb.util.functional.Predicate;
-import org.hivedb.util.functional.Transform;
-import org.hivedb.util.functional.Unary;
+import org.hivedb.util.functional.*;
+
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.*;
+import java.util.Map.Entry;
 
 public class GeneratedServiceInterceptor implements MethodInterceptor, Service {
 
