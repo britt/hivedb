@@ -1,17 +1,5 @@
 package org.hivedb.util.database.test;
 
-import java.io.Serializable;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-
-import javax.sql.DataSource;
-
 import org.hivedb.Hive;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.hibernate.BaseDataAccessObjectFactory;
@@ -22,14 +10,22 @@ import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
-import org.hivedb.util.*;
+import org.hivedb.util.HiveCreator;
+import org.hivedb.util.HiveDestructor;
 import org.hivedb.util.database.HiveDbDialect;
-import org.hivedb.util.database.test.Continent;
-import org.hivedb.util.database.test.H2TestCase;
-import org.hivedb.util.database.test.WeatherEvent;
-import org.hivedb.util.database.test.WeatherReport;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+
+import javax.sql.DataSource;
+import java.io.Serializable;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 
 public class HiveTest {
 	protected EntityHiveConfig config;
