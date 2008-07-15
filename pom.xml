@@ -4,7 +4,7 @@
   <groupId>org.hivedb</groupId>
   <artifactId>hivedb</artifactId>
   <packaging>jar</packaging>
-  <version>0.9.5-SNAPSHOT</version>
+  <version>0.9.6-SNAPSHOT</version>
   <name>hivedb</name>
   <url>http://www.hivedb.org</url>
   <description>HiveDB is an open source framework for partitioning MySQL systems.</description>
