@@ -45,8 +45,8 @@ public class GeneratedInstanceInterceptor implements  MethodInterceptor {
 			char propName[] = name.substring("get".length()).toCharArray();
 			propName[0] = Character.toLowerCase( propName[0] );
 			return implementor.get(new String( propName ));
-		}
-		return method.invoke(implementor, args);		
+		} else
+		  return method.invoke(implementor, args);		
 	}
 
 	/**

@@ -1,21 +1,24 @@
 package org.hivedb.util;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.hivedb.annotations.GeneratedClass;
 import org.hivedb.annotations.GeneratorIgnore;
 import org.hivedb.util.classgen.GenerateInstance;
+import org.hivedb.util.classgen.GeneratedClassFactory;
+import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
 import org.hivedb.util.functional.Atom;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 public class TestGenerateInstance {
 	@GeneratedClass("FooImpl")
 	public interface Foo {
 		@GeneratorIgnore
 		String getString();
-		int getInt();
+    void setString(String s);
+    int getInt();
 	}
 	@GeneratedClass("BooImpl")
 	public interface Boo extends Foo {
@@ -33,8 +36,16 @@ public class TestGenerateInstance {
 		Assert.assertTrue(boo.getCoos().size() > 0);
 		Assert.assertTrue(boo.getString() == null);
 	}
-	
-	@GeneratedClass("FaaImpl")
+
+  @Test
+  public void shouldAddSetters() throws Exception {
+    Foo generated = GeneratedClassFactory.newInstance(Foo.class, new GeneratedInstanceInterceptor(Foo.class));
+    String speech = "I have a dream!";
+    generated.setString(speech);
+    Assert.assertEquals(generated.getString(), speech);
+  }
+
+  @GeneratedClass("FaaImpl")
 	public interface Faa {
 		String getString();
 		int getInt();

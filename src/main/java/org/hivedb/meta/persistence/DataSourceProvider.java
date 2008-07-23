@@ -1,7 +1,8 @@
 package org.hivedb.meta.persistence;
 
-import javax.sql.DataSource;
 import org.hivedb.meta.Node;
+
+import javax.sql.DataSource;
 
 public interface DataSourceProvider {
 	public DataSource getDataSource(String uri);

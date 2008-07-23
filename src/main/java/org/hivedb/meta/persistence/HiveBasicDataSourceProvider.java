@@ -3,10 +3,10 @@
  */
 package org.hivedb.meta.persistence;
 
-import javax.sql.DataSource;
-
 import org.hivedb.meta.Node;
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy;
+
+import javax.sql.DataSource;
 
 public class HiveBasicDataSourceProvider implements DataSourceProvider {
 	private Long connectionTimeoutInMillis = 0l;

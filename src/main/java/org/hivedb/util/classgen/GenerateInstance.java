@@ -1,23 +1,15 @@
 package org.hivedb.util.classgen;
 
+import net.sf.cglib.proxy.Factory;
+import org.hivedb.annotations.GeneratorIgnore;
+import org.hivedb.util.*;
+import org.hivedb.util.QuickCache;
+import org.hivedb.util.functional.*;
+import org.springframework.beans.BeanUtils;
+
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
-
-import net.sf.cglib.proxy.Factory;
-
-import org.hivedb.annotations.GeneratorIgnore;
-import org.hivedb.util.Lists;
-import org.hivedb.util.MapBacked;
-import org.hivedb.util.PrimitiveUtils;
-import org.hivedb.util.QuickCache;
-import org.hivedb.util.ReflectionTools;
-import org.hivedb.util.functional.Delay;
-import org.hivedb.util.functional.Filter;
-import org.hivedb.util.functional.Generator;
-import org.hivedb.util.functional.Transform;
-import org.hivedb.util.functional.Unary;
-import org.springframework.beans.BeanUtils;
 
 
 public class GenerateInstance<T> implements Generator<T> {

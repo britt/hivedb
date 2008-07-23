@@ -1,14 +1,13 @@
 package org.hivedb.util.classgen;
 
-import java.util.Map;
-
+import net.sf.cglib.proxy.Callback;
+import net.sf.cglib.proxy.Enhancer;
+import net.sf.cglib.proxy.MethodInterceptor;
 import org.hivedb.util.Mapper;
 import org.hivedb.util.PropertyAccessor;
 import org.hivedb.util.ReflectionTools;
 
-import net.sf.cglib.proxy.Callback;
-import net.sf.cglib.proxy.Enhancer;
-import net.sf.cglib.proxy.MethodInterceptor;
+import java.util.Map;
 
 
 public class GeneratedClassFactory {
