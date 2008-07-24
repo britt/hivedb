@@ -52,7 +52,6 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	private final HiveSessionFactory factory;
 	private final EntityConfig config;
 	private final Class<?> clazz;
-	private Interceptor defaultInterceptor = EmptyInterceptor.INSTANCE;
 	private HiveFacade hive;
 	private EntityIndexConfig partitionIndexEntityIndexConfig;
 
@@ -70,11 +69,6 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		this.factory = factory;
 		this.hive = hive;
 		
-	}
-	
-	public BaseDataAccessObject(EntityConfig config, Hive hive, HiveSessionFactory factory, Interceptor interceptor) {
-		this(config,hive,factory);
-		this.defaultInterceptor = interceptor;
 	}
 	
 
@@ -481,10 +475,6 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	public Class<Object> getRespresentedClass() {
 		return (Class<Object>) EntityResolver.getPersistedImplementation(clazz);
 	}
-	
-	public Interceptor getInterceptor() {return this.defaultInterceptor;}
-	
-	public void setInterceptor(Interceptor i) {this.defaultInterceptor = i;}
 	
 	public static void doInTransaction(SessionCallback callback, Session session) {
 		Transaction tx = null;

@@ -4,6 +4,7 @@
 package org.hivedb.meta.persistence;
 
 import org.hivedb.meta.Node;
+import org.hivedb.util.database.DriverLoader;
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy;
 
 import javax.sql.DataSource;
@@ -26,6 +27,7 @@ public class CachingDataSourceProvider implements DataSourceProvider {
 	public DataSource getDataSource(String uri) {
 		LazyConnectionDataSourceProxy ds = cache.get(uri);
 		if (ds == null) {
+			DriverLoader.initializeDriver(uri);
 			ds = new LazyConnectionDataSourceProxy(new HiveBasicDataSource(uri));
 			cache.put(uri, ds);
 		}
