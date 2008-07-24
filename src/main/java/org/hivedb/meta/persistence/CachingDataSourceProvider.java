@@ -9,6 +9,7 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import org.hivedb.meta.Node;
+import org.hivedb.util.database.DriverLoader;
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy;
 
 public class CachingDataSourceProvider implements DataSourceProvider {
@@ -29,6 +30,7 @@ public class CachingDataSourceProvider implements DataSourceProvider {
 		LazyConnectionDataSourceProxy ds = cache.get(uri);
 		//DataSource ds = cache.get(uri);
 		if (ds == null) {
+			DriverLoader.initializeDriver(uri);
 			ds = new LazyConnectionDataSourceProxy(new HiveBasicDataSource(uri));
 			//ds = new HiveBasicDataSource(uri);
 			cache.put(uri, ds);
