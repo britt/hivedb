@@ -1,39 +1,21 @@
 package org.hivedb.hibernate;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertNotNull;
-import static org.testng.AssertJUnit.assertNull;
-import static org.testng.AssertJUnit.assertTrue;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-import java.util.Map.Entry;
-
 import org.hivedb.Hive;
 import org.hivedb.HiveLockableException;
-import org.hivedb.util.*;
+import org.hivedb.util.ReflectionTools;
 import org.hivedb.util.classgen.GenerateInstance;
 import org.hivedb.util.classgen.GeneratedClassFactory;
 import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
 import org.hivedb.util.database.test.HiveTest;
-import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.database.test.HiveTest.Config;
-import org.hivedb.util.functional.Amass;
-import org.hivedb.util.functional.Atom;
-import org.hivedb.util.functional.Filter;
-import org.hivedb.util.functional.Generate;
-import org.hivedb.util.functional.Generator;
-import org.hivedb.util.functional.NumberIterator;
-import org.hivedb.util.functional.Pair;
-import org.hivedb.util.functional.Transform;
-import org.hivedb.util.functional.Unary;
+import org.hivedb.util.database.test.WeatherReport;
+import org.hivedb.util.functional.*;
 import org.testng.Assert;
+import static org.testng.AssertJUnit.*;
 import org.testng.annotations.Test;
+
+import java.util.*;
+import java.util.Map.Entry;
 
 @Config(file="hive_default")
 public class BaseDataAccessObjectTest extends HiveTest {
