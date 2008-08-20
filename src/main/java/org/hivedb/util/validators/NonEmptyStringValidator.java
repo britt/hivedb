@@ -1,7 +1,7 @@
 package org.hivedb.util.validators;
 
 import org.hivedb.HiveRuntimeException;
-import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.classgen.ReflectionTools;
 
 public class NonEmptyStringValidator implements Validator  {
 	public boolean isValid(Object instance, String propertyName) {

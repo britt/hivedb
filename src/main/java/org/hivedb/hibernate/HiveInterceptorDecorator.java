@@ -17,7 +17,7 @@ import org.hivedb.annotations.AnnotationHelper;
 import org.hivedb.annotations.EntityId;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
-import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.classgen.GeneratedClassFactory;
 import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
 import org.hivedb.util.functional.Filter;

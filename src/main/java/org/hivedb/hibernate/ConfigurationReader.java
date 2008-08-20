@@ -33,7 +33,7 @@ import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.Lists;
 import org.hivedb.util.PrimitiveUtils;
-import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;

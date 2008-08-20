@@ -8,7 +8,7 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
 
-import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.classgen.ReflectionTools;
 
 public class DebugMap<K,V> implements Map<K,V>
 {
@@ -98,7 +98,7 @@ public class DebugMap<K,V> implements Map<K,V>
 	private int makeHashCode(Entry entry) {
 		if (entry.getValue() == null)
 			return 0;
-		return ReflectionTools.doesImplementOrExtend(entry.getValue().getClass(), Collection.class) 
+		return ReflectionTools.doesImplementOrExtend(entry.getValue().getClass(), Collection.class)
 			? Amass.makeHashCode((Collection)entry.getValue()) 
 			: entry.getValue().hashCode();
 	}

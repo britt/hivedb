@@ -4,7 +4,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 
 import org.hivedb.util.AccessorFunction;
-import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.classgen.ReflectionTools;
 
 public class GetSetReflectionFunction  {
 	

@@ -9,7 +9,7 @@ import org.hivedb.HiveLockableException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
-import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;

@@ -11,7 +11,7 @@ import org.hivedb.annotations.EntityId;
 import org.hivedb.util.DeepHashCode;
 import org.hivedb.util.PropertyAccessor;
 import org.hivedb.util.PropertyChangeListenerRegistrar;
-import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.functional.Amass;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.DebugMap;

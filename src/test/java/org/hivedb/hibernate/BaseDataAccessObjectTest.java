@@ -2,7 +2,7 @@ package org.hivedb.hibernate;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveLockableException;
-import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.classgen.GenerateInstance;
 import org.hivedb.util.classgen.GeneratedClassFactory;
 import org.hivedb.util.classgen.GeneratedInstanceInterceptor;

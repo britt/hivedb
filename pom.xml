@@ -234,11 +234,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.testng</groupId>
-      <artifactId>testng</artifactId>
-      <version>5.7</version>
-      <classifier>jdk15</classifier>
-    </dependency>
+          <groupId>org.testng</groupId>
+          <artifactId>testng</artifactId>
+          <version>5.7</version>
+          <classifier>jdk15</classifier>
+          <scope>provided</scope>
+        </dependency>
     <dependency>
       <groupId>org.apache.cxf</groupId>
       <artifactId>cxf-rt-core</artifactId>

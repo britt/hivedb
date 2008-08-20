@@ -5,6 +5,7 @@ import java.util.Collection;
 
 import org.hivedb.util.classgen.GeneratePrimitiveCollection;
 import org.hivedb.util.classgen.GeneratePrimitiveValue;
+import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.functional.Generate;
 import org.hivedb.util.functional.Generator;
 import org.hivedb.util.functional.NumberIterator;
@@ -55,7 +56,7 @@ public class BeanGenerator<R> implements Generator<R> {
 
 	private void setCollection(R instance, String propertyName,
 			Class<Object> collectionItemClass) {
-		ReflectionTools.invokeSetter(instance, propertyName, 
+		ReflectionTools.invokeSetter(instance, propertyName,
 				PrimitiveUtils.isPrimitiveClass(collectionItemClass)
 					? new GeneratePrimitiveCollection<Object>(collectionItemClass,COLLECTION_SIZE).generate()
 					: generateObjectCollection(collectionItemClass, COLLECTION_SIZE));

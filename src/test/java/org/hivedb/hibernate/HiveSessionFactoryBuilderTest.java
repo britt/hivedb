@@ -16,7 +16,7 @@ import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hivedb.Hive;
 import org.hivedb.meta.Node;
 import org.hivedb.util.Lists;
-import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.classgen.GenerateInstance;
 import org.hivedb.util.classgen.GeneratedClassFactory;
 import org.hivedb.util.classgen.GeneratedInstanceInterceptor;

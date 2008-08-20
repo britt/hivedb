@@ -1,10 +1,10 @@
 package org.hivedb.util.classgen;
 
-import java.util.Collection;
-
 import org.hivedb.util.functional.Generate;
 import org.hivedb.util.functional.Generator;
 import org.hivedb.util.functional.NumberIterator;
+
+import java.util.Collection;
 
 public class GeneratePrimitiveCollection<F> implements Generator<Collection<F>> {
 

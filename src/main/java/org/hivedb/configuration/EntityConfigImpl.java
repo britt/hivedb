@@ -8,7 +8,7 @@ import java.util.EnumSet;
 import org.hivedb.annotations.AnnotationHelper;
 import org.hivedb.annotations.Index;
 import org.hivedb.annotations.IndexType;
-import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Predicate;
 import org.hivedb.util.functional.Transform;

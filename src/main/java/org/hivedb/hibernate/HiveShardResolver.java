@@ -12,7 +12,7 @@ import org.hivedb.HiveFacade;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.EntityIndexConfig;
-import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 

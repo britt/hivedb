@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hivedb.util.Lists;
-import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Maps;

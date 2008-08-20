@@ -8,7 +8,7 @@ import org.hivedb.annotations.IndexType;
 import org.hivedb.annotations.PartitionIndex;
 import org.hivedb.annotations.Validate;
 import org.hivedb.util.InstanceCollectionValueGetter;
-import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.database.SqlUtils;
 import org.hivedb.util.functional.Actor;
 import org.hivedb.util.functional.Transform;

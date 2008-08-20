@@ -22,7 +22,7 @@ import org.hivedb.hibernate.EntityResolver;
 import org.hivedb.hibernate.HiveSessionFactory;
 import org.hivedb.hibernate.HiveSessionFactoryBuilderImpl;
 import org.hivedb.util.PrimitiveUtils;
-import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.classgen.GenerateInstance;
 import org.hivedb.util.classgen.GeneratePrimitiveValue;
 import org.hivedb.util.functional.Generator;

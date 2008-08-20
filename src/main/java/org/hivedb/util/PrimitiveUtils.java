@@ -1,16 +1,16 @@
 package org.hivedb.util;
 
+import org.hivedb.util.functional.Binary;
+import org.hivedb.util.classgen.ReflectionTools;
+
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.sql.Blob;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
-
-import org.hivedb.util.functional.Binary;
 
 
 public class PrimitiveUtils {

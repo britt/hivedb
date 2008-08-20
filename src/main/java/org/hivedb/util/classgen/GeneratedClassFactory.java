@@ -5,7 +5,7 @@ import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import org.hivedb.util.Mapper;
 import org.hivedb.util.PropertyAccessor;
-import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.classgen.ReflectionTools;
 
 import java.util.Map;
 

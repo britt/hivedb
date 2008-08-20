@@ -1,11 +1,11 @@
 package org.hivedb.util.classgen;
 
-import java.util.Collection;
-
 import org.hivedb.util.PrimitiveUtils;
 import org.hivedb.util.functional.Generate;
 import org.hivedb.util.functional.Generator;
 import org.hivedb.util.functional.NumberIterator;
+
+import java.util.Collection;
 
 public class GenerateInstanceCollection<T> implements Generator<Collection<T>> {
 	private Class<T> collectionItemClazz;

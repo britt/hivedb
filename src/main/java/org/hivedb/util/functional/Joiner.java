@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 
-import org.hivedb.util.ReflectionTools;
+import org.hivedb.util.classgen.ReflectionTools;
 
 public abstract class Joiner<C,R> {
 	public abstract R f(C item, R result);
