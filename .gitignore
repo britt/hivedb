@@ -9,3 +9,4 @@ target
 test-output
 velocity.log
 cobertura.ser
+.clover
