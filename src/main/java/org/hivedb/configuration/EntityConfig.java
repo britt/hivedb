@@ -1,10 +1,10 @@
 package org.hivedb.configuration;
 
+import org.hivedb.annotations.IndexType;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.EnumSet;
-
-import org.hivedb.annotations.IndexType;
 
 
 public interface EntityConfig {

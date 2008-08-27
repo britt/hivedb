@@ -163,7 +163,11 @@ public class GeneratedServiceInterceptor implements MethodInterceptor, Service {
 		return dao.getCountByProperties(partitioningProperty, propertyNameValueMap, firstResult, maxResults);
 	}
 
-	public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+  public Integer getCountByRange(String propertyName, Object minValue, Object maxValue) {
+    return dao.getCountByRange(propertyName, minValue, maxValue);
+  }
+
+  public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
 		Object retValFromSuper = null;
 		try {
 			if (!Modifier.isAbstract(method.getModifiers())) {
@@ -240,7 +244,7 @@ public class GeneratedServiceInterceptor implements MethodInterceptor, Service {
 				return getCountByProperty(entry.getKey(), entry.getValue());
 			else if (method.getName().equals("findByProperty"))
 				return findByProperty(entry.getKey(), entry.getValue());
-		}
+    }
 		if (entries.size()==2) {
 			Entry<String, Object> entry1 = Atom.getFirstOrThrow(entries);
 			Entry<String, Object> entry2 = Atom.getFirstOrThrow(Atom.getRestOrThrow(entries));

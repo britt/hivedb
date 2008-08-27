@@ -1,22 +1,8 @@
 package org.hivedb.hibernate;
 
-import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.Criteria;
-import org.hibernate.FlushMode;
-import org.hibernate.LockMode;
-import org.hibernate.Query;
-import org.hibernate.SQLQuery;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
+import org.hibernate.*;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -31,19 +17,18 @@ import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.configuration.EntityIndexConfigDelegator;
 import org.hivedb.configuration.EntityIndexConfigImpl;
-import org.hivedb.util.*;
+import org.hivedb.util.Lists;
 import org.hivedb.util.classgen.GenerateInstance;
 import org.hivedb.util.classgen.GeneratedClassFactory;
 import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
 import org.hivedb.util.classgen.ReflectionTools;
-import org.hivedb.util.functional.Amass;
-import org.hivedb.util.functional.Atom;
+import org.hivedb.util.functional.*;
 import org.hivedb.util.functional.Filter;
-import org.hivedb.util.functional.Joiner;
-import org.hivedb.util.functional.Pair;
-import org.hivedb.util.functional.Predicate;
-import org.hivedb.util.functional.Transform;
-import org.hivedb.util.functional.Unary;
+
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.Map.Entry;
 
 public class BaseDataAccessObject implements DataAccessObject<Object, Serializable>{
 	private final Log log = LogFactory.getLog(BaseDataAccessObject.class);
@@ -90,8 +75,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 					}
 					return Collections.singletonList(fetched);
 				}};
-			
-			Object fetched = Atom.getFirstOrThrow(queryInTransaction(query, getSession()));
+      Object fetched = Atom.getFirstOrThrow(queryInTransaction(query, getSession()));
 			if(fetched == null && exists(id)){
 				try {
 					hive.directory().deleteResourceId(config.getResourceName(), id);
@@ -101,8 +85,9 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 				log.warn(String.format("%s with id %s exists in the directory but not on the data node.  Directory record removed.", config.getResourceName(), id));
 			}
 			return fetched;
-		} catch(RuntimeException e) {
-			//This save us a directory hit for all cases except when requesting a non-existent id.
+		} catch(NoSuchElementException e) {
+      //TODO previous code may make this logic irrelevant
+      //This save us a directory hit for all cases except when requesting a non-existent id.
 			if(!exists(id))
 				return null; 
 			else
@@ -277,7 +262,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 					  Object deleted = get(config.getId(entity), session);
 					  session.delete(deleted);
 			  }}};
-			  deleteAll(chunk, callback);
+			  deleteAll(callback);
 		  }
 		 
 	      SessionCallback callback = new SessionCallback(){
@@ -382,8 +367,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 						criteria.setProjection( Projections.rowCount() );
 					return criteria.list();
 			}};
-		final Collection<Object> queryInTransaction = queryInTransaction(query, session);
-		return queryInTransaction;
+		return queryInTransaction(query, session);
 	}
 
 	private Map<String, Entry<EntityIndexConfig, Object>> createPropertyNameToValueMap(
@@ -418,7 +402,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		return query.list();
 	}
 	@SuppressWarnings("unchecked")
-	protected Collection<Object> queryWithHQLRowCount(Session session, Map<String, Object> propertyNameValueMap, Integer firstResult, Integer maxResults) {
+	protected Collection queryWithHQLRowCount(Session session, Map<String, Object> propertyNameValueMap, Integer firstResult, Integer maxResults) {
 		String queryString = String.format("select count(%s) %s",
 			config.getIdPropertyName(),
 			createHQLQuery(propertyNameValueMap));
@@ -621,7 +605,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			doInTransaction(cleanupCallback, factory.openSession(config.getPrimaryIndexKey(Atom.getFirstOrThrow(entities))));
 		}
 	}
-	 public void deleteAll(final Collection<Object> entities, SessionCallback callback) {
+	 public void deleteAll(SessionCallback callback) {
 		doInTransaction(callback, getSession());
 	 }
 

@@ -1,17 +1,5 @@
 package org.hivedb.hibernate;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Observable;
-import java.util.Observer;
-import java.util.Properties;
-import java.util.Set;
-import java.util.Map.Entry;
-
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -45,10 +33,13 @@ import org.hivedb.util.database.DriverLoader;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
-import org.hivedb.util.functional.Transform;
-import org.hivedb.util.functional.Unary;
 import org.hivedb.util.functional.Filter.BinaryPredicate;
+import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Transform.IdentityFunction;
+import org.hivedb.util.functional.Unary;
+
+import java.util.*;
+import java.util.Map.Entry;
 
 // TODO Node Set session factories have to go, combinatoric compexity
 

@@ -1,11 +1,11 @@
 package org.hivedb.hibernate;
 
-import java.io.Serializable;
-import java.util.Collection;
-
 import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hivedb.Hive;
 import org.hivedb.configuration.EntityHiveConfig;
+
+import java.io.Serializable;
+import java.util.Collection;
 
 public class BaseDataAccessObjectFactory<T, ID extends Serializable> implements DataAccessObjectFactory<T, ID> {
 	

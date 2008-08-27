@@ -1,18 +1,14 @@
 package org.hivedb.services;
 
+import org.hibernate.shards.strategy.access.ShardAccessStrategy;
+import org.hivedb.Hive;
+import org.hivedb.configuration.EntityConfig;
+import org.hivedb.hibernate.*;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-
-import org.hibernate.shards.strategy.access.ShardAccessStrategy;
-import org.hivedb.Hive;
-import org.hivedb.configuration.EntityConfig;
-import org.hivedb.hibernate.BaseDataAccessObject;
-import org.hivedb.hibernate.ConfigurationReader;
-import org.hivedb.hibernate.DataAccessObject;
-import org.hivedb.hibernate.HiveSessionFactory;
-import org.hivedb.hibernate.HiveSessionFactoryBuilderImpl;
 
 public class BaseClassDaoService<T,ID extends Serializable> implements ClassDaoService<T,ID> {
 	protected EntityConfig config;

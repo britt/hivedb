@@ -1,17 +1,10 @@
 package org.hivedb.util.database.test;
 
 
+import org.hivedb.annotations.*;
+
 import java.util.Collection;
 import java.util.Date;
-
-import org.hivedb.annotations.EntityId;
-import org.hivedb.annotations.GeneratedClass;
-import org.hivedb.annotations.Index;
-import org.hivedb.annotations.IndexDelegate;
-import org.hivedb.annotations.IndexType;
-import org.hivedb.annotations.PartitionIndex;
-import org.hivedb.annotations.Resource;
-import org.hivedb.annotations.Validate;
 
 /**
  *

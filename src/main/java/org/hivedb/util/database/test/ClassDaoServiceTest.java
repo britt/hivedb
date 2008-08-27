@@ -1,20 +1,5 @@
 package org.hivedb.util.database.test;
 
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertTrue;
-
-import java.io.Serializable;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-
 import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hivedb.Hive;
 import org.hivedb.HiveLockableException;
@@ -39,25 +24,28 @@ import org.hivedb.services.BaseClassDaoService;
 import org.hivedb.services.ClassDaoService;
 import org.hivedb.services.ServiceResponse;
 import org.hivedb.util.Lists;
-import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.classgen.GenerateInstance;
 import org.hivedb.util.classgen.GeneratePrimitiveValue;
 import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
+import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.Schemas;
-import org.hivedb.util.functional.Atom;
-import org.hivedb.util.functional.Delay;
-import org.hivedb.util.functional.Filter;
-import org.hivedb.util.functional.Predicate;
-import org.hivedb.util.functional.Transform;
-import org.hivedb.util.functional.Unary;
+import org.hivedb.util.functional.*;
 import org.hivedb.util.functional.Filter.BinaryPredicate;
 import org.hivedb.util.validators.NoValidator;
 import org.testng.Assert;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertTrue;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+
+import java.io.Serializable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
 
 /**
  * This test base class uses ClassDaoService as a thin wrapper around a DataAccessObject. Subclasses may specify what entity classes to test.

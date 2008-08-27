@@ -1,9 +1,6 @@
 package org.hivedb.util.functional;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class Atom {
 	public static<T> T getFirst(Iterable<? extends T> iterable) throws Exception
@@ -16,7 +13,7 @@ public class Atom {
 	{
 		for (T item : iterable)
 			return item;
-		throw new RuntimeException("Iterable has no items");
+		throw new NoSuchElementException("Iterable has no items");
 	}
 	public static<T> T getFirstOrNull(Iterable<? extends T> iterable)
 	{
@@ -51,7 +48,7 @@ public class Atom {
 		try {
 			return getRest(iterable);
 		}
-		catch (Exception e) { throw new RuntimeException(e); }
+		catch (Exception e) { throw new NoSuchElementException(e.getMessage()); }
 	}
 	
 	public static<T> T getFirst(T[] array) throws Exception
@@ -64,7 +61,7 @@ public class Atom {
 	public static<T> T getFirstOrThrow(T[] array)
 	{
 		if(array.length == 0)
-			throw new RuntimeException("Array has no items");
+			throw new NoSuchElementException("Array has no items");
 		else
 			return array[0];
 	}
@@ -98,7 +95,7 @@ public class Atom {
 		if( item != null)
 			return item;
 		else
-			throw new RuntimeException("Iterable has no items");
+			throw new NoSuchElementException("Iterable has no items");
 	}
 	public static<T> T getLastOrNull(Iterable<? extends T> iterable)
 	{
@@ -121,7 +118,7 @@ public class Atom {
 		if(array.length > 0)
 			return array[array.length-1];
 		else
-			throw new RuntimeException("Array has no items");
+			throw new NoSuchElementException("Array has no items");
 	}
 	public static<T> T getLastOrNull(T[] array)
 	{
