@@ -15,7 +15,6 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 public class SimpleDataAccessObject<T, ID extends Serializable> implements DataAccessObject<T, ID> {
   private final static Log log = LogFactory.getLog(SimpleDataAccessObject.class);
@@ -39,13 +38,8 @@ public class SimpleDataAccessObject<T, ID extends Serializable> implements DataA
       }
     };
 
-    T fetched = null;
-    try {
-      fetched = (T) Atom.getFirstOrThrow(t.queryInTransaction(query, getSession()));
-    } catch (NoSuchElementException e) {
-      if (exists(id))
-        removeDirectoryEntry(id);
-    }
+    T fetched = (T) Atom.getFirstOrThrow(t.queryInTransaction(query, getSession()));
+    
     if (fetched == null && exists(id))
       removeDirectoryEntry(id);
     return fetched;

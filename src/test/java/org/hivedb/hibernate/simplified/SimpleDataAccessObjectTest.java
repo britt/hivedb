@@ -10,6 +10,7 @@ import org.hivedb.util.classgen.GeneratedClassFactory;
 import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.WeatherReport;
+import org.hivedb.Lockable;
 import static org.testng.AssertJUnit.*;
 import org.testng.annotations.Test;
 
@@ -46,6 +47,31 @@ public class SimpleDataAccessObjectTest extends HiveTest {
     DataAccessObject<WeatherReport, Integer> dao = new SimpleDataAccessObject<WeatherReport, Integer>(getGeneratedClass(), getEntityHiveConfig().getEntityConfig(WeatherReport.class),getHive(), getSessionFactory());
 		WeatherReport report = dao.get(777777);
 		assertTrue(report == null);
+  }
+
+  @Test
+  public void shouldReturnNullIfTheRecordExistsButHasNoDirectoryEntry() throws Exception {
+    DataAccessObject<WeatherReport, Integer> dao = new SimpleDataAccessObject<WeatherReport, Integer>(getGeneratedClass(), getEntityHiveConfig().getEntityConfig(WeatherReport.class),getHive(), getSessionFactory());
+		WeatherReport original = getPersistentInstance(dao);
+    String resourceName = getEntityHiveConfig().getEntityConfig(WeatherReport.class).getResourceName();
+    getHive().directory().deleteResourceId(resourceName, original.getReportId());
+    assertFalse(dao.exists(original.getReportId()));    
+    WeatherReport report = dao.get(original.getReportId());
+    assertTrue(report == null);
+  }
+
+  @Test
+  public void shouldOnlyWarnIfTheHiveIsLockedForWrites() throws Exception {
+    DataAccessObject<WeatherReport, Integer> dao = new SimpleDataAccessObject<WeatherReport, Integer>(getGeneratedClass(), getEntityHiveConfig().getEntityConfig(WeatherReport.class),getHive(), getSessionFactory());
+		WeatherReport original = getPersistentInstance(dao);
+    dao.delete(original.getReportId());
+    String resourceName = getEntityHiveConfig().getEntityConfig(WeatherReport.class).getResourceName();
+    getHive().directory().insertResourceId(resourceName, original.getReportId(), original.getContinent());
+    assertTrue(getHive().directory().doesResourceIdExist(resourceName, original.getReportId()));
+    getHive().updateHiveStatus(Lockable.Status.readOnly);
+    WeatherReport report = dao.get(original.getReportId());
+    assertTrue(report == null);
+    assertTrue(getHive().directory().doesResourceIdExist(resourceName, original.getReportId()));
   }
 
   private HiveSessionFactory getSessionFactory() {
