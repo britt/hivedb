@@ -215,7 +215,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		return queryInTransaction(callback, session);
 	}
 
-    public Object save(Object entity) {
+  public Object save(Object entity) {
 		final Object populatedEntity = Atom.getFirstOrThrow(populateDataIndexDelegates(Collections.singletonList(entity)));
 		SessionCallback callback = new SessionCallback(){
 			public void execute(Session session) {

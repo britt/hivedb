@@ -1,19 +1,6 @@
 package org.hivedb.test;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertTrue;
-
-import java.io.Serializable;
-import java.lang.reflect.Array;
-import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-
 import junit.framework.Assert;
-
 import org.apache.cxf.Bus;
 import org.apache.cxf.BusException;
 import org.apache.cxf.BusFactory;
@@ -39,19 +26,20 @@ import org.hivedb.services.Service;
 import org.hivedb.services.ServiceContainer;
 import org.hivedb.services.ServiceResponse;
 import org.hivedb.util.Lists;
-import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.classgen.*;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.HiveTest;
-import org.hivedb.util.functional.Atom;
-import org.hivedb.util.functional.Filter;
-import org.hivedb.util.functional.Predicate;
-import org.hivedb.util.functional.RingIteratorable;
-import org.hivedb.util.functional.Transform;
-import org.hivedb.util.functional.Unary;
+import org.hivedb.util.functional.*;
 import org.testng.AssertJUnit;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import java.io.Serializable;
+import java.lang.reflect.Array;
+import java.lang.reflect.Method;
+import java.util.*;
 
 
 public abstract class ClassServiceTest<T,S> extends HiveTest {

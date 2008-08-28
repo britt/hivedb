@@ -4,14 +4,14 @@
  */
 package org.hivedb.configuration;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import org.apache.commons.dbcp.BasicDataSource;
 import org.hivedb.Schema;
 import org.hivedb.meta.persistence.TableInfo;
 import org.hivedb.util.Templater;
 import org.hivedb.util.database.Schemas;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * The Global Hive Configuration schema contains records of the Hive's internal

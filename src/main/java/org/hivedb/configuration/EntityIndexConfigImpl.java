@@ -1,7 +1,5 @@
 package org.hivedb.configuration;
 
-import java.util.Collection;
-
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.annotations.Index;
 import org.hivedb.annotations.IndexType;
@@ -15,6 +13,8 @@ import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.hivedb.util.validators.NonNullValidator;
 import org.hivedb.util.validators.Validator;
+
+import java.util.Collection;
 
 public class EntityIndexConfigImpl implements EntityIndexConfig {
 		

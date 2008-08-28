@@ -1,10 +1,5 @@
 package org.hivedb.hibernate;
 
-import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Iterator;
-
 import org.hibernate.CallbackException;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.EntityMode;
@@ -17,14 +12,19 @@ import org.hivedb.annotations.AnnotationHelper;
 import org.hivedb.annotations.EntityId;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
-import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.classgen.GeneratedClassFactory;
 import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
+import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Predicate;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 import org.springframework.beans.BeanUtils;
+
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Iterator;
 
 public class HiveInterceptorDecorator extends InterceptorDecorator implements Interceptor {
 	private EntityHiveConfig hiveConfig;

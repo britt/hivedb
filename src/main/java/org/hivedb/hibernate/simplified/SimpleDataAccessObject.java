@@ -2,7 +2,9 @@ package org.hivedb.hibernate.simplified;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hivedb.Hive;
 import org.hivedb.HiveLockableException;
 import org.hivedb.configuration.EntityConfig;
@@ -16,11 +18,18 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
+/**
+ * A DataAccessObject for storing and retrieving objects using Hibernate. This class also acts
+ * as an error detection and repair mechanism for the directory.  If a directory error is detected
+ * SimpleDataAccessObject will attempt to fix it either by re-indexing the object or removing the
+ * erroneous directory entry.  Thus many of the operations can produce side-effects. All error
+ * correcting operations are marked as such.
+ */
 public class SimpleDataAccessObject<T, ID extends Serializable> implements DataAccessObject<T, ID> {
   private final static Log log = LogFactory.getLog(SimpleDataAccessObject.class);
   private Hive hive;
   private EntityConfig config;
-  private HibernateTransactionHelper t = new HibernateTransactionHelper();
+  private HibernateTransactionHelper transactionHelper = new HibernateTransactionHelper();
   private HiveSessionFactory factory;
   private Class<T> representedClass;
 
@@ -31,6 +40,12 @@ public class SimpleDataAccessObject<T, ID extends Serializable> implements DataA
     this.factory = factory;
   }
 
+  /**
+   * Retrieve an entity by id. <em>This method is error correcting and can have side-effects.</em>
+   *
+   * @param id
+   * @return
+   */
   public T get(final ID id) {
     QueryCallback query = new QueryCallback() {
       public Collection<Object> execute(Session session) {
@@ -38,8 +53,8 @@ public class SimpleDataAccessObject<T, ID extends Serializable> implements DataA
       }
     };
 
-    T fetched = (T) Atom.getFirstOrThrow(t.queryInTransaction(query, getSession()));
-    
+    T fetched = (T) Atom.getFirstOrThrow(transactionHelper.queryInTransaction(query, getSession()));
+
     if (fetched == null && exists(id))
       removeDirectoryEntry(id);
     return fetched;
@@ -73,7 +88,7 @@ public class SimpleDataAccessObject<T, ID extends Serializable> implements DataA
 //		if (partionDimensionKeyHasChanged(entity))
 //			delete(config.getId(entity));
 //		doSave(populatedEntity, callback, cleanupCallback);
-    t.updateInTransaction(callback, getSession());
+    transactionHelper.updateInTransaction(callback, getSession());
     return entity;
   }
 
@@ -120,12 +135,37 @@ public class SimpleDataAccessObject<T, ID extends Serializable> implements DataA
         session.delete(deleted);
       }
     };
-    t.updateInTransaction(callback, getSession());
+    transactionHelper.updateInTransaction(callback, getSession());
     return id;
   }
 
   public Class<T> getRespresentedClass() {
     return representedClass;
+  }
+
+  // TODO TEST!
+  public void safeSave(final T entity, SessionCallback callback, SessionCallback cleanupCallback) {
+    try {
+      transactionHelper.updateInTransaction(callback, getSession());
+    } catch (HibernateException dupe) {
+      if (isDuplicateRecordException(dupe,entity) && !exists((ID) config.getId(entity))) {
+        transactionHelper.updateInTransaction(cleanupCallback, factory.openSession(config.getPrimaryIndexKey(entity)));
+      } else {
+        log.error(
+          String.format(
+            "Detected an integrity constraint violation on the data node but %s with id %s exists in the directory.",
+            config.getResourceName(),
+            config.getId(entity)));        
+        throw dupe;
+      }
+    }
+  }
+
+  private boolean isDuplicateRecordException(HibernateException dupe, T entity) {
+    return
+      (dupe.getCause().getClass().isAssignableFrom(ConstraintViolationException.class)
+        || dupe.getClass().isAssignableFrom(ConstraintViolationException.class))
+				&& !exists((ID)config.getId(entity));
   }
 }
 

@@ -1,13 +1,13 @@
 package org.hivedb.configuration;
 
+import org.hivedb.HiveRuntimeException;
+import org.hivedb.util.Lists;
+import org.hivedb.util.functional.DebugMap;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
-import org.hivedb.HiveRuntimeException;
-import org.hivedb.util.Lists;
-import org.hivedb.util.functional.DebugMap;
 
 public class PluralHiveConfig implements EntityHiveConfig {
 	private Map<String,EntityConfig> indexConfigurations = new DebugMap<String, EntityConfig>();

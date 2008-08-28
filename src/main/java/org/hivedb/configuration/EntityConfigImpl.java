@@ -1,19 +1,19 @@
 package org.hivedb.configuration;
 
-import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.EnumSet;
-
 import org.hivedb.annotations.AnnotationHelper;
 import org.hivedb.annotations.Index;
 import org.hivedb.annotations.IndexType;
 import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Filter.BinaryPredicate;
 import org.hivedb.util.functional.Predicate;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
-import org.hivedb.util.functional.Filter.BinaryPredicate;
+
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.EnumSet;
 
 public class EntityConfigImpl implements EntityConfig {
 
