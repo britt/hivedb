@@ -1,29 +1,16 @@
 package org.hivedb.meta;
 
-import static org.hivedb.meta.directory.DirectoryWrapper.semaphoreToId;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertTrue;
-
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Hashtable;
-import java.util.Map;
-
 import org.hivedb.Hive;
 import org.hivedb.HiveFacade;
 import org.hivedb.HiveLockableException;
-import org.hivedb.HiveRuntimeException;
-import org.hivedb.Schema;
 import org.hivedb.Lockable.Status;
+import org.hivedb.Schema;
 import org.hivedb.configuration.HiveConfigurationSchema;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.directory.Directory;
 import org.hivedb.meta.directory.DirectoryWrapper;
+import static org.hivedb.meta.directory.DirectoryWrapper.semaphoreToId;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
-import org.hivedb.meta.persistence.HiveBasicDataSource;
 import org.hivedb.meta.persistence.IndexSchema;
 import org.hivedb.util.AssertUtils;
 import org.hivedb.util.Lists;
@@ -31,10 +18,12 @@ import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2TestCase;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Transform;
+import org.junit.Before;
+import org.junit.Test;import static org.junit.Assert.assertEquals;import static org.junit.Assert.assertTrue;import static org.junit.Assert.assertFalse;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
+
+import java.sql.Types;
+import java.util.*;
 
 public class DirectoryTest extends H2TestCase {
 	private PartitionDimension dimension;
@@ -73,7 +62,7 @@ public class DirectoryTest extends H2TestCase {
 		}
 	}
 	
-	@BeforeMethod
+	@Before
 	@Override
 	public void beforeMethod() {
 		deleteDatabasesAfterEachTest = true;

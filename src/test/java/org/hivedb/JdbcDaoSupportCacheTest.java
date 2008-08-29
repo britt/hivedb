@@ -1,16 +1,13 @@
 package org.hivedb;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertTrue;
-
-import java.sql.SQLException;
-import java.util.Collection;
-
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.database.test.HiveTest;
+import org.junit.Test;import static org.junit.Assert.assertTrue;import static org.junit.Assert.assertEquals;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
-import org.testng.annotations.Test;
+
+import java.sql.SQLException;
+import java.util.Collection;
 
 public class JdbcDaoSupportCacheTest extends HiveTest {
 	protected boolean cleanupDbAfterEachTest = true;

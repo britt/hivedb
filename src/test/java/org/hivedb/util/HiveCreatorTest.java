@@ -1,24 +1,22 @@
 package org.hivedb.util;
 
+import org.hivedb.Hive;
+import org.hivedb.Schema;
+import org.hivedb.meta.Node;
+import org.hivedb.util.database.JdbcTypeMapper;
+import org.hivedb.util.database.Schemas;
+import org.hivedb.util.database.test.HiveTest;
+import org.hivedb.util.database.test.HiveTest.Config;
+import org.ho.yaml.Yaml;
+import org.junit.Assert;
+import org.junit.Test;
+
 import java.io.FileReader;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-
-import org.hivedb.Hive;
-import org.hivedb.Schema;
-import org.hivedb.meta.Node;
-import org.hivedb.util.HiveCreator;
-import org.hivedb.util.database.JdbcTypeMapper;
-import org.hivedb.util.database.Schemas;
-import org.hivedb.util.database.test.HiveTest;
-import org.hivedb.util.database.test.HiveTest.Config;
-import org.ho.yaml.Yaml;
-import org.testng.Assert;
-import org.testng.annotations.Test;
 
 /**
  * Tests HiveCreator and HiveDestructor functionality

@@ -1,18 +1,15 @@
 package org.hivedb.persistence;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertTrue;
-
-import java.sql.Types;
-import java.util.ArrayList;
-
 import org.hivedb.Hive;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.persistence.PartitionDimensionDao;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.HiveTest.Config;
-import org.testng.annotations.Test;
+import org.junit.Test;import static org.junit.Assert.assertTrue;import static org.junit.Assert.assertEquals;
+
+import java.sql.Types;
+import java.util.ArrayList;
 
 @Config(file="hive_default")
 public class TestPartitionDimensionPersistence extends HiveTest {

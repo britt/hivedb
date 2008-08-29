@@ -1,10 +1,10 @@
 package org.hivedb.util.database.test;
 
-import java.util.Arrays;
-import java.util.Collection;
-
 import org.hivedb.Schema;
 import org.hivedb.meta.persistence.TableInfo;
+
+import java.util.Arrays;
+import java.util.Collection;
 
 public class ContinentalSchema extends Schema {
 	

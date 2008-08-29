@@ -1,5 +1,10 @@
 package org.hivedb.util.database.test;
 
+import org.hivedb.Schema;
+import org.hivedb.meta.Node;
+import org.hivedb.meta.persistence.CachingDataSourceProvider;
+
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -7,15 +12,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Map;
-
-import javax.sql.DataSource;
-
-import org.h2.tools.DeleteDbFiles;
-import org.hivedb.Schema;
-import org.hivedb.meta.Node;
-import org.hivedb.meta.persistence.CachingDataSourceProvider;
-import org.hivedb.meta.persistence.HiveBasicDataSource;
-import org.hivedb.meta.persistence.TableInfo;
 
 /**
  *  This class adds and overrides behaviour of DatabaseTestCase

@@ -1,11 +1,11 @@
 package org.hivedb;
 
-import java.util.Arrays;
-import java.util.Collection;
-
 import org.hivedb.configuration.HiveConfigurationSchema;
 import org.hivedb.util.database.test.H2TestCase;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.Collection;
 
 public class TestGlobalSchema extends H2TestCase {
 

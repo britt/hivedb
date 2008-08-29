@@ -1,12 +1,5 @@
 package org.hivedb.services;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNotNull;
-
-import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Collection;
-
 import org.apache.cxf.Bus;
 import org.apache.cxf.BusException;
 import org.apache.cxf.BusFactory;
@@ -25,12 +18,18 @@ import org.hivedb.configuration.EntityConfig;
 import org.hivedb.hibernate.DataAccessObject;
 import org.hivedb.util.Lists;
 import org.hivedb.util.database.test.HiveTest;
-import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.database.test.HiveTest.Config;
+import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Unary;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Collection;
 
 @Config(file="hive_default")
 public class DataGenerationServiceTest extends HiveTest {
@@ -95,7 +94,7 @@ public class DataGenerationServiceTest extends HiveTest {
 	}
 	
 	@BeforeClass
-	public void initializeSOAPLocalTransport() throws BusException {		
+	public static void initializeSOAPLocalTransport() throws BusException {		
 		String[] transports = new String[]{
 				"http://cxf.apache.org/transports/local",
 				"http://schemas.xmlsoap.org/soap/http",

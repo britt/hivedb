@@ -1,13 +1,12 @@
 package org.hivedb.management;
 
-import java.util.Arrays;
-import java.util.Collection;
-
 import org.hivedb.util.database.test.H2TestCase;
+import org.junit.Assert;
+import org.junit.Test;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import java.util.Arrays;
+import java.util.Collection;
 
 public class TestHiveInstaller extends H2TestCase {
 	private static String TEST_DB = "testDB";

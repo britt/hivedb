@@ -1,35 +1,19 @@
  package org.hivedb.services;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
-
-import javax.mail.Store;
-
-import junit.framework.Assert;
-
+ import org.junit.Assert;
 import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hivedb.Schema;
 import org.hivedb.hibernate.ConfigurationReader;
 import org.hivedb.test.ClassServiceTest;
-import org.hivedb.util.Lists;
-import org.hivedb.util.classgen.GenerateInstance;
-import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
 import org.hivedb.util.classgen.GeneratedServiceInterceptor;
-import org.hivedb.util.database.test.WeatherEvent;
+import org.hivedb.util.database.test.HiveTest.Config;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.database.test.WeatherSchema;
-import org.hivedb.util.database.test.HiveTest.Config;
-import org.hivedb.util.functional.Atom;
-import org.testng.AssertJUnit;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
 
-@Test(groups={"service"})
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
 @Config(file="hive_default")
 public class WeatherServiceTest extends ClassServiceTest<WeatherReport,WeatherReportService> {
 

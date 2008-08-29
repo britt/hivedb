@@ -1,15 +1,13 @@
 package org.hivedb;
 
-import static org.testng.AssertJUnit.assertTrue;
+import org.hivedb.meta.persistence.HiveSemaphoreDao;
+import org.hivedb.util.database.test.HiveTest;
+import org.hivedb.util.database.test.HiveTest.Config;
+import org.junit.Test;import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
-
-import org.hivedb.meta.persistence.HiveSemaphoreDao;
-import org.hivedb.util.database.test.HiveTest;
-import org.hivedb.util.database.test.HiveTest.Config;
-import org.testng.annotations.Test;
 
 @Config(file="hive_default")
 public class TestHiveSyncDaemon extends HiveTest {

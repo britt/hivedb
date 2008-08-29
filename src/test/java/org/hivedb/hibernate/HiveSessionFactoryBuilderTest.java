@@ -1,13 +1,5 @@
 package org.hivedb.hibernate;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertTrue;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertNotNull;
-
-import java.util.Date;
-import java.util.Properties;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
@@ -16,20 +8,24 @@ import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hivedb.Hive;
 import org.hivedb.meta.Node;
 import org.hivedb.util.Lists;
-import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.classgen.GenerateInstance;
 import org.hivedb.util.classgen.GeneratedClassFactory;
 import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
+import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.Schemas;
 import org.hivedb.util.database.test.Continent;
 import org.hivedb.util.database.test.HiveTest;
+import org.hivedb.util.database.test.HiveTest.Config;
 import org.hivedb.util.database.test.WeatherEvent;
 import org.hivedb.util.database.test.WeatherReport;
-import org.hivedb.util.database.test.HiveTest.Config;
 import org.hivedb.util.functional.Atom;
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import org.junit.Assert;
+import static org.junit.Assert.*;
+import org.junit.Test;
+
+import java.util.Date;
+import java.util.Properties;
 
 @Config(file="hive_default")
 public class HiveSessionFactoryBuilderTest extends HiveTest {
@@ -137,7 +133,7 @@ public class HiveSessionFactoryBuilderTest extends HiveTest {
 		save(factoryBuilder, report);
 		
 		WeatherReport fetched = (WeatherReport) factoryBuilder.openSession().get(getGeneratedClass(WeatherReport.class), report.getReportId());
-		Assert.assertEquals(report, fetched, ReflectionTools.getDifferingFields(report, fetched, WeatherReport.class).toString());
+		Assert.assertEquals(report, fetched);
 	}
 	
 	@Test
@@ -187,7 +183,7 @@ public class HiveSessionFactoryBuilderTest extends HiveTest {
 		WeatherReport fetched = (WeatherReport) factoryBuilder.openSession().get(getGeneratedClass(WeatherReport.class), report.getReportId());
 		assertNotNull(fetched);
 		assertFalse(ReflectionTools.getDifferingFields(report, fetched, WeatherReport.class).size() == 0);
-		Assert.assertEquals(report, fetched, ReflectionTools.getDifferingFields(mutated, fetched, WeatherReport.class).toString());
+		Assert.assertEquals(report, fetched);
 	}
 	
 	@Test

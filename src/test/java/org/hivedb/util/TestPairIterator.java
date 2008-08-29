@@ -1,11 +1,11 @@
 package org.hivedb.util;
 
-import java.util.Arrays;
-
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.PairIterator;
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import org.junit.Assert;
+import org.junit.Test;
+
+import java.util.Arrays;
 
 public class TestPairIterator {
 	@Test

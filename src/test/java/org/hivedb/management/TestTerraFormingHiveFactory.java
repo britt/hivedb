@@ -1,20 +1,16 @@
 package org.hivedb.management;
 
-import static org.testng.AssertJUnit.assertNotNull;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
-import javax.mail.Store;
-
 import org.hivedb.Hive;
 import org.hivedb.hibernate.ConfigurationReader;
 import org.hivedb.util.database.test.H2TestCase;
 import org.hivedb.util.database.test.WeatherEvent;
 import org.hivedb.util.database.test.WeatherReport;
-import org.testng.annotations.Test;
+import org.junit.Test;import static org.junit.Assert.assertNotNull;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 public class TestTerraFormingHiveFactory extends H2TestCase {
 	private static final String HIVE = "hive";

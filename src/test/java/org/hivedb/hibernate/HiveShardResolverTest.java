@@ -1,10 +1,5 @@
 package org.hivedb.hibernate;
 
-import static org.testng.AssertJUnit.assertNotNull;
-import static org.testng.AssertJUnit.assertTrue;
-
-import java.util.Collection;
-
 import org.hibernate.shards.ShardId;
 import org.hibernate.shards.strategy.selection.ShardResolutionStrategyData;
 import org.hibernate.shards.strategy.selection.ShardResolutionStrategyDataImpl;
@@ -12,10 +7,12 @@ import org.hivedb.Hive;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.util.database.test.Continent;
 import org.hivedb.util.database.test.HiveTest;
+import org.hivedb.util.database.test.HiveTest.Config;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.database.test.WeatherReportImpl;
-import org.hivedb.util.database.test.HiveTest.Config;
-import org.testng.annotations.Test;
+import org.junit.Test;import static org.junit.Assert.assertNotNull;import static org.junit.Assert.assertTrue;
+
+import java.util.Collection;
 
 @Config(file="hive_default")
 public class HiveShardResolverTest extends HiveTest {

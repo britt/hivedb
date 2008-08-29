@@ -1,21 +1,15 @@
 package org.hivedb.util.database.test;
 
-import java.lang.management.ManagementFactory;
+import org.hivedb.Schema;
+import org.hivedb.meta.Node;
+import org.hivedb.util.database.Schemas;
+import org.junit.After;
+import org.junit.Before;
+
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.util.Collection;
 import java.util.Collections;
-
-import javax.sql.DataSource;
-
-import org.hivedb.Schema;
-import org.hivedb.meta.Node;
-import org.hivedb.meta.persistence.TableInfo;
-import org.hivedb.util.database.Schemas;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.AfterSuite;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
 
 @SuppressWarnings("unchecked")
 public abstract class DatabaseTestCase {
@@ -37,8 +31,8 @@ public abstract class DatabaseTestCase {
 	/**
 	 * At the end of this method all databases and tables must exist and be empty
 	 */
-	@BeforeMethod
-	protected void beforeMethod() {
+	@Before
+	public void beforeMethod() {
 		if( cleanupAfterEachTest ) {
 			for(String name : getDatabaseNames()){
 				if(databaseExists(name)) {
@@ -56,8 +50,8 @@ public abstract class DatabaseTestCase {
 	/**
 	 * At the end of this method all databases and tables must exist and be empty
 	 */
-	@AfterMethod
-	protected void afterMethod() {
+	@After
+	public void afterMethod() {
 		if( cleanupAfterEachTest ){
 			for(String name : getDatabaseNames()){
 				if(databaseExists(name)) {
@@ -73,12 +67,12 @@ public abstract class DatabaseTestCase {
 	/**
 	 * At the end of this method all databases must be deleted
 	 */
-	@AfterSuite
-	protected void afterSuite() {
-		for(String name : getDatabaseNames())
-			if(databaseExists(name))
-				deleteDatabase(name);
-	}
+//	@After
+//	protected void afterAll() {
+//		for(String name : getDatabaseNames())
+//			if(databaseExists(name))
+//				deleteDatabase(name);
+//	}
 
 	/**
 	 * The name of all databases that need to be created and deleted by this test

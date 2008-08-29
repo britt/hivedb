@@ -12,7 +12,7 @@ import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.HiveTest.Config;
 import org.hivedb.util.functional.Toss;
 import org.hivedb.util.functional.Transform;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 @Config(file="hive_default")
 public class TestConnectionWriteLocking extends HiveTest {

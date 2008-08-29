@@ -1,11 +1,5 @@
 package org.hivedb;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.Collection;
-
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.Node;
@@ -18,12 +12,18 @@ import org.hivedb.util.database.test.H2TestCase;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.HiveTest.Config;
 import org.hivedb.util.functional.Atom;
+import org.junit.Assert;
+import org.junit.Test;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
-import org.testng.Assert;
-import org.testng.annotations.Test;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * This test provides a narrative example of how to create and use a hive.

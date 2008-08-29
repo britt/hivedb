@@ -2,17 +2,17 @@ package org.hivedb.hibernate;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveLockableException;
-import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.classgen.GenerateInstance;
 import org.hivedb.util.classgen.GeneratedClassFactory;
 import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
+import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.HiveTest.Config;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.functional.*;
-import org.testng.Assert;
-import static org.testng.AssertJUnit.*;
-import org.testng.annotations.Test;
+import org.junit.Assert;
+import static org.junit.Assert.assertEquals;import static org.junit.Assert.assertFalse;import static org.junit.Assert.assertTrue;import static org.junit.Assert.assertNull;import static org.junit.Assert.assertNotNull;
+import org.junit.Test;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -55,7 +55,7 @@ public class BaseDataAccessObjectTest extends HiveTest {
 		GeneratedInstanceInterceptor.setProperty(report, "temperature", temperature);
 		dao.save(report);
 		WeatherReport found = Atom.getFirstOrThrow(dao.findByProperty("temperature", temperature));
-		Assert.assertEquals(report.hashCode(), found.hashCode(), ReflectionTools.getDifferingFields(report, found, WeatherReport.class).toString());
+		Assert.assertEquals(report.hashCode(), found.hashCode());
 		found = Atom.getFirstOrThrow(dao.findByProperty("regionCode", report.getRegionCode()));
 		assertEquals(report.hashCode(), found.hashCode());
 		found = Atom.getFirstOrThrow(dao.findByProperty("weatherEvents", Atom.getFirstOrThrow(report.getWeatherEvents()).getEventId()));

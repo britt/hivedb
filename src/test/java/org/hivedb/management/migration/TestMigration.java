@@ -1,13 +1,5 @@
 package org.hivedb.management.migration;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNotNull;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map.Entry;
-
 import org.hivedb.Hive;
 import org.hivedb.Schema;
 import org.hivedb.meta.Node;
@@ -21,8 +13,13 @@ import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Pair;
 import org.hivedb.util.functional.Transform;
+import org.junit.Test;import static org.junit.Assert.assertEquals;import static org.junit.Assert.assertNotNull;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
-import org.testng.annotations.Test;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map.Entry;
 
 public class TestMigration extends HiveTest {
 	

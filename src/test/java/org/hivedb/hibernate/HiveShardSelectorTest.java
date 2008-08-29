@@ -1,22 +1,21 @@
 package org.hivedb.hibernate;
 
-import static org.testng.AssertJUnit.assertNotNull;
-import static org.testng.AssertJUnit.assertTrue;
-
-import java.util.Collection;
-
 import org.hibernate.shards.ShardId;
 import org.hivedb.Hive;
 import org.hivedb.meta.Node;
 import org.hivedb.util.database.test.Continent;
 import org.hivedb.util.database.test.HiveTest;
+import org.hivedb.util.database.test.HiveTest.Config;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.database.test.WeatherReportImpl;
-import org.hivedb.util.database.test.HiveTest.Config;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
-import org.testng.annotations.Test;
+import org.junit.Test;
+import org.junit.Assert;import static org.junit.Assert.assertTrue;
+
+import java.util.Collection;
+
 /***
  * More complex and useful tests will be added when dynamic shard configuration is added.
  * @author bcrawford
@@ -33,7 +32,7 @@ public class HiveShardSelectorTest extends HiveTest {
 		WeatherReport report = WeatherReportImpl.generate();
 		
 		ShardId id = selector.selectShardIdForNewObject(report);
-		assertNotNull(id);
+		Assert.assertNotNull(id);
 		
 		Collection<Integer> nodeIds = Transform.map(new Unary<Node, Integer>(){
 			public Integer f(Node n) {

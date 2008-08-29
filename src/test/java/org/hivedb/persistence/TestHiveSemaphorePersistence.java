@@ -1,12 +1,10 @@
 package org.hivedb.persistence;
 
-import static org.testng.AssertJUnit.assertEquals;
-
 import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.persistence.HiveSemaphoreDao;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.HiveTest.Config;
-import org.testng.annotations.Test;
+import org.junit.Test;import org.junit.Assert;
 
 @Config(file="hive_default")
 public class TestHiveSemaphorePersistence extends HiveTest {
@@ -19,8 +17,8 @@ public class TestHiveSemaphorePersistence extends HiveTest {
 		hsd.update(hs);
 		
 		HiveSemaphore hs2 = hsd.get();
-		assertEquals(hs.getRevision(),hs2.getRevision());
-		assertEquals(hs.getStatus(),hs2.getStatus());
+		Assert.assertEquals(hs.getRevision(),hs2.getRevision());
+		Assert.assertEquals(hs.getStatus(),hs2.getStatus());
 	}
 
 }

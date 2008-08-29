@@ -1,10 +1,10 @@
 package org.hivedb;
 
-import java.util.Arrays;
-
 import org.hivedb.configuration.HiveConfigurationSchema;
 import org.hivedb.util.database.test.H2TestCase;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import java.util.Arrays;
 
 public class TestMetadataSchemaWithH2 extends H2TestCase {
 	/**

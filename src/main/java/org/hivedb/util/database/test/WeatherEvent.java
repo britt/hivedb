@@ -1,11 +1,11 @@
 package org.hivedb.util.database.test;
 
-import java.io.Serializable;
-import java.util.Collection;
-
 import org.hivedb.annotations.EntityId;
 import org.hivedb.annotations.GeneratedClass;
 import org.hivedb.annotations.Index;
+
+import java.io.Serializable;
+import java.util.Collection;
 
 
 @GeneratedClass("WeatherEventGenerated")

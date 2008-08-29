@@ -1,20 +1,16 @@
 package org.hivedb.hibernate;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertTrue;
-
-import java.util.Collection;
-
 import org.hivedb.Hive;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.util.classgen.GenerateInstance;
 import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
 import org.hivedb.util.database.test.HiveTest;
+import org.hivedb.util.database.test.HiveTest.Config;
 import org.hivedb.util.database.test.WeatherEvent;
 import org.hivedb.util.database.test.WeatherReport;
-import org.hivedb.util.database.test.HiveTest.Config;
-import org.testng.annotations.Test;
+import org.junit.Test;import static org.junit.Assert.assertTrue;import static org.junit.Assert.assertEquals;import static org.junit.Assert.assertFalse;
+
+import java.util.Collection;
 
 @Config(file="hive_default")
 public class HiveIndexerTest extends HiveTest {

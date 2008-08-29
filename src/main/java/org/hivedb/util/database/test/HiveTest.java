@@ -13,8 +13,8 @@ import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.HiveCreator;
 import org.hivedb.util.HiveDestructor;
 import org.hivedb.util.database.HiveDbDialect;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
+import org.junit.After;
+import org.junit.Before;
 
 import javax.sql.DataSource;
 import java.io.Serializable;
@@ -52,7 +52,7 @@ public class HiveTest {
 		return HiveDbDialect.H2;
 	}
 	
-	@BeforeMethod
+	@Before
 	public void beforeMethod() throws Exception {
 		dialect = getDialect();
 		hive = new HiveCreator(dialect).load(getHiveConfigurationFile());
@@ -62,7 +62,7 @@ public class HiveTest {
 		setup();
 	}
 	
-	@AfterMethod
+	@After
 	public void afterMethod() {
 		teardown();
 		new HiveDestructor().destroy(hive);

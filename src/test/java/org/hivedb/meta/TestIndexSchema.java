@@ -1,13 +1,13 @@
 package org.hivedb.meta;
 
+import org.hivedb.util.database.Schemas;
+import org.hivedb.util.database.test.H2TestCase;
+import org.junit.Test;
+
 import java.sql.Types;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.hivedb.meta.persistence.IndexSchema;
-import org.hivedb.util.database.Schemas;
-import org.hivedb.util.database.test.H2TestCase;
-import org.testng.annotations.Test;
 public class TestIndexSchema extends H2TestCase {
 	@Test
 	public void testSchemaInstallation() {

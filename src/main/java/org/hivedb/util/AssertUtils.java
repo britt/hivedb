@@ -1,13 +1,11 @@
 package org.hivedb.util;
 
-import java.util.Stack;
-
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
+import org.junit.Assert;import static org.junit.Assert.fail;import static org.junit.Assert.assertEquals;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Toss;
 import org.hivedb.util.functional.Transform;
+
+import java.util.Stack;
 
 public class AssertUtils  {
 	public static abstract class UndoableToss extends ThrowableUndoable implements Toss
@@ -24,7 +22,7 @@ public class AssertUtils  {
 		} catch (Exception e) {
 			return;
 		}
-		TestCase.fail("Expected exception but none occured");
+		fail("Expected exception but none occured");
 	}
 	/**
 	 *  Asserts that the implementation of Toss throws an exception of the given type 
@@ -39,7 +37,7 @@ public class AssertUtils  {
 				return;
 			throw new RuntimeException("Expected exception of type " + exceptionType.getName() + " but got exception of type " + e.getClass().getName(), e);
 		}
-		TestCase.fail("Expected exception of type " + exceptionType.getName() + " but no exception occured occured");
+		fail("Expected exception of type " + exceptionType.getName() + " but no exception occured occured");
 	}
 	/**
 	 *  Asserts that the implementation of UndoablToss throws an exception of the given type, and then calls all the Undo functors created in UndoableToss.
@@ -69,7 +67,7 @@ public class AssertUtils  {
 				new RuntimeException("Got initial expected exception but got unexpected exception calling undo", ue);
 			}
 		}
-		TestCase.fail("Expected exception but none occured");
+		fail("Expected exception but none occured");
 	}
 	public static void assertThrows(UndoableToss toss, Class<? extends Exception> exceptionType)
 	{
@@ -87,7 +85,7 @@ public class AssertUtils  {
 				throw new RuntimeException("Got initial expected exception but got unexpected exception calling undo", ue);
 			}
 		}
-		TestCase.fail("Expected exception but none occured");
+		fail("Expected exception but none occured");
 	}
 	/**
 	 *  Asserts that the implementation of Toss does not throw an exception.
@@ -98,13 +96,13 @@ public class AssertUtils  {
 		try {
 			toss.f();
 		} catch (Exception e) {
-			TestCase.fail("Got unexpected exception: " + e.getMessage() + e.getStackTrace());
+			fail("Got unexpected exception: " + e.getMessage() + e.getStackTrace());
 		}
 	}
 	
 	@SuppressWarnings("unchecked")
 	public static void assertUnique(Iterable i) {
-		TestCase.assertEquals(Transform.toCollection(i).size(), Filter.getUnique(i).size());
+		assertEquals(Transform.toCollection(i).size(), Filter.getUnique(i).size());
 	}
 	
 	private static abstract class ThrowableUndoable {

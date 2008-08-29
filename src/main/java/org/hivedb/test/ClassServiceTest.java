@@ -1,6 +1,6 @@
 package org.hivedb.test;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.apache.cxf.Bus;
 import org.apache.cxf.BusException;
 import org.apache.cxf.BusFactory;
@@ -30,11 +30,8 @@ import org.hivedb.util.classgen.*;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.functional.*;
-import org.testng.AssertJUnit;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertTrue;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
+import org.junit.BeforeClass;
 
 import java.io.Serializable;
 import java.lang.reflect.Array;
@@ -70,7 +67,7 @@ public abstract class ClassServiceTest<T,S> extends HiveTest {
 	
 	protected abstract Service createService(ConfigurationReader reader);
 	
-	@Test(groups={"service"})
+	@Test
 	public void saveAndRetrieve() throws Exception {
 		Object instance = getPersistentInstance();
 		final EntityConfig entityConfig = config.getEntityConfig(clazz);
@@ -147,7 +144,7 @@ public abstract class ClassServiceTest<T,S> extends HiveTest {
 		}
 	}
 	
-	@Test(groups={"service"})
+	@Test
 	public void saveAll() throws Exception {
 		final EntityConfig entityConfig = config.getEntityConfig(clazz);
 		Collection<T> instances = Lists.newArrayList();
@@ -164,7 +161,7 @@ public abstract class ClassServiceTest<T,S> extends HiveTest {
 					Arrays.asList(new String[] {}));
 	}
 	
-	@Test(groups={"service"})
+	@Test
 	public void update() throws Exception {
 		final EntityConfig entityConfig = config.getEntityConfig(clazz);
 		Collection<T> instances = Lists.newArrayList();
@@ -191,29 +188,29 @@ public abstract class ClassServiceTest<T,S> extends HiveTest {
 		}
 	}
 	
-	@Test(groups={"service"})
+	@Test
 	public void delete() throws Exception {
 		Object instance = getPersistentInstance();
 		final EntityConfig entityConfig = config.getEntityConfig(clazz);
 		Service s = getClient();
 		final Serializable id = entityConfig.getId(instance);
 		validate(createServiceResponse(Arrays.asList(instance)), invoke(s, "get",id), Arrays.asList(new String[] {}));
-		AssertJUnit.assertEquals(id, invokeDelete(s, "delete", id));
-		AssertJUnit.assertFalse(invokeExists(s, "exists", id));
+		Assert.assertEquals(id, invokeDelete(s, "delete", id));
+		Assert.assertFalse(invokeExists(s, "exists", id));
 	}
 	
-	@Test(groups={"service"})
+	@Test
 	public void exists() throws Exception {
 		final EntityConfig entityConfig = config.getEntityConfig(clazz);
 		Service s = getClient();
-		AssertJUnit.assertFalse(invokeExists(s,"exists",new GeneratePrimitiveValue<Object>((Class<Object>) entityConfig.getIdClass()).generate()));
+		Assert.assertFalse(invokeExists(s,"exists",new GeneratePrimitiveValue<Object>((Class<Object>) entityConfig.getIdClass()).generate()));
 		// Make sure that the service generates an empty response when fetching missing items
-		AssertJUnit.assertEquals(0, invoke(s, "get", new GeneratePrimitiveValue<Object>((Class<Object>) entityConfig.getIdClass()).generate()).getContainers().size());
+		Assert.assertEquals(0, invoke(s, "get", new GeneratePrimitiveValue<Object>((Class<Object>) entityConfig.getIdClass()).generate()).getContainers().size());
 		Object p = getPersistentInstance();
-		AssertJUnit.assertTrue(invokeExists(s, "exists", entityConfig.getId(p)));
+		Assert.assertTrue(invokeExists(s, "exists", entityConfig.getId(p)));
 	}
 
-	@Test(groups={"service"})
+	@Test
 	public void findByProperty() throws Exception {
 		Object instance = getPersistentInstance();
 		final EntityConfig entityConfig = config.getEntityConfig(clazz);
@@ -239,7 +236,7 @@ public abstract class ClassServiceTest<T,S> extends HiveTest {
 		
 	}
 	
-	@Test(groups={"service"})
+	@Test
 	public void findByProperties() throws Exception {
 		final Object instance = getPersistentInstance();
 		final EntityConfig entityConfig = config.getEntityConfig(clazz);
@@ -305,14 +302,14 @@ public abstract class ClassServiceTest<T,S> extends HiveTest {
 	abstract protected List<Class<?>> getEntityClasses();
 	
 	protected void validate(ServiceResponse expected, ServiceResponse actual, Collection<String> arguments) {
-		assertEquals(
+		Assert.assertEquals(
 				String.format("Testing using the following arguments: %s", arguments),
 				expected.getContainers().size(), actual.getContainers().size());		
 		Map<Object, ServiceContainer> expectedMap = getInstanceHashCodeMap(expected);
 		Map<Object, ServiceContainer> actualMap = getInstanceHashCodeMap(actual);
 
 		for(Object key : actualMap.keySet()) {
-			assertTrue(
+			Assert.assertTrue(
 					String.format("Expected results did not contian a ServiceContainer with hashCode %s", key), 
 					expectedMap.containsKey(key));
 			validate(expectedMap.get(key), actualMap.get(key), arguments);
@@ -321,17 +318,17 @@ public abstract class ClassServiceTest<T,S> extends HiveTest {
 	
 	protected void validate(ServiceContainer expected, ServiceContainer actual, Collection<String> arguments) {
 		final EntityConfig entityConfig = config.getEntityConfig(clazz);
-		AssertJUnit.assertEquals(expected.getVersion(), actual.getVersion());
-		AssertJUnit.assertEquals(
+		Assert.assertEquals(expected.getVersion(), actual.getVersion());
+		Assert.assertEquals(
 				ReflectionTools.getDifferingFields(expected.getInstance(), actual.getInstance(), (Class<Object>)clazz).toString(),
 				expected.getInstance().hashCode(), 
 				actual.getInstance().hashCode());
-		AssertJUnit.assertEquals(String.format("Testing using the following arguments: %s", arguments), entityConfig.getId(expected.getInstance()), entityConfig.getId(actual.getInstance()));
-		//AssertJUnit.assertEquals(expected.getInstance().getDescription(), actual.getInstance().getDescription());
+		Assert.assertEquals(String.format("Testing using the following arguments: %s", arguments), entityConfig.getId(expected.getInstance()), entityConfig.getId(actual.getInstance()));
+		//Assert.assertEquals(expected.getInstance().getDescription(), actual.getInstance().getDescription());
 	}
 	
 	@BeforeClass
-	public void initializeSOAPLocalTransport() throws BusException {		
+	public static void initializeSOAPLocalTransport() throws BusException {		
 		String[] transports = new String[]{
 				"http://cxf.apache.org/transports/local",
 				"http://schemas.xmlsoap.org/soap/http",

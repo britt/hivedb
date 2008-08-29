@@ -6,8 +6,8 @@ import org.hivedb.util.classgen.GenerateInstance;
 import org.hivedb.util.classgen.GeneratedClassFactory;
 import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
 import org.hivedb.util.functional.Atom;
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import org.junit.Assert;
+import org.junit.Test;
 
 import java.util.Collection;
 import java.util.HashSet;

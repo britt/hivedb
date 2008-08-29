@@ -1,17 +1,16 @@
 package org.hivedb.util;
 
+import org.hivedb.util.classgen.GenerateInstance;
+import org.hivedb.util.classgen.GeneratedClassFactory;
+import org.hivedb.util.classgen.ReflectionTools;
+import org.hivedb.util.classgen.ReflectionTools.SetterWrapper;
+import org.junit.Assert;
+import org.junit.Test;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-
-import org.hivedb.util.classgen.ReflectionTools.SetterWrapper;
-import org.hivedb.util.classgen.GenerateInstance;
-import org.hivedb.util.classgen.GeneratedClassFactory;
-import org.hivedb.util.classgen.ReflectionTools;
-import org.testng.Assert;
-import org.testng.annotations.Test;
 
 public class TestReflectionTools  {
 	

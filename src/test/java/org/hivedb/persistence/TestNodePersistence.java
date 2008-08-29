@@ -1,11 +1,5 @@
 package org.hivedb.persistence;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertNotNull;
-
-import java.util.List;
-
 import org.hivedb.Hive;
 import org.hivedb.Lockable.Status;
 import org.hivedb.meta.Node;
@@ -13,7 +7,9 @@ import org.hivedb.meta.persistence.NodeDao;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.HiveTest.Config;
-import org.testng.annotations.Test;
+import org.junit.Test;import static org.junit.Assert.assertEquals;import static org.junit.Assert.assertNotNull;import static org.junit.Assert.assertFalse;
+
+import java.util.List;
 
 @Config(file="hive_default")
 public class TestNodePersistence extends HiveTest {

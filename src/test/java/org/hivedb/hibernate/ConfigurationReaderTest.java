@@ -1,10 +1,5 @@
 package org.hivedb.hibernate;
 
-import java.sql.Types;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-
 import org.hivedb.Hive;
 import org.hivedb.HiveFacade;
 import org.hivedb.Schema;
@@ -21,14 +16,19 @@ import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Predicate;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
+import org.junit.Before;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;import static org.junit.Assert.assertTrue;import static org.junit.Assert.assertFalse;
 
-import static org.testng.AssertJUnit.*;
+import java.sql.Types;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 
 public class ConfigurationReaderTest extends H2TestCase {
 	
-	@BeforeMethod
+	@Before
 	public void beforeMethod() {
 		super.beforeMethod();
 		deleteDatabasesAfterEachTest = true;
@@ -75,7 +75,9 @@ public class ConfigurationReaderTest extends H2TestCase {
 			}}, indexes);
 	}
 
-	private WeatherReport generateInstance() {
+
+
+  private WeatherReport generateInstance() {
 		return new GenerateInstance<WeatherReport>(WeatherReport.class).generate();
 	}
 	

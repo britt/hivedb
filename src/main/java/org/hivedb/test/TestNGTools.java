@@ -1,11 +1,11 @@
 package org.hivedb.test;
 
+import org.hibernate.shards.util.Lists;
+import org.hivedb.util.functional.Atom;
+
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-
-import org.hibernate.shards.util.Lists;
-import org.hivedb.util.functional.Atom;
 
 public class TestNGTools {
 

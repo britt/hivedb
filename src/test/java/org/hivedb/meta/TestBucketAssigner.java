@@ -1,14 +1,11 @@
 package org.hivedb.meta;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNotNull;
+import org.hivedb.BucketAssigner;
+import org.hivedb.util.database.HiveDbDialect;
+import org.junit.Test;import static org.junit.Assert.assertNotNull;import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Collection;
-
-import org.hivedb.BucketAssigner;
-import org.hivedb.util.database.HiveDbDialect;
-import org.testng.annotations.Test;
 
 public class TestBucketAssigner {
 

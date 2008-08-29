@@ -4,9 +4,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.MySQLInnoDBDialect;
 import org.hivedb.util.database.DriverLoader;
 import org.hivedb.util.database.HiveDbDialect;
-import org.testng.annotations.Test;
-
-import static org.testng.AssertJUnit.*;
+import org.junit.Test;import static org.junit.Assert.assertEquals;
 
 public class HibernateConfigurationTest {
 

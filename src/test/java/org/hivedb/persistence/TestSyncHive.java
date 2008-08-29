@@ -1,8 +1,5 @@
 package org.hivedb.persistence;
 
-import java.util.ArrayList;
-import java.util.Observer;
-
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
 import org.hivedb.HiveFacade;
@@ -11,8 +8,11 @@ import org.hivedb.meta.Node;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.HiveTest.Config;
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import org.junit.Assert;
+import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.Observer;
 
 @Config(file="hive_default")
 public class TestSyncHive extends HiveTest {

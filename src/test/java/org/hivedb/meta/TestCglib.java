@@ -1,11 +1,11 @@
 package org.hivedb.meta;
 
-import java.util.Collection;
-
 import org.hivedb.util.classgen.GeneratedClassFactory;
 import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import org.junit.Assert;
+import org.junit.Test;
+
+import java.util.Collection;
 
 public class TestCglib {
 	

@@ -1,26 +1,23 @@
 package org.hivedb;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNotNull;
-
-import java.sql.Types;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-
 import org.hivedb.configuration.HiveConfigurationSchema;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2TestCase;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
+import org.junit.Before;
+import org.junit.Test;import static org.junit.Assert.assertNotNull;import static org.junit.Assert.assertEquals;
+
+import java.sql.Types;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 
 public class TestHiveLoading extends H2TestCase {
 	Hive hive;
 	
-	@BeforeMethod
+	@Before
 	@Override
 	public void beforeMethod() {
 		deleteDatabasesAfterEachTest = true;
