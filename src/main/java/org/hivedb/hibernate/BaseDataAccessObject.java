@@ -466,7 +466,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			callback.execute(session);
 			tx.commit();
 		} catch( RuntimeException e ) {
-			LogFactory.getLog(BaseDataAccessObject.class).debug("doInTransaction: Error on data node " + OpenSessionEventImpl.getNode(), e);
+			LogFactory.getLog(BaseDataAccessObject.class).error("doInTransaction: Error on data node " + OpenSessionEventImpl.getNode(), e);
 			if(tx != null)
 				tx.rollback();
 			throw e;
@@ -483,7 +483,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			results = callback.execute(session);
 			tx.commit();
 		} catch( RuntimeException e ) {
-			LogFactory.getLog(BaseDataAccessObject.class).debug("queryInTransaction: Error on data node " + OpenSessionEventImpl.getNode(), e);
+			LogFactory.getLog(BaseDataAccessObject.class).error("queryInTransaction: Error on data node " + OpenSessionEventImpl.getNode(), e);
 			throw e;
 		} finally {
 			session.close();

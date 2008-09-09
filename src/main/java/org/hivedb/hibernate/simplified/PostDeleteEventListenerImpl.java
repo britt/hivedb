@@ -1,7 +1,4 @@
 package org.hivedb.hibernate.simplified;
-import org.hivedb.hibernate.*;
-import java.io.Serializable;
-
 import org.apache.log4j.Logger;
 import org.hibernate.HibernateException;
 import org.hibernate.action.Executable;
@@ -11,9 +8,12 @@ import org.hivedb.HiveFacade;
 import org.hivedb.HiveLockableException;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
+import org.hivedb.hibernate.HiveIndexer;
 import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
+
+import java.io.Serializable;
 
 /**
  * This is an alternative way of deleting the hive indexes after successful
