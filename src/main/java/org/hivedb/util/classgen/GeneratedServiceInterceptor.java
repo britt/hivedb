@@ -147,6 +147,10 @@ public class GeneratedServiceInterceptor implements MethodInterceptor, Service {
 		return formulateResponse(dao.findByPropertyRange(propertyName, start, end));
 	}
 	
+	public Integer getCountByPropertyRange(String propertyName, Object start, Object end) {
+		return dao.getCountByRange(propertyName, start, end);
+	}
+	
 	public ServiceResponse findByPropertyPaged(String propertyName, Object value, Integer firstResult, Integer maxResults) {
 		return formulateResponse(dao.findByProperty(propertyName, value, firstResult, maxResults));
 	}
@@ -249,7 +253,9 @@ public class GeneratedServiceInterceptor implements MethodInterceptor, Service {
 			Entry<String, Object> entry1 = Atom.getFirstOrThrow(entries);
 			Entry<String, Object> entry2 = Atom.getFirstOrThrow(Atom.getRestOrThrow(entries));
 			if (entry1.getKey().equals(entry2.getKey()))
-				return findByPropertyRange(entry1.getKey(), entry1.getValue(), entry2.getValue());
+				return method.getName().startsWith("getCountBy") ?
+					getCountByPropertyRange(entry1.getKey(), entry1.getValue(), entry2.getValue()) :
+					findByPropertyRange(entry1.getKey(), entry1.getValue(), entry2.getValue());
 		}
 		if (method.getName().startsWith("getCountBy") && method.getName().endsWith("Properties")) {
 			return this.getCountByProperties(Atom.getFirstOrThrow(entries).getKey(), Transform.toOrderedMap(entries), pagingPair.getKey(), pagingPair.getValue());

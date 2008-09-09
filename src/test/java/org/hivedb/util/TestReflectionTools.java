@@ -224,7 +224,14 @@ public class TestReflectionTools  {
 //		Collection<Class<?>> classes = new HashSet<Class<?>>(ReflectionTools.getUniqueComplexPropertyTypes(Arrays.asList(new Class[] {Foo.class})));
 //		Assert.assertEquals(classes, new HashSet<Class<?>>((Collection<? extends Class<?>>) Arrays.asList(new Class[] {Foo.class,Coo.class,Boo.class})));
 	}
-	private interface Foo {
+	
+	/*
+	 * private interface Foo {
+	 *  Stack-walking on our proxy objects will yield ReflectionTools as caller
+	 *  class and the security check on method.invoke will fail if Foo is not
+	 *  public or method.setAccesible(true) is called prior invocation.
+	 */
+	public interface Foo {
 		String getStroo();
 		Integer getIoo();
 		Collection<Coo> getCoos();
