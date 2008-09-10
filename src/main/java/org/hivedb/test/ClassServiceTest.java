@@ -304,10 +304,21 @@ public abstract class ClassServiceTest<T,S> extends HiveTest {
 	protected void validate(ServiceResponse expected, ServiceResponse actual, Collection<String> arguments) {
 		Assert.assertEquals(
 				String.format("Testing using the following arguments: %s", arguments),
-				expected.getContainers().size(), actual.getContainers().size());		
+				expected.getContainers().size(), actual.getContainers().size());
 		Map<Object, ServiceContainer> expectedMap = getInstanceHashCodeMap(expected);
 		Map<Object, ServiceContainer> actualMap = getInstanceHashCodeMap(actual);
-
+		validate(expectedMap, actualMap, arguments);
+	}
+	
+	protected void contains(ServiceResponse expected, ServiceResponse actual, Collection<String> arguments) {
+		Assert.assertTrue(String.format("Testing using the following arguments: %s", arguments),
+				expected.getContainers().size() >= actual.getContainers().size());
+		Map<Object, ServiceContainer> expectedMap = getInstanceHashCodeMap(expected);
+		Map<Object, ServiceContainer> actualMap = getInstanceHashCodeMap(actual);
+		validate(expectedMap, actualMap, arguments);
+	}
+	
+	private void validate(Map<Object, ServiceContainer> expectedMap, Map<Object, ServiceContainer> actualMap, Collection<String> arguments) {
 		for(Object key : actualMap.keySet()) {
 			Assert.assertTrue(
 					String.format("Expected results did not contian a ServiceContainer with hashCode %s", key), 
@@ -326,6 +337,7 @@ public abstract class ClassServiceTest<T,S> extends HiveTest {
 		Assert.assertEquals(String.format("Testing using the following arguments: %s", arguments), entityConfig.getId(expected.getInstance()), entityConfig.getId(actual.getInstance()));
 		//Assert.assertEquals(expected.getInstance().getDescription(), actual.getInstance().getDescription());
 	}
+	
 	
 	@BeforeClass
 	public static void initializeSOAPLocalTransport() throws BusException {		
