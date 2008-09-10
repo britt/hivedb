@@ -147,6 +147,10 @@ public class GeneratedServiceInterceptor implements MethodInterceptor, Service {
 		return formulateResponse(dao.findByPropertyRange(propertyName, start, end));
 	}
 	
+	public ServiceResponse findByPropertyRange(String propertyName, Object start, Object end, Integer firstResult, Integer maxResults) {
+		return formulateResponse(dao.findByPropertyRange(propertyName, start, end, firstResult, maxResults));
+	}
+	
 	public Integer getCountByPropertyRange(String propertyName, Object start, Object end) {
 		return dao.getCountByRange(propertyName, start, end);
 	}
@@ -252,10 +256,14 @@ public class GeneratedServiceInterceptor implements MethodInterceptor, Service {
 		if (entries.size()==2) {
 			Entry<String, Object> entry1 = Atom.getFirstOrThrow(entries);
 			Entry<String, Object> entry2 = Atom.getFirstOrThrow(Atom.getRestOrThrow(entries));
-			if (entry1.getKey().equals(entry2.getKey()))
-				return method.getName().startsWith("getCountBy") ?
-					getCountByPropertyRange(entry1.getKey(), entry1.getValue(), entry2.getValue()) :
+			if (entry1.getKey().equals(entry2.getKey())) {
+				if  (method.getName().startsWith("getCountBy")) {
+					return getCountByPropertyRange(entry1.getKey(), entry1.getValue(), entry2.getValue());
+				}
+				return indexParamPagingPair != null ?
+					findByPropertyRange(entry1.getKey(), entry1.getValue(), entry2.getValue(), pagingPair.getKey(), pagingPair.getValue()) :
 					findByPropertyRange(entry1.getKey(), entry1.getValue(), entry2.getValue());
+			}
 		}
 		if (method.getName().startsWith("getCountBy") && method.getName().endsWith("Properties")) {
 			return this.getCountByProperties(Atom.getFirstOrThrow(entries).getKey(), Transform.toOrderedMap(entries), pagingPair.getKey(), pagingPair.getValue());
