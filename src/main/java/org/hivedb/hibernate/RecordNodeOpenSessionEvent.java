@@ -1,12 +1,12 @@
 package org.hivedb.hibernate;
 
-import java.sql.SQLException;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.shards.session.OpenSessionEvent;
 
-public class OpenSessionEventImpl implements OpenSessionEvent {
+import java.sql.SQLException;
+
+public class RecordNodeOpenSessionEvent implements OpenSessionEvent {
 
 	public static ThreadLocal<String> node = new ThreadLocal<String>();
 	

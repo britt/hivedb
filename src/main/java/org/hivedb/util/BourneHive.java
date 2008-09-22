@@ -1,26 +1,23 @@
 package org.hivedb.util;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
 import org.hivedb.Hive;
 import org.hivedb.HiveLockableException;
 import org.hivedb.Schema;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.DataSourceProvider;
-import org.hivedb.meta.persistence.HiveBasicDataSourceProvider;
 import org.hivedb.util.database.DialectTools;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.database.Schemas;
-import org.hivedb.util.database.test.H2TestCase;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Helper class to systematically create a hive from configuration maps

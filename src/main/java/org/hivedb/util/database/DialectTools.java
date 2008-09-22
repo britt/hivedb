@@ -1,5 +1,7 @@
 package org.hivedb.util.database;
 
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.MySQLInnoDBDialect;
 import org.hivedb.UnsupportedDialectException;
 
 public class DialectTools {
@@ -7,7 +9,6 @@ public class DialectTools {
 	public static final String MYSQL = "MySQL";
 	public static final String DERBY = "Derby";
 	public static final String H2 = "H2";
-
 
 	/**
 	 * Get the SQL fragment to create an auto-incrementing key sequence for a database dialect.
@@ -88,4 +89,17 @@ public class DialectTools {
 			default: throw new RuntimeException("Unsupported Dialect: " + dialect);
 		}
 	}
+
+  public static Class getHibernateDialect(HiveDbDialect dialect) {
+    return dialect == HiveDbDialect.H2 ? H2Dialect.class : MySQLInnoDBDialect.class;
+  }
+
+  public static HiveDbDialect getHiveDbDialectForHibernateDialect(Class hibernateDialect) {
+    if(hibernateDialect.isAssignableFrom(H2Dialect.class))
+      return HiveDbDialect.H2;
+    else if(hibernateDialect.isAssignableFrom(MySQLInnoDBDialect.class))
+      return HiveDbDialect.MySql;
+    else
+      throw new UnsupportedDialectException("Unkown database dialect.  HiveDB supports MySQL and H2.");
+  }
 }

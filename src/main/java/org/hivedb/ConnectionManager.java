@@ -1,24 +1,19 @@
 package org.hivedb;
 
+import org.hivedb.meta.*;
+import org.hivedb.meta.directory.Directory;
+import org.hivedb.meta.persistence.DataSourceProvider;
+import org.hivedb.util.Preconditions;
+import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Unary;
+
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.sql.DataSource;
-
-import org.hivedb.meta.AccessType;
-import org.hivedb.meta.KeySemaphore;
-import org.hivedb.meta.Node;
-import org.hivedb.meta.Resource;
-import org.hivedb.meta.SecondaryIndex;
-import org.hivedb.meta.directory.Directory;
-import org.hivedb.meta.persistence.DataSourceProvider;
-import org.hivedb.util.Preconditions;
-import org.hivedb.util.functional.Filter;
-import org.hivedb.util.functional.Unary;
 
 public class ConnectionManager {
 	private Directory directory;

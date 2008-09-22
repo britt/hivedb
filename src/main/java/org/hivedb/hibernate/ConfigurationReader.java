@@ -1,32 +1,11 @@
 package org.hivedb.hibernate;
 
-import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.hivedb.Hive;
 import org.hivedb.HiveFacade;
 import org.hivedb.HiveLockableException;
 import org.hivedb.HiveRuntimeException;
-import org.hivedb.annotations.AnnotationHelper;
-import org.hivedb.annotations.EntityId;
-import org.hivedb.annotations.EntityVersion;
-import org.hivedb.annotations.Index;
-import org.hivedb.annotations.IndexDelegate;
-import org.hivedb.annotations.IndexType;
-import org.hivedb.annotations.PartitionIndex;
-import org.hivedb.annotations.Resource;
-import org.hivedb.configuration.EntityConfig;
-import org.hivedb.configuration.EntityConfigImpl;
-import org.hivedb.configuration.EntityHiveConfig;
-import org.hivedb.configuration.EntityIndexConfig;
-import org.hivedb.configuration.EntityIndexConfigDelegator;
-import org.hivedb.configuration.EntityIndexConfigImpl;
-import org.hivedb.configuration.EntityIndexConfigProxy;
-import org.hivedb.configuration.PluralHiveConfig;
+import org.hivedb.annotations.*;
+import org.hivedb.configuration.*;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.SecondaryIndex;
@@ -39,6 +18,9 @@ import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Predicate;
 import org.springframework.beans.BeanUtils;
+
+import java.lang.reflect.Method;
+import java.util.*;
 
 public class ConfigurationReader {
 	private Map<String, EntityConfig> hiveConfigs = new HashMap<String, EntityConfig>();

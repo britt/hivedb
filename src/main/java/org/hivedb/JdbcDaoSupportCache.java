@@ -1,9 +1,9 @@
 package org.hivedb;
 
-import java.util.Collection;
-
 import org.hivedb.meta.AccessType;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
+
+import java.util.Collection;
 
 public interface JdbcDaoSupportCache {
 	public Collection<SimpleJdbcDaoSupport> get(Object primaryIndexKey, AccessType intention) throws HiveLockableException;

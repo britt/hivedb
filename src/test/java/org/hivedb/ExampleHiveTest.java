@@ -120,7 +120,7 @@ public class ExampleHiveTest extends HiveTest {
 		//While it is possible to write a record to multiple locations within the Hive, the default implementation
 		//inserts a single copy.
 		hive.directory().insertPrimaryIndexKey(spork.getType());
-		//Next we insert the record into the assigned data node
+    //Next we insert the record into the assigned data node
 		Collection<SimpleJdbcDaoSupport> sporkDaos = hive.connection().daoSupport().get(spork.getType(), AccessType.ReadWrite);
 		PreparedStatementCreatorFactory stmtFactory = 
 			new PreparedStatementCreatorFactory(productInsertSql, new int[] {Types.INTEGER, Types.VARCHAR, Types.VARCHAR});

@@ -1,23 +1,18 @@
 package org.hivedb;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.sql.DataSource;
-
-import org.hivedb.meta.AccessType;
-import org.hivedb.meta.KeySemaphore;
-import org.hivedb.meta.Node;
-import org.hivedb.meta.Resource;
-import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.meta.*;
 import org.hivedb.meta.directory.Directory;
 import org.hivedb.meta.persistence.DataSourceProvider;
 import org.hivedb.util.Preconditions;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Unary;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
+
+import javax.sql.DataSource;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Britt Crawford (bcrawford@cafepress.com)
@@ -120,7 +115,9 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache{
 			KeySemaphore semaphore = new KeySemaphore(node.getId(), node.getStatus());
 			return get(semaphore, AccessType.ReadWrite);
 		} catch (HiveException e) {
-			throw new RuntimeException(e);
+      // TODO Better exception Handling
+      // HiveLockable should become runtime
+      throw new RuntimeException(e);
 		}
 	}
 

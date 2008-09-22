@@ -11,7 +11,6 @@ import org.hibernate.shards.ShardId;
 import org.hibernate.shards.ShardedConfiguration;
 import org.hibernate.shards.cfg.ConfigurationToShardConfigurationAdapter;
 import org.hibernate.shards.cfg.ShardConfiguration;
-import org.hibernate.shards.engine.ShardedSessionFactoryImplementor;
 import org.hibernate.shards.session.ShardedSessionFactory;
 import org.hibernate.shards.session.ShardedSessionImpl;
 import org.hibernate.shards.strategy.ShardStrategy;
@@ -138,7 +137,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	private ShardedSessionFactory buildMultiNodeSessionFactory(List<ShardConfiguration> shardConfigs) {
 		Configuration prototypeConfig = buildPrototypeConfiguration();
 		ShardedConfiguration shardedConfig = new ShardedConfiguration(prototypeConfig, shardConfigs, buildShardStrategyFactory());
-		return (ShardedSessionFactoryImplementor) shardedConfig.buildShardedSessionFactory();
+		return shardedConfig.buildShardedSessionFactory();
 	}
 	
 	private Map<Integer, Configuration> getConfigurationsFromNodes(HiveFacade hive) {
@@ -256,7 +255,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 	
 	private Session addOpenSessionEvents(Session session) {
 		for (Shard shard : ((ShardedSessionImpl) session).getShards()) {
-			shard.addOpenSessionEvent(new OpenSessionEventImpl());
+			shard.addOpenSessionEvent(new RecordNodeOpenSessionEvent());
 		}
 		return session;
 	}
@@ -315,7 +314,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
 		// If more are requested then we delegate to the allNodesSessionFactory
 		if(nodeIds.size() <= NODE_SET_LIMIT) {
 			Session session = nodeSessionFactories.get(new HashSet(nodeIds)).openSession(interceptor);
-			OpenSessionEventImpl.setNode(session);
+			RecordNodeOpenSessionEvent.setNode(session);
 			return session;
 		} else {
 			return allNodesSessionFactory.openSession(interceptor);

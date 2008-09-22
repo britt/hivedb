@@ -1,16 +1,16 @@
 package org.hivedb.util;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.util.List;
-import java.util.Map;
-
 import org.hivedb.Hive;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.meta.persistence.DataSourceProvider;
 import org.hivedb.util.database.DialectTools;
 import org.hivedb.util.database.HiveDbDialect;
 import org.ho.yaml.Yaml;
+
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Systematically creates a hive from a given yaml configuration file
