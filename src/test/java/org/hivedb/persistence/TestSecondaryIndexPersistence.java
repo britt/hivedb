@@ -6,7 +6,7 @@ import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.HiveTest.Config;
 import org.junit.Test;import static org.junit.Assert.assertEquals;
 
-@Config(file="hive_default")
+@Config("hive_default")
 public class TestSecondaryIndexPersistence extends HiveTest {
 	
 	@Test

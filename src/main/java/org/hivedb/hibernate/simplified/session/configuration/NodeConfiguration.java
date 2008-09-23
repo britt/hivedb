@@ -44,5 +44,9 @@ public class NodeConfiguration extends Configuration {
   public ShardConfiguration toShardConfig() {
     return new ConfigurationToShardConfigurationAdapter(configure());
   }
+
+  public Node getNode() {
+    return node;
+  }
 }
 

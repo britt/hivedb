@@ -21,7 +21,7 @@ import java.util.Collection;
  * @author bcrawford
  *
  */
-@Config(file="hive_default")
+@Config("hive_default")
 public class HiveShardSelectorTest extends HiveTest {
 
 	@Test

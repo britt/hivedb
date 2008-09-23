@@ -17,7 +17,7 @@ import org.junit.Test;
 import java.util.*;
 import java.util.Map.Entry;
 
-@Config(file="hive_default")
+@Config("hive_default")
 public class BaseDataAccessObjectTest extends HiveTest {
 
 	private static Random random = new Random();

@@ -18,7 +18,7 @@ import static org.junit.Assert.assertFalse;
 
 import java.util.List;
 
-@HiveTest.Config(file="hive_default")
+@HiveTest.Config("hive_default")
 public class ErrorCorrectingDataAccessObjectRetrievalTest extends HiveTest {
   private final static Log log = LogFactory.getLog(ErrorCorrectingDataAccessObjectRetrievalTest.class);
   private HiveSessionFactory hiveSessionFactory;

@@ -14,7 +14,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-@Config(file="hive_default")
+@Config("hive_default")
 public class WeatherServiceTest extends ClassServiceTest<WeatherReport,WeatherReportService> {
 
 	private static final String WEATHER_SERVICE_URL = "local://weather";

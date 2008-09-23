@@ -31,7 +31,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
 
-@Config(file="hive_default")
+@Config("hive_default")
 public class DataGenerationServiceTest extends HiveTest {
 	
 	@Test

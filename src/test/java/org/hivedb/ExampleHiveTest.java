@@ -39,7 +39,7 @@ import java.util.Collection;
  * @author Britt Crawford (bcrawford@cafepress.com)
  *
  */
-@Config(file="hive_default")
+@Config("hive_default")
 public class ExampleHiveTest extends HiveTest {
 	private static final String dataTableCreateSql = "CREATE TABLE products (id integer PRIMARY KEY, name varchar(255), type varchar(255))";
 	private static final String productInsertSql = "INSERT INTO products VALUES (?,?,?)";

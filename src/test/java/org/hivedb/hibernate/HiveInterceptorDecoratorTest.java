@@ -17,7 +17,7 @@ import org.junit.Test;import static org.junit.Assert.assertEquals;import static 
 
 import java.util.Arrays;
 
-@Config(file="hive_default")
+@Config("hive_default")
 public class HiveInterceptorDecoratorTest extends HiveTest {
 	
 	@Test

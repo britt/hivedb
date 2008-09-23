@@ -12,7 +12,7 @@ import org.junit.Test;import static org.junit.Assert.assertTrue;import static or
 
 import java.util.Collection;
 
-@Config(file="hive_default")
+@Config("hive_default")
 public class HiveIndexerTest extends HiveTest {
 	
 	// Test for HiveIndexer.insert(final EntityIndexConfiguration config, final Object entity)

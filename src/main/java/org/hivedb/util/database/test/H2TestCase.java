@@ -53,7 +53,7 @@ public class H2TestCase extends DatabaseTestCase {
 	@Override
 	protected void deleteDatabase(final String name) {
 		try {
-			getConnection(name).createStatement().execute("SHUTDOWN");
+      getConnection(name).createStatement().execute("SHUTDOWN");
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}

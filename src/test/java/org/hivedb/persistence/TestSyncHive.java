@@ -14,7 +14,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.Observer;
 
-@Config(file="hive_default")
+@Config("hive_default")
 public class TestSyncHive extends HiveTest {
 	
 	/**

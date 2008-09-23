@@ -6,7 +6,7 @@ import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.HiveTest.Config;
 import org.junit.Test;import org.junit.Assert;
 
-@Config(file="hive_default")
+@Config("hive_default")
 public class TestHiveSemaphorePersistence extends HiveTest {
 	
 	@Test

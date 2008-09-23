@@ -53,9 +53,11 @@ public class SingletonHiveSessionFactoryBuilder implements HiveSessionFactoryBui
   }
 
   private HiveSessionFactory buildSessionFactory() {
+    log.info("Building HiveSessionFactory");
     Collection<NodeConfiguration> nodeConfigs = getNodeConfigurations();
     Collection<ShardConfiguration> shardConfigs = Transform.map(new Unary<NodeConfiguration, ShardConfiguration>(){
       public ShardConfiguration f(NodeConfiguration item) {
+        log.info("Adding node: " + item.getNode().getUri());
         return item.toShardConfig();
       }
     },nodeConfigs);
@@ -64,6 +66,10 @@ public class SingletonHiveSessionFactoryBuilder implements HiveSessionFactoryBui
         buildPrototypeConfiguration(Atom.getFirstOrThrow(nodeConfigs)),
         Lists.newList(shardConfigs),
         buildShardStrategyFactory()).buildShardedSessionFactory();
+
+    logIterable("Adding class:", persistableClasses);
+    logMap("Overriding: ", overrides);
+    
     return new HiveSessionFactoryImpl(shardedFactory, hive, hiveConfig);
   }
 
@@ -76,10 +82,6 @@ public class SingletonHiveSessionFactoryBuilder implements HiveSessionFactoryBui
 						accessStrategy);
 			}
 		};
-	}
-
-  private EntityHiveConfig buildHiveConfiguration() {
-		return new ConfigurationReader(persistableClasses).getHiveConfiguration();
 	}
 
   private Configuration buildPrototypeConfiguration(Configuration config) {
@@ -98,11 +100,23 @@ public class SingletonHiveSessionFactoryBuilder implements HiveSessionFactoryBui
   }
 
   public void update(Observable o, Object arg) {
+    log.info("Update received");
     HiveSessionFactory newFactory = buildSessionFactory();
 		synchronized(this) {
 			this.factory = newFactory;
 		}
-    log.info("Rebuilt HiveSessionFactory");
+  }
+
+  private void logIterable(String prefix, Iterable<?> iterable) {
+    for(Object o : iterable) {
+      log.info(String.format("%s %s", prefix, o));
+    }
+  }
+
+  private void logMap(String prefix, Map<?,?> map) {
+    for(Map.Entry e : map.entrySet()) {
+      log.info(String.format("%s %s => %s", prefix, e.getKey(), e.getValue()));
+    }
   }
 
   public Hive getHive() {

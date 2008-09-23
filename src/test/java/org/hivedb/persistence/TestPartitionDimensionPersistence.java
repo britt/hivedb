@@ -11,7 +11,7 @@ import org.junit.Test;import static org.junit.Assert.assertTrue;import static or
 import java.sql.Types;
 import java.util.ArrayList;
 
-@Config(file="hive_default")
+@Config("hive_default")
 public class TestPartitionDimensionPersistence extends HiveTest {
 	
 	@Test

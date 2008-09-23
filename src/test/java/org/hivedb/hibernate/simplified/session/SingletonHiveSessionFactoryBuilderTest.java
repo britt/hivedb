@@ -7,7 +7,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
-@HiveTest.Config(file="hive_default")
+@HiveTest.Config("hive_default")
 public class SingletonHiveSessionFactoryBuilderTest extends HiveTest {
   SingletonHiveSessionFactoryBuilder builder;
 

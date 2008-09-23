@@ -14,7 +14,7 @@ import org.hivedb.util.functional.Toss;
 import org.hivedb.util.functional.Transform;
 import org.junit.Test;
 
-@Config(file="hive_default")
+@Config("hive_default")
 public class TestConnectionWriteLocking extends HiveTest {
 
 	@Test

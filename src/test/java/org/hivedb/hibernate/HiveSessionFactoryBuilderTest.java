@@ -27,7 +27,7 @@ import org.junit.Test;
 import java.util.Date;
 import java.util.Properties;
 
-@Config(file="hive_default")
+@Config("hive_default")
 public class HiveSessionFactoryBuilderTest extends HiveTest {
 	
 	@Test

@@ -11,7 +11,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import org.junit.Test;
 
-@HiveTest.Config(file="hive_default")
+@HiveTest.Config("hive_default")
 public class TestHiveWithNodeOutOfService extends HiveTest {
 
   @Test

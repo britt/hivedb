@@ -14,7 +14,7 @@ import org.junit.Test;import static org.junit.Assert.assertNotNull;import static
 
 import java.util.Collection;
 
-@Config(file="hive_default")
+@Config("hive_default")
 public class HiveShardResolverTest extends HiveTest {
 	
 	@Test

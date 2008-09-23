@@ -13,7 +13,8 @@ public interface DirectoryFacade {
 	public Collection<KeySemaphore> getKeySemamphoresOfPrimaryIndexKey(Object primaryIndexKey);
 	public Collection getResourceIdsOfPrimaryIndexKey(String resource,Object primaryIndexKey);
 	public boolean getReadOnlyOfPrimaryIndexKey(Object primaryIndexKey);
-	public void insertPrimaryIndexKey(Object primaryIndexKey) throws HiveLockableException;
+  // TODO Unify terminology
+  public void insertPrimaryIndexKey(Object primaryIndexKey) throws HiveLockableException;
 	public void updatePrimaryIndexKeyReadOnly(Object primaryIndexKey, boolean isReadOnly) throws HiveLockableException;
 	public void deletePrimaryIndexKey(Object primaryIndexKey) throws HiveLockableException;
 

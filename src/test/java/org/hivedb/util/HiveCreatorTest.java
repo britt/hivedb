@@ -23,7 +23,7 @@ import java.util.Map;
  * 
  * @author mellwanger 
  */
-@Config(file="hive_default")
+@Config("hive_default")
 public class HiveCreatorTest extends HiveTest {
 	
 	@Test

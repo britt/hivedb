@@ -35,7 +35,7 @@ public class HiveTest {
 
 	protected String getHiveConfigurationFile() {
 		return getClass().isAnnotationPresent(Config.class) ?
-				String.format("src/test/resources/%s.cfg.yml", getClass().getAnnotation(Config.class).file()) :
+				String.format("src/test/resources/%s.cfg.yml", getClass().getAnnotation(Config.class).value()) :
 				String.format("src/test/resources/hive_%s.cfg.yml", getClass().getSimpleName());
 	}
 	
@@ -149,6 +149,6 @@ public class HiveTest {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.TYPE)
 	public @interface Config {
-		String file();
+		String value();
 	}
 }

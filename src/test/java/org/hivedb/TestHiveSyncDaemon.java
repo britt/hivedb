@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
 
-@Config(file="hive_default")
+@Config("hive_default")
 public class TestHiveSyncDaemon extends HiveTest {
 	
 	@Test
