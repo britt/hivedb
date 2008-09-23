@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!--  Hibernate mapping for an example entity class  -->
+<hibernate-mapping package="org.hivedb.util.database.test">
+	<class name="WeatherReport" table="WEATHER_REPORT" select-before-update="true">
+		<!-- The custom accessor GeneratedAccessor is used to get and set the properties of our CGLib generated
+			class implementation. This allows our interfaces to exclude setters -->
+		<id name="reportId" column="REPORT_ID" unsaved-value="0" />
+		<property name="reportTime" column="REPORT_TIME" />
+    	<property name="continent" column="CONTINENT" />
+    	<property name="regionCode" column="REGION_CODE"  />
+    	<property name="latitude" column="LATITUDE" />
+    	<property name="longitude" column="LONGITUDE" />
+    	<property name="temperature" column="TEMPERATURE" />
+		<bag name="weatherEvents" lazy="false"  cascade="all,delete-orphan" >
+      		<key column="REPORT_ID" not-null="true"  />
+        	<one-to-many class="WeatherEvent" />
+		</bag>
+		
+		<bag name="sources" cascade="save-update" table="WEATHER_REPORT_SOURCE" lazy="false" >
+    	 	<key column="REPORT_ID" />
+			<element type="integer" column="SOURCE"/>
+		</bag>
+		 
+    </class>
+</hibernate-mapping>

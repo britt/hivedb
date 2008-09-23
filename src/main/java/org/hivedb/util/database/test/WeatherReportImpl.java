@@ -73,7 +73,11 @@ public class WeatherReportImpl implements WeatherReport {
 	public Collection<Integer> getSources() {
 		return sources;
 	}
-	public void setSources(Collection<Integer> sources) {
+
+  public void getSources(Collection<Integer> reportId) {
+  }
+
+  public void setSources(Collection<Integer> sources) {
 		this.sources = sources;
 	}
 	

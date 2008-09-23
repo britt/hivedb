@@ -13,6 +13,9 @@ public interface WeatherEvent extends Serializable {
 	@Index
 	@EntityId
 	Integer getEventId();
-	String getName();
-	Collection<Integer> getStatistics();
+  void setEventId(Integer id);
+  String getName();
+  void setName(String name);
+  Collection<Integer> getStatistics();
+  void setStatistics(Collection<Integer> statistics);
 }

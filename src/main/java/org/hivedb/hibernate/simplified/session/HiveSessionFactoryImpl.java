@@ -4,24 +4,24 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.shards.Shard;
 import org.hibernate.shards.session.ShardedSessionFactory;
 import org.hibernate.shards.session.ShardedSessionImpl;
-import org.hibernate.shards.Shard;
 import org.hivedb.Hive;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.hibernate.HiveInterceptorDecorator;
 import org.hivedb.hibernate.RecordNodeOpenSessionEvent;
+
+import java.util.Map;
 
 public class HiveSessionFactoryImpl implements HiveSessionFactory{
   private final static Log log = LogFactory.getLog(HiveSessionFactoryImpl.class);
   private ShardedSessionFactory factory;
   private EntityHiveConfig config;
   private Hive hive;
-
-  public HiveSessionFactoryImpl() {
-    throw new UnsupportedOperationException("Not yet implemented");
-  }
-
+  private Map<Integer, SessionFactory> factories;
+  
   public HiveSessionFactoryImpl(ShardedSessionFactory shardedFactory, Hive hive, EntityHiveConfig hiveConfig) {
     this.factory = shardedFactory;
     this.hive = hive;
@@ -29,11 +29,11 @@ public class HiveSessionFactoryImpl implements HiveSessionFactory{
   }
 
   public Session openSession() {
-    return factory.openSession(getDefaultInterceptor());
+    return openShardedSession(getDefaultInterceptor());
   }
 
   public Session openSession(Interceptor interceptor) {
-    return factory.openSession(getDefaultInterceptor(interceptor));
+    return openShardedSession(getDefaultInterceptor(interceptor));
   }
 
   public Session openSession(Object primaryIndexKey) {
@@ -68,10 +68,19 @@ public class HiveSessionFactoryImpl implements HiveSessionFactory{
 		return new HiveInterceptorDecorator(interceptor, config, hive);
 	}
 
-  private Session openSessionWithEvents(ShardedSessionImpl session) {
+  private Session openShardedSession(Interceptor interceptor) {
+    return addEventsToShardedSession((ShardedSessionImpl) factory.openSession(getDefaultInterceptor(interceptor)));
+  }
+  
+  private Session addEventsToShardedSession(ShardedSessionImpl session) {
 		for (Shard shard : session.getShards()) {
 			shard.addOpenSessionEvent(new RecordNodeOpenSessionEvent());
 		}
+		return session;
+	}
+
+  private Session addEventsToSession(Session session) {
+		RecordNodeOpenSessionEvent.setNode(session);
 		return session;
 	}
 }
