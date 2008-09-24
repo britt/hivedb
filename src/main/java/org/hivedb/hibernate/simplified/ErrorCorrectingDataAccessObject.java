@@ -3,6 +3,7 @@ package org.hivedb.hibernate.simplified;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hivedb.Hive;
@@ -70,27 +71,46 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
   }
 
   public T save(final T entity) {
-//		final Object populatedEntity = Atom.getFirstOrNull(populateDataIndexDelegates(Collections.singletonList(entity)));
     SessionCallback callback = new SessionCallback() {
       public void execute(Session session) {
         session.saveOrUpdate(getRespresentedClass().getName(), entity);
       }
     };
 
-//		SessionCallback cleanupCallback = new SessionCallback(){
-//			public void execute(Session session) {
-//				session.refresh(populatedEntity);
-//				session.lock(getRespresentedClass().getName(),populatedEntity, LockMode.UPGRADE);
-//				session.update(getRespresentedClass().getName(),populatedEntity);
-//				log.warn(String.format("%s with id %s exists in the data node but not on the directory. Data node record was updated and re-indexed.", config.getResourceName(), config.getId(populatedEntity)));
-//			}};
+		SessionCallback cleanupCallback = new SessionCallback(){
+		  public void execute(Session session) {
+			  session.refresh(entity);
+				session.lock(getRespresentedClass().getName(),entity, LockMode.UPGRADE);
+				session.update(getRespresentedClass().getName(),entity);
+				log.warn(String.format("%s with id %s exists in the data node but not on the directory. Data node record was updated and re-indexed.", config.getResourceName(), config.getId(entity)));
+			}};
 
-//		if (partionDimensionKeyHasChanged(entity))
-//			delete(config.getId(entity));
-//		doSave(populatedEntity, callback, cleanupCallback);
-    transactionHelper.updateInTransaction(callback, getSession());
+		if (hasPartitionDimensionKeyChanged(entity))
+			delete((ID) config.getId(entity));
+    
+    try {
+      transactionHelper.updateInTransaction(callback, getSession());
+    } catch (HibernateException dupe) {
+      if (isDuplicateRecordException(dupe,entity) && !exists((ID) config.getId(entity))) {
+        transactionHelper.updateInTransaction(cleanupCallback, factory.openSession(config.getPrimaryIndexKey(entity)));
+      } else {
+        log.error(
+          String.format(
+            "Detected an integrity constraint violation on the data node but %s with id %s exists in the directory.",
+            config.getResourceName(),
+            config.getId(entity)));
+        throw dupe;
+      }
+    }
+    
     return entity;
   }
+
+
+	public boolean hasPartitionDimensionKeyChanged(Object entity) {
+		return hive.directory().doesResourceIdExist(config.getResourceName(), config.getId(entity)) &&
+				!config.getPrimaryIndexKey(entity).equals(hive.directory().getPrimaryIndexKeyOfResourceId(config.getResourceName(), config.getId(entity)));
+	}
 
   private Session getSession() {
     return factory.openSession();
@@ -141,24 +161,6 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
 
   public Class<T> getRespresentedClass() {
     return representedClass;
-  }
-
-  // TODO Find a new strategy so that this doesn't exist!
-  public void safeSave(final T entity, SessionCallback callback, SessionCallback cleanupCallback) {
-    try {
-      transactionHelper.updateInTransaction(callback, getSession());
-    } catch (HibernateException dupe) {
-      if (isDuplicateRecordException(dupe,entity) && !exists((ID) config.getId(entity))) {
-        transactionHelper.updateInTransaction(cleanupCallback, factory.openSession(config.getPrimaryIndexKey(entity)));
-      } else {
-        log.error(
-          String.format(
-            "Detected an integrity constraint violation on the data node but %s with id %s exists in the directory.",
-            config.getResourceName(),
-            config.getId(entity)));        
-        throw dupe;
-      }
-    }
   }
 
   private boolean isDuplicateRecordException(HibernateException dupe, T entity) {

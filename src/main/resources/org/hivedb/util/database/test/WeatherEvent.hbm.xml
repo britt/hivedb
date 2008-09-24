@@ -5,10 +5,12 @@
 <hibernate-mapping package="org.hivedb.util.database.test">
 	<class name="org.hivedb.util.database.test.WeatherEvent" table="WEATHER_EVENT">
 		<id name="eventId" column="EVENT_ID" />
-    	<property name="name" column="NAME" />
+    <discriminator type="string" column="type" />
+      <property name="name" column="NAME" />
     	<bag name="statistics" table="EVENT_STATISTIC" lazy="false" >
     	 	<key column="EVENT_ID" />
 			<element type="integer" column="STAT"/>
 		</bag>
+    <subclass name="org.hivedb.util.database.test.WeatherEventImpl"></subclass>    
     </class>
 </hibernate-mapping>

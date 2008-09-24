@@ -26,7 +26,25 @@ public class ErrorCorrectingDataAccessObjectRetrievalTest extends HiveTest {
 		WeatherReport original = getPersistentInstance(dao);
 		WeatherReport report = dao.get(original.getReportId());
 		assertEquals(ReflectionTools.getDifferingFields(original, report, WeatherReport.class).toString(), original.hashCode(), report.hashCode());
-	}
+  }
+
+  @Test
+  public void shouldDetectChangesInPrimaryIndexKey() throws Exception {
+    ErrorCorrectingDataAccessObject<WeatherReport, Integer> dao = new ErrorCorrectingDataAccessObject<WeatherReport, Integer>(WeatherReport.class, getEntityHiveConfig().getEntityConfig(WeatherReport.class),getHive(), getSessionFactory());
+    WeatherReport original = getPersistentInstance(dao);
+    assertFalse(dao.hasPartitionDimensionKeyChanged(original));    
+    String newContinent = original.getContinent().equals("Asia") ? "Australia" : "Asia";
+    hive.directory().insertPrimaryIndexKey(newContinent);
+    hive.directory().updatePrimaryIndexKeyOfResourceId("WeatherReport", original.getReportId(), newContinent);
+    assertTrue(dao.hasPartitionDimensionKeyChanged(original));
+  }
+
+  @Test
+  public void shouldIndicateThatThePartitionKeyHasNotChangedForUnsaveRecords() throws Exception {
+    ErrorCorrectingDataAccessObject<WeatherReport, Integer> dao = new ErrorCorrectingDataAccessObject<WeatherReport, Integer>(WeatherReport.class, getEntityHiveConfig().getEntityConfig(WeatherReport.class),getHive(), getSessionFactory());
+    WeatherReport original = WeatherReportImpl.generate();
+    assertFalse(dao.hasPartitionDimensionKeyChanged(original));
+  }
 
   @Test
   public void shouldDeleteTheDirectoryEntryIfTheEntityIsNotPresentOnTheDataNode() throws Exception {
