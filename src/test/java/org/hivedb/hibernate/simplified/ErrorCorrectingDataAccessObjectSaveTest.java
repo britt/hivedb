@@ -3,14 +3,14 @@ package org.hivedb.hibernate.simplified;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
-import org.hivedb.hibernate.HiveSessionFactory;
-import org.hivedb.hibernate.HiveSessionFactoryBuilderImpl;
+import org.hivedb.hibernate.simplified.session.HiveSessionFactory;
+import org.hivedb.hibernate.simplified.session.SingletonHiveSessionFactoryBuilder;
 import org.hivedb.util.classgen.GenerateInstance;
 import org.hivedb.util.classgen.GeneratedClassFactory;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.WeatherReport;
-import org.junit.Test;
 import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 import java.util.List;
 
@@ -26,7 +26,7 @@ public class ErrorCorrectingDataAccessObjectSaveTest extends HiveTest{
 
   private HiveSessionFactory getSessionFactory() {
     if(hiveSessionFactory==null)
-      hiveSessionFactory = new HiveSessionFactoryBuilderImpl(getHive().getUri(), (List<Class<?>>) getMappedClasses(),new SequentialShardAccessStrategy());
+      hiveSessionFactory = new SingletonHiveSessionFactoryBuilder(getHive(), (List<Class<?>>) getMappedClasses(),new SequentialShardAccessStrategy()).getSessionFactory();
     return hiveSessionFactory;
   }
 

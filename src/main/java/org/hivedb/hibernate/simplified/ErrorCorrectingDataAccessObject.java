@@ -8,9 +8,9 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.hivedb.Hive;
 import org.hivedb.HiveLockableException;
 import org.hivedb.configuration.EntityConfig;
-import org.hivedb.hibernate.HiveSessionFactory;
 import org.hivedb.hibernate.QueryCallback;
 import org.hivedb.hibernate.SessionCallback;
+import org.hivedb.hibernate.simplified.session.HiveSessionFactory;
 import org.hivedb.util.functional.Atom;
 
 import java.io.Serializable;
@@ -93,7 +93,7 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
   }
 
   private Session getSession() {
-    return factory.openSession(factory.getDefaultInterceptor());
+    return factory.openSession();
   }
 
   public Boolean exists(ID id) {
