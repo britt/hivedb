@@ -99,6 +99,49 @@ public class HiveSessionFactoryImplTest extends HiveTest {
   }
 
   @Test
+  public void shouldOpenASessionByResourceId() throws Exception {
+    Hive hive = getHive();
+    String asia = "Asia";
+    hive.directory().insertPrimaryIndexKey(asia);
+    int id = 999;
+    hive.directory().insertResourceId("WeatherReport", id, asia);
+    final WeatherReportImpl report = new WeatherReportImpl();
+    report.setContinent(asia);
+    Session session = factory.openSession("WeatherReport", id);
+    try {
+      Node node = getNodeForFirstId(hive, hive.directory().getNodeIdsOfResourceId("WeatherReport", id));
+      assertCorrectNode(session, node);
+    } catch(Exception e) {
+      fail(e.getMessage());
+    } finally {
+      session.close();
+    }
+  }
+
+  @Test
+  public void shouldOpenASessionBySecondaryIndex() throws Exception {
+    Hive hive = getHive();
+    String asia = "Asia";
+    int id = 999;    
+    hive.directory().insertPrimaryIndexKey(asia);
+    hive.directory().insertResourceId("WeatherReport", id, asia);
+    int code = 765;
+    hive.directory().insertSecondaryIndexKey("WeatherReport", "RegionCode", code, id);
+
+    final WeatherReportImpl report = new WeatherReportImpl();
+    report.setContinent(asia);
+    Session session = factory.openSession("WeatherReport", "RegionCode", code);
+    try {
+      Node node = getNodeForFirstId(hive, hive.directory().getNodeIdsOfSecondaryIndexKey("WeatherReport", "RegionCode", code));
+      assertCorrectNode(session, node);
+    } catch(Exception e) {
+      fail(e.getMessage());
+    } finally {
+      session.close();
+    }
+  }
+
+  @Test
   public void shouldAddOpenSessionEvents() throws Exception {
     Hive hive = getHive();
     String asia = "Asia";
@@ -135,6 +178,30 @@ public class HiveSessionFactoryImplTest extends HiveTest {
       fail("Exception thrown: " + e.getMessage());
     } finally {
       session.close();
+    }
+  }
+
+  @Test
+  public void shouldThrowAnExceptionIfARecordIsStoredOnMoreThanOneNode() throws Exception {
+    Hive hive = getHive();
+    String asia = "Asia";
+    hive.directory().insertPrimaryIndexKey(asia);
+    hive.directory().insertPrimaryIndexKey(asia);
+    final WeatherReportImpl report = new WeatherReportImpl();
+    report.setContinent(asia);
+    Session session = null;
+    try {
+      session = factory.openSession(asia);
+      Collection<Integer> nodeIds = hive.directory().getNodeIdsOfPrimaryIndexKey(asia);
+      assertEquals(2, nodeIds.size());
+      Node node = getNodeForFirstId(hive, nodeIds);
+      assertCorrectNode(session, node);
+      fail("No exception thrown");
+    } catch(IllegalStateException e) {
+
+    } finally {
+      if(session!=null)
+        session.close();
     }
   }
 
