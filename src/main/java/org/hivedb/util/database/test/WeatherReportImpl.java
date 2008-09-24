@@ -4,12 +4,12 @@ import org.hivedb.annotations.EntityId;
 import org.hivedb.annotations.Index;
 import org.hivedb.annotations.PartitionIndex;
 import org.hivedb.annotations.Resource;
+import org.hivedb.util.Lists;
 import org.hivedb.util.classgen.ReflectionTools;
-import org.hivedb.util.classgen.GenerateInstanceCollection;
-import org.hivedb.util.classgen.GeneratePrimitiveCollection;
 import org.hivedb.util.functional.Amass;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Random;
@@ -68,8 +68,9 @@ public class WeatherReportImpl implements WeatherReport {
 		this.temperature = temperature;
 	}
 	
-	private Collection<Integer> sources = new GeneratePrimitiveCollection<Integer>(Integer.class,7).generate();
-	@Index
+//	private Collection<Integer> sources = new GeneratePrimitiveCollection<Integer>(Integer.class,7).generate();
+  private Collection<Integer> sources = Lists.newList(1,2,3,4);
+  @Index
 	public Collection<Integer> getSources() {
 		return sources;
 	}
@@ -102,8 +103,9 @@ public class WeatherReportImpl implements WeatherReport {
 		return weatherReport;
 	}
 	
-	private Collection<WeatherEvent> weatherEvents = new GenerateInstanceCollection<WeatherEvent>(WeatherEvent.class,3).generate();
-	@Index
+//	private Collection<WeatherEvent> weatherEvents = new GenerateInstanceCollection<WeatherEvent>(WeatherEvent.class,3).generate();
+  private Collection<WeatherEvent> weatherEvents = new ArrayList<WeatherEvent>();
+  @Index
 	public Collection<WeatherEvent> getWeatherEvents() {
 		return weatherEvents;
 	}

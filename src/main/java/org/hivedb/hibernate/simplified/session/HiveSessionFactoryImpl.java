@@ -11,8 +11,8 @@ import org.hibernate.shards.session.ShardedSessionImpl;
 import org.hivedb.Hive;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.configuration.EntityHiveConfig;
-import org.hivedb.hibernate.HiveInterceptorDecorator;
 import org.hivedb.hibernate.RecordNodeOpenSessionEvent;
+import org.hivedb.hibernate.simplified.HiveInterceptorDecorator;
 import org.hivedb.meta.Node;
 import org.hivedb.util.functional.*;
 

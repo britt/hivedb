@@ -22,6 +22,7 @@ public class WeatherSchema extends Schema {
     "LATITUDE DOUBLE," +
     "LONGITUDE DOUBLE," +
     "TEMPERATURE INT," +
+    "TYPE VARCHAR(255)," +
     "REPORT_TIME TIMESTAMP);"),
     	// Demonstrates a primitive indexed collection
     	new TableInfo("WEATHER_REPORT_SOURCE", "CREATE TABLE WEATHER_REPORT_SOURCE (" + 

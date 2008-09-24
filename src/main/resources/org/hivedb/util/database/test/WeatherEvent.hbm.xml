@@ -3,7 +3,7 @@
     "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
     "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <hibernate-mapping package="org.hivedb.util.database.test">
-	<class name="WeatherEvent" table="WEATHER_EVENT">
+	<class name="org.hivedb.util.database.test.WeatherEvent" table="WEATHER_EVENT">
 		<id name="eventId" column="EVENT_ID" />
     	<property name="name" column="NAME" />
     	<bag name="statistics" table="EVENT_STATISTIC" lazy="false" >

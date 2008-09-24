@@ -3,7 +3,7 @@
     "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
     "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <hibernate-mapping package="org.hivedb.util.database.test">
-    <class name="Continent" table="CONTINENT">
+    <class name="org.hivedb.util.database.test.Continent" table="CONTINENT">
         <id name="name" column="NAME"/>
         <property name="population" column="POPULATION"/>
     </class>
