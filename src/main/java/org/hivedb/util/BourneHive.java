@@ -7,7 +7,6 @@ import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
-import org.hivedb.meta.persistence.DataSourceProvider;
 import org.hivedb.util.database.DialectTools;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.JdbcTypeMapper;
@@ -18,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import org.hivedb.meta.persistence.HiveDataSourceProvider;
 
 /**
  * Helper class to systematically create a hive from configuration maps
@@ -32,11 +32,11 @@ public class BourneHive {
 		return hive;
 	}
 		
-	public BourneHive(Map<String, String> dimension, DataSourceProvider dataSourceProvider) {
+	public BourneHive(Map<String, String> dimension, HiveDataSourceProvider dataSourceProvider) {
 		this(dimension, dataSourceProvider, HiveDbDialect.H2);
 	}
 	
-	public BourneHive(Map<String, String> dimension, DataSourceProvider dataSourceProvider, HiveDbDialect dialect) {
+	public BourneHive(Map<String, String> dimension, HiveDataSourceProvider dataSourceProvider, HiveDbDialect dialect) {
 		this.dialect = dialect;
 		new HiveInstaller(DialectTools.getHiveTestUri(dialect)).run();
 		String name = dimension.get("name");

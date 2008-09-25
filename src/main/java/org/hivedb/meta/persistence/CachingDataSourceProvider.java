@@ -11,7 +11,7 @@ import javax.sql.DataSource;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CachingDataSourceProvider implements DataSourceProvider {
+public class CachingDataSourceProvider implements HiveDataSourceProvider {
 	
 	private static CachingDataSourceProvider INSTANCE = new CachingDataSourceProvider();
 	
@@ -28,10 +28,14 @@ public class CachingDataSourceProvider implements DataSourceProvider {
 		LazyConnectionDataSourceProxy ds = cache.get(uri);
 		if (ds == null) {
 			DriverLoader.initializeDriver(uri);
-			ds = new LazyConnectionDataSourceProxy(new HiveBasicDataSource(uri));
+			ds = new LazyConnectionDataSourceProxy(createDataSource(uri));
 			cache.put(uri, ds);
 		}
 		return ds;
+	}
+	
+	protected DataSource createDataSource(String uri) {
+		return new HiveBasicDataSource(uri);
 	}
 	
 	public static CachingDataSourceProvider getInstance() {

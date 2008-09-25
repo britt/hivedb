@@ -2,7 +2,6 @@ package org.hivedb.util;
 
 import org.hivedb.Hive;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
-import org.hivedb.meta.persistence.DataSourceProvider;
 import org.hivedb.util.database.DialectTools;
 import org.hivedb.util.database.HiveDbDialect;
 import org.ho.yaml.Yaml;
@@ -11,6 +10,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.List;
 import java.util.Map;
+import org.hivedb.meta.persistence.HiveDataSourceProvider;
 
 /**
  * Systematically creates a hive from a given yaml configuration file
@@ -18,7 +18,7 @@ import java.util.Map;
  * @author mellwanger
  */
 public class HiveCreator {
-	private DataSourceProvider dataSourceProvider = CachingDataSourceProvider.getInstance();
+	private HiveDataSourceProvider dataSourceProvider = CachingDataSourceProvider.getInstance();
 	private HiveDbDialect dialect;
 	
 	public HiveCreator(HiveDbDialect dialect) {

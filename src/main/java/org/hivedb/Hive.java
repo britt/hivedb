@@ -41,7 +41,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	private Collection<Node> nodes = new ArrayList<Node>();
 	
 	private DataSource hiveDataSource;
-	private DataSourceProvider dataSourceProvider;
+	private HiveDataSourceProvider dataSourceProvider;
   
   private Assigner assigner = new RandomAssigner();
 	
@@ -49,7 +49,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	 *  Calls {@see #load(String, DataSourceProvider, Assigner)} with the
 	 *  default DataSourceProvider.
 	 */
-	public static Hive load(String hiveDatabaseUri, DataSourceProvider dataSourceProvider) {
+	public static Hive load(String hiveDatabaseUri, HiveDataSourceProvider dataSourceProvider) {
 		return load(hiveDatabaseUri, dataSourceProvider, null);
 	}
 
@@ -62,7 +62,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	 * @param assigner The key assigner to be used by the Hive for identifying new unidentified entity instances
 	 * @return a Hive instance
 	 */
-	public static Hive load(String hiveUri, DataSourceProvider provider, Assigner assigner) {
+	public static Hive load(String hiveUri, HiveDataSourceProvider provider, Assigner assigner) {
 		Hive hive = prepareHive(hiveUri, provider, assigner);
 		hive.sync();
 		return hive;
@@ -73,7 +73,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	  * Calls {@see #create(String, String, int, DataSourceProvider, Assigner)} with the default
 	 * DataSourceProvider.
 	 */
-	public static HiveFacade create(String hiveUri, String dimensionName, int indexType, DataSourceProvider provider) {
+	public static HiveFacade create(String hiveUri, String dimensionName, int indexType, HiveDataSourceProvider provider) {
 		return create(hiveUri, dimensionName, indexType, provider, null);
 	}
 	
@@ -86,7 +86,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	 * @param assigner - The key assigner to be used by the Hive for identifying new unidentified entity instances.
 	 * @return an instance to access the created hive.
 	 */
-	public static Hive create(String hiveUri, String dimensionName, int indexType, DataSourceProvider provider, Assigner assigner) {
+	public static Hive create(String hiveUri, String dimensionName, int indexType, HiveDataSourceProvider provider, Assigner assigner) {
 		Hive hive = prepareHive(hiveUri, provider, assigner);
 		PartitionDimension dimension = new PartitionDimension(dimensionName, indexType);
 		dimension.setIndexUri(hiveUri);
@@ -102,7 +102,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 			throw new HiveRuntimeException(String.format("There is already a Hive with a partition dimension named %s intalled at this uri: %s", Atom.getFirstOrThrow(partitionDimensions).getName(), hiveUri));
 	}
 	
-	private static Hive prepareHive(String hiveUri, DataSourceProvider provider, Assigner assigner) {
+	private static Hive prepareHive(String hiveUri, HiveDataSourceProvider provider, Assigner assigner) {
 		DriverLoader.initializeDriver(hiveUri);
 		Hive hive = new Hive(hiveUri, 0, Status.writable, provider);
 		if(assigner != null)
@@ -162,7 +162,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 		this.semaphore = new HiveSemaphore();
 	}
 	
-	protected Hive(String hiveUri, int revision, Status status, DataSourceProvider dataSourceProvider) {
+	protected Hive(String hiveUri, int revision, Status status, HiveDataSourceProvider dataSourceProvider) {
 		this();
 		this.hiveUri = hiveUri;
 		this.semaphore.setRevision(revision);
@@ -189,7 +189,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 	 * Sets the dataSourceProvider for testing purposes. Use {@see #load(String, DataSourceProvider, Assigner)} instead.
 	 * @param dataSourceProvider
 	 */
-	public void setDataSourceProvider(DataSourceProvider dataSourceProvider) {
+	public void setDataSourceProvider(HiveDataSourceProvider dataSourceProvider) {
 		this.dataSourceProvider = dataSourceProvider;
 	} 
 

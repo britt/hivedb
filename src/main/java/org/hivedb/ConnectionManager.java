@@ -14,15 +14,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import org.hivedb.meta.persistence.HiveDataSourceProvider;
 
 public class ConnectionManager {
 	private Directory directory;
-	private DataSourceProvider dataSourceProvider;
+	private HiveDataSourceProvider dataSourceProvider;
 	private Map<Integer, DataSource> nodeDataSources;
 	private JdbcDaoSupportCacheImpl cache;
 	private Hive hive;
 	
-	public ConnectionManager(Directory directory, Hive hive, DataSourceProvider provider) {
+	public ConnectionManager(Directory directory, Hive hive, HiveDataSourceProvider provider) {
 		this.hive = hive;
 		this.directory = directory;
 		this.dataSourceProvider = provider;
