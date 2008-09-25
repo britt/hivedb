@@ -12,11 +12,9 @@ import org.hivedb.configuration.EntityConfig;
 import org.hivedb.hibernate.QueryCallback;
 import org.hivedb.hibernate.SessionCallback;
 import org.hivedb.hibernate.simplified.session.HiveSessionFactory;
-import org.hivedb.util.functional.Atom;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -26,6 +24,9 @@ import java.util.Map;
  * erroneous directory entry.  Thus many of the operations can produce side-effects. All error
  * correcting operations are marked as such.
  */
+
+// Todo saveAll
+// Todo queries
 public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> implements DataAccessObject<T, ID> {
   private final static Log log = LogFactory.getLog(ErrorCorrectingDataAccessObject.class);
   private Hive hive;
@@ -48,13 +49,8 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
    * @return
    */
   public T get(final ID id) {
-    QueryCallback query = new QueryCallback() {
-      public Collection<Object> execute(Session session) {
-        return Collections.singletonList(session.get(getRespresentedClass(), id));
-      }
-    };
-
-    T fetched = (T) Atom.getFirstOrThrow(transactionHelper.queryInTransaction(query, getSession()));
+    QueryCallback query = transactionHelper.newGetCallback(id, getRespresentedClass());
+    T fetched = (T) transactionHelper.querySingleInTransaction(query, getSession());
 
     if (fetched == null && exists(id))
       removeDirectoryEntry(id);
@@ -71,11 +67,7 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
   }
 
   public T save(final T entity) {
-    SessionCallback callback = new SessionCallback() {
-      public void execute(Session session) {
-        session.saveOrUpdate(getRespresentedClass().getName(), entity);
-      }
-    };
+    SessionCallback callback = transactionHelper.newSaveCallback(entity, getRespresentedClass());
 
 		SessionCallback cleanupCallback = new SessionCallback(){
 		  public void execute(Session session) {
@@ -83,7 +75,8 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
 				session.lock(getRespresentedClass().getName(),entity, LockMode.UPGRADE);
 				session.update(getRespresentedClass().getName(),entity);
 				log.warn(String.format("%s with id %s exists in the data node but not on the directory. Data node record was updated and re-indexed.", config.getResourceName(), config.getId(entity)));
-			}};
+			}
+    };
 
 		if (hasPartitionDimensionKeyChanged(entity))
 			delete((ID) config.getId(entity));
@@ -107,6 +100,21 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
   }
 
 
+  public Collection<T> saveAll(Collection<T> ts) {
+    throw new UnsupportedOperationException("Not yet implemented");
+  }
+
+  public ID delete(final ID id) {
+    SessionCallback callback = new SessionCallback() {
+      public void execute(Session session) {
+        Object deleted = session.get(getRespresentedClass(), id);
+        session.delete(deleted);
+      }
+    };
+    transactionHelper.updateInTransaction(callback, getSession());
+    return id;
+  }
+ 
 	public boolean hasPartitionDimensionKeyChanged(Object entity) {
 		return hive.directory().doesResourceIdExist(config.getResourceName(), config.getId(entity)) &&
 				!config.getPrimaryIndexKey(entity).equals(hive.directory().getPrimaryIndexKeyOfResourceId(config.getResourceName(), config.getId(entity)));
@@ -121,42 +129,27 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
   }
 
   public Collection<T> find(Map<String, Object> properties) {
-    return null;
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 
   public Collection<T> find(Map<String, Object> properties, Integer offSet, Integer maxResultSetSize) {
-    return null;
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 
   public Collection<T> findInRange(String propertyName, Object minValue, Object maxValue) {
-    return null;
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 
   public Collection<T> findInRange(String propertyName, Object minValue, Object maxValue, Integer offSet, Integer maxResultSetSize) {
-    return null;
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 
   public Integer getCount(Map<String, Object> properties) {
-    return null;
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 
   public Integer getCountInRange(String propertyName, Object minValue, Object maxValue) {
-    return null;
-  }
-
-  public Collection<T> saveAll(Collection<T> ts) {
-    return null;
-  }
-
-  public ID delete(final ID id) {
-    SessionCallback callback = new SessionCallback() {
-      public void execute(Session session) {
-        Object deleted = session.get(getRespresentedClass(), id);
-        session.delete(deleted);
-      }
-    };
-    transactionHelper.updateInTransaction(callback, getSession());
-    return id;
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 
   public Class<T> getRespresentedClass() {

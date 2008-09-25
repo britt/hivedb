@@ -1,9 +1,6 @@
 package org.hivedb.hibernate;
 
 
-import java.util.Collection;
-import java.util.List;
-
 import org.hibernate.shards.ShardId;
 import org.hibernate.shards.strategy.resolution.ShardResolutionStrategy;
 import org.hibernate.shards.strategy.selection.ShardResolutionStrategyData;
@@ -15,6 +12,9 @@ import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
+
+import java.util.Collection;
+import java.util.List;
 
 public class HiveShardResolver implements ShardResolutionStrategy {
 	private EntityHiveConfig hiveConfig;

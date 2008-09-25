@@ -32,7 +32,14 @@ public class ErrorCorrectingDataAccessObjectSaveTest extends HiveTest{
   @Test
   public void shouldSaveAndReIndexIfAnEntityExistsOnTheDataNodeButNotTheDirectory() throws Exception {
     DataAccessObject<WeatherReport, Integer> dao = new ErrorCorrectingDataAccessObject<WeatherReport, Integer>(WeatherReport.class, getEntityHiveConfig().getEntityConfig(WeatherReport.class),getHive(), getSessionFactory());
-        
+    WeatherReport report = getPersistentInstance(dao);
+    hive.directory().deleteResourceId("WeatherReport", report.getReportId());
+    assertFalse(hive.directory().getNodeIdsOfResourceId("WeatherReport", report.getReportId()).size() > 0);
+    report.setRegionCode(87654);
+    dao.save(report);
+    assertTrue(hive.directory().getNodeIdsOfResourceId("WeatherReport", report.getReportId()).size() > 0);
+    WeatherReport thawed = dao.get(report.getReportId());
+    assertEquals(report, thawed);
   }
 
   @Test
