@@ -2,14 +2,16 @@ package org.hivedb.hibernate.simplified;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Criteria;
+import org.hibernate.Session;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hivedb.Lockable;
 import org.hivedb.hibernate.simplified.session.HiveSessionFactory;
 import org.hivedb.hibernate.simplified.session.SingletonHiveSessionFactoryBuilder;
+import org.hivedb.util.Lists;
 import org.hivedb.util.classgen.ReflectionTools;
-import org.hivedb.util.database.test.HiveTest;
-import org.hivedb.util.database.test.WeatherReport;
-import org.hivedb.util.database.test.WeatherReportImpl;
+import org.hivedb.util.database.test.*;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
@@ -89,6 +91,28 @@ public class ErrorCorrectingDataAccessObjectRetrievalTest extends HiveTest {
     WeatherReport report = dao.get(original.getReportId());
     assertTrue(report == null);
     assertTrue(getHive().directory().doesResourceIdExist(resourceName, original.getReportId()));
+  }
+
+  @Test
+  public void shouldPerformCriteriaQueries() throws Exception {
+    DataAccessObject<WeatherReport, Integer> dao = new ErrorCorrectingDataAccessObject<WeatherReport, Integer>(WeatherReport.class, getEntityHiveConfig().getEntityConfig(WeatherReport.class),getHive(), getSessionFactory());
+    for(int i=0; i<10; i++) {
+      WeatherReport report = WeatherReportImpl.generate();
+      WeatherEvent event = WeatherEventImpl.generate();
+      event.setEventId(i);
+      report.setWeatherEvents(Lists.newList(event));
+      report.setRegionCode(i);
+      report.setSources(Lists.newList(i,i,i));
+      dao.save(report);
+      assertTrue(dao.exists(report.getReportId()));
+    }
+    Session session = hiveSessionFactory.openSession();
+    Criteria regionCodeSearch = session.createCriteria(WeatherReport.class).add(Restrictions.between("regionCode", 2, 5));
+    assertEquals(4,regionCodeSearch.list().size());
+    Criteria eventSearch = session.createCriteria(WeatherReport.class).createCriteria("weatherEvents").add(Restrictions.between("eventId",2,5));
+    assertEquals(4,eventSearch.list().size());
+
+    session.close();
   }
 
   private HiveSessionFactory getSessionFactory() {

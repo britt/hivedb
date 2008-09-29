@@ -15,6 +15,6 @@
 		
 		<!-- time out after 1 hour - well before the 8 hour MySQL timeout (a.k.a. "broken pipe") -->
 		<property name="hibernate.c3p0.timeout">3600</property> <!-- seconds -->
-		
+		<!--<property name="hibernate.show_sql">true</property>-->
     </session-factory>
 </hibernate-configuration>

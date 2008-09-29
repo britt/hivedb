@@ -6,7 +6,6 @@ import org.hivedb.annotations.PartitionIndex;
 import org.hivedb.annotations.Resource;
 import org.hivedb.util.Lists;
 import org.hivedb.util.classgen.ReflectionTools;
-import org.hivedb.util.functional.Amass;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -16,6 +15,8 @@ import java.util.Random;
 
 @Resource("WeatherReport")
 public class WeatherReportImpl implements WeatherReport {
+  private static Random r = new Random(System.nanoTime());
+  
   private static final String[] continents =
     new String[]{"North America", "South America", "Asia", "Europe", "Africa", "Australia", "Antarctica"};
   private Integer reportId;
@@ -93,27 +94,16 @@ public class WeatherReportImpl implements WeatherReport {
     this.sources = sources;
   }
 
-  @Override
-  public boolean equals(Object obj) {
-    return this.hashCode() == obj.hashCode();
-  }
-
   static final Collection<Method> getters = ReflectionTools.getGetters(WeatherReport.class);
 
-  @Override
-  public int hashCode() {
-    return Amass.makeHashCode(ReflectionTools.invokeGetters(this, getters));
-  }
-
   public static WeatherReportImpl generate() {
-    Random r = new Random(System.currentTimeMillis());
     WeatherReportImpl weatherReport = new WeatherReportImpl();
     weatherReport.setContinent(continents[r.nextInt(continents.length)]);
     weatherReport.setLatitude(new Double(360 * r.nextDouble()));
     weatherReport.setLongitude(new Double(360 * r.nextDouble()));
     weatherReport.setReportId(r.nextInt());
     weatherReport.setReportTime(new Date(System.currentTimeMillis()));
-    weatherReport.setTemperature((int) Math.rint(Math.random() * 100));
+    weatherReport.setTemperature(r.nextInt(100));
     return weatherReport;
   }
 
@@ -137,5 +127,22 @@ public class WeatherReportImpl implements WeatherReport {
 
   public void setRegionCode(Integer regionCode) {
     this.regionCode = regionCode;
+  }
+
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof WeatherReportImpl)) return false;
+
+    WeatherReportImpl report = (WeatherReportImpl) o;
+
+    if (reportId != null ? !reportId.equals(report.reportId) : report.reportId != null) return false;
+    
+    return true;
+  }
+
+  public int hashCode() {
+    int result;
+    result = (reportId != null ? reportId.hashCode() : 0);
+    return result;
   }
 }

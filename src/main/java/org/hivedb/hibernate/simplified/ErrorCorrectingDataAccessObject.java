@@ -25,8 +25,9 @@ import java.util.Map;
  * correcting operations are marked as such.
  */
 
-// Todo saveAll
 // Todo queries
+// No HQL -- user Criteria
+// Drop primitive collection property query support
 public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> implements DataAccessObject<T, ID> {
   private final static Log log = LogFactory.getLog(ErrorCorrectingDataAccessObject.class);
   private Hive hive;
@@ -50,7 +51,7 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
    */
   public T get(final ID id) {
     QueryCallback query = transactionHelper.newGetCallback(id, getRespresentedClass());
-    T fetched = (T) transactionHelper.querySingleInTransaction(query, getSession());
+    T fetched = (T) transactionHelper.querySingleInTransaction(query, factory.openSession());
 
     if (fetched == null && exists(id))
       removeDirectoryEntry(id);
@@ -82,7 +83,7 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
 			delete((ID) config.getId(entity));
     
     try {
-      transactionHelper.updateInTransaction(callback, getSession());
+      transactionHelper.updateInTransaction(callback, factory.openSession());
     } catch (HibernateException dupe) {
       if (isDuplicateRecordException(dupe,entity) && !exists((ID) config.getId(entity))) {
         transactionHelper.updateInTransaction(cleanupCallback, factory.openSession(config.getPrimaryIndexKey(entity)));
@@ -99,11 +100,12 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
     return entity;
   }
 
-
-  public Collection<T> saveAll(Collection<T> ts) {
-    throw new UnsupportedOperationException("Not yet implemented");
+  public Collection<T> saveAll(Collection<T> entities) {
+    for(T t : entities)
+      save(t);
+    return entities;
   }
-
+  
   public ID delete(final ID id) {
     SessionCallback callback = new SessionCallback() {
       public void execute(Session session) {
@@ -111,7 +113,8 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
         session.delete(deleted);
       }
     };
-    transactionHelper.updateInTransaction(callback, getSession());
+    if(exists(id))
+      transactionHelper.updateInTransaction(callback, factory.openSession());
     return id;
   }
  
@@ -119,10 +122,6 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
 		return hive.directory().doesResourceIdExist(config.getResourceName(), config.getId(entity)) &&
 				!config.getPrimaryIndexKey(entity).equals(hive.directory().getPrimaryIndexKeyOfResourceId(config.getResourceName(), config.getId(entity)));
 	}
-
-  private Session getSession() {
-    return factory.openSession();
-  }
 
   public Boolean exists(ID id) {
     return hive.directory().doesResourceIdExist(config.getResourceName(), id);
@@ -157,10 +156,14 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
   }
 
   private boolean isDuplicateRecordException(HibernateException dupe, T entity) {
-    return
-      (dupe.getCause().getClass().isAssignableFrom(ConstraintViolationException.class)
-        || dupe.getClass().isAssignableFrom(ConstraintViolationException.class))
-				&& !exists((ID)config.getId(entity));
+    try {
+      return
+        (dupe.getCause().getClass().isAssignableFrom(ConstraintViolationException.class)
+          || dupe.getClass().isAssignableFrom(ConstraintViolationException.class))
+				  && !exists((ID)config.getId(entity));
+    } catch(RuntimeException e) {
+      return false;
+    }
   }
 }
 

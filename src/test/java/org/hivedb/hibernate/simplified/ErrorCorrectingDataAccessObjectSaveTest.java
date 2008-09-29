@@ -7,12 +7,14 @@ import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hivedb.hibernate.simplified.session.HiveSessionFactory;
 import org.hivedb.hibernate.simplified.session.HiveSessionFactoryImpl;
 import org.hivedb.hibernate.simplified.session.SingletonHiveSessionFactoryBuilder;
+import org.hivedb.util.Lists;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.WeatherReport;
 import org.hivedb.util.database.test.WeatherReportImpl;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
+import java.util.Collection;
 import java.util.List;
 
 @HiveTest.Config("hive_default")
@@ -27,6 +29,17 @@ public class ErrorCorrectingDataAccessObjectSaveTest extends HiveTest{
     dao.save(original);
     WeatherReport fetched = dao.get(original.getReportId());
     assertEquals(original, fetched);
+  }
+
+  @Test
+  public void shouldSaveManyEntities() throws Exception {
+    ErrorCorrectingDataAccessObject<WeatherReport, Integer> dao = new ErrorCorrectingDataAccessObject<WeatherReport, Integer>(WeatherReport.class, getEntityHiveConfig().getEntityConfig(WeatherReport.class),getHive(), getSessionFactory());
+    Collection<WeatherReport> reports = Lists.newArrayList();
+    for(int i=0; i<100; i++)
+      reports.add(WeatherReportImpl.generate());
+    dao.saveAll(reports);
+    for(WeatherReport report : reports)
+      assertTrue(dao.exists(report.getReportId()));
   }
 
   @Test
@@ -73,6 +86,16 @@ public class ErrorCorrectingDataAccessObjectSaveTest extends HiveTest{
   public void shouldDeleteRecords() throws Exception {
     DataAccessObject<WeatherReport, Integer> dao = new ErrorCorrectingDataAccessObject<WeatherReport, Integer>(WeatherReport.class, getEntityHiveConfig().getEntityConfig(WeatherReport.class),getHive(), getSessionFactory());
     WeatherReport report = getPersistentInstance(dao);
+    assertTrue(dao.exists(report.getReportId()));
+    dao.delete(report.getReportId());
+    assertFalse(dao.exists(report.getReportId()));
+  }
+
+  @Test
+  public void shouldNotThrowAnExceptionWhenDeletingNonExistentRecords() throws Exception {
+    DataAccessObject<WeatherReport, Integer> dao = new ErrorCorrectingDataAccessObject<WeatherReport, Integer>(WeatherReport.class, getEntityHiveConfig().getEntityConfig(WeatherReport.class),getHive(), getSessionFactory());
+    WeatherReport report = WeatherReportImpl.generate();
+    assertFalse(dao.exists(report.getReportId()));
     dao.delete(report.getReportId());
     assertFalse(dao.exists(report.getReportId()));
   }
