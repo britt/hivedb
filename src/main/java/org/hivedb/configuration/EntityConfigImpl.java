@@ -165,7 +165,7 @@ public class EntityConfigImpl implements EntityConfig {
 		return getEntityIndexConfigs(EnumSet.of(indexType));
 	}
 	public EntityIndexConfig getEntityIndexConfig(final String propertyName) {
-		return Filter.grepSingle(new Predicate<EntityIndexConfig>() {
+		return Filter.grepSingleOrNull(new Predicate<EntityIndexConfig>() {
 			public boolean f(EntityIndexConfig entityIndexConfig) {
 				return entityIndexConfig.getPropertyName().equals(propertyName);
 			}},

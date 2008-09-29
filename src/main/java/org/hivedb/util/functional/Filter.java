@@ -1,15 +1,8 @@
 package org.hivedb.util.functional;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-
 import org.hivedb.util.functional.Transform.IdentityFunction;
+
+import java.util.*;
 
 public abstract class Filter {
 	

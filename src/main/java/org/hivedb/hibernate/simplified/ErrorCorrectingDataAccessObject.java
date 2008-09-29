@@ -2,9 +2,13 @@ package org.hivedb.hibernate.simplified;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hivedb.Hive;
 import org.hivedb.HiveLockableException;
@@ -135,20 +139,60 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
     throw new UnsupportedOperationException("Not yet implemented");
   }
 
-  public Collection<T> findInRange(String propertyName, Object minValue, Object maxValue) {
-    throw new UnsupportedOperationException("Not yet implemented");
+  // TODO Fix associated entity queries
+  public Collection<T> findInRange(final String propertyName, final Object minValue, final Object maxValue) {
+    checkForHiveIndexedProperty(propertyName);
+
+    QueryCallback query = new QueryCallback(){
+      public Collection<Object> execute(Session session) {
+        Criteria c = session.createCriteria(getRespresentedClass());
+        c.add(Restrictions.between(propertyName, minValue, maxValue));
+        return c.list();
+      }
+    };
+    return (Collection<T>) transactionHelper.queryInTransaction(query, factory.openSession());
   }
 
-  public Collection<T> findInRange(String propertyName, Object minValue, Object maxValue, Integer offSet, Integer maxResultSetSize) {
-    throw new UnsupportedOperationException("Not yet implemented");
+  //TODO test
+  public Collection<T> findInRange(final String propertyName, final Object minValue, final Object maxValue, final Integer offSet, final Integer maxResultSetSize) {
+    checkForHiveIndexedProperty(propertyName);
+
+    QueryCallback query = new QueryCallback(){
+      public Collection<Object> execute(Session session) {
+        Criteria c = session.createCriteria(getRespresentedClass());
+        c.add(Restrictions.between(propertyName, minValue, maxValue));
+        c.setFirstResult(offSet);
+				c.setMaxResults(maxResultSetSize);
+				c.addOrder(Order.asc(propertyName));
+        return c.list();
+      }
+    };
+    return (Collection<T>) transactionHelper.queryInTransaction(query, factory.openSession());
+  }
+
+  private void checkForHiveIndexedProperty(String propertyName) throws UnsupportedOperationException {
+    if(config.getEntityIndexConfig(propertyName) == null)
+      throw new UnsupportedOperationException(String.format("%s.%s is not indexed by the Hive. This operation can only be performed on indexed properties.",getRespresentedClass().getSimpleName(), propertyName));
   }
 
   public Integer getCount(Map<String, Object> properties) {
     throw new UnsupportedOperationException("Not yet implemented");
   }
 
-  public Integer getCountInRange(String propertyName, Object minValue, Object maxValue) {
-    throw new UnsupportedOperationException("Not yet implemented");
+  // TODO Test
+  public Integer getCountInRange(final String propertyName, final Object minValue, final Object maxValue) {
+    checkForHiveIndexedProperty(propertyName);
+
+    QueryCallback query = new QueryCallback(){
+      public Collection<Object> execute(Session session) {
+        Criteria c = session.createCriteria(config.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+        c.add(Restrictions.between(propertyName, minValue, maxValue));
+				c.setProjection( Projections.rowCount() );
+				return c.list();
+      }
+    };
+    
+    return (Integer) transactionHelper.querySingleInTransaction(query, factory.openSession());
   }
 
   public Class<T> getRespresentedClass() {
