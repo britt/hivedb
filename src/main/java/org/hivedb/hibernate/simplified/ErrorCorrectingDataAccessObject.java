@@ -6,7 +6,6 @@ import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
-import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.exception.ConstraintViolationException;
@@ -30,6 +29,7 @@ import java.util.Map;
  * correcting operations are marked as such.
  */
 
+// Todo Identify Extractions that can DRY up this code.
 // Todo queries
 // No HQL -- use Criteria
 // Drop primitive collection property query support
@@ -158,7 +158,6 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
     return (Collection<T>) transactionHelper.queryInTransaction(query, factory.openSession());
   }
 
-  //TODO test
   public Collection<T> findInRange(final String propertyName, final Object minValue, final Object maxValue, final Integer offSet, final Integer maxResultSetSize) {
     checkForHiveIndexedProperty(propertyName);
 
@@ -173,7 +172,7 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
         }
         c.setFirstResult(offSet);
         c.setMaxResults(maxResultSetSize);
-        c.addOrder(Order.asc(propertyName));
+//        c.addOrder(Order.asc(propertyName));
         return c.list();
       }
     };
@@ -189,14 +188,18 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
     throw new UnsupportedOperationException("Not yet implemented");
   }
 
-  // TODO Test
   public Integer getCountInRange(final String propertyName, final Object minValue, final Object maxValue) {
     checkForHiveIndexedProperty(propertyName);
 
     QueryCallback query = new QueryCallback(){
       public Collection<Object> execute(Session session) {
         Criteria c = session.createCriteria(config.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-        c.add(Restrictions.between(propertyName, minValue, maxValue));
+        if (ReflectionTools.isComplexCollectionItemProperty(getRespresentedClass(), propertyName)) {
+          c.createCriteria(propertyName)
+            .add(Restrictions.between("id", minValue, maxValue));
+        } else {
+          c.add(Restrictions.between(propertyName, minValue, maxValue));
+        }
 				c.setProjection( Projections.rowCount() );
 				return c.list();
       }

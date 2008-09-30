@@ -148,7 +148,7 @@ public class ErrorCorrectingDataAccessObjectRetrievalTest extends HiveTest {
   public void shouldThrowIfFindByRangeIsCalledOnAnUnindexedProperty() throws Exception {
     DataAccessObject<WeatherReport, Integer> dao = new ErrorCorrectingDataAccessObject<WeatherReport, Integer>(WeatherReport.class, getEntityHiveConfig().getEntityConfig(WeatherReport.class),getHive(), getSessionFactory());
     try {
-        dao.findInRange("longotude",2,5);
+        dao.findInRange("longitude",2,5);
         fail("No exception thrown");
     } catch (UnsupportedOperationException o ) {
         //pass
@@ -180,7 +180,101 @@ public class ErrorCorrectingDataAccessObjectRetrievalTest extends HiveTest {
     Integer count = dao.getCountInRange("regionCode",22,55);
     assertEquals(new Integer(0),count);
   }
-  
+
+  @Test
+  public void shouldCountPropertiesThatAreAssociatedObjects() throws Exception {
+    DataAccessObject<WeatherReport, Integer> dao = new ErrorCorrectingDataAccessObject<WeatherReport, Integer>(WeatherReport.class, getEntityHiveConfig().getEntityConfig(WeatherReport.class),getHive(), getSessionFactory());
+    for(int i=0; i<10; i++) {
+      WeatherReport report = WeatherReportImpl.generate();
+      report.setTemperature(i);
+      dao.save(report);
+      assertTrue(dao.exists(report.getReportId()));
+    }
+    Integer count = dao.getCountInRange("temperature",2,5);
+    assertEquals(new Integer(4), count);  
+  }
+
+  @Test
+  public void shouldCountPropertiesThatAreAssociatedCollections() throws Exception {
+    DataAccessObject<WeatherReport, Integer> dao = new ErrorCorrectingDataAccessObject<WeatherReport, Integer>(WeatherReport.class, getEntityHiveConfig().getEntityConfig(WeatherReport.class),getHive(), getSessionFactory());
+    for(int i=0; i<10; i++) {
+      WeatherReport report = WeatherReportImpl.generate();
+      WeatherEvent event = WeatherEventImpl.generate();
+      event.setEventId(i);
+      report.setWeatherEvents(Lists.newList(event));
+      dao.save(report);
+      assertTrue(dao.exists(report.getReportId()));
+    }
+    Integer count = dao.getCountInRange("weatherEvents",2,5);
+    assertEquals(new Integer(4), count);
+  }
+
+  @Test
+    public void shouldFindAllItemsInAPropertyRangePage() throws Exception {
+      DataAccessObject<WeatherReport, Integer> dao = new ErrorCorrectingDataAccessObject<WeatherReport, Integer>(WeatherReport.class, getEntityHiveConfig().getEntityConfig(WeatherReport.class),getHive(), getSessionFactory());
+      for(int i=0; i<10; i++) {
+        WeatherReport report = WeatherReportImpl.generate();
+        report.setRegionCode(i);
+        dao.save(report);
+        assertTrue(dao.exists(report.getReportId()));
+      }
+      Collection<WeatherReport> page1 = dao.findInRange("regionCode",2,5,0,2);
+      Collection<WeatherReport> page2 = dao.findInRange("regionCode",2,5,2,2);
+      assertEquals(2,Filter.grepUnique(page1).size());
+      assertEquals(2,Filter.grepUnique(page2).size());
+      for(WeatherReport report : page2) {
+        assertFalse(page1.contains(report));
+      }
+    }
+
+
+  @Test
+    public void shouldFindByRangePagedWithAssociatedObjectCollections() throws Exception {
+      DataAccessObject<WeatherReport, Integer> dao = new ErrorCorrectingDataAccessObject<WeatherReport, Integer>(WeatherReport.class, getEntityHiveConfig().getEntityConfig(WeatherReport.class),getHive(), getSessionFactory());
+      for(int i=0; i<10; i++) {
+        WeatherReport report = WeatherReportImpl.generate();
+        WeatherEvent event = WeatherEventImpl.generate();
+        event.setEventId(i);
+        report.setWeatherEvents(Lists.newList(event));
+        dao.save(report);
+        assertTrue(dao.exists(report.getReportId()));
+      }
+      Collection<WeatherReport> reports = dao.findInRange("weatherEvents",2,5,0,2);
+      assertEquals(2,Filter.grepUnique(reports).size());
+    }
+
+    @Test
+    public void shouldFindByRangePagedWithAssociatedObjects() throws Exception {
+      DataAccessObject<WeatherReport, Integer> dao = new ErrorCorrectingDataAccessObject<WeatherReport, Integer>(WeatherReport.class, getEntityHiveConfig().getEntityConfig(WeatherReport.class),getHive(), getSessionFactory());
+      for(int i=0; i<10; i++) {
+        WeatherReport report = WeatherReportImpl.generate();
+        report.setTemperature(i);
+        dao.save(report);
+        assertTrue(dao.exists(report.getReportId()));
+      }
+      Collection<WeatherReport> reports = dao.findInRange("temperature",2,5,2,2);
+      assertEquals(2,Filter.grepUnique(reports).size());
+    }
+
+    @Test
+    public void shouldReturnAnEmptyListIfFindByRangePagedReturnsNoResults() throws Exception {
+      DataAccessObject<WeatherReport, Integer> dao = new ErrorCorrectingDataAccessObject<WeatherReport, Integer>(WeatherReport.class, getEntityHiveConfig().getEntityConfig(WeatherReport.class),getHive(), getSessionFactory());
+      Collection<WeatherReport> reports = dao.findInRange("regionCode",2,5,1,1);
+      assertEquals(0,Filter.grepUnique(reports).size());
+    }
+
+    @Test
+    public void shouldThrowIfFindByRangePagedIsCalledOnAnUnindexedProperty() throws Exception {
+      DataAccessObject<WeatherReport, Integer> dao = new ErrorCorrectingDataAccessObject<WeatherReport, Integer>(WeatherReport.class, getEntityHiveConfig().getEntityConfig(WeatherReport.class),getHive(), getSessionFactory());
+      try {
+          dao.findInRange("longitude",2,5,1,4);
+          fail("No exception thrown");
+      } catch (UnsupportedOperationException o ) {
+          //pass
+      }
+    }
+
+
 //  @Test
 //  public void shouldPerformCriteriaQueries() throws Exception {
 //    DataAccessObject<WeatherReport, Integer> dao = new ErrorCorrectingDataAccessObject<WeatherReport, Integer>(WeatherReport.class, getEntityHiveConfig().getEntityConfig(WeatherReport.class),getHive(), getSessionFactory());
