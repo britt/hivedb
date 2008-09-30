@@ -2,9 +2,6 @@ package org.hivedb.hibernate.simplified;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.Criteria;
-import org.hibernate.Session;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hivedb.Lockable;
 import org.hivedb.hibernate.simplified.session.HiveSessionFactory;
@@ -113,7 +110,7 @@ public class ErrorCorrectingDataAccessObjectRetrievalTest extends HiveTest {
   }
   
   @Test
-  public void shouldFindByRangeWithAssociatedObjects() throws Exception {
+  public void shouldFindByRangeWithAssociatedObjectCollectionss() throws Exception {
     DataAccessObject<WeatherReport, Integer> dao = new ErrorCorrectingDataAccessObject<WeatherReport, Integer>(WeatherReport.class, getEntityHiveConfig().getEntityConfig(WeatherReport.class),getHive(), getSessionFactory());
     for(int i=0; i<10; i++) {
       WeatherReport report = WeatherReportImpl.generate();
@@ -124,6 +121,19 @@ public class ErrorCorrectingDataAccessObjectRetrievalTest extends HiveTest {
       assertTrue(dao.exists(report.getReportId()));
     }
     Collection<WeatherReport> reports = dao.findInRange("weatherEvents",2,5);
+    assertEquals(4,Filter.grepUnique(reports).size());
+  }
+
+  @Test
+  public void shouldFindByRangeWithAssociatedObjects() throws Exception {
+    DataAccessObject<WeatherReport, Integer> dao = new ErrorCorrectingDataAccessObject<WeatherReport, Integer>(WeatherReport.class, getEntityHiveConfig().getEntityConfig(WeatherReport.class),getHive(), getSessionFactory());
+    for(int i=0; i<10; i++) {
+      WeatherReport report = WeatherReportImpl.generate();
+      report.setTemperature(i);
+      dao.save(report);
+      assertTrue(dao.exists(report.getReportId()));
+    }
+    Collection<WeatherReport> reports = dao.findInRange("temperature",2,5);
     assertEquals(4,Filter.grepUnique(reports).size());
   }
     
@@ -143,30 +153,55 @@ public class ErrorCorrectingDataAccessObjectRetrievalTest extends HiveTest {
     } catch (UnsupportedOperationException o ) {
         //pass
     }
-    
   }
-  
+
   @Test
-  public void shouldPerformCriteriaQueries() throws Exception {
+  public void shouldCountResultsInARange() throws Exception {
     DataAccessObject<WeatherReport, Integer> dao = new ErrorCorrectingDataAccessObject<WeatherReport, Integer>(WeatherReport.class, getEntityHiveConfig().getEntityConfig(WeatherReport.class),getHive(), getSessionFactory());
     for(int i=0; i<10; i++) {
       WeatherReport report = WeatherReportImpl.generate();
-      WeatherEvent event = WeatherEventImpl.generate();
-      event.setEventId(i);
-      report.setWeatherEvents(Lists.newList(event));
       report.setRegionCode(i);
-      report.setSources(Lists.newList(i,i,i));
       dao.save(report);
       assertTrue(dao.exists(report.getReportId()));
     }
-    Session session = hiveSessionFactory.openSession();
-    Criteria regionCodeSearch = session.createCriteria(WeatherReport.class).add(Restrictions.between("regionCode", 2, 5));
-    assertEquals(4,regionCodeSearch.list().size());
-    Criteria eventSearch = session.createCriteria(WeatherReport.class).createCriteria("weatherEvents").add(Restrictions.between("eventId",2,5));
-    assertEquals(4,eventSearch.list().size());
-
-    session.close();
+    Integer count = dao.getCountInRange("regionCode",2,5);
+    assertEquals(new Integer(4),count);
   }
+
+  @Test
+  public void shouldReturnZeroIfNoRecordsExist() throws Exception {
+    DataAccessObject<WeatherReport, Integer> dao = new ErrorCorrectingDataAccessObject<WeatherReport, Integer>(WeatherReport.class, getEntityHiveConfig().getEntityConfig(WeatherReport.class),getHive(), getSessionFactory());
+    for(int i=0; i<10; i++) {
+      WeatherReport report = WeatherReportImpl.generate();
+      report.setRegionCode(i);
+      dao.save(report);
+      assertTrue(dao.exists(report.getReportId()));
+    }
+    Integer count = dao.getCountInRange("regionCode",22,55);
+    assertEquals(new Integer(0),count);
+  }
+  
+//  @Test
+//  public void shouldPerformCriteriaQueries() throws Exception {
+//    DataAccessObject<WeatherReport, Integer> dao = new ErrorCorrectingDataAccessObject<WeatherReport, Integer>(WeatherReport.class, getEntityHiveConfig().getEntityConfig(WeatherReport.class),getHive(), getSessionFactory());
+//    for(int i=0; i<10; i++) {
+//      WeatherReport report = WeatherReportImpl.generate();
+//      WeatherEvent event = WeatherEventImpl.generate();
+//      event.setEventId(i);
+//      report.setWeatherEvents(Lists.newList(event));
+//      report.setRegionCode(i);
+//      report.setSources(Lists.newList(i,i,i));
+//      dao.save(report);
+//      assertTrue(dao.exists(report.getReportId()));
+//    }
+//    Session session = hiveSessionFactory.openSession();
+//    Criteria regionCodeSearch = session.createCriteria(WeatherReport.class).add(Restrictions.between("regionCode", 2, 5));
+//    assertEquals(4,regionCodeSearch.list().size());
+//    Criteria eventSearch = session.createCriteria(WeatherReport.class).createCriteria("weatherEvents").add(Restrictions.between("eventId",2,5));
+//    assertEquals(4,eventSearch.list().size());
+//
+//    session.close();
+//  }
 
   private HiveSessionFactory getSessionFactory() {
     if(hiveSessionFactory==null)

@@ -16,6 +16,7 @@ import org.hivedb.configuration.EntityConfig;
 import org.hivedb.hibernate.QueryCallback;
 import org.hivedb.hibernate.SessionCallback;
 import org.hivedb.hibernate.simplified.session.HiveSessionFactory;
+import org.hivedb.util.classgen.ReflectionTools;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -30,7 +31,7 @@ import java.util.Map;
  */
 
 // Todo queries
-// No HQL -- user Criteria
+// No HQL -- use Criteria
 // Drop primitive collection property query support
 public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> implements DataAccessObject<T, ID> {
   private final static Log log = LogFactory.getLog(ErrorCorrectingDataAccessObject.class);
@@ -139,14 +140,18 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
     throw new UnsupportedOperationException("Not yet implemented");
   }
 
-  // TODO Fix associated entity queries
   public Collection<T> findInRange(final String propertyName, final Object minValue, final Object maxValue) {
     checkForHiveIndexedProperty(propertyName);
 
     QueryCallback query = new QueryCallback(){
       public Collection<Object> execute(Session session) {
         Criteria c = session.createCriteria(getRespresentedClass());
-        c.add(Restrictions.between(propertyName, minValue, maxValue));
+        if(ReflectionTools.isComplexCollectionItemProperty(getRespresentedClass(), propertyName)){
+          c.createCriteria(propertyName)
+					.add(  Restrictions.between("id", minValue, maxValue));
+        } else {
+          c.add(Restrictions.between(propertyName, minValue, maxValue));                                  
+        }
         return c.list();
       }
     };
@@ -157,13 +162,18 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
   public Collection<T> findInRange(final String propertyName, final Object minValue, final Object maxValue, final Integer offSet, final Integer maxResultSetSize) {
     checkForHiveIndexedProperty(propertyName);
 
-    QueryCallback query = new QueryCallback(){
+    QueryCallback query = new QueryCallback() {
       public Collection<Object> execute(Session session) {
         Criteria c = session.createCriteria(getRespresentedClass());
-        c.add(Restrictions.between(propertyName, minValue, maxValue));
+        if (ReflectionTools.isComplexCollectionItemProperty(getRespresentedClass(), propertyName)) {
+          c.createCriteria(propertyName)
+            .add(Restrictions.between("id", minValue, maxValue));
+        } else {
+          c.add(Restrictions.between(propertyName, minValue, maxValue));
+        }
         c.setFirstResult(offSet);
-				c.setMaxResults(maxResultSetSize);
-				c.addOrder(Order.asc(propertyName));
+        c.setMaxResults(maxResultSetSize);
+        c.addOrder(Order.asc(propertyName));
         return c.list();
       }
     };
