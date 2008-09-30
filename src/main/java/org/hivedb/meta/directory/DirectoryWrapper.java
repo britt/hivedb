@@ -1,23 +1,17 @@
 package org.hivedb.meta.directory;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import javax.sql.DataSource;
-
 import org.hivedb.*;
 import org.hivedb.Lockable.Status;
-import org.hivedb.meta.Assigner;
-import org.hivedb.meta.KeySemaphore;
-import org.hivedb.meta.Node;
-import org.hivedb.meta.PartitionDimension;
-import org.hivedb.meta.Resource;
-import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.meta.*;
 import org.hivedb.util.HiveUtils;
 import org.hivedb.util.Lists;
 import org.hivedb.util.Preconditions;
 import org.hivedb.util.functional.*;
+
+import javax.sql.DataSource;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class DirectoryWrapper implements DirectoryFacade {
 	private Directory directory;

@@ -26,7 +26,7 @@ Add HiveDB as a dependency.
 <dependency>
 	<groupId>org.hivedb</groupId>
 	<artifactId>hivedb</artifactId>
-	<version>0.9.3</version>
+	<version>0.9.6-SNAPSHOT</version>
 </dependency>
 
 
