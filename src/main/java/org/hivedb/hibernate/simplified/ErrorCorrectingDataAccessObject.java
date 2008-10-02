@@ -14,6 +14,8 @@ import org.hivedb.HiveLockableException;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.hibernate.QueryCallback;
 import org.hivedb.hibernate.SessionCallback;
+import org.hivedb.hibernate.simplified.session.HiveCriteria;
+import org.hivedb.hibernate.simplified.session.HiveCriteriaImpl;
 import org.hivedb.hibernate.simplified.session.HiveSessionFactory;
 import org.hivedb.util.classgen.ReflectionTools;
 
@@ -145,10 +147,9 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
 
     QueryCallback query = new QueryCallback(){
       public Collection<Object> execute(Session session) {
-        Criteria c = session.createCriteria(getRespresentedClass());
+        HiveCriteria c = new HiveCriteriaImpl(session.createCriteria(getRespresentedClass()), getRespresentedClass());
         if(ReflectionTools.isComplexCollectionItemProperty(getRespresentedClass(), propertyName)){
-          c.createCriteria(propertyName)
-					.add(  Restrictions.between("id", minValue, maxValue));
+          c.createCriteria(propertyName).add(  Restrictions.between("id", minValue, maxValue));
         } else {
           c.add(Restrictions.between(propertyName, minValue, maxValue));                                  
         }
@@ -163,7 +164,7 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
 
     QueryCallback query = new QueryCallback() {
       public Collection<Object> execute(Session session) {
-        Criteria c = session.createCriteria(getRespresentedClass());
+        HiveCriteria c = new HiveCriteriaImpl(session.createCriteria(getRespresentedClass()), getRespresentedClass());
         if (ReflectionTools.isComplexCollectionItemProperty(getRespresentedClass(), propertyName)) {
           c.createCriteria(propertyName)
             .add(Restrictions.between("id", minValue, maxValue));
@@ -172,7 +173,6 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
         }
         c.setFirstResult(offSet);
         c.setMaxResults(maxResultSetSize);
-//        c.addOrder(Order.asc(propertyName));
         return c.list();
       }
     };
@@ -193,7 +193,7 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
 
     QueryCallback query = new QueryCallback(){
       public Collection<Object> execute(Session session) {
-        Criteria c = session.createCriteria(config.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+        HiveCriteria c = new HiveCriteriaImpl(session.createCriteria(config.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY), getRespresentedClass());
         if (ReflectionTools.isComplexCollectionItemProperty(getRespresentedClass(), propertyName)) {
           c.createCriteria(propertyName)
             .add(Restrictions.between("id", minValue, maxValue));

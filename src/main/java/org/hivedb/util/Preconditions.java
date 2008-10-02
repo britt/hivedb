@@ -1,13 +1,13 @@
 package org.hivedb.util;
 
-import java.util.Collection;
-
 import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.HiveLockableException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.Lockable;
 import org.hivedb.meta.IdAndNameIdentifiable;
 import org.hivedb.meta.Identifiable;
+
+import java.util.Collection;
 
 public class Preconditions {
 	
@@ -51,4 +51,9 @@ public class Preconditions {
 		if(c == null || c.size() == 0)
 			throw new HiveKeyNotFoundException(message);
 	}
+
+  public static void isNotNull(Object... objects) {
+    for(Object o : objects)
+      if(o == null) {throw new HiveRuntimeException("Precondition violated an object was null.");}
+  }
 }

@@ -124,7 +124,7 @@ public class DirectoryWrapper implements DirectoryFacade {
 		return directory.getResourceIdsOfPrimaryIndexKey(getResource(resource), primaryIndexKey);
 	}
 
-	public void insertPrimaryIndexKey(Object primaryIndexKey) throws HiveLockableException {
+	public Integer insertPrimaryIndexKey(Object primaryIndexKey) throws HiveLockableException {
     Collection<Node> writableNodes = Filter.grep(new Predicate<Node>(){
       public boolean f(Node item) {
         return item.getStatus() == Lockable.Status.writable;
@@ -133,6 +133,7 @@ public class DirectoryWrapper implements DirectoryFacade {
     Node node = assigner.chooseNode(writableNodes, primaryIndexKey);
 		Preconditions.isWritable(hive, node);
 		directory.insertPrimaryIndexKey(node, primaryIndexKey);
+    return node.getId();
 	}
 
 	public void insertResourceId(String resource, Object id, Object primaryIndexKey) throws HiveLockableException {
