@@ -3,6 +3,7 @@ package org.hivedb.meta.directory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hivedb.Hive;
+import org.hivedb.meta.KeySemaphore;
 import org.hivedb.util.Lists;
 import org.hivedb.util.cache.Cache;
 import org.jmock.Expectations;
@@ -121,7 +122,6 @@ public class CachingDirectoryFacadeTest {
       });
     }
 
-
   @Test
   public void doesPrimaryIndexKeyExistShouldReturnTrueIfKeyInCache() throws Exception {
     final Object primaryKey = new Object();
@@ -130,17 +130,6 @@ public class CachingDirectoryFacadeTest {
     mockThatPrimaryKeyExistsInCache(primaryKey, true);
 
     assertTrue("key should exist", facade.doesPrimaryIndexKeyExist(primaryKey));
-  }
-
-  private void mockThatPrimaryKeyExistsInCache(final Object primaryKey, final boolean exists) {
-    mockery.checking(new Expectations() {
-      {
-        one(keyBuilder).build(with(same(CacheKeyBuilder.Mode.key)), with(anything()));
-        will(returnValue(cacheKey));
-        one(cache).exists(cacheKey);
-        will(returnValue(exists));
-      }
-    });
   }
 
   @Test
@@ -165,15 +154,6 @@ public class CachingDirectoryFacadeTest {
     assertTrue("key should exist", facade.doesPrimaryIndexKeyExist(primaryKey));
   }
 
-  private void mockPrimaryIndexKeyExistsInDelegate(final Object primaryKey, final boolean exists) {
-    mockery.checking(new Expectations() {
-      {
-        one(delegate).doesPrimaryIndexKeyExist(primaryKey);
-        will(returnValue(exists));
-      }
-    });
-  }
-
   @Test
   public void doesPrimaryIndexKeyExistShouldDelegateIfCacheException() throws Exception {
     final Object primaryKey = new Object();
@@ -186,6 +166,165 @@ public class CachingDirectoryFacadeTest {
     assertTrue("key should exist", facade.doesPrimaryIndexKeyExist(primaryKey));
   }
 
+  @Test
+  public void getNodeIdsOfPrimaryIndexKeyshouldDelegateIfCacheThrowsExceptionOnRead() throws Exception {
+    final Object primaryKey = new Object();
+    final Collection<Integer> expected = Lists.newArrayList();
+    CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
+
+    mockThatPrimaryIndexKeyCacheReadThrowsException(primaryKey, cacheKey, CacheKeyBuilder.Mode.key);
+    mockThatGetNodeIdsOfPrimaryIndexKeyReturnsValue(primaryKey, expected);
+    mockThatKeyIsPutIntoCache(cacheKey, expected);
+
+    Collection<Integer> actual = facade.getNodeIdsOfPrimaryIndexKey(primaryKey);
+    assertSame("return value not from cache", expected, actual);
+  }
+
+  @Test
+  public void getNodeIdsOfPrimaryIndexKeyshouldStillReturnIfCacheWriteFails() throws Exception {
+    final Object primaryKey = new Object();
+    final Collection<Integer> expected = Lists.newArrayList();
+    CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
+
+    mockThatPrimaryIndexKeyIsNotFoundInCache(primaryKey, CacheKeyBuilder.Mode.key);
+    mockThatGetNodeIdsOfPrimaryIndexKeyReturnsValue(primaryKey, expected);
+    mockThatCacheWriteThrowsException(cacheKey);
+
+    Collection<Integer> actual = facade.getNodeIdsOfPrimaryIndexKey(primaryKey);
+    assertSame("return value not from cache", expected, actual);
+  }
+
+  @Test
+  public void getNodeIdsOfPrimaryIndexKeyshouldNotDelegateIfFoundInCache() throws Exception {
+    final Object primaryKey = new Object();
+    final Collection<Integer> expected = Lists.newArrayList();
+    CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
+
+    mockThatPrimaryIndexKeyIsFoundInCache(primaryKey, expected, CacheKeyBuilder.Mode.key);
+
+    Collection<Integer> actual = facade.getNodeIdsOfPrimaryIndexKey(primaryKey);
+    assertSame("return value not from cache", expected, actual);
+  }
+
+  @Test
+  public void getNodeIdsOfPrimaryIndexKeyshouldDelegateIfNotFoundInCache() throws Exception {
+    final Object primaryKey = new Object();
+    final Collection<Integer> expected = Lists.newArrayList();
+
+    mockThatPrimaryIndexKeyIsNotFoundInCache(primaryKey, CacheKeyBuilder.Mode.key);
+    mockThatGetNodeIdsOfPrimaryIndexKeyReturnsValue(primaryKey, expected);
+    mockThatKeyIsPutIntoCache(cacheKey, expected);
+
+    CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
+    Collection<Integer> actual = facade.getNodeIdsOfPrimaryIndexKey(primaryKey);
+    assertSame("return value not from delegate", expected, actual);
+  }
+
+  @Test
+  public void getKeySemaphoresOfPrimaryIndexKeyshouldDelegateIfCacheThrowsExceptionOnRead() throws Exception {
+    final Object primaryKey = new Object();
+    final Collection<KeySemaphore> expected = Lists.newArrayList();
+    CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
+
+    mockThatPrimaryIndexKeyCacheReadThrowsException(primaryKey, cacheKey, CacheKeyBuilder.Mode.semaphore);
+    mockThatGetKeySemaphoresOfPrimaryIndexKeyReturnsValue(primaryKey, expected);
+    mockThatKeyIsPutIntoCache(cacheKey, expected);
+
+    Collection<KeySemaphore> actual = facade.getKeySemamphoresOfPrimaryIndexKey(primaryKey);
+    assertSame("return value not from cache", expected, actual);
+  }
+
+  @Test
+  public void getKeySemaphoresOfPrimaryIndexKeyshouldStillReturnIfCacheWriteFails() throws Exception {
+    final Object primaryKey = new Object();
+    final Collection<KeySemaphore> expected = Lists.newArrayList();
+    CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
+
+    mockThatPrimaryIndexKeyIsNotFoundInCache(primaryKey, CacheKeyBuilder.Mode.semaphore);
+    mockThatGetKeySemaphoresOfPrimaryIndexKeyReturnsValue(primaryKey, expected);
+    mockThatCacheWriteThrowsException(cacheKey);
+
+    Collection<KeySemaphore> actual = facade.getKeySemamphoresOfPrimaryIndexKey(primaryKey);
+    assertSame("return value not from cache", expected, actual);
+  }
+
+  @Test
+  public void geKeySemaphoresOfPrimaryIndexKeyshouldNotDelegateIfFoundInCache() throws Exception {
+    final Object primaryKey = new Object();
+    final Collection<KeySemaphore> expected = Lists.newArrayList();
+    CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
+
+    mockThatKeySemaphoreOfPrimaryIndexKeyIsFoundInCache(primaryKey, expected);
+
+    Collection<KeySemaphore> actual = facade.getKeySemamphoresOfPrimaryIndexKey(primaryKey);
+    assertSame("return value not from cache", expected, actual);
+  }
+
+  private void mockThatKeySemaphoreOfPrimaryIndexKeyIsFoundInCache(final Object primaryKey, final Collection<KeySemaphore> expected) {
+    mockery.checking(new Expectations() {
+      {
+        one(keyBuilder).build(CacheKeyBuilder.Mode.semaphore, primaryKey);
+        will(returnValue(cacheKey));
+        one(cache).get(cacheKey);
+        will(returnValue(expected));
+      }
+    });
+  }
+
+  @Test
+  public void getKeySemaphoresOfPrimaryIndexKeyshouldDelegateIfNotFoundInCache() throws Exception {
+    final Object primaryKey = new Object();
+    final Collection<KeySemaphore> expected = Lists.newArrayList();
+
+    mockThatPrimaryIndexKeyIsNotFoundInCache(primaryKey, CacheKeyBuilder.Mode.semaphore);
+    mockThatGetKeySemaphoresOfPrimaryIndexKeyReturnsValue(primaryKey, expected);
+    mockThatKeyIsPutIntoCache(cacheKey, expected);
+
+    CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
+    Collection<KeySemaphore> actual = facade.getKeySemamphoresOfPrimaryIndexKey(primaryKey);
+    assertSame("return value not from delegate", expected, actual);
+  }
+
+  private void mockThatGetKeySemaphoresOfPrimaryIndexKeyReturnsValue(final Object primaryKey, final Collection<KeySemaphore> expected) {
+     mockery.checking(new Expectations() {
+      {
+        one(delegate).getKeySemamphoresOfPrimaryIndexKey(primaryKey);
+        will(returnValue(expected));
+      }
+    });
+  }
+
+  private void mockPrimaryIndexKeyExistsInDelegate(final Object primaryKey, final boolean exists) {
+    mockery.checking(new Expectations() {
+      {
+        one(delegate).doesPrimaryIndexKeyExist(primaryKey);
+        will(returnValue(exists));
+      }
+    });
+  }
+
+  private void mockThatPrimaryKeyExistsInCache(final Object primaryKey, final boolean exists) {
+    mockery.checking(new Expectations() {
+      {
+        one(keyBuilder).build(with(same(CacheKeyBuilder.Mode.key)), with(anything()));
+        will(returnValue(cacheKey));
+        one(cache).exists(cacheKey);
+        will(returnValue(exists));
+      }
+    });
+  }
+
+  private void mockThatPrimaryIndexKeyCacheReadThrowsException(final Object primaryKey, final Object cacheKey, final CacheKeyBuilder.Mode mode) {
+    mockery.checking(new Expectations() {
+      {
+        one(keyBuilder).build(mode, primaryKey);
+        will(returnValue(cacheKey));
+        one(cache).get(cacheKey);
+        will(throwException(new RuntimeException()));
+      }
+    });
+  }
+  
   private void mockThatCacheKeyExistsForPrimaryIndexKeyThrowsException(final Object primaryKey) {
     mockery.checking(new Expectations() {
       {
@@ -197,45 +336,6 @@ public class CachingDirectoryFacadeTest {
     });
   }
 
-  @Test
-  public void getNodeIdsOfPrimaryIndexKeyshouldDelegateIfCacheThrowsExceptionOnRead() throws Exception {
-    final Object primaryKey = new Object();
-    final Collection<Integer> expected = Lists.newArrayList();
-    CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
-
-    mockThatCacheReadThrowsException(primaryKey, cacheKey);
-    mockThatDelegateReturnsValue(primaryKey, expected);
-    mockThatKeyIsPutIntoCache(cacheKey, expected);
-
-    Collection<Integer> actual = facade.getNodeIdsOfPrimaryIndexKey(primaryKey);
-    assertSame("return value not from cache", expected, actual);
-  }
-
-  private void mockThatCacheReadThrowsException(final Object primaryKey, final Object cacheKey) {
-    mockery.checking(new Expectations() {
-      {
-        one(keyBuilder).build(CacheKeyBuilder.Mode.key, primaryKey);
-        will(returnValue(cacheKey));
-        one(cache).get(cacheKey);
-        will(throwException(new RuntimeException()));
-      }
-    });
-  }
-
-  @Test
-  public void getNodeIdsOfPrimaryIndexKeyshouldStillReturnIfCacheWriteFails() throws Exception {
-    final Object primaryKey = new Object();
-    final Collection<Integer> expected = Lists.newArrayList();
-    CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
-
-    mockThatKeyIsNotFoundInCache(primaryKey);
-    mockThatDelegateReturnsValue(primaryKey, expected);
-    mockThatCacheWriteThrowsException(cacheKey);
-
-    Collection<Integer> actual = facade.getNodeIdsOfPrimaryIndexKey(primaryKey);
-    assertSame("return value not from cache", expected, actual);
-  }
-
   private void mockThatCacheWriteThrowsException(final String cacheKey) {
     mockery.checking(new Expectations() {
       {
@@ -245,33 +345,7 @@ public class CachingDirectoryFacadeTest {
     });
   }
 
-  @Test
-  public void getNodeIdsOfPrimaryIndexKeyshouldNotDelegateIfFoundInCache() throws Exception {
-    final Object primaryKey = new Object();
-    final Collection<Integer> expected = Lists.newArrayList();
-    CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
-
-    mockThatKeyIsFoundInCache(primaryKey, expected);
-
-    Collection<Integer> actual = facade.getNodeIdsOfPrimaryIndexKey(primaryKey);
-    assertSame("return value not from cache", expected, actual);
-  }
-
-  @Test
-  public void getNodeIdsOfPrimaryIndexKeyshouldDelegateIfNotFoundInCache() throws Exception {
-    final Object primaryKey = new Object();
-    final Collection<Integer> expected = Lists.newArrayList();
-
-    mockThatKeyIsNotFoundInCache(primaryKey);
-    mockThatDelegateReturnsValue(primaryKey, expected);
-    mockThatKeyIsPutIntoCache(cacheKey, expected);
-
-    CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
-    Collection<Integer> actual = facade.getNodeIdsOfPrimaryIndexKey(primaryKey);
-    assertSame("return value not from delegate", expected, actual);
-  }
-
-  private void mockThatDelegateReturnsValue(final Object primaryKey, final Collection<Integer> expected) {
+  private void mockThatGetNodeIdsOfPrimaryIndexKeyReturnsValue(final Object primaryKey, final Collection<Integer> expected) {
     mockery.checking(new Expectations() {
       {
         one(delegate).getNodeIdsOfPrimaryIndexKey(primaryKey);
@@ -280,10 +354,10 @@ public class CachingDirectoryFacadeTest {
     });
   }
 
-  private void mockThatKeyIsFoundInCache(final Object primaryKey, final Collection<Integer> expected) {
+  private void mockThatPrimaryIndexKeyIsFoundInCache(final Object primaryKey, final Collection<Integer> expected, final CacheKeyBuilder.Mode mode) {
     mockery.checking(new Expectations() {
       {
-        one(keyBuilder).build(CacheKeyBuilder.Mode.key, primaryKey);
+        one(keyBuilder).build(mode, primaryKey);
         will(returnValue(cacheKey));
         one(cache).get(cacheKey);
         will(returnValue(expected));
@@ -291,7 +365,7 @@ public class CachingDirectoryFacadeTest {
     });
   }
 
-  private void mockThatKeyIsPutIntoCache(final String cacheKey, final Collection<Integer> value) {
+  private void mockThatKeyIsPutIntoCache(final String cacheKey, final Object value) {
     mockery.checking(new Expectations() {
       {
         one(cache).put(cacheKey, value);
@@ -299,7 +373,7 @@ public class CachingDirectoryFacadeTest {
     });
   }
 
-  private void mockThatKeyIsNotFoundInCache(final Object primaryKey) {
-    mockThatKeyIsFoundInCache(primaryKey, null);
+  private void mockThatPrimaryIndexKeyIsNotFoundInCache(final Object primaryKey, CacheKeyBuilder.Mode mode) {
+    mockThatPrimaryIndexKeyIsFoundInCache(primaryKey, null, mode);
   }
 }
