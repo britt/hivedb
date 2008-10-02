@@ -184,12 +184,22 @@ public class CachingDirectoryFacade implements DirectoryFacade {
     });
   }
 
-  public Collection<Integer> getNodeIdsOfResourceId(String resource, Object id) {
-    return delegate.getNodeIdsOfResourceId(resource, id);
+  public Collection<Integer> getNodeIdsOfResourceId(final String resource, final Object id) {
+    String cacheKey = cacheKeyBuilder.build(CacheKeyBuilder.Mode.key, resource, id);
+    return readAndCache(cacheKey, new Delay<Collection<Integer>>(){
+      public Collection<Integer> f() {
+        return delegate.getNodeIdsOfResourceId(resource, id);
+      }
+    });
   }
 
-  public Collection<KeySemaphore> getKeySemaphoresOfResourceId(String resource, Object resourceId) {
-    return delegate.getKeySemaphoresOfResourceId(resource, resourceId);
+  public Collection<KeySemaphore> getKeySemaphoresOfResourceId(final String resource, final Object resourceId) {
+    String cacheKey = cacheKeyBuilder.build(CacheKeyBuilder.Mode.semaphore, resource, resourceId);
+    return readAndCache(cacheKey, new Delay<Collection<KeySemaphore>>(){
+      public Collection<KeySemaphore> f() {
+        return delegate.getKeySemaphoresOfResourceId(resource, resourceId);        
+      }
+    });
   }
 
   public boolean getReadOnlyOfResourceId(String resource, Object id) {

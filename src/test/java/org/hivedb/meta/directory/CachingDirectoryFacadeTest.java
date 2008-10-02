@@ -18,6 +18,7 @@ import org.junit.runner.RunWith;
 
 import java.util.Collection;
 
+// TODO check assertion messages
 @RunWith(JMock.class)
 public class CachingDirectoryFacadeTest {
   private final static Log log = LogFactory.getLog(CachingDirectoryFacadeTest.class);
@@ -89,6 +90,168 @@ public class CachingDirectoryFacadeTest {
     mockResourceIdExistsInDelegate(resource, resourceId, true);
 
     assertTrue("key should exist", facade.doesResourceIdExist(resource, resourceId));
+  }
+
+  @Test
+  public void getNodeIdsOfResourceIdShouldDelegateIfCacheReadThrwosAnException() throws Exception {
+    final String resource = "resource";
+    final Object resourceId = new Object();
+    final Collection<Integer> expected = Lists.newArrayList();
+    CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
+
+    mockThatResourceIdCacheReadThrowsException(resource, resourceId, cacheKey, CacheKeyBuilder.Mode.key);
+    mockThatGetNodeIdsOfResourceIdReturnsValue(resource, resourceId, expected);
+    mockThatKeyIsPutIntoCache(cacheKey, expected);
+   
+    assertSame("return value not from cache", expected, facade.getNodeIdsOfResourceId(resource, resourceId));
+  }
+
+  private void mockThatGetNodeIdsOfResourceIdReturnsValue(final String resource, final Object resourceId, final Collection<Integer> expected) {
+    mockery.checking(new Expectations() {
+      {
+        one(delegate).getNodeIdsOfResourceId(resource, resourceId);
+        will(returnValue(expected));
+      }
+    });
+  }
+
+  private void mockThatGetKeySemaphoresOfResourceIdReturnsValue(final String resource, final Object resourceId, final Collection<KeySemaphore> expected) {
+    mockery.checking(new Expectations() {
+      {
+        one(delegate).getKeySemaphoresOfResourceId(resource, resourceId);
+        will(returnValue(expected));
+      }
+    });
+  }
+
+  @Test
+  public void getNodeIdsOfResourceIdShouldStillReturnIfCacheWriteFails() throws Exception {
+    final String resource = "resource";
+    final Object resourceId = new Object();
+    final Collection<Integer> expected = Lists.newArrayList();
+    CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
+
+    mockResourceIdIsNotFoundInCache(resource, resourceId, expected, CacheKeyBuilder.Mode.key);
+    mockThatGetNodeIdsOfResourceIdReturnsValue(resource, resourceId, expected);
+    mockThatCacheWriteThrowsException(cacheKey);
+
+    assertSame("return value not from cache", expected, facade.getNodeIdsOfResourceId(resource, resourceId));
+  }
+
+  private void mockResourceIdIsNotFoundInCache(final String resource, final Object resourceId, final Collection expected, final CacheKeyBuilder.Mode mode) {
+    mockery.checking(new Expectations() {
+      {
+        one(keyBuilder).build(mode, resource, resourceId);
+        will(returnValue(cacheKey));
+        one(cache).get(cacheKey);
+        will(returnValue(null));
+      }
+    });
+  }
+
+  private void mockResourceIdIsFoundInCache(final String resource, final Object resourceId, final Collection expected, final CacheKeyBuilder.Mode mode) {
+    mockery.checking(new Expectations() {
+      {
+        one(keyBuilder).build(mode, resource, resourceId);
+        will(returnValue(cacheKey));
+        one(cache).get(cacheKey);
+        will(returnValue(expected));
+      }
+    });
+  }
+
+  @Test
+  public void getNodeIdsOfResourceIdShouldNotDelegateIfExistsInCache() throws Exception {
+    final String resource = "resource";
+    final Object resourceId = new Object();
+    final Collection<Integer> expected = Lists.newArrayList();
+    CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
+
+    mockResourceIdIsFoundInCache(resource, resourceId, expected, CacheKeyBuilder.Mode.key);
+
+    Collection<Integer> actual = facade.getNodeIdsOfResourceId(resource, resourceId);
+    assertSame("return value not from cache", expected, actual);
+  }
+
+  @Test
+  public void getNodeIdsOfResourceIdShouldDelegateIfDoesNotExistInCache() throws Exception {
+    final String resource = "resource";
+    final Object resourceId = new Object();
+    final Collection<Integer> expected = Lists.newArrayList();
+    CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
+
+    mockResourceIdIsNotFoundInCache(resource, resourceId, expected, CacheKeyBuilder.Mode.key);
+    mockThatGetNodeIdsOfResourceIdReturnsValue(resource, resourceId, expected);
+    mockThatKeyIsPutIntoCache(cacheKey, expected);
+    
+    assertSame("return value not from cache", expected, facade.getNodeIdsOfResourceId(resource, resourceId));
+  }
+
+
+
+  @Test
+  public void getKeySemaphoresOfResourceIdShouldDelegateIfCacheReadThrwosAnException() throws Exception {
+    final String resource = "resource";
+    final Object resourceId = new Object();
+    final Collection<KeySemaphore> expected = Lists.newArrayList();
+    CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
+
+    mockThatResourceIdCacheReadThrowsException(resource, resourceId, cacheKey, CacheKeyBuilder.Mode.semaphore);
+    mockThatGetKeySemaphoresOfResourceIdReturnsValue(resource, resourceId, expected);
+    mockThatKeyIsPutIntoCache(cacheKey, expected);
+
+    assertSame("return value not from delegate", expected, facade.getKeySemaphoresOfResourceId(resource, resourceId));
+  }
+
+  @Test
+  public void getKeySemaphoresOfResourceIdShouldStillReturnIfCacheWriteFails() throws Exception {
+    final String resource = "resource";
+    final Object resourceId = new Object();
+    final Collection<KeySemaphore> expected = Lists.newArrayList();
+    CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
+
+    mockResourceIdIsNotFoundInCache(resource, resourceId, expected, CacheKeyBuilder.Mode.semaphore);
+    mockThatGetKeySemaphoresOfResourceIdReturnsValue(resource, resourceId, expected);
+    mockThatCacheWriteThrowsException(cacheKey);
+
+    assertSame("return value not from delegate", expected, facade.getKeySemaphoresOfResourceId(resource, resourceId));
+  }
+
+  @Test
+  public void getKeySemaphoresOfResourceIdShouldNotDelegateIfExistsInCache() throws Exception {
+    final String resource = "resource";
+    final Object resourceId = new Object();
+    final Collection<KeySemaphore> expected = Lists.newArrayList();
+    CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
+
+    mockResourceIdIsFoundInCache(resource, resourceId, expected, CacheKeyBuilder.Mode.semaphore);
+
+    assertSame("return value not from cache", expected, facade.getKeySemaphoresOfResourceId(resource, resourceId));
+  }
+
+  @Test
+  public void getKeySemaphoresOfResourceIdShouldDelegateIfDoesNotExistInCache() throws Exception {
+    final String resource = "resource";
+    final Object resourceId = new Object();
+    final Collection<KeySemaphore> expected = Lists.newArrayList();
+    CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
+
+    mockResourceIdIsNotFoundInCache(resource, resourceId, expected, CacheKeyBuilder.Mode.semaphore);
+    mockThatGetKeySemaphoresOfResourceIdReturnsValue(resource, resourceId, expected);
+    mockThatKeyIsPutIntoCache(cacheKey, expected);
+    
+    assertSame("return value not from delegate", expected, facade.getKeySemaphoresOfResourceId(resource, resourceId));
+  }
+
+  private void mockThatResourceIdCacheReadThrowsException(final String reosurce, final Object resourceId, final Object cacheKey, final CacheKeyBuilder.Mode mode) {
+    mockery.checking(new Expectations() {
+      {
+        one(keyBuilder).build(mode, reosurce, resourceId);
+        will(returnValue(cacheKey));
+        one(cache).get(cacheKey);
+        will(throwException(new RuntimeException()));
+      }
+    });
   }
 
   private void mockThatResourceKeyExistsInCache(final String resource, final Object resourceId, final boolean exists) {
