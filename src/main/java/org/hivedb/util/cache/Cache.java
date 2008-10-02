@@ -11,7 +11,7 @@ public interface Cache<K, V> {
 
   void put(K key, V value);
 
-  boolean exists(K cacheKey);
+  boolean exists(K key);
 
   void remove(K key);
 }
