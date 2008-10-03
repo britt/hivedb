@@ -2,6 +2,7 @@ package org.hivedb.util.cache;
 
 import com.danga.MemCached.ErrorHandler;
 import com.danga.MemCached.MemCachedClient;
+import com.danga.MemCached.SockIOPool;
 import org.apache.log4j.Logger;
 
 import java.util.Map;
@@ -9,10 +10,11 @@ import java.util.Map;
 /**
  * Very "dumb" {@link org.hivedb.util.cache.Cache} implementation backed by memcached.
  * <p/>
- * It is entierly this cache client's responsibility to deal with any exceptions thrown by memcached.
+ * It is entirely the cache client's responsibility to deal with any exceptions thrown by memcached.
  * <p/>
  * Cache entries have no expiration. It is also the client's responsibility to properly configure the
- * {@link com.danga.MemCached.SockIOPool}. See memcached javadocs for more information.
+ * {@link com.danga.MemCached.SockIOPool}, including calling {@link com.danga.MemCached.SockIOPool#initialize()}.
+ * See memcached javadocs for more information.
  *
  * @author Dave Peckham <dpeckham@cafepress.com>
  */
@@ -22,11 +24,18 @@ public class MemcachedCache implements Cache<String, Object> {
   private MemCachedClient client;
 
   public MemcachedCache() {
-    this.client = new MemCachedClient();
+    this(new MemCachedClient(), SockIOPool.getInstance());
   }
 
   public MemcachedCache(String poolName) {
-    this.client = new MemCachedClient(poolName);
+    this(new MemCachedClient(poolName), SockIOPool.getInstance(poolName));
+  }
+
+  public MemcachedCache(MemCachedClient client, SockIOPool pool) {
+    if (!pool.isInitialized()) {
+      throw new IllegalStateException("SockIOPool must be initialized prior to creating a cache.");
+    }
+    this.client = client;
   }
 
   public Object get(String key) {
