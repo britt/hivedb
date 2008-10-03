@@ -197,6 +197,7 @@ public class CachingDirectoryFacade implements DirectoryFacade {
     String cacheKey = cacheKeyBuilder.build(CacheKeyBuilder.Mode.semaphore, resource, resourceId);
     return readAndCache(cacheKey, new Delay<Collection<KeySemaphore>>(){
       public Collection<KeySemaphore> f() {
+        delegate.getPrimaryIndexKeyOfResourceId(resource, resourceId);
         return delegate.getKeySemaphoresOfResourceId(resource, resourceId);        
       }
     });
