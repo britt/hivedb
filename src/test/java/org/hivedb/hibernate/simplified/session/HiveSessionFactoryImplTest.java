@@ -8,7 +8,9 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hivedb.Hive;
 import org.hivedb.hibernate.RecordNodeOpenSessionEvent;
+import org.hivedb.meta.Assigner;
 import org.hivedb.meta.Node;
+import org.hivedb.meta.persistence.HiveDataSourceProvider;
 import org.hivedb.util.Lists;
 import org.hivedb.util.database.Schemas;
 import org.hivedb.util.database.test.HiveTest;
@@ -31,24 +33,24 @@ import java.util.Collection;
 public class HiveSessionFactoryImplTest extends HiveTest {
   private final static Log log = LogFactory.getLog(HiveSessionFactoryImplTest.class);
   HiveSessionFactoryImpl factory;
-	private Mockery context;
+  private Mockery context;
 
 
-	public void setup() {
+  public void setup() {
     context = new JUnit4Mockery() {
-		  {
-			  //setImposteriser(ClassImposteriser.INSTANCE);
-			}
-		};
-  
-    if(factory == null)
+      {
+        //setImposteriser(ClassImposteriser.INSTANCE);
+      }
+    };
+
+    if (factory == null)
       factory =
-        (HiveSessionFactoryImpl)
-          new SingletonHiveSessionFactoryBuilder(
-            getHive(),
-            Lists.newList(getMappedClasses()), 
-            new SequentialShardAccessStrategy()).getSessionFactory();
-    for(Node node : getHive().getNodes())
+          (HiveSessionFactoryImpl)
+              new SingletonHiveSessionFactoryBuilder(
+                  getHive(),
+                  Lists.newList(getMappedClasses()),
+                  new SequentialShardAccessStrategy()).getSessionFactory();
+    for (Node node : getHive().getNodes())
       Schemas.install(WeatherSchema.getInstance(), node.getUri());
   }
 
@@ -64,17 +66,17 @@ public class HiveSessionFactoryImplTest extends HiveTest {
     final Interceptor mockInterceptor = context.mock(Interceptor.class);
     final WeatherReportImpl report = new WeatherReportImpl();
     context.checking(new Expectations() {
-    					{
-    						one(mockInterceptor).getEntityName(report);
-    						//will(returnValue());
-    					}
-    				});
+      {
+        one(mockInterceptor).getEntityName(report);
+        //will(returnValue());
+      }
+    });
     Session session = factory.openSession(mockInterceptor);
     try {
-        session.getEntityName(report);
-        fail("No exception throw");
+      session.getEntityName(report);
+      fail("No exception throw");
     } catch (TransientObjectException e) {
-        //this is just here because I don't want to mock every method that will be called.
+      //this is just here because I don't want to mock every method that will be called.
     } finally {
       session.close();
     }
@@ -91,7 +93,7 @@ public class HiveSessionFactoryImplTest extends HiveTest {
     try {
       Node node = getNodeForFirstId(hive, hive.directory().getNodeIdsOfPrimaryIndexKey(asia));
       assertCorrectNode(session, node);
-    } catch(Exception e) {
+    } catch (Exception e) {
       fail(e.getMessage());
     } finally {
       session.close();
@@ -111,7 +113,7 @@ public class HiveSessionFactoryImplTest extends HiveTest {
     try {
       Node node = getNodeForFirstId(hive, hive.directory().getNodeIdsOfResourceId("WeatherReport", id));
       assertCorrectNode(session, node);
-    } catch(Exception e) {
+    } catch (Exception e) {
       fail(e.getMessage());
     } finally {
       session.close();
@@ -122,7 +124,7 @@ public class HiveSessionFactoryImplTest extends HiveTest {
   public void shouldOpenASessionBySecondaryIndex() throws Exception {
     Hive hive = getHive();
     String asia = "Asia";
-    int id = 999;    
+    int id = 999;
     hive.directory().insertPrimaryIndexKey(asia);
     hive.directory().insertResourceId("WeatherReport", id, asia);
     int code = 765;
@@ -134,7 +136,7 @@ public class HiveSessionFactoryImplTest extends HiveTest {
     try {
       Node node = getNodeForFirstId(hive, hive.directory().getNodeIdsOfSecondaryIndexKey("WeatherReport", "RegionCode", code));
       assertCorrectNode(session, node);
-    } catch(Exception e) {
+    } catch (Exception e) {
       fail(e.getMessage());
     } finally {
       session.close();
@@ -151,8 +153,8 @@ public class HiveSessionFactoryImplTest extends HiveTest {
     Session session = factory.openSession(asia);
     try {
       Node node = getNodeForFirstId(hive, hive.directory().getNodeIdsOfPrimaryIndexKey(asia));
-      assertTrue("Opened a session to the wrong node", node.getUri().startsWith(RecordNodeOpenSessionEvent.getNode()));  
-    } catch(Exception e) {
+      assertTrue("Opened a session to the wrong node", node.getUri().startsWith(RecordNodeOpenSessionEvent.getNode()));
+    } catch (Exception e) {
       e.printStackTrace();
       fail("Exception thrown: " + e.getMessage());
     } finally {
@@ -173,7 +175,7 @@ public class HiveSessionFactoryImplTest extends HiveTest {
       session.save(report);
       Node node = getNodeForFirstId(hive, hive.directory().getNodeIdsOfPrimaryIndexKey(asia));
       assertTrue("Opened a session to the wrong node", node.getUri().startsWith(RecordNodeOpenSessionEvent.getNode()));
-    } catch(Exception e) {
+    } catch (Exception e) {
       e.printStackTrace();
       fail("Exception thrown: " + e.getMessage());
     } finally {
@@ -183,12 +185,21 @@ public class HiveSessionFactoryImplTest extends HiveTest {
 
   @Test
   public void shouldThrowAnExceptionIfARecordIsStoredOnMoreThanOneNode() throws Exception {
-    Hive hive = getHive();
+    final Assigner assigner = context.mock(Assigner.class);
+    final Hive hive = Hive.load(getHive().getUri(), (HiveDataSourceProvider) getHive().getDataSourceProvider(), assigner);
+    context.checking(new Expectations() {
+      {
+        exactly(2).of(assigner).chooseNode(with(any(Collection.class)), with(anything()));
+        will(onConsecutiveCalls(returnValue(hive.getNode(1)), returnValue(hive.getNode(2))));
+      }
+    });
+
     String asia = "Asia";
     hive.directory().insertPrimaryIndexKey(asia);
     hive.directory().insertPrimaryIndexKey(asia);
-    final WeatherReportImpl report = new WeatherReportImpl();
-    report.setContinent(asia);
+
+    context.assertIsSatisfied(); //asserts that this is no longer probabalistic
+
     Session session = null;
     try {
       session = factory.openSession(asia);
@@ -197,10 +208,10 @@ public class HiveSessionFactoryImplTest extends HiveTest {
       Node node = getNodeForFirstId(hive, nodeIds);
       assertCorrectNode(session, node);
       fail("No exception thrown");
-    } catch(IllegalStateException e) {
+    } catch (IllegalStateException e) {
 
     } finally {
-      if(session!=null)
+      if (session != null)
         session.close();
     }
   }
@@ -211,7 +222,7 @@ public class HiveSessionFactoryImplTest extends HiveTest {
 
   @SuppressWarnings("deprecation")
   public void assertCorrectNode(Session session, Node node) throws Exception {
-    assertTrue("Opened a session to the wrong node", node.getUri().startsWith(session.connection().getMetaData().getURL()));  
+    assertTrue("Opened a session to the wrong node", node.getUri().startsWith(session.connection().getMetaData().getURL()));
   }
 }
 
