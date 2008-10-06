@@ -245,7 +245,7 @@ public class DbDirectory extends SimpleJdbcDaoSupport implements NodeResolver, I
   @SuppressWarnings("unchecked")
   public class KeySemaphoreRowMapper implements ParameterizedRowMapper {
     public Object mapRow(ResultSet rs, int arg1) throws SQLException {
-      return new KeySemaphore(rs.getInt("node"), resolveStatus(rs));
+      return new KeySemaphoreImpl(rs.getInt("node"), resolveStatus(rs));
     }
 
     private Status resolveStatus(ResultSet rs) throws SQLException {
@@ -313,7 +313,7 @@ public class DbDirectory extends SimpleJdbcDaoSupport implements NodeResolver, I
     return new Unary<KeySemaphore, Integer>() {
 
       public Integer f(KeySemaphore item) {
-        return item.getId();
+        return item.getNodeId();
       }
     };
   }

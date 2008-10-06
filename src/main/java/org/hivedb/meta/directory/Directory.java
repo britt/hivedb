@@ -1,6 +1,5 @@
 package org.hivedb.meta.directory;
 
-import org.hivedb.meta.KeySemaphore;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;

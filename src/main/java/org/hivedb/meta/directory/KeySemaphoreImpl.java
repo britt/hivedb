@@ -1,19 +1,19 @@
-package org.hivedb.meta;
+package org.hivedb.meta.directory;
 
 import org.hivedb.Lockable;
 import org.hivedb.util.HiveUtils;
 
-public class KeySemaphore implements Lockable {
+public class KeySemaphoreImpl implements KeySemaphore {
 	private Status status;
-	private int id;
+	private int nodeId;
 	
-	public KeySemaphore(int id, Lockable.Status status) {
-		this.id = id;
+	public KeySemaphoreImpl(int nodeId, Lockable.Status status) {
+		this.nodeId = nodeId;
 		this.status = status;
 	}
 	
-	public int getId() {
-		return id;
+	public int getNodeId() {
+		return nodeId;
 	}
 		
 	public boolean equals(Object obj)
@@ -22,13 +22,11 @@ public class KeySemaphore implements Lockable {
 	}
 	public int hashCode() {
 		return HiveUtils.makeHashCode(new Object[] {
-				id, status
+      nodeId, status
 		});
 	}
 
 	public Status getStatus() {
 		return status;
 	}
-
-
 }

@@ -162,7 +162,7 @@ public class DirectoryWrapper implements DirectoryFacade {
     return new Unary<KeySemaphore, Integer>() {
 
       public Integer f(KeySemaphore item) {
-        return item.getId();
+        return item.getNodeId();
       }
     };
   }

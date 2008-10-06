@@ -2,10 +2,7 @@ package org.hivedb.meta.directory;
 
 import java.util.Collection;
 
-import org.hivedb.meta.KeySemaphore;
-import org.hivedb.meta.PartitionDimension;
-import org.hivedb.meta.Resource;
-import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.meta.*;
 
 public interface NodeResolver {
 	/***
@@ -83,7 +80,6 @@ public interface NodeResolver {
 	
 	/***
 	 * Get all of the keys associated with a resource id for a particular secondary index.
-	 * @param resource
 	 * @param id
 	 * @return
 	 */

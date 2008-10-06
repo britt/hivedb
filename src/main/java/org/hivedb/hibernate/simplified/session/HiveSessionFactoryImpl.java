@@ -109,7 +109,7 @@ public class HiveSessionFactoryImpl implements HiveSessionFactory {
 		return session;
 	}
 
-  @SuppressWarnings("deprecated")
+  @SuppressWarnings("deprecation")
   public String extractFactoryURL(SessionFactory factory) {
     Session session = null;
     try {

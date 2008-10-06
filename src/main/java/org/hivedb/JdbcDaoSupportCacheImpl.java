@@ -2,6 +2,8 @@ package org.hivedb;
 
 import org.hivedb.meta.*;
 import org.hivedb.meta.directory.DbDirectory;
+import org.hivedb.meta.directory.KeySemaphore;
+import org.hivedb.meta.directory.KeySemaphoreImpl;
 import org.hivedb.meta.persistence.DataSourceProvider;
 import org.hivedb.util.Preconditions;
 import org.hivedb.util.functional.Filter;
@@ -52,13 +54,13 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache {
 
   private SimpleJdbcDaoSupport get(KeySemaphore semaphore, AccessType intention) throws HiveLockableException {
     Node node = null;
-    node = hive.getNode(semaphore.getId());
+    node = hive.getNode(semaphore.getNodeId());
 
     if (intention == AccessType.ReadWrite)
       Preconditions.isWritable(node, semaphore);
 
-    if (jdbcDaoSupports.containsKey(semaphore.getId()))
-      return jdbcDaoSupports.get(semaphore.getId());
+    if (jdbcDaoSupports.containsKey(semaphore.getNodeId()))
+      return jdbcDaoSupports.get(semaphore.getNodeId());
 
     throw new HiveKeyNotFoundException("Could not find dataSource for ", semaphore);
   }
@@ -66,7 +68,6 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache {
   /**
    * Get a SimpleJdbcDaoSupport by primary partition key.
    *
-   * @param partitionDimension The partition dimension
    * @param primaryIndexKey    The partition key
    * @param intention          The permissions with which you wish to acquire the conenction
    * @return
@@ -93,7 +94,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache {
     Collection<KeySemaphore> keySemaphores = directory.getKeySemaphoresOfSecondaryIndexKey(getSecondaryIndex(resource, secondaryIndex), secondaryIndexKey);
     keySemaphores = Filter.getUnique(keySemaphores, new Unary<KeySemaphore, Integer>() {
       public Integer f(KeySemaphore item) {
-        return item.getId();
+        return item.getNodeId();
       }
     });
 
@@ -112,7 +113,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache {
   public SimpleJdbcDaoSupport getUnsafe(String nodeName) {
     try {
       Node node = hive.getNode(nodeName);
-      KeySemaphore semaphore = new KeySemaphore(node.getId(), node.getStatus());
+      KeySemaphore semaphore = new KeySemaphoreImpl(node.getId(), node.getStatus());
       return get(semaphore, AccessType.ReadWrite);
     } catch (HiveException e) {
       // TODO Better exception Handling

@@ -1,7 +1,6 @@
 package org.hivedb.meta.directory;
 
 import org.hivedb.HiveLockableException;
-import org.hivedb.meta.KeySemaphore;
 
 import java.util.Collection;
 import java.util.Map;

@@ -183,6 +183,7 @@ public class HiveSessionFactoryImplTest extends HiveTest {
     }
   }
 
+  // TODO There is no guarantee that records get assigned to different nodes, causes intermittent failures
   @Test
   public void shouldThrowAnExceptionIfARecordIsStoredOnMoreThanOneNode() throws Exception {
     final Assigner assigner = context.mock(Assigner.class);
