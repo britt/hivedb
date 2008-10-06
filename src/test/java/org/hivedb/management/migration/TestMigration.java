@@ -143,7 +143,7 @@ public class TestMigration extends HiveTest {
 		hive.directory().insertPrimaryIndexKey(primaryKey);
 		//Setup the test data on one node
 		NodeResolver dir = new Directory(hive.getPartitionDimension(), getDataSource(getConnectString(getHiveDatabaseName())));
-		int originId = Atom.getFirst(dir.getKeySemamphoresOfPrimaryIndexKey(primaryKey)).getId();
+		int originId = Atom.getFirst(dir.getKeySemamphoresOfPrimaryIndexKey(primaryKey)).getNodeId();
 		Node origin = hive.getNode(originId);
 		Node destination = origin.getName().equals("data1") ? hive.getNode("data2") : 
 			hive.getNode("data1");

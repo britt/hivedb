@@ -2,7 +2,7 @@ package org.hivedb.management.migration;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveLockableException;
-import org.hivedb.meta.KeySemaphore;
+import org.hivedb.meta.directory.KeySemaphore;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.directory.Directory;
@@ -145,7 +145,7 @@ public class HiveMigrator implements Migrator {
 			Directory dir = new Directory(dimension);
 			Collection<Node> origins = Transform.map(new Unary<KeySemaphore, Node>(){
 				public Node f(KeySemaphore keySemaphore) {
-					return getNode(keySemaphore.getId());
+					return getNode(keySemaphore.getNodeId());
 				}}, dir.getKeySemamphoresOfPrimaryIndexKey(key));
 			
 			//Elect a random origin node as the authority

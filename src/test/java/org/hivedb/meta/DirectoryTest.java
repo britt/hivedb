@@ -9,6 +9,7 @@ import org.hivedb.configuration.HiveConfigurationSchema;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.directory.Directory;
 import org.hivedb.meta.directory.DirectoryWrapper;
+import org.hivedb.meta.directory.KeySemaphore;
 import static org.hivedb.meta.directory.DirectoryWrapper.semaphoreToId;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.meta.persistence.IndexSchema;

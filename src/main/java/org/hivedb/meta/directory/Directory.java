@@ -15,7 +15,6 @@ import org.hivedb.util.functional.Delay;
 import org.hivedb.util.functional.Unary;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.simple.ParameterizedRowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -24,8 +23,6 @@ import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Collection;
 
@@ -147,7 +144,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 		return count.size() > 0;
 	}
 	
-	public Collection<KeySemaphore> getKeySemamphoresOfPrimaryIndexKey(Object primaryIndexKey) {
+	public Collection<KeySemaphoreImpl> getKeySemamphoresOfPrimaryIndexKey(Object primaryIndexKey) {
 		return doRead(sql.selectKeySemaphoreOfPrimaryIndexKey(partitionDimension), 
 				new Object[] { primaryIndexKey }, 
 				new KeySemaphoreRowMapper());
@@ -182,9 +179,9 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 	}
 	
 	@SuppressWarnings("unchecked")
-	public Collection<KeySemaphore> getKeySemaphoresOfResourceId(Resource resource, Object resourceId)
+	public Collection<KeySemaphoreImpl> getKeySemaphoresOfResourceId(Resource resource, Object resourceId)
 	{
-		return (Collection<KeySemaphore>) (resource.isPartitioningResource()
+		return (Collection<KeySemaphoreImpl>) (resource.isPartitioningResource()
 		? getKeySemamphoresOfPrimaryIndexKey(resourceId)
 		: doRead(
 			sql.selectKeySemaphoresOfResourceId(resource), 
@@ -233,19 +230,8 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 				new Object[] { primaryIndexKey }, 
 				RowMappers.newObjectRowMapper(resource.getColumnType()));
 	}
-	
-	@SuppressWarnings("unchecked")
-	public class KeySemaphoreRowMapper implements ParameterizedRowMapper {
-		public Object mapRow(ResultSet rs, int arg1) throws SQLException {
-			return new KeySemaphore(rs.getInt("node"), resolveStatus(rs));
-		}
 
-		private Status resolveStatus(ResultSet rs) throws SQLException {
-			return Status.getByValue(rs.getInt("status"));
-		}	
-	}
-
-	@SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked")
 	public Collection getSecondaryIndexKeysOfResourceId(SecondaryIndex secondaryIndex, Object id) {
     return doRead(
 				sql.selectSecondaryIndexKeyOfResourceId(secondaryIndex), 
@@ -295,7 +281,7 @@ public class Directory extends SimpleJdbcDaoSupport implements NodeResolver, Ind
 		return new Unary<KeySemaphore, Integer>(){
 
 			public Integer f(KeySemaphore item) {
-				return item.getId();
+				return item.getNodeId();
 			}};
 	}
 	

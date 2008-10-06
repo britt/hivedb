@@ -1,7 +1,8 @@
 package org.hivedb.meta.directory;
 
 import org.hivedb.HiveLockableException;
-import org.hivedb.meta.KeySemaphore;
+import org.hivedb.meta.directory.KeySemaphoreImpl;
+import org.hivedb.meta.directory.KeySemaphore;
 
 import java.util.Collection;
 import java.util.Map;
@@ -10,7 +11,7 @@ public interface DirectoryFacade {
 
 	public boolean doesPrimaryIndexKeyExist(Object primaryIndexKey);
 	public Collection<Integer> getNodeIdsOfPrimaryIndexKey(Object primaryIndexKey);
-	public Collection<KeySemaphore> getKeySemamphoresOfPrimaryIndexKey(Object primaryIndexKey);
+	public Collection<KeySemaphoreImpl> getKeySemamphoresOfPrimaryIndexKey(Object primaryIndexKey);
 	public Collection getResourceIdsOfPrimaryIndexKey(String resource,Object primaryIndexKey);
 	public boolean getReadOnlyOfPrimaryIndexKey(Object primaryIndexKey);
   // TODO Unify terminology
@@ -26,7 +27,7 @@ public interface DirectoryFacade {
 
 	public boolean doesResourceIdExist(String resource, Object resourceId);
 	public Collection<Integer> getNodeIdsOfResourceId(String resource, Object id);
-	public Collection<KeySemaphore> getKeySemaphoresOfResourceId(String resource, Object resourceId);
+	public Collection<KeySemaphoreImpl> getKeySemaphoresOfResourceId(String resource, Object resourceId);
 	public boolean getReadOnlyOfResourceId(String resource, Object id);
 	public void insertResourceId(String resource, Object id, Object primaryIndexKey) throws HiveLockableException;
 	public void updatePrimaryIndexKeyOfResourceId(String resource, Object resourceId, Object newPrimaryIndexKey) throws HiveLockableException;

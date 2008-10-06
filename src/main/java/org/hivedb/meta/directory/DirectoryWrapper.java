@@ -82,11 +82,11 @@ public class DirectoryWrapper implements DirectoryFacade {
 		return directory.doesSecondaryIndexKeyExist(getSecondaryIndex(resource, secondaryIndex), secondaryIndexKey, resourceId);
 	}
 
-	public Collection<KeySemaphore> getKeySemamphoresOfPrimaryIndexKey(Object primaryIndexKey) {
+	public Collection<KeySemaphoreImpl> getKeySemamphoresOfPrimaryIndexKey(Object primaryIndexKey) {
 		return directory.getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey);
 	}
 
-	public Collection<KeySemaphore> getKeySemaphoresOfResourceId(String resource, Object resourceId) {
+	public Collection<KeySemaphoreImpl> getKeySemaphoresOfResourceId(String resource, Object resourceId) {
 		return directory.getKeySemaphoresOfResourceId(getResource(resource), resourceId);
 	}
 
@@ -140,14 +140,14 @@ public class DirectoryWrapper implements DirectoryFacade {
 		if (getResource(resource).isPartitioningResource()) {
 			insertPrimaryIndexKey(primaryIndexKey);
 		} else {
-			Collection<KeySemaphore> semaphores = directory.getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey);
+			Collection<KeySemaphoreImpl> semaphores = directory.getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey);
 			Preconditions.isWritable(semaphores, hive);
 			directory.insertResourceId(getResource(resource), id, primaryIndexKey);
 		}
 	}
 
 	public void insertSecondaryIndexKey(String resource, String secondaryIndex, Object secondaryIndexKey, Object resourceId) throws HiveLockableException {
-		Collection<KeySemaphore> semaphores = 
+		Collection<KeySemaphoreImpl> semaphores =
 			directory.getKeySemaphoresOfResourceId(getResource(resource), resourceId);
 		Preconditions.isWritable(semaphores, hive);
 		directory.insertSecondaryIndexKey(getSecondaryIndex(resource, secondaryIndex), secondaryIndexKey,resourceId);
@@ -163,7 +163,7 @@ public class DirectoryWrapper implements DirectoryFacade {
 	}
 
 	public void updatePrimaryIndexKeyReadOnly(Object primaryIndexKey, boolean isReadOnly) throws HiveLockableException {
-		Collection<KeySemaphore> semaphores = directory.getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey);
+		Collection<KeySemaphoreImpl> semaphores = directory.getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey);
 		Preconditions.isWritable(HiveUtils.getNodesForSemaphores(semaphores, hive));
 		directory.updatePrimaryIndexKeyReadOnly(primaryIndexKey, isReadOnly);
 	}
@@ -180,7 +180,7 @@ public class DirectoryWrapper implements DirectoryFacade {
 		return new Unary<KeySemaphore, Integer>(){
 
 			public Integer f(KeySemaphore item) {
-				return item.getId();
+				return item.getNodeId();
 			}};
 	}
 	

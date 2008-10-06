@@ -2,6 +2,7 @@ package org.hivedb;
 
 import org.hivedb.meta.*;
 import org.hivedb.meta.directory.Directory;
+import org.hivedb.meta.directory.KeySemaphore;
 import org.hivedb.meta.persistence.DataSourceProvider;
 import org.hivedb.util.Preconditions;
 import org.hivedb.util.functional.Filter;
@@ -40,8 +41,8 @@ public class ConnectionManager {
 	
 	private Connection getConnection(KeySemaphore semaphore, AccessType intention) throws HiveLockableException,SQLException {
 		if(intention == AccessType.ReadWrite)
-			Preconditions.isWritable(hive, semaphore, hive.getNode(semaphore.getId()));
-		return nodeDataSources.get(semaphore.getId()).getConnection();
+			Preconditions.isWritable(hive, semaphore, hive.getNode(semaphore.getNodeId()));
+		return nodeDataSources.get(semaphore.getNodeId()).getConnection();
 	}
 	
 	public Collection<Connection> getByPartitionKey(Object primaryIndexKey, AccessType intent) throws SQLException, HiveLockableException {
@@ -71,7 +72,7 @@ public class ConnectionManager {
 		Collection<KeySemaphore> keySemaphores = directory.getKeySemaphoresOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
 		keySemaphores = Filter.getUnique(keySemaphores, new Unary<KeySemaphore, Integer>(){
 			public Integer f(KeySemaphore item) {
-				return item.getId();
+				return item.getNodeId();
 			}});
 		for(KeySemaphore semaphore : keySemaphores)
 			connections.add(getConnection(semaphore, intent));

@@ -2,10 +2,7 @@ package org.hivedb.meta.directory;
 
 import java.util.Collection;
 
-import org.hivedb.meta.KeySemaphore;
-import org.hivedb.meta.PartitionDimension;
-import org.hivedb.meta.Resource;
-import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.meta.*;
 
 public interface NodeResolver {
 	/***
@@ -36,7 +33,7 @@ public interface NodeResolver {
 	 * @param primaryIndexKey
 	 * @return
 	 */
-	public Collection<KeySemaphore> getKeySemamphoresOfPrimaryIndexKey(Object primaryIndexKey);
+	public Collection<KeySemaphoreImpl> getKeySemamphoresOfPrimaryIndexKey(Object primaryIndexKey);
 
 	/***
 	 * Test the existence of a secondary index key

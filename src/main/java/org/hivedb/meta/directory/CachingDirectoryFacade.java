@@ -3,7 +3,8 @@ package org.hivedb.meta.directory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hivedb.HiveLockableException;
-import org.hivedb.meta.KeySemaphore;
+import org.hivedb.meta.directory.KeySemaphoreImpl;
+import org.hivedb.meta.directory.KeySemaphore;
 import org.hivedb.util.Preconditions;
 import org.hivedb.util.cache.Cache;
 import org.hivedb.util.functional.Delay;
@@ -83,11 +84,11 @@ public class CachingDirectoryFacade implements DirectoryFacade {
     return retVal;
   }
 
-  public Collection<KeySemaphore> getKeySemamphoresOfPrimaryIndexKey(final Object primaryIndexKey) {
+  public Collection<KeySemaphoreImpl> getKeySemamphoresOfPrimaryIndexKey(final Object primaryIndexKey) {
     String cacheKey = cacheKeyBuilder.build(CacheKeyBuilder.Mode.semaphore, primaryIndexKey);
 
-    return readAndCache(cacheKey, new Delay<Collection<KeySemaphore>>() {
-      public Collection<KeySemaphore> f() {
+    return readAndCache(cacheKey, new Delay<Collection<KeySemaphoreImpl>>() {
+      public Collection<KeySemaphoreImpl> f() {
         return delegate.getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey);
       }
     });
@@ -193,10 +194,10 @@ public class CachingDirectoryFacade implements DirectoryFacade {
     });
   }
 
-  public Collection<KeySemaphore> getKeySemaphoresOfResourceId(final String resource, final Object resourceId) {
+  public Collection<KeySemaphoreImpl> getKeySemaphoresOfResourceId(final String resource, final Object resourceId) {
     String cacheKey = cacheKeyBuilder.build(CacheKeyBuilder.Mode.semaphore, resource, resourceId);
-    return readAndCache(cacheKey, new Delay<Collection<KeySemaphore>>(){
-      public Collection<KeySemaphore> f() {
+    return readAndCache(cacheKey, new Delay<Collection<KeySemaphoreImpl>>(){
+      public Collection<KeySemaphoreImpl> f() {
         delegate.getPrimaryIndexKeyOfResourceId(resource, resourceId);
         return delegate.getKeySemaphoresOfResourceId(resource, resourceId);        
       }

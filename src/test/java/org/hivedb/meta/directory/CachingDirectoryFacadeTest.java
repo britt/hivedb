@@ -3,7 +3,7 @@ package org.hivedb.meta.directory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hivedb.Hive;
-import org.hivedb.meta.KeySemaphore;
+import org.hivedb.meta.directory.KeySemaphoreImpl;
 import org.hivedb.util.Lists;
 import org.hivedb.util.cache.Cache;
 import org.jmock.Expectations;
@@ -115,7 +115,7 @@ public class CachingDirectoryFacadeTest {
     });
   }
 
-  private void mockThatGetKeySemaphoresOfResourceIdReturnsValue(final String resource, final Object resourceId, final Collection<KeySemaphore> expected) {
+  private void mockThatGetKeySemaphoresOfResourceIdReturnsValue(final String resource, final Object resourceId, final Collection<KeySemaphoreImpl> expected) {
     mockery.checking(new Expectations() {
       {
         one(delegate).getKeySemaphoresOfResourceId(resource, resourceId);
@@ -193,7 +193,7 @@ public class CachingDirectoryFacadeTest {
   public void getKeySemaphoresOfResourceIdShouldDelegateIfCacheReadThrwosAnException() throws Exception {
     final String resource = "resource";
     final Object resourceId = new Object();
-    final Collection<KeySemaphore> expected = Lists.newArrayList();
+    final Collection<KeySemaphoreImpl> expected = Lists.newArrayList();
     CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
 
     mockThatResourceIdCacheReadThrowsException(resource, resourceId, cacheKey, CacheKeyBuilder.Mode.semaphore);
@@ -207,7 +207,7 @@ public class CachingDirectoryFacadeTest {
   public void getKeySemaphoresOfResourceIdShouldStillReturnIfCacheWriteFails() throws Exception {
     final String resource = "resource";
     final Object resourceId = new Object();
-    final Collection<KeySemaphore> expected = Lists.newArrayList();
+    final Collection<KeySemaphoreImpl> expected = Lists.newArrayList();
     CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
 
     mockResourceIdIsNotFoundInCache(resource, resourceId, expected, CacheKeyBuilder.Mode.semaphore);
@@ -221,7 +221,7 @@ public class CachingDirectoryFacadeTest {
   public void getKeySemaphoresOfResourceIdShouldNotDelegateIfExistsInCache() throws Exception {
     final String resource = "resource";
     final Object resourceId = new Object();
-    final Collection<KeySemaphore> expected = Lists.newArrayList();
+    final Collection<KeySemaphoreImpl> expected = Lists.newArrayList();
     CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
 
     mockResourceIdIsFoundInCache(resource, resourceId, expected, CacheKeyBuilder.Mode.semaphore);
@@ -233,7 +233,7 @@ public class CachingDirectoryFacadeTest {
   public void getKeySemaphoresOfResourceIdShouldDelegateIfDoesNotExistInCache() throws Exception {
     final String resource = "resource";
     final Object resourceId = new Object();
-    final Collection<KeySemaphore> expected = Lists.newArrayList();
+    final Collection<KeySemaphoreImpl> expected = Lists.newArrayList();
     CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
 
     mockResourceIdIsNotFoundInCache(resource, resourceId, expected, CacheKeyBuilder.Mode.semaphore);
@@ -386,44 +386,44 @@ public class CachingDirectoryFacadeTest {
   @Test
   public void getKeySemaphoresOfPrimaryIndexKeyshouldDelegateIfCacheThrowsExceptionOnRead() throws Exception {
     final Object primaryKey = new Object();
-    final Collection<KeySemaphore> expected = Lists.newArrayList();
+    final Collection<KeySemaphoreImpl> expected = Lists.newArrayList();
     CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
 
     mockThatPrimaryIndexKeyCacheReadThrowsException(primaryKey, cacheKey, CacheKeyBuilder.Mode.semaphore);
     mockThatGetKeySemaphoresOfPrimaryIndexKeyReturnsValue(primaryKey, expected);
     mockThatKeyIsPutIntoCache(cacheKey, expected);
 
-    Collection<KeySemaphore> actual = facade.getKeySemamphoresOfPrimaryIndexKey(primaryKey);
+    Collection<KeySemaphoreImpl> actual = facade.getKeySemamphoresOfPrimaryIndexKey(primaryKey);
     assertSame("return value not from cache", expected, actual);
   }
 
   @Test
   public void getKeySemaphoresOfPrimaryIndexKeyshouldStillReturnIfCacheWriteFails() throws Exception {
     final Object primaryKey = new Object();
-    final Collection<KeySemaphore> expected = Lists.newArrayList();
+    final Collection<KeySemaphoreImpl> expected = Lists.newArrayList();
     CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
 
     mockThatPrimaryIndexKeyIsNotFoundInCache(primaryKey, CacheKeyBuilder.Mode.semaphore);
     mockThatGetKeySemaphoresOfPrimaryIndexKeyReturnsValue(primaryKey, expected);
     mockThatCacheWriteThrowsException(cacheKey);
 
-    Collection<KeySemaphore> actual = facade.getKeySemamphoresOfPrimaryIndexKey(primaryKey);
+    Collection<KeySemaphoreImpl> actual = facade.getKeySemamphoresOfPrimaryIndexKey(primaryKey);
     assertSame("return value not from cache", expected, actual);
   }
 
   @Test
   public void geKeySemaphoresOfPrimaryIndexKeyshouldNotDelegateIfFoundInCache() throws Exception {
     final Object primaryKey = new Object();
-    final Collection<KeySemaphore> expected = Lists.newArrayList();
+    final Collection<KeySemaphoreImpl> expected = Lists.newArrayList();
     CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
 
     mockThatKeySemaphoreOfPrimaryIndexKeyIsFoundInCache(primaryKey, expected);
 
-    Collection<KeySemaphore> actual = facade.getKeySemamphoresOfPrimaryIndexKey(primaryKey);
+    Collection<KeySemaphoreImpl> actual = facade.getKeySemamphoresOfPrimaryIndexKey(primaryKey);
     assertSame("return value not from cache", expected, actual);
   }
 
-  private void mockThatKeySemaphoreOfPrimaryIndexKeyIsFoundInCache(final Object primaryKey, final Collection<KeySemaphore> expected) {
+  private void mockThatKeySemaphoreOfPrimaryIndexKeyIsFoundInCache(final Object primaryKey, final Collection<KeySemaphoreImpl> expected) {
     mockery.checking(new Expectations() {
       {
         one(keyBuilder).build(CacheKeyBuilder.Mode.semaphore, primaryKey);
@@ -437,18 +437,18 @@ public class CachingDirectoryFacadeTest {
   @Test
   public void getKeySemaphoresOfPrimaryIndexKeyshouldDelegateIfNotFoundInCache() throws Exception {
     final Object primaryKey = new Object();
-    final Collection<KeySemaphore> expected = Lists.newArrayList();
+    final Collection<KeySemaphoreImpl> expected = Lists.newArrayList();
 
     mockThatPrimaryIndexKeyIsNotFoundInCache(primaryKey, CacheKeyBuilder.Mode.semaphore);
     mockThatGetKeySemaphoresOfPrimaryIndexKeyReturnsValue(primaryKey, expected);
     mockThatKeyIsPutIntoCache(cacheKey, expected);
 
     CachingDirectoryFacade facade = new CachingDirectoryFacade(delegate, cache, keyBuilder);
-    Collection<KeySemaphore> actual = facade.getKeySemamphoresOfPrimaryIndexKey(primaryKey);
+    Collection<KeySemaphoreImpl> actual = facade.getKeySemamphoresOfPrimaryIndexKey(primaryKey);
     assertSame("return value not from delegate", expected, actual);
   }
 
-  private void mockThatGetKeySemaphoresOfPrimaryIndexKeyReturnsValue(final Object primaryKey, final Collection<KeySemaphore> expected) {
+  private void mockThatGetKeySemaphoresOfPrimaryIndexKeyReturnsValue(final Object primaryKey, final Collection<KeySemaphoreImpl> expected) {
      mockery.checking(new Expectations() {
       {
         one(delegate).getKeySemamphoresOfPrimaryIndexKey(primaryKey);
