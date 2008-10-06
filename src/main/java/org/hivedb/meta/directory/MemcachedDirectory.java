@@ -1,25 +1,40 @@
 package org.hivedb.meta.directory;
 
+import com.danga.MemCached.MemCachedClient;
+import com.danga.MemCached.SockIOPool;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
 public class MemcachedDirectory implements Directory {
   private final static Log log = LogFactory.getLog(MemcachedDirectory.class);
+  private MemCachedClient client;
+  private CacheKeyBuilder keyBuilder;
+
+  public MemcachedDirectory(String poolName, CacheKeyBuilder keyBuilder) {
+    this(poolName, new MemCachedClient(poolName), keyBuilder);
+  }
+
+  public MemcachedDirectory(String poolName, MemCachedClient client, CacheKeyBuilder keyBuilder) {
+    if (!SockIOPool.getInstance(poolName).isInitialized())
+      throw new IllegalStateException("Pool must be initialized.");
+    this.client = client;
+    this.keyBuilder = keyBuilder;
+  }
 
   public boolean doesPrimaryIndexKeyExist(Object primaryIndexKey) {
-    //todo: implement me
-    throw new UnsupportedOperationException("Not yet implemented");
+    return client.keyExists(keyBuilder.build(primaryIndexKey));
   }
 
   public Collection<KeySemaphore> getKeySemamphoresOfPrimaryIndexKey(Object primaryIndexKey) {
-    //todo: implement me
-    throw new UnsupportedOperationException("Not yet implemented");
+    final Collection<KeySemaphore> results = (Collection<KeySemaphore>) client.get(keyBuilder.build(primaryIndexKey));
+    return results == null ? new ArrayList<KeySemaphore>(0) : results;
   }
 
   public void deletePrimaryIndexKey(Object primaryIndexKey) {
@@ -38,8 +53,7 @@ public class MemcachedDirectory implements Directory {
   }
 
   public boolean doesSecondaryIndexKeyExist(SecondaryIndex index, Object secondaryIndexKey, Object resourceId) {
-    //todo: implement me
-    throw new UnsupportedOperationException("Not yet implemented");
+    return client.keyExists(keyBuilder.build(index.getResource().getName(), index.getName(), secondaryIndexKey, resourceId));
   }
 
   public void deleteSecondaryIndexKey(SecondaryIndex index, Object secondaryIndexKey, Object resourceId) {
@@ -48,8 +62,7 @@ public class MemcachedDirectory implements Directory {
   }
 
   public boolean doesResourceIdExist(Resource resource, Object resourceId) {
-    //todo: implement me
-    throw new UnsupportedOperationException("Not yet implemented");
+    return client.keyExists(keyBuilder.build(resource.getName(), resourceId));
   }
 
   public Collection<KeySemaphore> getKeySemaphoresOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey) {
