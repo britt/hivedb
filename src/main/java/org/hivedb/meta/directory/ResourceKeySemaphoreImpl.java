@@ -6,12 +6,16 @@ import org.apache.commons.logging.LogFactory;
 public class ResourceKeySemaphoreImpl implements ResourceKeySemaphore {
   private final static Log log = LogFactory.getLog(ResourceKeySemaphoreImpl.class);
 
-  private Object primaryKey;
+  private Object resourceId;
   private KeySemaphore keySemaphore;
 
-  public ResourceKeySemaphoreImpl(KeySemaphore keySemaphore, Object primaryKey) {
+  public ResourceKeySemaphoreImpl(KeySemaphore keySemaphore, Object resourceId) {
     this.keySemaphore = keySemaphore;
-    this.primaryKey = primaryKey;
+    this.resourceId = resourceId;
+  }
+  
+  public Object getKey() {
+    return resourceId;
   }
 
   public int getNodeId() {
@@ -23,7 +27,7 @@ public class ResourceKeySemaphoreImpl implements ResourceKeySemaphore {
   }
 
   public Object getPrimaryIndexKey() {
-    return primaryKey;
+    return keySemaphore.getKey();
   }
 
   public boolean equals(Object o) {
@@ -33,14 +37,14 @@ public class ResourceKeySemaphoreImpl implements ResourceKeySemaphore {
     ResourceKeySemaphoreImpl that = (ResourceKeySemaphoreImpl) o;
 
     if (keySemaphore != null ? !keySemaphore.equals(that.keySemaphore) : that.keySemaphore != null) return false;
-    if (primaryKey != null ? !primaryKey.equals(that.primaryKey) : that.primaryKey != null) return false;
+    if (resourceId != null ? !resourceId.equals(that.resourceId) : that.resourceId != null) return false;
 
     return true;
   }
 
   public int hashCode() {
     int result;
-    result = (primaryKey != null ? primaryKey.hashCode() : 0);
+    result = (resourceId != null ? resourceId.hashCode() : 0);
     result = 31 * result + (keySemaphore != null ? keySemaphore.hashCode() : 0);
     return result;
   }

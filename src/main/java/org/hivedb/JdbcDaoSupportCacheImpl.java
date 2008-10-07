@@ -113,7 +113,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache {
   public SimpleJdbcDaoSupport getUnsafe(String nodeName) {
     try {
       Node node = hive.getNode(nodeName);
-      KeySemaphore semaphore = new KeySemaphoreImpl(node.getId(), node.getStatus());
+      KeySemaphore semaphore = new KeySemaphoreImpl(null, node.getId(), node.getStatus());
       return get(semaphore, AccessType.ReadWrite);
     } catch (HiveException e) {
       // TODO Better exception Handling

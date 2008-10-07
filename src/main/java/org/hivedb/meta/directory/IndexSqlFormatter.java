@@ -4,7 +4,6 @@ import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.ResourceIndex;
 import org.hivedb.meta.SecondaryIndex;
-import org.hivedb.meta.persistence.IndexSchema;
 import org.hivedb.util.database.Schemas;
 
 /***
@@ -25,7 +24,7 @@ public class IndexSqlFormatter {
 	}
 	
 	public String selectKeySemaphoreOfPrimaryIndexKey(PartitionDimension partitionDimension) {
-		return String.format("select node,status from %s where id = ?", Schemas.getPrimaryIndexTableName(partitionDimension)); 
+		return String.format("select id,node,status from %s where id = ?", Schemas.getPrimaryIndexTableName(partitionDimension));
 	}
 	
 	public String selectResourceIdsOfPrimaryIndexKey(ResourceIndex resourceIndex) {
@@ -75,19 +74,19 @@ public class IndexSqlFormatter {
 		if (ResourceIndex.class.isInstance(secondaryIndex))		
 			// index of a resource
 			return String.format(
-				"select distinct p.node,p.status from %s p join %s r on r.pkey = p.id where r.id = ?", 
+				"select distinct r.id as id,p.node,p.status from %s p join %s r on r.pkey = p.id where r.id = ?",
 				Schemas.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
 				Schemas.getSecondaryIndexTableName(secondaryIndex.getResource().getIdIndex()));
 		else if (secondaryIndex.getResource().isPartitioningResource())
 			 // secondary index of a resource that is also the partition dimension
 			 return String.format(
-				"select distinct p.node,p.status from %s p join %s s on s.pkey = p.id where s.id = ?", 
+				"select distinct s.id as id,p.node,p.status from %s p join %s s on s.pkey = p.id where s.id = ?",
 				Schemas.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
 				Schemas.getSecondaryIndexTableName(secondaryIndex));
 		else 
 			// secondary index of a resource that is not also the partition dimension
 			return String.format(
-				"select distinct p.node,p.status from %s p join %s r on r.pkey = p.id join %s s on s.pkey = r.id where s.id = ?", 
+				"select distinct s.id as id,p.node,p.status from %s p join %s r on r.pkey = p.id join %s s on s.pkey = r.id where s.id = ?", 
 				Schemas.getPrimaryIndexTableName(secondaryIndex.getResource().getPartitionDimension()),
 				Schemas.getResourceIndexTableName(secondaryIndex.getResource()),
 				Schemas.getSecondaryIndexTableName(secondaryIndex));
@@ -154,7 +153,7 @@ public class IndexSqlFormatter {
 	
 	public String selectKeySemaphoresOfResourceId(Resource resource) {
 		return String.format(
-				"select p.node,p.status from %s p join %s r on r.pkey = p.id where r.id = ?", 
+				"select r.id as id,p.node,p.status from %s p join %s r on r.pkey = p.id where r.id = ?",
 				Schemas.getPrimaryIndexTableName(resource.getPartitionDimension()),
 				Schemas.getResourceIndexTableName(resource));
 	}

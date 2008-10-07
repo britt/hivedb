@@ -7,23 +7,23 @@ public class SecondaryIndexKeySemaphoreImpl implements SecondaryIndexKeySemaphor
   private final static Log log = LogFactory.getLog(SecondaryIndexKeySemaphoreImpl.class);
 
   private ResourceKeySemaphore semaphore;
-  private Object resourceId;
+  private Object secondaryIndexKey;
 
-  public SecondaryIndexKeySemaphoreImpl(ResourceKeySemaphore semaphore, Object resourceId) {
-    this.resourceId = resourceId;
+  public SecondaryIndexKeySemaphoreImpl(ResourceKeySemaphore semaphore, Object secondaryIndexKey) {
     this.semaphore = semaphore;
+    this.secondaryIndexKey = secondaryIndexKey;
   }
 
   public Object getResourceId() {
-    return resourceId;
-  }
-
-  public void setResourceId(Object resourceId) {
-    this.resourceId = resourceId;
+    return semaphore.getKey();
   }
 
   public Object getPrimaryIndexKey() {
     return semaphore.getPrimaryIndexKey();
+  }
+
+  public Object getKey() {
+    return this.secondaryIndexKey;
   }
 
   public int getNodeId() {

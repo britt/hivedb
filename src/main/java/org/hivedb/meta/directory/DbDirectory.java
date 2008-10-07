@@ -3,7 +3,10 @@ package org.hivedb.meta.directory;
 import org.hivedb.DirectoryCorruptionException;
 import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.Lockable.Status;
-import org.hivedb.meta.*;
+import org.hivedb.meta.Node;
+import org.hivedb.meta.PartitionDimension;
+import org.hivedb.meta.Resource;
+import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.QuickCache;
 import org.hivedb.util.database.JdbcTypeMapper;
@@ -15,7 +18,6 @@ import org.hivedb.util.functional.Delay;
 import org.hivedb.util.functional.Unary;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.simple.ParameterizedRowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -24,8 +26,6 @@ import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Collection;
 import java.util.Map;
@@ -240,17 +240,6 @@ public class DbDirectory extends SimpleJdbcDaoSupport implements NodeResolver, I
         sql.selectResourceIdsOfPrimaryIndexKey(resource.getIdIndex()),
         new Object[]{primaryIndexKey},
         RowMappers.newObjectRowMapper(resource.getColumnType()));
-  }
-
-  @SuppressWarnings("unchecked")
-  public class KeySemaphoreRowMapper implements ParameterizedRowMapper {
-    public Object mapRow(ResultSet rs, int arg1) throws SQLException {
-      return new KeySemaphoreImpl(rs.getInt("node"), resolveStatus(rs));
-    }
-
-    private Status resolveStatus(ResultSet rs) throws SQLException {
-      return Status.getByValue(rs.getInt("status"));
-    }
   }
 
   @SuppressWarnings("unchecked")

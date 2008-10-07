@@ -168,7 +168,7 @@ public class MemcachedDirectoryTest {
     final MemCachedClient client = mockery.mock(MemCachedClient.class);
     final CacheKeyBuilder keyBuilder = mockery.mock(CacheKeyBuilder.class);
 
-    final String key = mockPrimaryIndexKeyFound(client, keyBuilder, Lists.newList(new KeySemaphoreImpl(0, Lockable.Status.writable)));
+    final String key = mockPrimaryIndexKeyFound(client, keyBuilder, Lists.newList(new KeySemaphoreImpl("", 0, Lockable.Status.writable)));
 
     MemcachedDirectory directory = new MemcachedDirectory(poolName, client, keyBuilder);
     assertEquals(1, directory.getKeySemamphoresOfPrimaryIndexKey(key).size());

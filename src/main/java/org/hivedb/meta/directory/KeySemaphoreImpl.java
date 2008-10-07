@@ -6,8 +6,14 @@ import org.hivedb.util.HiveUtils;
 public class KeySemaphoreImpl implements KeySemaphore {
 	private Status status;
 	private int nodeId;
-	
-	public KeySemaphoreImpl(int nodeId, Lockable.Status status) {
+
+  public Object getKey() {
+    return key;
+  }
+
+  private Object key;
+
+  public KeySemaphoreImpl(Object key, int nodeId, Lockable.Status status) {
 		this.nodeId = nodeId;
 		this.status = status;
 	}
