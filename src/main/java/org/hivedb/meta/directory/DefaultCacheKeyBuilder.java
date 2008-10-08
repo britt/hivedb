@@ -1,40 +1,27 @@
 package org.hivedb.meta.directory;
 
 import org.hivedb.util.Preconditions;
+import org.hivedb.util.Strings;
 
 public class DefaultCacheKeyBuilder implements CacheKeyBuilder {
-  private static final char DELIMITER = '-';
-  private static final String PRIMARY_PREFIX = "pri" + DELIMITER;
-  private static final String RESOURCE_PREFIX = "res" + DELIMITER;
-  private static final String SECONDARY_PREFIX = "sec" + DELIMITER;
+  private static final String DELIMITER = "-";
+  private static final String PRIMARY_PREFIX = "pri";
+  private static final String RESOURCE_PREFIX = "res";
+  private static final String SECONDARY_PREFIX = "sec";
 
   public String build(Object primaryIndexKey) {
     Preconditions.isNotNull(primaryIndexKey);
-    return new StringBuilder(PRIMARY_PREFIX)
-        .append(primaryIndexKey.toString())
-        .toString();
+    return Strings.join(DELIMITER, PRIMARY_PREFIX, primaryIndexKey.toString());
   }
 
   public String build(String resource, Object resourceId) {
     Preconditions.isNotNull(resource, resourceId);
-    return new StringBuilder(RESOURCE_PREFIX)
-        .append(resource)
-        .append(DELIMITER)
-        .append(resourceId.toString())
-        .toString();
+    return Strings.join(DELIMITER, RESOURCE_PREFIX, resource, resourceId.toString());
   }
 
   public String build(String resource, String secondaryIndex, Object secondaryIndexKey, Object resourceId) {
     Preconditions.isNotNull(resource, resourceId, secondaryIndex, secondaryIndexKey);
-    return new StringBuilder(SECONDARY_PREFIX)
-        .append(resource)
-        .append(DELIMITER)
-        .append(resourceId.toString())
-        .append(DELIMITER)
-        .append(secondaryIndex)
-        .append(DELIMITER)
-        .append(secondaryIndexKey.toString())
-        .toString();
+    return Strings.join(DELIMITER, SECONDARY_PREFIX, resource, resourceId.toString(), secondaryIndex, secondaryIndexKey.toString());
   }
 
 }

@@ -16,6 +16,7 @@ import org.hivedb.HiveRuntimeException;
 import org.hivedb.Lockable.Status;
 import org.hivedb.meta.Node;
 import org.hivedb.util.Lists;
+import org.hivedb.util.Strings;
 import org.hivedb.util.database.DialectTools;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.functional.Transform;
@@ -127,7 +128,7 @@ public class NodeDao extends JdbcDaoSupport {
 		String[] questionMarks = new String[getFields().length];
 		for(int i=0; i< questionMarks.length; i++)
 			questionMarks[i] = "?";
-		return String.format("INSERT INTO node_metadata (%s) VALUES (%s)", Lists.join(",", getFields()), Lists.join(",", questionMarks));
+		return String.format("INSERT INTO node_metadata (%s) VALUES (%s)", Strings.join(",", getFields()), Strings.join(",", questionMarks));
 	}
 	
 	private String updateSql() {
@@ -135,7 +136,7 @@ public class NodeDao extends JdbcDaoSupport {
 			public String f(String item) {
 				return String.format("%s=?", item);
 			}}, Lists.newList(getFields())).toArray(new String[]{});
-		return String.format("UPDATE node_metadata set %s where id=?", Lists.join(",", fields));
+		return String.format("UPDATE node_metadata set %s where id=?", Strings.join(",", fields));
 	}
 	
 	//This is vulgar but maps don't have dependable ordering.

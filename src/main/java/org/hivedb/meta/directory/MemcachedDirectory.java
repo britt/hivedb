@@ -4,6 +4,7 @@ import com.danga.MemCached.MemCachedClient;
 import com.danga.MemCached.SockIOPool;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hivedb.Lockable;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
@@ -15,15 +16,16 @@ import java.util.Map;
 public class MemcachedDirectory implements Directory {
   private final static Log log = LogFactory.getLog(MemcachedDirectory.class);
   private MemCachedClient client;
-  private CacheKeyBuilder keyBuilder;
+  private MemcacheDirectoryKeyBuilder keyBuilder;
 
-  public MemcachedDirectory(String poolName, CacheKeyBuilder keyBuilder) {
+  public MemcachedDirectory(String poolName, MemcacheDirectoryKeyBuilder keyBuilder) {
     this(poolName, new MemCachedClient(poolName), keyBuilder);
   }
 
-  public MemcachedDirectory(String poolName, MemCachedClient client, CacheKeyBuilder keyBuilder) {
-    if (!SockIOPool.getInstance(poolName).isInitialized())
+  public MemcachedDirectory(String poolName, MemCachedClient client, MemcacheDirectoryKeyBuilder keyBuilder) {
+    if (!SockIOPool.getInstance(poolName).isInitialized()) {
       throw new IllegalStateException("Pool must be initialized.");
+    }
     this.client = client;
     this.keyBuilder = keyBuilder;
   }
@@ -53,7 +55,8 @@ public class MemcachedDirectory implements Directory {
   }
 
   public boolean doesSecondaryIndexKeyExist(SecondaryIndex index, Object secondaryIndexKey, Object resourceId) {
-    return client.keyExists(keyBuilder.build(index.getResource().getName(), index.getName(), secondaryIndexKey, resourceId));
+    String referenceKey = client.get(keyBuilder.build(index.getResource().getName(), index.getName(), secondaryIndexKey, resourceId)).toString();
+    return referenceKey != null && client.keyExists(referenceKey);
   }
 
   public void deleteSecondaryIndexKey(SecondaryIndex index, Object secondaryIndexKey, Object resourceId) {
@@ -62,7 +65,8 @@ public class MemcachedDirectory implements Directory {
   }
 
   public boolean doesResourceIdExist(Resource resource, Object resourceId) {
-    return client.keyExists(keyBuilder.build(resource.getName(), resourceId));
+    String referenceKey = client.get(keyBuilder.build(resource.getName(), resourceId)).toString();
+    return referenceKey != null && client.keyExists(referenceKey);
   }
 
   public Collection<KeySemaphore> getKeySemaphoresOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey) {
@@ -71,8 +75,13 @@ public class MemcachedDirectory implements Directory {
   }
 
   public void insertPrimaryIndexKey(Node node, Object primaryIndexKey) {
-    //todo: implement me
-    throw new UnsupportedOperationException("Not yet implemented");
+    // TODO: This only supports single assignment. Decide whether to refactor or support multiple assignment
+    if(!doesPrimaryIndexKeyExist(primaryIndexKey)) {
+      client.add(keyBuilder.build(primaryIndexKey), new KeySemaphoreImpl(primaryIndexKey, node.getId(), Lockable.Status.writable));
+      client.addOrIncr(keyBuilder.buildCounterKey(primaryIndexKey));
+    } else {
+      throw new IllegalStateException("Primary index key already exists. Use update instead.");
+    }
   }
 
   public void insertResourceId(Resource resource, Object id, Object primaryIndexKey) {
