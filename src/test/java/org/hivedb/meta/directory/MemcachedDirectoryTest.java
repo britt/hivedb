@@ -38,6 +38,13 @@ public class MemcachedDirectoryTest {
   public void tearDown() throws Exception {
   }
 
+  @Test(expected = IllegalStateException.class)
+  public void shouldThrowIllegalStateExceptionIfSockIOPoolIsNotInitialized() throws Exception {
+    final MemCachedClient client = mockery.mock(MemCachedClient.class);
+    final MemcacheDirectoryKeyBuilder keyBuilder = mockery.mock(MemcacheDirectoryKeyBuilder.class);
+    MemcachedDirectory directory = new MemcachedDirectory("uninitializedPool", client, keyBuilder);
+  }
+
   @Test
   public void shouldTestTheExistenceOfPrimaryKeys() throws Exception {
     String poolName = getInitializedPool();
