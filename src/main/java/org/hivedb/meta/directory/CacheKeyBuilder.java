@@ -7,7 +7,7 @@ public interface CacheKeyBuilder {
 
   String build(String resource, String secondaryIndex, Object secondaryIndexKey, Object resourceId);
 
-  String buildCounterKey(Object primaryIndexKey);
+  String buildCounterKey(Object primaryIndexKey, String resource);
 
-  String buildReferenceKey(Object primaryIndexKey, String resourceName, Integer counter);
+  String buildReferenceKey(Object primaryIndexKey, String resourceName, Long counter);
 }

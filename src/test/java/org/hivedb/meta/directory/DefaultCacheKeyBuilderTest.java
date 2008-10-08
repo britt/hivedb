@@ -71,32 +71,32 @@ public class DefaultCacheKeyBuilderTest {
   }
 
   @Test
-  public void shouldBuilderPrimaryIndexCounterKeys() throws Exception {
+  public void shouldBuildPrimaryIndexCounterKeys() throws Exception {
     Object primaryIndexKey = new Integer(99);
-    assertEquals(builder.build(primaryIndexKey) + "-counter", builder.buildCounterKey(primaryIndexKey));
+    assertEquals(builder.build(primaryIndexKey) + "-res-counter", builder.buildCounterKey(primaryIndexKey, "res"));
   }
 
   @Test(expected = HiveRuntimeException.class)
   public void buildCounterKeyhouldThrowRuntimeExceptionForNullPrimaryKey() throws Exception {
-    builder.buildCounterKey(null);
+    builder.buildCounterKey(null, "res");
   }
 
   @Test
   public void shouldBuildReferenceKeyBasedOnCounterAndResourceName() throws Exception {
     Integer primaryIndexKey = new Integer(77);
     String resource = "aResource";
-    Integer counter = new Integer(42);
+    Long counter = new Long(42);
     assertEquals("ref-77-aResource-42", builder.buildReferenceKey(primaryIndexKey, resource, counter));
   }
 
   @Test(expected = HiveRuntimeException.class)
   public void buildReferenceKeyShouldThrowRuntimeExceptionForNullPrimaryKey() throws Exception {
-    builder.buildReferenceKey(null, "aResource", new Integer(42));
+    builder.buildReferenceKey(null, "aResource", new Long(42));
   }
 
   @Test(expected = HiveRuntimeException.class)
   public void buildReferenceKeyShouldThrowRuntimeExceptionForNullResource() throws Exception {
-    builder.buildReferenceKey(new Integer(43), null, new Integer(42));
+    builder.buildReferenceKey(new Integer(43), null, new Long(42));
   }
 
   @Test(expected = HiveRuntimeException.class)

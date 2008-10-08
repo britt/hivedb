@@ -8,6 +8,10 @@ public class KeySemaphoreImpl implements KeySemaphore {
   private int nodeId;
   private Object key;
 
+  public KeySemaphoreImpl(Object key, int nodeId) {
+    this(key, nodeId, Lockable.Status.writable);
+  }
+
   public KeySemaphoreImpl(Object key, int nodeId, Lockable.Status status) {
     this.nodeId = nodeId;
     this.status = status;
@@ -28,11 +32,15 @@ public class KeySemaphoreImpl implements KeySemaphore {
 
   public int hashCode() {
     return HiveUtils.makeHashCode(new Object[]{
-      nodeId, status
+        nodeId, status
     });
   }
 
   public Status getStatus() {
     return status;
+  }
+
+  public void setStatus(Status status) {
+    this.status = status;
   }
 }
