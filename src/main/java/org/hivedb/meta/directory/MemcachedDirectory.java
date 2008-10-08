@@ -16,13 +16,13 @@ import java.util.Map;
 public class MemcachedDirectory implements Directory {
   private final static Log log = LogFactory.getLog(MemcachedDirectory.class);
   private MemCachedClient client;
-  private MemcacheDirectoryKeyBuilder keyBuilder;
+  private CacheKeyBuilder keyBuilder;
 
-  public MemcachedDirectory(String poolName, MemcacheDirectoryKeyBuilder keyBuilder) {
+  public MemcachedDirectory(String poolName, CacheKeyBuilder keyBuilder) {
     this(poolName, new MemCachedClient(poolName), keyBuilder);
   }
 
-  public MemcachedDirectory(String poolName, MemCachedClient client, MemcacheDirectoryKeyBuilder keyBuilder) {
+  public MemcachedDirectory(String poolName, MemCachedClient client, CacheKeyBuilder keyBuilder) {
     if (!SockIOPool.getInstance(poolName).isInitialized()) {
       throw new IllegalStateException("Pool must be initialized.");
     }

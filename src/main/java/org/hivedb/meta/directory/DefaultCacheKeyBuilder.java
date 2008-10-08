@@ -8,6 +8,9 @@ public class DefaultCacheKeyBuilder implements CacheKeyBuilder {
   private static final String PRIMARY_PREFIX = "pri";
   private static final String RESOURCE_PREFIX = "res";
   private static final String SECONDARY_PREFIX = "sec";
+  private static final String COUNTER_SUFFIX = "counter";
+  private static final String REFERENCE_PREFIX = "ref";
+  
 
   public String build(Object primaryIndexKey) {
     Preconditions.isNotNull(primaryIndexKey);
@@ -24,4 +27,13 @@ public class DefaultCacheKeyBuilder implements CacheKeyBuilder {
     return Strings.join(DELIMITER, SECONDARY_PREFIX, resource, resourceId.toString(), secondaryIndex, secondaryIndexKey.toString());
   }
 
+  public String buildCounterKey(Object primaryIndexKey) {
+    Preconditions.isNotNull(primaryIndexKey);
+    return Strings.join(DELIMITER, build(primaryIndexKey), COUNTER_SUFFIX);
+  }
+
+  public String buildReferenceKey(Object primaryIndexKey, String resourceName, Integer counter) {
+    Preconditions.isNotNull(primaryIndexKey, resourceName, counter);
+    return Strings.join(DELIMITER, REFERENCE_PREFIX, primaryIndexKey.toString(), resourceName, counter.toString());
+  }
 }
