@@ -7,7 +7,6 @@ import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.util.Lists;
-import org.hivedb.util.functional.Pair;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JMock;
@@ -47,7 +46,7 @@ public class MemcachedDirectoryTest {
   public void shouldThrowIllegalStateExceptionIfSockIOPoolIsNotInitialized() throws Exception {
     final MemCachedClient client = mockery.mock(MemCachedClient.class);
     final CacheKeyBuilder keyBuilder = mockery.mock(CacheKeyBuilder.class);
-    MemcachedDirectory directory = new MemcachedDirectory("uninitializedPool", client, keyBuilder, partitionDimension);
+    new MemcachedDirectory("uninitializedPool", client, keyBuilder, partitionDimension);
   }
 
   @Test
@@ -55,11 +54,19 @@ public class MemcachedDirectoryTest {
     String poolName = getInitializedPool();
     final MemCachedClient client = mockery.mock(MemCachedClient.class);
     final CacheKeyBuilder keyBuilder = mockery.mock(CacheKeyBuilder.class);
+    final Integer primaryIndexKey = 1;
 
-    final String key = mockPrimaryKeyExists(client, keyBuilder, true);
+    mockery.checking(new Expectations() {
+      {
+        one(keyBuilder).build(primaryIndexKey);
+        will(returnValue("P"));
+        one(client).keyExists("P");
+        will(returnValue(true));
+      }
+    });
 
     MemcachedDirectory directory = new MemcachedDirectory(poolName, client, keyBuilder, partitionDimension);
-    assertTrue(directory.doesPrimaryIndexKeyExist(key));
+    assertTrue(directory.doesPrimaryIndexKeyExist(primaryIndexKey));
   }
 
   @Test
@@ -67,27 +74,20 @@ public class MemcachedDirectoryTest {
     String poolName = getInitializedPool();
     final MemCachedClient client = mockery.mock(MemCachedClient.class);
     final CacheKeyBuilder keyBuilder = mockery.mock(CacheKeyBuilder.class);
-
-    final String key = mockPrimaryKeyExists(client, keyBuilder, false);
-
-    MemcachedDirectory directory = new MemcachedDirectory(poolName, client, keyBuilder, partitionDimension);
-    assertFalse(directory.doesPrimaryIndexKeyExist(key));
-  }
-
-  private String mockPrimaryKeyExists(final MemCachedClient client, final CacheKeyBuilder keyBuilder, final boolean exists) {
-    final String key = "aKey";
-    final String cacheKey = "cacheKey";
+    final Integer primaryIndexKey = 1;
 
     mockery.checking(new Expectations() {
       {
-        one(keyBuilder).build(key);
-        will(returnValue(cacheKey));
-        one(client).keyExists(cacheKey);
-        will(returnValue(exists));
+        one(keyBuilder).build(primaryIndexKey);
+        will(returnValue("P"));
+        one(client).keyExists("P");
+        will(returnValue(false));
 
       }
     });
-    return key;
+
+    MemcachedDirectory directory = new MemcachedDirectory(poolName, client, keyBuilder, partitionDimension);
+    assertFalse(directory.doesPrimaryIndexKeyExist(primaryIndexKey));
   }
 
   @Test
@@ -140,25 +140,6 @@ public class MemcachedDirectoryTest {
 
     MemcachedDirectory directory = new MemcachedDirectory(poolName, client, keyBuilder, partitionDimension);
     assertFalse(directory.doesResourceIdExist(resource, resourceId));
-  }
-
-  private Pair<Resource, String> mockResourceIdExists(final MemCachedClient client, final CacheKeyBuilder keyBuilder, final boolean exists) {
-    final String key = "aKey";
-    final String cacheKey = "cacheKey";
-    final Resource resource = new Resource("resource", Types.INTEGER, false);
-
-    mockery.checking(new Expectations() {
-      {
-        one(keyBuilder).build(resource.getName(), key);
-        will(returnValue(cacheKey));
-        one(client).get(cacheKey);
-        String referenceKey = cacheKey + 1;
-        will(returnValue(referenceKey));
-        one(client).keyExists(referenceKey);
-        will(returnValue(exists));
-      }
-    });
-    return new Pair<Resource, String>(resource, key);
   }
 
   @Test
