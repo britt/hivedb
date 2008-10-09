@@ -1,7 +1,8 @@
 package org.hivedb;
 
-import org.hivedb.meta.*;
-import org.hivedb.meta.directory.DbDirectory;
+import org.hivedb.meta.AccessType;
+import org.hivedb.meta.Node;
+import org.hivedb.meta.directory.DirectoryFacade;
 import org.hivedb.meta.directory.KeySemaphore;
 import org.hivedb.meta.persistence.DataSourceProvider;
 import org.hivedb.meta.persistence.HiveDataSourceProvider;
@@ -18,13 +19,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ConnectionManager {
-  private DbDirectory directory;
+  private DirectoryFacade directory;
   private HiveDataSourceProvider dataSourceProvider;
   private Map<Integer, DataSource> nodeDataSources;
   private JdbcDaoSupportCacheImpl cache;
   private Hive hive;
 
-  public ConnectionManager(DbDirectory directory, Hive hive, HiveDataSourceProvider provider) {
+  public ConnectionManager(DirectoryFacade directory, Hive hive, HiveDataSourceProvider provider) {
     this.hive = hive;
     this.directory = directory;
     this.dataSourceProvider = provider;
@@ -54,22 +55,17 @@ public class ConnectionManager {
 
   public Collection<Connection> getByResourceId(String resourceName, Object resourceId, AccessType intent) throws HiveLockableException, SQLException {
     Collection<Connection> connections = new ArrayList<Connection>();
-    for (KeySemaphore semaphore : directory.getKeySemaphoresOfResourceId(getResource(resourceName), resourceId))
+    for (KeySemaphore semaphore : directory.getKeySemaphoresOfResourceId(resourceName, resourceId))
       connections.add(getConnection(semaphore, intent));
     return connections;
-  }
-
-  private Resource getResource(String resourceName) {
-    return this.directory.getPartitionDimension().getResource(resourceName);
   }
 
   public Collection<Connection> getBySecondaryIndexKey(String secondaryIndexName, String resourceName, Object secondaryIndexKey, AccessType intent) throws HiveLockableException, SQLException {
     if (AccessType.ReadWrite == intent)
       throw new UnsupportedOperationException("Writes must be performed using the primary index key.");
 
-    SecondaryIndex secondaryIndex = directory.getPartitionDimension().getResource(resourceName).getSecondaryIndex(secondaryIndexName);
     Collection<Connection> connections = new ArrayList<Connection>();
-    Collection<KeySemaphore> keySemaphores = directory.getKeySemaphoresOfSecondaryIndexKey(secondaryIndex, secondaryIndexKey);
+    Collection<KeySemaphore> keySemaphores = directory.getKeySemaphoresOfSecondaryIndexKey(resourceName, secondaryIndexName, secondaryIndexKey);
     keySemaphores = Filter.getUnique(keySemaphores, new Unary<KeySemaphore, Integer>() {
       public Integer f(KeySemaphore item) {
         return item.getNodeId();

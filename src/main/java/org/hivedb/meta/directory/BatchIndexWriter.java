@@ -15,7 +15,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
- * A class for transactionally performing batches of directory operations.
+ * A class for transactionally performing batches of directory operations. This class is a close collaborator with DbDirectory.
+ * It is probably more appropriately and inner class of DbDirectory.  It is only extracted for readability.
  *
  * @author bcrawford
  */
@@ -41,7 +42,7 @@ public class BatchIndexWriter extends SimpleJdbcDaoSupport {
             }, secondaryIndexKeysEntry.getValue());
           }
         },
-            secondaryIndexValueMap.entrySet()).size();
+          secondaryIndexValueMap.entrySet()).size();
       }
     });
   }
@@ -58,7 +59,7 @@ public class BatchIndexWriter extends SimpleJdbcDaoSupport {
             }, secondaryIndexKeysEntry.getValue());
           }
         },
-            secondaryIndexValueMap.entrySet()).size();
+          secondaryIndexValueMap.entrySet()).size();
       }
     });
   }
@@ -71,7 +72,7 @@ public class BatchIndexWriter extends SimpleJdbcDaoSupport {
         Integer rowsAffected = 0;
         for (SecondaryIndex secondaryIndex : resource.getSecondaryIndexes()) {
           PreparedStatementCreatorFactory deleteIndexFactory =
-              Statements.newStmtCreatorFactory(sql.deleteAllSecondaryIndexKeysForResourceId(secondaryIndex), resource.getColumnType());
+            Statements.newStmtCreatorFactory(sql.deleteAllSecondaryIndexKeysForResourceId(secondaryIndex), resource.getColumnType());
           rowsAffected += getJdbcTemplate().update(deleteIndexFactory.newPreparedStatementCreator(parameters));
         }
         return rowsAffected;
