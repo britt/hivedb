@@ -35,7 +35,8 @@ import java.util.Map;
 // Todo queries
 // No HQL -- use Criteria
 // Drop primitive collection property query support
-public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> implements DataAccessObject<T, ID> {
+public class
+  ErrorCorrectingDataAccessObject<T, ID extends Serializable> implements DataAccessObject<T, ID> {
   private final static Log log = LogFactory.getLog(ErrorCorrectingDataAccessObject.class);
   private Hive hive;
   private EntityConfig config;
@@ -77,22 +78,22 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
   public T save(final T entity) {
     SessionCallback callback = transactionHelper.newSaveCallback(entity, getRespresentedClass());
 
-		SessionCallback cleanupCallback = new SessionCallback(){
-		  public void execute(Session session) {
-			  session.refresh(entity);
-				session.lock(getRespresentedClass().getName(),entity, LockMode.UPGRADE);
-				session.update(getRespresentedClass().getName(),entity);
-				log.warn(String.format("%s with id %s exists in the data node but not on the directory. Data node record was updated and re-indexed.", config.getResourceName(), config.getId(entity)));
-			}
+    SessionCallback cleanupCallback = new SessionCallback() {
+      public void execute(Session session) {
+        session.refresh(entity);
+        session.lock(getRespresentedClass().getName(), entity, LockMode.UPGRADE);
+        session.update(getRespresentedClass().getName(), entity);
+        log.warn(String.format("%s with id %s exists in the data node but not on the directory. Data node record was updated and re-indexed.", config.getResourceName(), config.getId(entity)));
+      }
     };
 
-		if (hasPartitionDimensionKeyChanged(entity))
-			delete((ID) config.getId(entity));
-    
+    if (hasPartitionDimensionKeyChanged(entity))
+      delete((ID) config.getId(entity));
+
     try {
       transactionHelper.updateInTransaction(callback, factory.openSession());
     } catch (HibernateException dupe) {
-      if (isDuplicateRecordException(dupe,entity) && !exists((ID) config.getId(entity))) {
+      if (isDuplicateRecordException(dupe, entity) && !exists((ID) config.getId(entity))) {
         transactionHelper.updateInTransaction(cleanupCallback, factory.openSession(config.getPrimaryIndexKey(entity)));
       } else {
         log.error(
@@ -103,16 +104,16 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
         throw dupe;
       }
     }
-    
+
     return entity;
   }
 
   public Collection<T> saveAll(Collection<T> entities) {
-    for(T t : entities)
+    for (T t : entities)
       save(t);
     return entities;
   }
-  
+
   public ID delete(final ID id) {
     SessionCallback callback = new SessionCallback() {
       public void execute(Session session) {
@@ -120,15 +121,15 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
         session.delete(deleted);
       }
     };
-    if(exists(id))
+    if (exists(id))
       transactionHelper.updateInTransaction(callback, factory.openSession());
     return id;
   }
- 
-	public boolean hasPartitionDimensionKeyChanged(Object entity) {
-		return hive.directory().doesResourceIdExist(config.getResourceName(), config.getId(entity)) &&
-				!config.getPrimaryIndexKey(entity).equals(hive.directory().getPrimaryIndexKeyOfResourceId(config.getResourceName(), config.getId(entity)));
-	}
+
+  public boolean hasPartitionDimensionKeyChanged(Object entity) {
+    return hive.directory().doesResourceIdExist(config.getResourceName(), config.getId(entity)) &&
+      !config.getPrimaryIndexKey(entity).equals(hive.directory().getPrimaryIndexKeyOfResourceId(config.getResourceName(), config.getId(entity)));
+  }
 
   public Boolean exists(ID id) {
     return hive.directory().doesResourceIdExist(config.getResourceName(), id);
@@ -145,13 +146,13 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
   public Collection<T> findInRange(final String propertyName, final Object minValue, final Object maxValue) {
     checkForHiveIndexedProperty(propertyName);
 
-    QueryCallback query = new QueryCallback(){
+    QueryCallback query = new QueryCallback() {
       public Collection<Object> execute(Session session) {
         HiveCriteria c = new HiveCriteriaImpl(session.createCriteria(getRespresentedClass()), getRespresentedClass());
-        if(ReflectionTools.isComplexCollectionItemProperty(getRespresentedClass(), propertyName)){
-          c.createCriteria(propertyName).add(  Restrictions.between("id", minValue, maxValue));
+        if (ReflectionTools.isComplexCollectionItemProperty(getRespresentedClass(), propertyName)) {
+          c.createCriteria(propertyName).add(Restrictions.between("id", minValue, maxValue));
         } else {
-          c.add(Restrictions.between(propertyName, minValue, maxValue));                                  
+          c.add(Restrictions.between(propertyName, minValue, maxValue));
         }
         return c.list();
       }
@@ -180,8 +181,8 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
   }
 
   private void checkForHiveIndexedProperty(String propertyName) throws UnsupportedOperationException {
-    if(config.getEntityIndexConfig(propertyName) == null)
-      throw new UnsupportedOperationException(String.format("%s.%s is not indexed by the Hive. This operation can only be performed on indexed properties.",getRespresentedClass().getSimpleName(), propertyName));
+    if (config.getEntityIndexConfig(propertyName) == null)
+      throw new UnsupportedOperationException(String.format("%s.%s is not indexed by the Hive. This operation can only be performed on indexed properties.", getRespresentedClass().getSimpleName(), propertyName));
   }
 
   public Integer getCount(Map<String, Object> properties) {
@@ -191,7 +192,7 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
   public Integer getCountInRange(final String propertyName, final Object minValue, final Object maxValue) {
     checkForHiveIndexedProperty(propertyName);
 
-    QueryCallback query = new QueryCallback(){
+    QueryCallback query = new QueryCallback() {
       public Collection<Object> execute(Session session) {
         HiveCriteria c = new HiveCriteriaImpl(session.createCriteria(config.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY), getRespresentedClass());
         if (ReflectionTools.isComplexCollectionItemProperty(getRespresentedClass(), propertyName)) {
@@ -200,11 +201,11 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
         } else {
           c.add(Restrictions.between(propertyName, minValue, maxValue));
         }
-				c.setProjection( Projections.rowCount() );
-				return c.list();
+        c.setProjection(Projections.rowCount());
+        return c.list();
       }
     };
-    
+
     return (Integer) transactionHelper.querySingleInTransaction(query, factory.openSession());
   }
 
@@ -217,8 +218,8 @@ public class ErrorCorrectingDataAccessObject<T, ID extends Serializable> impleme
       return
         (dupe.getCause().getClass().isAssignableFrom(ConstraintViolationException.class)
           || dupe.getClass().isAssignableFrom(ConstraintViolationException.class))
-				  && !exists((ID)config.getId(entity));
-    } catch(RuntimeException e) {
+          && !exists((ID) config.getId(entity));
+    } catch (RuntimeException e) {
       return false;
     }
   }

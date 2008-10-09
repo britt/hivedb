@@ -13,7 +13,8 @@ import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Pair;
 import org.hivedb.util.functional.Transform;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import org.junit.Test;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 
@@ -157,7 +158,7 @@ public class TestMigration extends HiveTest {
     int originId = Atom.getFirst(dir.getKeySemamphoresOfPrimaryIndexKey(primaryKey)).getNodeId();
     Node origin = hive.getNode(originId);
     Node destination = origin.getName().equals("data1") ? hive.getNode("data2") :
-        hive.getNode("data1");
+      hive.getNode("data1");
     PartitionKeyMover<String> pMover = new PrimaryMover(origin.getUri());
     Mover<Integer> secMover = new SecondaryMover();
     pMover.copy(primaryKey, origin);
@@ -175,8 +176,8 @@ public class TestMigration extends HiveTest {
     @Override
     public Collection<TableInfo> getTables(String uri) {
       return Arrays.asList(
-          new TableInfo("primary_table", "create table primary_table (id varchar(50));"),
-          new TableInfo("secondary_table", "create table secondary_table (id integer);"));
+        new TableInfo("primary_table", "create table primary_table (id varchar(50));"),
+        new TableInfo("secondary_table", "create table secondary_table (id integer);"));
     }
 
     public static TestMigrationSchema getInstance() {

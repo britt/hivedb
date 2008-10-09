@@ -2,13 +2,15 @@ package org.hivedb.meta.directory;
 
 import org.hivedb.*;
 import org.hivedb.Lockable.Status;
-import org.hivedb.meta.*;
+import org.hivedb.meta.Assigner;
+import org.hivedb.meta.Node;
+import org.hivedb.meta.Resource;
+import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.HiveUtils;
 import org.hivedb.util.Lists;
 import org.hivedb.util.Preconditions;
 import org.hivedb.util.functional.*;
 
-import javax.sql.DataSource;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -18,14 +20,8 @@ public class DirectoryWrapper implements DirectoryFacade {
   private Assigner assigner;
   private Hive hive;
 
-  public DirectoryWrapper(PartitionDimension dimension, DataSource dataSource, Assigner assigner, Hive hive) {
-    this.directory = new DbDirectory(dimension, dataSource);
-    this.hive = hive;
-    this.assigner = assigner;
-  }
-
-  public DirectoryWrapper(PartitionDimension dimension, Assigner assigner, Hive hive) {
-    this.directory = new DbDirectory(dimension);
+  public DirectoryWrapper(Hive hive, Assigner assigner, Directory directory) {
+    this.directory = directory;
     this.hive = hive;
     this.assigner = assigner;
   }
@@ -33,7 +29,7 @@ public class DirectoryWrapper implements DirectoryFacade {
   public void deletePrimaryIndexKey(Object primaryIndexKey) throws HiveLockableException {
     if (!directory.doesPrimaryIndexKeyExist(primaryIndexKey))
       throw new HiveKeyNotFoundException("The primary index key " + primaryIndexKey
-          + " does not exist", primaryIndexKey);
+        + " does not exist", primaryIndexKey);
     Preconditions.isWritable(directory.getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey), hive);
     directory.deletePrimaryIndexKey(primaryIndexKey);
   }
@@ -50,9 +46,9 @@ public class DirectoryWrapper implements DirectoryFacade {
     Preconditions.isWritable(directory.getKeySemaphoresOfResourceId(getResource(resource), resourceId), hive);
     if (!directory.doesSecondaryIndexKeyExist(index, secondaryIndexKey, resourceId))
       throw new HiveKeyNotFoundException(
-          String.format(
-              "Secondary index key %s of secondary index %s does not exist",
-              secondaryIndexKey, index.getName()), secondaryIndexKey);
+        String.format(
+          "Secondary index key %s of secondary index %s does not exist",
+          secondaryIndexKey, index.getName()), secondaryIndexKey);
 
     directory.deleteSecondaryIndexKey(index, secondaryIndexKey, resourceId);
   }
@@ -95,14 +91,14 @@ public class DirectoryWrapper implements DirectoryFacade {
 
   public boolean getReadOnlyOfPrimaryIndexKey(Object primaryIndexKey) {
     Collection<Boolean> locks =
-        Transform.map(semaphoreToReadOnly(), directory.getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey));
+      Transform.map(semaphoreToReadOnly(), directory.getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey));
     Preconditions.isNotEmpty(locks, String.format("Unable to find partitionKey %s ", primaryIndexKey));
     return Lists.or(locks);
   }
 
   public boolean getReadOnlyOfResourceId(String resource, Object id) {
     Collection<Boolean> locks =
-        Transform.map(semaphoreToReadOnly(), directory.getKeySemaphoresOfResourceId(getResource(resource), id));
+      Transform.map(semaphoreToReadOnly(), directory.getKeySemaphoresOfResourceId(getResource(resource), id));
     Preconditions.isNotEmpty(locks, String.format("Unable to find resource %s with id = %s ", resource, id));
     return Lists.or(locks);
   }
@@ -130,7 +126,7 @@ public class DirectoryWrapper implements DirectoryFacade {
 
   public void insertSecondaryIndexKey(String resource, String secondaryIndex, Object secondaryIndexKey, Object resourceId) throws HiveLockableException {
     Collection<KeySemaphore> semaphores =
-        directory.getKeySemaphoresOfResourceId(getResource(resource), resourceId);
+      directory.getKeySemaphoresOfResourceId(getResource(resource), resourceId);
     Preconditions.isWritable(semaphores, hive);
     directory.insertSecondaryIndexKey(getSecondaryIndex(resource, secondaryIndex), secondaryIndexKey, resourceId);
   }
@@ -178,8 +174,8 @@ public class DirectoryWrapper implements DirectoryFacade {
 
   public Object getPrimaryIndexKeyOfResourceId(String name, Object resourceId) {
     return getResource(name).isPartitioningResource()
-        ? resourceId
-        : directory.getPrimaryIndexKeyOfResourceId(getResource(name), resourceId);
+      ? resourceId
+      : directory.getPrimaryIndexKeyOfResourceId(getResource(name), resourceId);
   }
 
   /*
@@ -215,13 +211,13 @@ public class DirectoryWrapper implements DirectoryFacade {
 
   private Map<SecondaryIndex, Collection<Object>> stringMapToIndexValueMap(final String resource, final Map<String, Collection<Object>> map) {
     return Transform.toMap(
-        Transform.map(
-            new Unary<Entry<String, Collection<Object>>, Entry<SecondaryIndex, Collection<Object>>>() {
-              public Entry<SecondaryIndex, Collection<Object>> f(Entry<String, Collection<Object>> item) {
-                return new Pair<SecondaryIndex, Collection<Object>>(
-                    getSecondaryIndex(resource, item.getKey()),
-                    item.getValue());
-              }
-            }, map.entrySet()));
+      Transform.map(
+        new Unary<Entry<String, Collection<Object>>, Entry<SecondaryIndex, Collection<Object>>>() {
+          public Entry<SecondaryIndex, Collection<Object>> f(Entry<String, Collection<Object>> item) {
+            return new Pair<SecondaryIndex, Collection<Object>>(
+              getSecondaryIndex(resource, item.getKey()),
+              item.getValue());
+          }
+        }, map.entrySet()));
   }
 }
