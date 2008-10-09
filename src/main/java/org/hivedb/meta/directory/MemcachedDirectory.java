@@ -13,9 +13,34 @@ import org.hivedb.util.Lists;
 import org.hivedb.util.Preconditions;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 
+/**
+ * This {@link Directory} implementation uses a map data structure to store the directory. It is backed by memcached.
+ * <p/>
+ * There are a series of indirect links in the map.
+ * <p/>
+ * KEY                                              VALUE
+ * ===                                              =====
+ * P = f(primaryIndexKey)                        => {@link org.hivedb.meta.directory.KeySemaphoreImpl} (contains node id and lock status)
+ * <p/>
+ * PRC = f(primaryIndexKey, resourceName)        => {@link Long} count of PR keys for this P
+ * <p/>
+ * PR = f(primaryIndexKey, resourceName, count)  => {@link org.hivedb.meta.directory.MemcachedDirectory.ResourceCacheEntry} (contains P and R refs)
+ * <p/>
+ * R = f(resourceName, resourceId)               => PR
+ * <p/>
+ * There are two ways to look at the resources belonging to a primary key:
+ * <p/>
+ * First, you can iterate over the collection by getting PRC then iterating from 0..PRC and then calculating key PR.
+ * <p/>
+ * Second, you can compute key R if you know the resourceId, then get PR.
+ * <p/>
+ * Because of the back-references to R in a PR, we can maintain the Map in a consistent state. No oprhaned entries are present under normal operation.
+ */
 public class MemcachedDirectory implements Directory {
   private final static Log log = LogFactory.getLog(MemcachedDirectory.class);
   private MemCachedClient client;
@@ -44,7 +69,11 @@ public class MemcachedDirectory implements Directory {
   public Collection<KeySemaphore> getKeySemamphoresOfPrimaryIndexKey(Object primaryIndexKey) {
     Preconditions.isNotNull(primaryIndexKey);
     final KeySemaphore semaphore = (KeySemaphoreImpl) client.get(keyBuilder.build(primaryIndexKey));
-    return Lists.newList(semaphore);
+    if (semaphore != null) {
+      return Lists.newList(semaphore);
+    } else {
+      return new ArrayList<KeySemaphore>(0);
+    }
   }
 
   public void deletePrimaryIndexKey(Object primaryIndexKey) {
@@ -129,8 +158,12 @@ public class MemcachedDirectory implements Directory {
   }
 
   public void insertPrimaryIndexKey(Node node, Object primaryIndexKey) {
+    String p = keyBuilder.build(primaryIndexKey);
+    if (client.keyExists(p)) {
+      throw new IllegalStateException(String.format("Can't insert if the key already exists [key=%1$s]", p));
+    }
     KeySemaphoreImpl semaphore = new KeySemaphoreImpl(primaryIndexKey, node.getId());
-    client.set(keyBuilder.build(primaryIndexKey), semaphore);
+    client.set(p, semaphore);
     for (Resource resource : partitionDimension.getResources()) {
       client.storeCounter(keyBuilder.buildCounterKey(primaryIndexKey, resource.getName()), 0);
     }
@@ -143,7 +176,7 @@ public class MemcachedDirectory implements Directory {
     String referenceKey = keyBuilder.buildReferenceKey(primaryIndexKey, resource.getName(), counter);
     client.set(referenceKey, entry);
 
-    client.set(keyBuilder.build(resource.getName(), id), referenceKey);
+    client.set(resourceKey, referenceKey);
   }
 
   public void insertSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey, Object resourceId) {
@@ -191,19 +224,34 @@ public class MemcachedDirectory implements Directory {
     throw new UnsupportedOperationException("Secondary indices are not supported by this Directory.");
   }
 
-  private class ResourceCacheEntry implements Serializable {
+  public static class ResourceCacheEntry implements Serializable {
     private String[] data;
 
     public ResourceCacheEntry(String primaryIndexCacheKey, String resourceBackreferenceCacheKey) {
       data = new String[]{primaryIndexCacheKey, resourceBackreferenceCacheKey};
     }
 
-    private String getPrimaryIndexCacheKey() {
+    public String getPrimaryIndexCacheKey() {
       return data[0];
     }
 
-    private String getResourceBackreferenceCacheKey() {
+    public String getResourceBackreferenceCacheKey() {
       return data[1];
+    }
+
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      ResourceCacheEntry that = (ResourceCacheEntry) o;
+
+      if (!Arrays.equals(data, that.data)) return false;
+
+      return true;
+    }
+
+    public int hashCode() {
+      return Arrays.hashCode(data);
     }
   }
 }
