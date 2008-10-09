@@ -107,7 +107,7 @@ public class MemcachedDirectoryTest {
         will(returnValue("PR"));
         one(client).get("PR");
         will(returnValue(entry));
-        one(client).keyExists(entry.getPrimaryIndexCacheKey());
+        one(client).keyExists(entry.getP());
         will(returnValue(true));
       }
     });
@@ -133,7 +133,7 @@ public class MemcachedDirectoryTest {
         will(returnValue("PR"));
         one(client).get("PR");
         will(returnValue(entry));
-        one(client).keyExists(entry.getPrimaryIndexCacheKey());
+        one(client).keyExists(entry.getP());
         will(returnValue(false));
       }
     });
@@ -428,6 +428,47 @@ public class MemcachedDirectoryTest {
   }
 
   @Test
+  public void shouldUpdatePrimaryIndexKeyOfResourceId() throws Exception {
+    String poolName = getInitializedPool();
+    final MemCachedClient client = mockery.mock(MemCachedClient.class);
+    final CacheKeyBuilder keyBuilder = mockery.mock(CacheKeyBuilder.class);
+    final Integer primaryIndexKey = new Integer(1);
+    final Integer resourceId = new Integer(2);
+    final Resource resource = new Resource("res", Types.INTEGER, false);
+    final KeySemaphore semaphore = new KeySemaphoreImpl(primaryIndexKey, 4);
+
+    mockery.checking(new Expectations() {
+      {
+        exactly(2).of(keyBuilder).build(resource.getName(), resourceId);
+        will(returnValue("R"));
+        one(client).get("R");
+        will(returnValue("PR"));
+        one(client).delete("R");
+        one(client).delete("PR");
+
+        one(keyBuilder).buildCounterKey(primaryIndexKey, resource.getName());
+        will(returnValue("PRC"));
+
+        one(client).addOrIncr("PRC");
+        will(returnValue(99L));
+
+        one(keyBuilder).build(primaryIndexKey);
+        will(returnValue("P"));
+
+        one(keyBuilder).buildReferenceKey(primaryIndexKey, resource.getName(), 99L);
+        will(returnValue("PR"));
+
+        one(client).set("R", "PR");
+        one(client).set("PR", new MemcachedDirectory.ResourceCacheEntry("P", "R"));
+
+      }
+    });
+
+    MemcachedDirectory directory = new MemcachedDirectory(poolName, client, keyBuilder, partitionDimension);
+    directory.updatePrimaryIndexKeyOfResourceId(resource, resourceId, primaryIndexKey);
+  }
+
+  @Test
   public void shouldDeleteResourceId() throws Exception {
     String poolName = getInitializedPool();
     final MemCachedClient client = mockery.mock(MemCachedClient.class);
@@ -452,6 +493,45 @@ public class MemcachedDirectoryTest {
 
     MemcachedDirectory directory = new MemcachedDirectory(poolName, client, keyBuilder, partitionDimension);
     directory.deleteResourceId(resource, resourceId);
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void shouldNotSupportDeleteSecondaryIndexKey() throws Exception {
+    newBogusDirectory().deleteSecondaryIndexKey(null, null, null);
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void shouldNotSupportDeleteSecondaryIndexKeys() throws Exception {
+    newBogusDirectory().deleteSecondaryIndexKeys(null, null);
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void shouldNotSupportDoesSecondaryIndexKeyExist() throws Exception {
+    newBogusDirectory().doesSecondaryIndexKeyExist(null, null, null);
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void shouldNotSupportGetKeySemaphoresOfSecondaryIndexKey() throws Exception {
+    newBogusDirectory().getKeySemaphoresOfSecondaryIndexKey(null, null);
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void shouldNotSupportGetSecondaryIndexKeysOfResourceId() throws Exception {
+    newBogusDirectory().getSecondaryIndexKeysOfResourceId(null, null);
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void shouldNotSupportInsertSecondaryIndexKey() throws Exception {
+    newBogusDirectory().insertSecondaryIndexKey(null, null, null);
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void shouldNotSupportInsertSecondaryIndexKeys() throws Exception {
+    newBogusDirectory().insertSecondaryIndexKeys(null, null);
+  }
+
+  private Directory newBogusDirectory() {
+    return new MemcachedDirectory(getInitializedPool(), null, null);
   }
 
 

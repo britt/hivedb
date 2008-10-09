@@ -21,7 +21,9 @@ import java.util.Map;
 /**
  * This {@link Directory} implementation uses a map data structure to store the directory. It is backed by memcached.
  * <p/>
- * There are a series of indirect links in the map.
+ * There are a series of indirect links in the map. They can be confusing to follow. Its really hard to come up with meaningful
+ * words that are not ambiguous to describe the keys, so you'll see P, PRC, PR, and R used in the code.
+ * <p/>
  * <p/>
  * KEY                                              VALUE
  * ===                                              =====
@@ -63,12 +65,14 @@ public class MemcachedDirectory implements Directory {
 
   public boolean doesPrimaryIndexKeyExist(Object primaryIndexKey) {
     Preconditions.isNotNull(primaryIndexKey);
-    return client.keyExists(keyBuilder.build(primaryIndexKey));
+    String P = keyBuilder.build(primaryIndexKey);
+    return client.keyExists(P);
   }
 
   public Collection<KeySemaphore> getKeySemamphoresOfPrimaryIndexKey(Object primaryIndexKey) {
     Preconditions.isNotNull(primaryIndexKey);
-    final KeySemaphore semaphore = (KeySemaphoreImpl) client.get(keyBuilder.build(primaryIndexKey));
+    String P = keyBuilder.build(primaryIndexKey);
+    final KeySemaphore semaphore = (KeySemaphoreImpl) client.get(P);
     if (semaphore != null) {
       return Lists.newList(semaphore);
     } else {
@@ -77,27 +81,28 @@ public class MemcachedDirectory implements Directory {
   }
 
   public void deletePrimaryIndexKey(Object primaryIndexKey) {
-    client.delete(keyBuilder.build(primaryIndexKey));
+    String P = keyBuilder.build(primaryIndexKey);
+    client.delete(P);
 
     String counterCacheKey = null;
 
-    ResourceCacheEntry resourceEntry = null;
-    String resourceCacheKey = null;
+    ResourceCacheEntry entry = null;
+    String PRC = null;
     for (Resource resource : partitionDimension.getResources()) {
       counterCacheKey = keyBuilder.buildCounterKey(primaryIndexKey, resource.getName());
       long resourceCount = client.getCounter(counterCacheKey);
       for (long i = 0; i < resourceCount; i++) {
-        resourceCacheKey = keyBuilder.buildReferenceKey(primaryIndexKey, resource.getName(), i);
-        resourceEntry = (ResourceCacheEntry) client.get(resourceCacheKey);
+        PRC = keyBuilder.buildReferenceKey(primaryIndexKey, resource.getName(), i);
+        entry = (ResourceCacheEntry) client.get(PRC);
         try {
-          client.delete(resourceEntry.getResourceBackreferenceCacheKey());
+          client.delete(entry.getR());
         } catch (Exception e) {
-          logOrphan(resourceEntry.getResourceBackreferenceCacheKey());
+          logOrphan(entry.getR());
         }
         try {
-          client.delete(resourceCacheKey);
+          client.delete(PRC);
         } catch (Exception e) {
-          logOrphan(resourceCacheKey);
+          logOrphan(PRC);
         }
       }
     }
@@ -113,24 +118,24 @@ public class MemcachedDirectory implements Directory {
   }
 
   public Collection<KeySemaphore> getKeySemaphoresOfResourceId(Resource resource, Object id) {
-    String resourceCacheKey = keyBuilder.build(resource.getName(), id);
-    String otherKey = (String) client.get(resourceCacheKey);
+    String R = keyBuilder.build(resource.getName(), id);
+    String PR = (String) client.get(R);
 
-    ResourceCacheEntry resourceCacheEntry = (ResourceCacheEntry) client.get(otherKey);
+    ResourceCacheEntry resourceCacheEntry = (ResourceCacheEntry) client.get(PR);
 
-    KeySemaphore keySemaphore = (KeySemaphoreImpl) client.get(resourceCacheEntry.getPrimaryIndexCacheKey());
+    KeySemaphore keySemaphore = (KeySemaphoreImpl) client.get(resourceCacheEntry.getP());
     return Lists.newList(keySemaphore);
   }
 
   public void deleteResourceId(Resource resource, Object id) {
-    String resourceCacheKey = keyBuilder.build(resource.getName(), id);
-    String otherKey = (String) client.get(resourceCacheKey);
+    String R = keyBuilder.build(resource.getName(), id);
+    String PR = (String) client.get(R);
 
-    client.delete(otherKey);
+    client.delete(PR);
     try {
-      client.delete(resourceCacheKey);
+      client.delete(R);
     } catch (Exception e) {
-      logOrphan(resourceCacheKey);
+      logOrphan(R);
     }
   }
 
@@ -143,14 +148,14 @@ public class MemcachedDirectory implements Directory {
   }
 
   public boolean doesResourceIdExist(Resource resource, Object resourceId) {
-    ResourceCacheEntry resourceEntry = null;
+    ResourceCacheEntry entry = null;
     try {
-      String resourceKey = keyBuilder.build(resource.getName(), resourceId);
-      String otherKey = (String) client.get(resourceKey);
-      resourceEntry = (ResourceCacheEntry) client.get(otherKey);
+      String R = keyBuilder.build(resource.getName(), resourceId);
+      String PR = (String) client.get(R);
+      entry = (ResourceCacheEntry) client.get(PR);
     } catch (Exception e) {
     }
-    return resourceEntry != null && client.keyExists(resourceEntry.getPrimaryIndexCacheKey());
+    return entry != null && client.keyExists(entry.getP());
   }
 
   public Collection<KeySemaphore> getKeySemaphoresOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey) {
@@ -158,25 +163,27 @@ public class MemcachedDirectory implements Directory {
   }
 
   public void insertPrimaryIndexKey(Node node, Object primaryIndexKey) {
-    String p = keyBuilder.build(primaryIndexKey);
-    if (client.keyExists(p)) {
-      throw new IllegalStateException(String.format("Can't insert if the key already exists [key=%1$s]", p));
+    String P = keyBuilder.build(primaryIndexKey);
+    if (client.keyExists(P)) {
+      throw new IllegalStateException(String.format("Can't insert if the key already exists [key=%1$s]", P));
     }
     KeySemaphoreImpl semaphore = new KeySemaphoreImpl(primaryIndexKey, node.getId());
-    client.set(p, semaphore);
+    client.set(P, semaphore);
     for (Resource resource : partitionDimension.getResources()) {
-      client.storeCounter(keyBuilder.buildCounterKey(primaryIndexKey, resource.getName()), 0);
+      String PRC = keyBuilder.buildCounterKey(primaryIndexKey, resource.getName());
+      client.storeCounter(PRC, 0);
     }
   }
 
   public void insertResourceId(Resource resource, Object id, Object primaryIndexKey) {
-    long counter = client.addOrIncr(keyBuilder.buildCounterKey(primaryIndexKey, resource.getName()));
-    String resourceKey = keyBuilder.build(resource.getName(), id);
-    ResourceCacheEntry entry = new ResourceCacheEntry(keyBuilder.build(primaryIndexKey), resourceKey);
-    String referenceKey = keyBuilder.buildReferenceKey(primaryIndexKey, resource.getName(), counter);
-    client.set(referenceKey, entry);
-
-    client.set(resourceKey, referenceKey);
+    String PRC = keyBuilder.buildCounterKey(primaryIndexKey, resource.getName());
+    long counter = client.addOrIncr(PRC);
+    String R = keyBuilder.build(resource.getName(), id);
+    String P = keyBuilder.build(primaryIndexKey);
+    ResourceCacheEntry entry = new ResourceCacheEntry(P, R);
+    String PR = keyBuilder.buildReferenceKey(primaryIndexKey, resource.getName(), counter);
+    client.set(PR, entry);
+    client.set(R, PR);
   }
 
   public void insertSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey, Object resourceId) {
@@ -189,25 +196,25 @@ public class MemcachedDirectory implements Directory {
   }
 
   public void updatePrimaryIndexKeyReadOnly(Object primaryIndexKey, boolean readOnly) {
-    String cacheKey = keyBuilder.build(primaryIndexKey);
-    KeySemaphoreImpl semaphore = (KeySemaphoreImpl) client.get(cacheKey);
+    String P = keyBuilder.build(primaryIndexKey);
+    KeySemaphoreImpl semaphore = (KeySemaphoreImpl) client.get(P);
     if (readOnly) {
       semaphore.setStatus(Lockable.Status.readOnly);
     } else {
       semaphore.setStatus(Lockable.Status.writable);
     }
-    client.set(cacheKey, semaphore);
+    client.set(P, semaphore);
   }
 
   private ResourceCacheEntry getResourceCacheEntry(Resource resource, Object resourceId) {
-    String resourceCacheKey = keyBuilder.build(resource.getName(), resourceId);
-    String otherKey = (String) client.get(resourceCacheKey);
-    return (ResourceCacheEntry) client.get(otherKey);
+    String R = keyBuilder.build(resource.getName(), resourceId);
+    String PR = (String) client.get(R);
+    return (ResourceCacheEntry) client.get(PR);
   }
 
   public Object getPrimaryIndexKeyOfResourceId(Resource resource, Object resourceId) {
-    ResourceCacheEntry resourceCacheEntry = getResourceCacheEntry(resource, resourceId);
-    KeySemaphore semaphore = (KeySemaphore) client.get(resourceCacheEntry.getPrimaryIndexCacheKey());
+    ResourceCacheEntry R = getResourceCacheEntry(resource, resourceId);
+    KeySemaphore semaphore = (KeySemaphore) client.get(R.getP());
     return semaphore.getKey();
   }
 
@@ -227,15 +234,15 @@ public class MemcachedDirectory implements Directory {
   public static class ResourceCacheEntry implements Serializable {
     private String[] data;
 
-    public ResourceCacheEntry(String primaryIndexCacheKey, String resourceBackreferenceCacheKey) {
-      data = new String[]{primaryIndexCacheKey, resourceBackreferenceCacheKey};
+    public ResourceCacheEntry(String P, String R) {
+      data = new String[]{P, R};
     }
 
-    public String getPrimaryIndexCacheKey() {
+    public String getP() {
       return data[0];
     }
 
-    public String getResourceBackreferenceCacheKey() {
+    public String getR() {
       return data[1];
     }
 
