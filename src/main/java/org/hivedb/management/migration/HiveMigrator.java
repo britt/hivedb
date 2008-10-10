@@ -2,10 +2,10 @@ package org.hivedb.management.migration;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveLockableException;
-import org.hivedb.meta.directory.KeySemaphore;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.directory.DbDirectory;
+import org.hivedb.meta.directory.KeySemaphore;
 import org.hivedb.util.Lists;
 import org.hivedb.util.functional.Collect;
 import org.hivedb.util.functional.Pair;
@@ -40,10 +40,10 @@ public class HiveMigrator implements Migrator {
       }
     } catch (RuntimeException e) {
       throw new MigrationException(
-          String.format("An error occured while copying records from node %s to node %s.  Records may be orphaned on node %s",
-              destination.getName(),
-              origin.getName(),
-              destination.getName()), e);
+        String.format("An error occured while copying records from node %s to node %s.  Records may be orphaned on node %s",
+          destination.getName(),
+          origin.getName(),
+          destination.getName()), e);
     }
   }
 
@@ -88,10 +88,10 @@ public class HiveMigrator implements Migrator {
 //							destination.getName()), e);
     } catch (RuntimeException e) {
       throw new MigrationException(
-          String.format("An error occured while copying records from node %s to node %s.  Records may be orphaned on node %s",
-              destination.getName(),
-              origin.getName(),
-              destination.getName()), e);
+        String.format("An error occured while copying records from node %s to node %s.  Records may be orphaned on node %s",
+          destination.getName(),
+          origin.getName(),
+          destination.getName()), e);
     }
 
     //Delete dependent records first, just in case there are FKs.
@@ -175,8 +175,8 @@ public class HiveMigrator implements Migrator {
         } catch (Exception ex) {
         }
         throw new MigrationException(
-            String.format("Failed to update directory entry for %s. Records may be orphaned.",
-                key), e);
+          String.format("Failed to update directory entry for %s. Records may be orphaned.",
+            key), e);
       }
 
       for (Node node : origins) {

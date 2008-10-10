@@ -1,7 +1,6 @@
 package org.hivedb.meta.directory;
 
 import org.hivedb.Hive;
-import org.hivedb.HiveFacade;
 import org.hivedb.HiveLockableException;
 import org.hivedb.Lockable.Status;
 import org.hivedb.Schema;
@@ -11,7 +10,7 @@ import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
-import static org.hivedb.meta.directory.DirectoryWrapper.*;
+import static org.hivedb.meta.directory.DirectoryWrapper.semaphoreToId;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.meta.persistence.IndexSchema;
 import org.hivedb.util.AssertUtils;
@@ -37,8 +36,8 @@ public class DbDirectoryTest extends H2TestCase {
 
   public Collection<Schema> getSchemas() {
     return Arrays.asList(new Schema[]{
-        new HiveConfigurationSchema(getConnectString(H2TestCase.TEST_DB)),
-        new IndexSchema(createPopulatedPartitionDimension())});
+      new HiveConfigurationSchema(getConnectString(H2TestCase.TEST_DB)),
+      new IndexSchema(createPopulatedPartitionDimension())});
   }
 
   private void prepare() {
@@ -76,11 +75,11 @@ public class DbDirectoryTest extends H2TestCase {
 
   protected PartitionDimension createPopulatedPartitionDimension() {
     return new PartitionDimension(
-        Hive.NEW_OBJECT_ID,
-        partitionDimensionName(),
-        Types.INTEGER,
-        getConnectString(H2TestCase.TEST_DB),
-        createResources());
+      Hive.NEW_OBJECT_ID,
+      partitionDimensionName(),
+      Types.INTEGER,
+      getConnectString(H2TestCase.TEST_DB),
+      createResources());
   }
 
   protected Collection<Resource> createResources() {
@@ -96,17 +95,17 @@ public class DbDirectoryTest extends H2TestCase {
 
   private Collection<SecondaryIndex> createSecondaryIndexes() {
     return Arrays.asList(
-        new SecondaryIndex("name", Types.VARCHAR),
-        new SecondaryIndex("num", Types.INTEGER));
+      new SecondaryIndex("name", Types.VARCHAR),
+      new SecondaryIndex("num", Types.INTEGER));
   }
 
   protected PartitionDimension createEmptyPartitionDimension() {
     return new PartitionDimension(
-        Hive.NEW_OBJECT_ID,
-        partitionDimensionName(),
-        Types.INTEGER,
-        getConnectString(H2TestCase.TEST_DB),
-        new ArrayList<Resource>());
+      Hive.NEW_OBJECT_ID,
+      partitionDimensionName(),
+      Types.INTEGER,
+      getConnectString(H2TestCase.TEST_DB),
+      new ArrayList<Resource>());
   }
 
   protected String partitionDimensionName() {
@@ -121,7 +120,7 @@ public class DbDirectoryTest extends H2TestCase {
   public void testInsertPrimaryIndexKey() throws Exception {
     DbDirectory d = getDirectory();
     Integer key = new Integer(43);
-    HiveFacade hive = getHive();
+    Hive hive = getHive();
     Node firstNode = Atom.getFirst(hive.getNodes());
     d.insertPrimaryIndexKey(Atom.getFirst(hive.getNodes()), key);
     for (Integer id : Transform.map(semaphoreToId(), d.getKeySemamphoresOfPrimaryIndexKey(key)))
@@ -131,7 +130,7 @@ public class DbDirectoryTest extends H2TestCase {
   @Test
   public void testInsertPrimaryIndexKeyMultipleNodes() throws Exception {
     DbDirectory d = getDirectory();
-    HiveFacade hive = getHive();
+    Hive hive = getHive();
     Integer key = new Integer(43);
     for (Node node : hive.getNodes())
       d.insertPrimaryIndexKey(node, key);
@@ -153,7 +152,7 @@ public class DbDirectoryTest extends H2TestCase {
   @Test
   public void testDeletePrimaryIndexKeyMultipleNodes() throws Exception {
     DbDirectory d = getDirectory();
-    HiveFacade hive = getHive();
+    Hive hive = getHive();
     for (String key : getPrimaryIndexOrResourceKeys())
       for (Node node : hive.getNodes())
         d.insertPrimaryIndexKey(node, key);
@@ -202,7 +201,7 @@ public class DbDirectoryTest extends H2TestCase {
 
   @Test
   public void testGetKeySemaphoresOfPartitioningResourceIds() throws Exception {
-    HiveFacade hive = Hive.load(getConnectString(H2TestCase.TEST_DB), CachingDataSourceProvider.getInstance());
+    Hive hive = Hive.load(getConnectString(H2TestCase.TEST_DB), CachingDataSourceProvider.getInstance());
     hive.deleteResource(resource);
     resource = Atom.getFirstOrNull(dimension.getResources());
     resource.setIsPartitioningResource(true);
@@ -226,7 +225,7 @@ public class DbDirectoryTest extends H2TestCase {
   @Test
   public void testGetPrimaryIndexKeysOfResourceId() throws Exception {
     DbDirectory d = getDirectory();
-    HiveFacade hive = getHive();
+    Hive hive = getHive();
     for (String key : getPrimaryIndexOrResourceKeys()) {
       d.insertPrimaryIndexKey(Atom.getFirstOrThrow(hive.getNodes()), key);
       d.insertResourceId(resource, key + 1, key);
@@ -250,10 +249,10 @@ public class DbDirectoryTest extends H2TestCase {
 
       Map<SecondaryIndex, Collection<Object>> secondaryIndexKeyMap = new Hashtable<SecondaryIndex, Collection<Object>>();
       secondaryIndexKeyMap.put(nameIndex, Arrays.asList(new Object[]{
-          secondaryKeyString
+        secondaryKeyString
       }));
       secondaryIndexKeyMap.put(numIndex, Arrays.asList(new Object[]{
-          secondaryKeyNum
+        secondaryKeyNum
       }));
       // TODO: for some reason the BatchIndexWriter won't find the tables when running through maven
       //d.batch().insertSecondaryIndexKeys(secondaryIndexKeyMap, primaryIndexKey);
@@ -266,9 +265,9 @@ public class DbDirectoryTest extends H2TestCase {
       assertEquals(1, d.getSecondaryIndexKeysOfResourceId(nameIndex, primaryIndexKey).size());
       assertEquals(secondaryKeyString, Atom.getFirst(d.getSecondaryIndexKeysOfResourceId(nameIndex, primaryIndexKey)));
       assertEquals(1,
-          d.getSecondaryIndexKeysOfResourceId(numIndex, primaryIndexKey).size());
+        d.getSecondaryIndexKeysOfResourceId(numIndex, primaryIndexKey).size());
       assertEquals(secondaryKeyNum,
-          Atom.getFirst(d.getSecondaryIndexKeysOfResourceId(numIndex, primaryIndexKey)));
+        Atom.getFirst(d.getSecondaryIndexKeysOfResourceId(numIndex, primaryIndexKey)));
     }
   }
 
@@ -324,7 +323,7 @@ public class DbDirectoryTest extends H2TestCase {
   @Test
   public void testGetKeySemaphoresOfPrimaryIndexKeyMultiNode() throws Exception {
     DbDirectory d = getDirectory();
-    HiveFacade hive = getHive();
+    Hive hive = getHive();
     for (String pkey : getPrimaryIndexOrResourceKeys()) {
       for (Node node : hive.getNodes())
         d.insertPrimaryIndexKey(node, pkey);

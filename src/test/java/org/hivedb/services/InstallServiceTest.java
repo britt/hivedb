@@ -1,9 +1,9 @@
 package org.hivedb.services;
 
 import org.hivedb.Hive;
+import org.hivedb.HiveRuntimeException;
 import org.hivedb.Lockable.Status;
 import org.hivedb.Schema;
-import org.hivedb.HiveRuntimeException;
 import org.hivedb.management.HiveInstaller;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;

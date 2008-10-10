@@ -28,7 +28,7 @@ import java.util.*;
  *         <p/>
  *         The facade for all fundamental CRUD operations on the Hive directories and Hive metadata.
  */
-public class Hive extends Observable implements Synchronizeable, Observer, Lockable, Finder, Nameable, HiveFacade {
+public class Hive extends Observable implements Synchronizeable, Observer, Lockable, Finder, Nameable {
   //constants
   private static final int DEFAULT_JDBC_TIMEOUT = 500;
   public static final int NEW_OBJECT_ID = 0;
@@ -74,12 +74,12 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
    * Calls {@see #create(String,String,int,DataSourceProvider,Assigner)} with the default
    * DataSourceProvider.
    */
-  public static HiveFacade create(String hiveUri, String dimensionName, int indexType, HiveDataSourceProvider provider) {
+  public static Hive create(String hiveUri, String dimensionName, int indexType, HiveDataSourceProvider provider) {
     return create(hiveUri, dimensionName, indexType, provider, null);
   }
 
   /**
-   * Creates a new Hive. Primary caller: {@see org.hivedb.hibernate.ConfigurationReader#install(HiveFacade)}
+   * Creates a new Hive. Primary caller: {@see org.hivedb.hibernate.ConfigurationReader#install(Hive)}
    *
    * @param hiveUri       - The location of the hive database
    * @param dimensionName - The name of the hive's partitioning dimension, used for naming hive index tables.
@@ -147,9 +147,9 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
     //Only synchronize other properties if a Partition Dimension exists
     try {
       PartitionDimension dimension = new PartitionDimensionDao(ds).get();
-      DirectoryFacade directory = new DirectoryWrapper(dimension, ds, getAssigner(), this);
+      DirectoryFacade directory = new DirectoryWrapper(this, getAssigner(), new DbDirectory(dimension, ds));
       synchronized (this) {
-        ConnectionManager connection = new ConnectionManager(new DbDirectory(dimension, ds), this, dataSourceProvider);
+        ConnectionManager connection = new ConnectionManager(directory, this, dataSourceProvider);
         this.dimension = dimension;
         this.directory = directory;
         this.connection = connection;
@@ -282,8 +282,8 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
    */
   public String toString() {
     return HiveUtils.toDeepFormatedString(this, "HiveUri", getUri(),
-        "Revision", getRevision(), "PartitionDimensions",
-        getPartitionDimension());
+      "Revision", getRevision(), "PartitionDimensions",
+      getPartitionDimension());
   }
 
   /**
@@ -349,7 +349,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
    * {@inheritDoc}
    */
   public Node addNode(Node node)
-      throws HiveLockableException {
+    throws HiveLockableException {
 
     Preconditions.isWritable(this);
     Preconditions.nameIsUnique(getNodes(), node);
@@ -595,6 +595,6 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
   }
 
   public static DataSourceProvider getNewDefaultDataSourceProvider() {
-		return new HiveBasicDataSourceProvider(DEFAULT_JDBC_TIMEOUT);
-	}
+    return new HiveBasicDataSourceProvider(DEFAULT_JDBC_TIMEOUT);
+  }
 }
