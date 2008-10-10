@@ -13,7 +13,7 @@ import org.hivedb.util.database.JdbcUriFormatter;
  * Node models a database instance suitable for storage of partitioned Data.
  * 
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
- * @author Andy Likuski (alikuski@cafepress.com)
+ *         <p/>
  */
 public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable<Integer>, Lockable {
 	private int id,port;

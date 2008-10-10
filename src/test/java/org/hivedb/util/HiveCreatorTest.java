@@ -48,7 +48,7 @@ public class HiveCreatorTest extends HiveTest {
 			DriverManager.getConnection(getHive().getUri());
 			// We have to verify by running a select to since H2 automatically starts the mem db on getConnection
 			DriverManager.getConnection(getHive().getUri()).prepareStatement("select * from hive_primary_member").execute();
-			throw new RuntimeException(String.format("Hive %s not destroyed", getHive().getName()));
+			throw new RuntimeException("Hive not destroyed");
 		} catch (SQLException ex) {
 			// expected
 		}

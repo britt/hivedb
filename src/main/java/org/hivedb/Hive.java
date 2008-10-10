@@ -28,7 +28,7 @@ import java.util.*;
  *         <p/>
  *         The facade for all fundamental CRUD operations on the Hive directories and Hive metadata.
  */
-public class Hive extends Observable implements Synchronizeable, Observer, Lockable, Finder, Nameable {
+public class Hive extends Observable implements Synchronizeable, Observer, Lockable, Nameable {
   //constants
   private static final int DEFAULT_JDBC_TIMEOUT = 500;
   public static final int NEW_OBJECT_ID = 0;
@@ -453,45 +453,6 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
   }
 
   /**
-   * Updates the Hive Resource matching the id of the given instance. The hive resource_metadata
-   * table is updated immediately to reflect any changes. This method increments the hive version.
-   *
-   * @param resource
-   * @return the given Resource
-   * @throws HiveLockableException
-   */
-  public Resource updateResource(Resource resource) throws HiveLockableException {
-    Preconditions.isWritable(this);
-    Preconditions.idIsPresentInList(resource.getPartitionDimension().getResources(), resource);
-    Preconditions.nameIsUnique(resource.getPartitionDimension().getResources(), resource);
-
-    ResourceDao resourceDao = new ResourceDao(hiveDataSource);
-    resourceDao.update(resource);
-    incrementAndPersistHive(hiveDataSource);
-
-    return resource;
-  }
-
-  /**
-   * Updates the Hive SecondaryIndex matching the id of the given instance. The hive secondary_index_metadata
-   * table is updated immediately to reflect any changes. This method increments the hive version.
-   *
-   * @return the given Resource
-   * @throws HiveLockableException
-   */
-  public SecondaryIndex updateSecondaryIndex(SecondaryIndex secondaryIndex) throws HiveLockableException {
-    Preconditions.isWritable(this);
-    Preconditions.idIsPresentInList(secondaryIndex.getResource().getSecondaryIndexes(), secondaryIndex);
-    Preconditions.nameIsUnique(secondaryIndex.getResource().getSecondaryIndexes(), secondaryIndex);
-
-    SecondaryIndexDao secondaryIndexDao = new SecondaryIndexDao(hiveDataSource);
-    secondaryIndexDao.update(secondaryIndex);
-    incrementAndPersistHive(hiveDataSource);
-
-    return secondaryIndex;
-  }
-
-  /**
    * {@inheritDoc}
    */
   public Node deleteNode(Node node) throws HiveLockableException {
@@ -567,34 +528,9 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
   }
 
   /**
-   * For internal use only.
-   */
-  @SuppressWarnings("unchecked")
-  public <T extends Nameable> T findByName(Class<T> forClass, final String name) {
-    if (forClass.equals(Node.class))
-      return (T) getNode(name);
-
-    throw new RuntimeException("Invalid type " + forClass.getName());
-  }
-
-  /**
-   * For internal use only.
-   */
-  @SuppressWarnings("unchecked")
-  public <T extends Nameable> Collection<T> findCollection(Class<T> forClass) {
-    if (forClass.equals(Node.class))
-      return (Collection<T>) getNodes();
-    throw new RuntimeException("Invalid type " + forClass.getName());
-  }
-
-  /**
    * returns the name of the hive, "hive"
    */
   public String getName() {
     return "hive";
-  }
-
-  public static DataSourceProvider getNewDefaultDataSourceProvider() {
-    return new HiveBasicDataSourceProvider(DEFAULT_JDBC_TIMEOUT);
   }
 }

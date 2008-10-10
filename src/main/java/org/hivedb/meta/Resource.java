@@ -18,7 +18,7 @@ import java.util.Collection;
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
  * @author Andy Likuski (alikuski@cafepress.com)
  */
-public class Resource implements Comparable<Resource>, IdAndNameIdentifiable<Integer>, Finder {
+public class Resource implements Comparable<Resource>, IdAndNameIdentifiable<Integer> {
   private int id;
   private PartitionDimension partitionDimension;
   private Collection<SecondaryIndex> secondaryIndexes = null;
@@ -108,16 +108,6 @@ public class Resource implements Comparable<Resource>, IdAndNameIdentifiable<Int
         secondaryIndexName,
         getName(),
         getPartitionDimension().getName()));
-  }
-
-  @SuppressWarnings("unchecked")
-  public <T extends Nameable> T findByName(Class<T> forClass, String name) {
-    return (T) getSecondaryIndex(name);
-  }
-
-  @SuppressWarnings("unchecked")
-  public <T extends Nameable> Collection<T> findCollection(Class<T> forClass) {
-    return (Collection<T>) getSecondaryIndexes();
   }
 
   /**
