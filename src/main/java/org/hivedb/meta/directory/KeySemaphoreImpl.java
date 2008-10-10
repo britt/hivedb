@@ -3,7 +3,9 @@ package org.hivedb.meta.directory;
 import org.hivedb.Lockable;
 import org.hivedb.util.HiveUtils;
 
-public class KeySemaphoreImpl implements KeySemaphore {
+import java.io.Serializable;
+
+public class KeySemaphoreImpl implements KeySemaphore, Serializable {
   private Status status;
   private int nodeId;
   private Object key;
