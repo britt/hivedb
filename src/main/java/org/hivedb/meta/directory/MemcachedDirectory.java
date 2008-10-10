@@ -45,6 +45,9 @@ import java.util.Map;
  */
 public class MemcachedDirectory implements Directory {
   private final static Log log = LogFactory.getLog(MemcachedDirectory.class);
+
+  private static final UnsupportedOperationException UNSUPPORTED_OPERATION_EXCEPTION = new UnsupportedOperationException("Secondary indices are not supported by this Directory.");
+
   private MemCachedClient client;
   private CacheKeyBuilder keyBuilder;
   private PartitionDimension partitionDimension;
@@ -140,11 +143,11 @@ public class MemcachedDirectory implements Directory {
   }
 
   public boolean doesSecondaryIndexKeyExist(SecondaryIndex index, Object secondaryIndexKey, Object resourceId) {
-    throw new UnsupportedOperationException("Secondary indices are not supported by this Directory.");
+    throw UNSUPPORTED_OPERATION_EXCEPTION;
   }
 
   public void deleteSecondaryIndexKey(SecondaryIndex index, Object secondaryIndexKey, Object resourceId) {
-    throw new UnsupportedOperationException("Secondary indices are not supported by this Directory.");
+    throw UNSUPPORTED_OPERATION_EXCEPTION;
   }
 
   public boolean doesResourceIdExist(Resource resource, Object resourceId) {
@@ -159,7 +162,7 @@ public class MemcachedDirectory implements Directory {
   }
 
   public Collection<KeySemaphore> getKeySemaphoresOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey) {
-    throw new UnsupportedOperationException("Secondary indices are not supported by this Directory.");
+    throw UNSUPPORTED_OPERATION_EXCEPTION;
   }
 
   public void insertPrimaryIndexKey(Node node, Object primaryIndexKey) {
@@ -187,7 +190,7 @@ public class MemcachedDirectory implements Directory {
   }
 
   public void insertSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey, Object resourceId) {
-    throw new UnsupportedOperationException("Secondary indices are not supported by this Directory.");
+    throw UNSUPPORTED_OPERATION_EXCEPTION;
   }
 
   public void updatePrimaryIndexKeyOfResourceId(Resource r, Object resourceId, Object newPrimaryIndexKey) {
@@ -219,16 +222,16 @@ public class MemcachedDirectory implements Directory {
   }
 
   public void deleteSecondaryIndexKeys(Map<SecondaryIndex, Collection<Object>> secondaryIndexValueMap, Object resourceId) {
-    throw new UnsupportedOperationException("Secondary indices are not supported by this Directory.");
+    throw UNSUPPORTED_OPERATION_EXCEPTION;
   }
 
   public void insertSecondaryIndexKeys(Map<SecondaryIndex, Collection<Object>> secondaryIndexValueMap, Object resourceId) {
-    throw new UnsupportedOperationException("Secondary indices are not supported by this Directory.");
+    throw UNSUPPORTED_OPERATION_EXCEPTION;
   }
 
   @SuppressWarnings("unchecked")
   public Collection getSecondaryIndexKeysOfResourceId(SecondaryIndex secondaryIndex, Object id) {
-    throw new UnsupportedOperationException("Secondary indices are not supported by this Directory.");
+    throw UNSUPPORTED_OPERATION_EXCEPTION;
   }
 
   public static class ResourceCacheEntry implements Serializable {
