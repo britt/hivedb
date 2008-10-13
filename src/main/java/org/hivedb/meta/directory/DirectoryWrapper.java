@@ -24,7 +24,7 @@ public class DirectoryWrapper implements DirectoryFacade {
   private Collection<Resource> resources;
   private Lockable semaphore;
 
-  public DirectoryWrapper(Directory directory, Assigner assigner, Collection<Node> nodes, Collection<Resource> resources, Lockable semaphore) {
+  DirectoryWrapper(Directory directory, Assigner assigner, Collection<Node> nodes, Collection<Resource> resources, Lockable semaphore) {
     this.assigner = assigner;
     this.directory = directory;
     this.nodes = nodes;

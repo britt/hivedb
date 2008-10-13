@@ -5,9 +5,7 @@
 package org.hivedb;
 
 import org.hivedb.meta.*;
-import org.hivedb.meta.directory.DbDirectory;
-import org.hivedb.meta.directory.DirectoryFacade;
-import org.hivedb.meta.directory.DirectoryWrapper;
+import org.hivedb.meta.directory.*;
 import org.hivedb.meta.persistence.*;
 import org.hivedb.util.HiveUtils;
 import org.hivedb.util.Preconditions;
@@ -147,7 +145,9 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
     //Only synchronize other properties if a Partition Dimension exists
     try {
       PartitionDimension dimension = new PartitionDimensionDao(ds).get();
-      DirectoryFacade directory = new DirectoryWrapper(new DbDirectory(dimension, ds), getAssigner(), getNodes(), dimension.getResources(), getSemaphore());
+      DirectoryProvider directoryProvider = new DbDirectoryFactory(CachingDataSourceProvider.getInstance());
+      DirectoryFacadeProvider directoryFacadeProvider = new DirectoryWrapperFactory(directoryProvider, CachingDataSourceProvider.getInstance());
+      DirectoryFacade directory = directoryFacadeProvider.getDirectoryFacade(hiveUri, getAssigner(), getSemaphore());
       synchronized (this) {
         ConnectionManager connection = new ConnectionManager(directory, this, dataSourceProvider);
         this.dimension = dimension;

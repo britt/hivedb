@@ -15,8 +15,8 @@ public class DbDirectoryFactory implements DirectoryProvider {
     this.provider = provider;
   }
 
-  public DbDirectory getDirectory(String uri) {
-    DataSource dataSource = provider.getDataSource(uri);
+  public DbDirectory getDirectory(String hiveConfigurationUri) {
+    DataSource dataSource = provider.getDataSource(hiveConfigurationUri);
     return new DbDirectory(new PartitionDimensionDao(dataSource).get(), dataSource);
   }
 }
