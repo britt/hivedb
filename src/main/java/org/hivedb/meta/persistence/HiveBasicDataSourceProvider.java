@@ -8,7 +8,7 @@ import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy;
 
 import javax.sql.DataSource;
 
-public class HiveBasicDataSourceProvider implements DataSourceProvider {
+public class HiveBasicDataSourceProvider implements HiveDataSourceProvider {
 	private Long connectionTimeoutInMillis = 0l;
 	private Long socketTimeoutInMillis = 0l;
 	
