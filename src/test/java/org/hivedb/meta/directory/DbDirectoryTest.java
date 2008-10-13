@@ -5,7 +5,7 @@ import org.hivedb.HiveLockableException;
 import org.hivedb.Lockable.Status;
 import org.hivedb.Schema;
 import org.hivedb.configuration.HiveConfigurationSchema;
-import org.hivedb.management.HiveInstaller;
+import org.hivedb.management.HiveConfigurationSchemaInstaller;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
@@ -42,7 +42,7 @@ public class DbDirectoryTest extends H2TestCase {
 
   private void prepare() {
     try {
-      new HiveInstaller(getConnectString(H2TestCase.TEST_DB)).run();
+      new HiveConfigurationSchemaInstaller(getConnectString(H2TestCase.TEST_DB)).run();
       Hive hive = Hive.create(getConnectString(H2TestCase.TEST_DB), partitionDimensionName(), Types.INTEGER, CachingDataSourceProvider.getInstance(), null);
       dimension = createPopulatedPartitionDimension();
       dimension.setId(hive.getPartitionDimension().getId());

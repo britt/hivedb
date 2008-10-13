@@ -26,13 +26,13 @@ public class TestTerraFormingHiveFactory extends H2TestCase {
 
   @Test
   public void hiveWithSemaphore() throws Exception {
-    new HiveInstaller(getConnectString(HIVE)).run();
+    new HiveConfigurationSchemaInstaller(getConnectString(HIVE)).run();
     barrenHiveDb();
   }
 
   @Test
   public void fullyInstalledHive() throws Exception {
-    new HiveInstaller(getConnectString(HIVE)).run();
+    new HiveConfigurationSchemaInstaller(getConnectString(HIVE)).run();
     new ConfigurationReader(getPersistedClasses()).install(getConnectString(HIVE));
     barrenHiveDb();
   }

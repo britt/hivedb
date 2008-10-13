@@ -4,7 +4,7 @@ import org.hivedb.Hive;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.Lockable.Status;
 import org.hivedb.Schema;
-import org.hivedb.management.HiveInstaller;
+import org.hivedb.management.HiveConfigurationSchemaInstaller;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.meta.persistence.TableInfo;
@@ -30,7 +30,7 @@ public class InstallServiceTest extends H2TestCase {
     this.deleteDatabasesAfterEachTest = true;
     super.afterMethod();
     super.beforeMethod();
-    new HiveInstaller(uri()).run();
+    new HiveConfigurationSchemaInstaller(uri()).run();
     Hive.create(uri(), "split", Types.INTEGER, CachingDataSourceProvider.getInstance(), null);
   }
 

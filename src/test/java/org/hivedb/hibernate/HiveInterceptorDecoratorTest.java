@@ -73,7 +73,6 @@ public class HiveInterceptorDecoratorTest extends HiveTest {
 
     assertTrue(hive.directory().doesPrimaryIndexKeyExist(asia.getName()));
     assertTrue(hive.directory().doesSecondaryIndexKeyExist("Continent", "population", asia.getPopulation(), asia.getName()));
-
   }
 
   @Test

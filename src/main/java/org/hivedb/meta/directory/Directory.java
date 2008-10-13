@@ -42,6 +42,5 @@ public interface Directory {
 
   void insertSecondaryIndexKeys(Map<SecondaryIndex, Collection<Object>> secondaryIndexValueMap, Object resourceId);
 
-  @SuppressWarnings("unchecked")
   Collection getSecondaryIndexKeysOfResourceId(SecondaryIndex secondaryIndex, Object id);
 }
