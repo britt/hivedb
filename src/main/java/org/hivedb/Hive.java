@@ -37,18 +37,30 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
   private PartitionDimension dimension;
   private DirectoryFacade directory;
   private Collection<Node> nodes = new ArrayList<Node>();
+  private DirectoryFacadeProvider directoryFacadeProvider;
 
   private DataSource hiveDataSource;
   private HiveDataSourceProvider dataSourceProvider;
 
   private Assigner assigner = new RandomAssigner();
 
+  public Hive(String hiveUri, int i, Status writable, HiveDataSourceProvider provider, DirectoryFacadeProvider directoryFacadeProvider) {
+    this(hiveUri, i, writable, provider);
+    this.directoryFacadeProvider = directoryFacadeProvider;
+  }
+
   /**
    * Calls {@see #load(String,DataSourceProvider,Assigner)} with the
    * default DataSourceProvider.
    */
   public static Hive load(String hiveDatabaseUri, HiveDataSourceProvider dataSourceProvider) {
-    return load(hiveDatabaseUri, dataSourceProvider, null);
+    return load(hiveDatabaseUri, dataSourceProvider, new RandomAssigner());
+  }
+
+  private static Hive load(String hiveDatabaseUri, HiveDataSourceProvider dataSourceProvider, Assigner assigner, DirectoryFacadeProvider directoryFacadeProvider) {
+    Hive hive = prepareHive(hiveDatabaseUri, dataSourceProvider, assigner, directoryFacadeProvider);
+    hive.sync();
+    return hive;
   }
 
   /**
@@ -61,11 +73,17 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
    * @param assigner The key assigner to be used by the Hive for identifying new unidentified entity instances
    * @return a Hive instance
    */
+  //TODO add DirectoryFacadeProvider
   public static Hive load(String hiveUri, HiveDataSourceProvider provider, Assigner assigner) {
-    Hive hive = prepareHive(hiveUri, provider, assigner);
-    hive.sync();
-    return hive;
+    DirectoryFacadeProvider directoryFacadeProvider = getDirectoryFacadeProvider();
+    return load(hiveUri, provider, assigner, directoryFacadeProvider);
 
+  }
+
+  private static DirectoryFacadeProvider getDirectoryFacadeProvider() {
+    DirectoryProvider directoryProvider = new DbDirectoryFactory(CachingDataSourceProvider.getInstance());
+    DirectoryFacadeProvider directoryFacadeProvider = new DirectoryWrapperFactory(directoryProvider, CachingDataSourceProvider.getInstance());
+    return directoryFacadeProvider;
   }
 
   /**
@@ -87,7 +105,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
    * @return an instance to access the created hive.
    */
   public static Hive create(String hiveUri, String dimensionName, int indexType, HiveDataSourceProvider provider, Assigner assigner) {
-    Hive hive = prepareHive(hiveUri, provider, assigner);
+    Hive hive = prepareHive(hiveUri, provider, assigner, getDirectoryFacadeProvider());
     PartitionDimension dimension = new PartitionDimension(dimensionName, indexType);
     dimension.setIndexUri(hiveUri);
     DataSource ds = provider.getDataSource(hiveUri);
@@ -102,9 +120,9 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
       throw new HiveRuntimeException(String.format("There is already a Hive with a partition dimension named %s intalled at this uri: %s", Atom.getFirstOrThrow(partitionDimensions).getName(), hiveUri));
   }
 
-  private static Hive prepareHive(String hiveUri, HiveDataSourceProvider provider, Assigner assigner) {
+  private static Hive prepareHive(String hiveUri, HiveDataSourceProvider provider, Assigner assigner, DirectoryFacadeProvider directoryFacadeProvider) {
     DriverLoader.initializeDriver(hiveUri);
-    Hive hive = new Hive(hiveUri, 0, Status.writable, provider);
+    Hive hive = new Hive(hiveUri, 0, Status.writable, provider, directoryFacadeProvider);
     if (assigner != null)
       hive.setAssigner(assigner);
     return hive;
@@ -145,8 +163,6 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
     //Only synchronize other properties if a Partition Dimension exists
     try {
       PartitionDimension dimension = new PartitionDimensionDao(ds).get();
-      DirectoryProvider directoryProvider = new DbDirectoryFactory(CachingDataSourceProvider.getInstance());
-      DirectoryFacadeProvider directoryFacadeProvider = new DirectoryWrapperFactory(directoryProvider, CachingDataSourceProvider.getInstance());
       DirectoryFacade directory = directoryFacadeProvider.getDirectoryFacade(hiveUri, getAssigner(), getSemaphore());
       synchronized (this) {
         ConnectionManager connection = new ConnectionManager(directory, this, dataSourceProvider);
@@ -162,7 +178,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 
 
   protected Hive() {
-    this.semaphore = new HiveSemaphore();
+    this.semaphore = new HiveSemaphoreImpl();
   }
 
   protected Hive(String hiveUri, int revision, Status status, HiveDataSourceProvider dataSourceProvider) {

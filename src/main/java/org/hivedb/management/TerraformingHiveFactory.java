@@ -6,6 +6,8 @@ import org.hivedb.meta.persistence.CachingDataSourceProvider;
 
 import java.util.List;
 
+
+// TODO remove
 public class TerraformingHiveFactory {
   public static Hive colonize(String uri, List<Class<?>> persistedClasses) {
     new HiveConfigurationSchemaInstaller(uri).run();

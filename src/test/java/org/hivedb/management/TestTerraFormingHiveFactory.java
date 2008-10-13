@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+//TODO remove
 public class TestTerraFormingHiveFactory extends H2TestCase {
   private static final String HIVE = "hive";
 
