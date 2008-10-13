@@ -33,7 +33,7 @@
     <repository>
       <id>HiveDB</id>
       <name>HiveDB Repository</name>
-      <url>scp://svn.hivedb.org/home/hivedb/public_html/hivedb.org/maven</url>
+      <url>scp://hivedb@svn.hivedb.org/home/hivedb/public_html/hivedb.org/maven</url>
     </repository>
   </distributionManagement>
   <repositories>
