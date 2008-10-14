@@ -19,7 +19,7 @@ import java.util.Collection;
  * @author Kevin Kelm (kkelm@fortress-consulting.com)
  * @author Andy Likuski (alikuski@cafepress.com)
  */
-public class PartitionDimension implements Comparable<PartitionDimension>, Cloneable, IdAndNameIdentifiable<Integer>, Finder {
+public class PartitionDimension implements Comparable<PartitionDimension>, Cloneable, IdAndNameIdentifiable<Integer> {
 	private int id;
 	private String name;
 	private int columnType;
@@ -100,20 +100,6 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	@SuppressWarnings("unchecked")
-	public<T extends Nameable> T findByName(Class<T> forClass, final String name){
-		if (forClass.equals(Resource.class))
-			return (T)getResource(name);
-		
-		throw new RuntimeException("Invalid type " + forClass.getName());
-	}
-	@SuppressWarnings("unchecked")
-	public<T extends Nameable> Collection<T> findCollection(Class<T> forClass) {
-		if (forClass.equals(Resource.class))
-			return (Collection<T>)getResources();
-		throw new RuntimeException("Invalid type " + forClass.getName());
 	}
 
 	public String getIndexUri() {

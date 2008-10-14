@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+//TODO remove
 public class TestTerraFormingHiveFactory extends H2TestCase {
   private static final String HIVE = "hive";
 
@@ -26,13 +27,13 @@ public class TestTerraFormingHiveFactory extends H2TestCase {
 
   @Test
   public void hiveWithSemaphore() throws Exception {
-    new HiveInstaller(getConnectString(HIVE)).run();
+    new HiveConfigurationSchemaInstaller(getConnectString(HIVE)).run();
     barrenHiveDb();
   }
 
   @Test
   public void fullyInstalledHive() throws Exception {
-    new HiveInstaller(getConnectString(HIVE)).run();
+    new HiveConfigurationSchemaInstaller(getConnectString(HIVE)).run();
     new ConfigurationReader(getPersistedClasses()).install(getConnectString(HIVE));
     barrenHiveDb();
   }

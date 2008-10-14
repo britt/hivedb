@@ -13,15 +13,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Systematically creates a hive from a given yaml configuration file
+ * Creates a hive from a given yaml configuration file
  *
  * @author mellwanger
  */
-public class HiveCreator {
+public class YamlHiveCreator {
   private HiveDataSourceProvider dataSourceProvider = CachingDataSourceProvider.getInstance();
   private HiveDbDialect dialect;
 
-  public HiveCreator(HiveDbDialect dialect) {
+  public YamlHiveCreator(HiveDbDialect dialect) {
     try {
       Class.forName(DialectTools.getDriver(dialect));
     } catch (Exception ex) {
@@ -51,7 +51,7 @@ public class HiveCreator {
     if (args.length != 4 || getDialect(args) == null || getConfigFile(args) == null) {
       usage();
     } else {
-      new HiveCreator(getDialect(args)).load(getConfigFile(args));
+      new YamlHiveCreator(getDialect(args)).load(getConfigFile(args));
     }
   }
 
@@ -78,6 +78,6 @@ public class HiveCreator {
   }
 
   public static void usage() {
-    System.out.println(new StringBuilder("USAGE: java -cp hivedb.jar org.hivedb.util.HiveCreator -dialect [h2|mysql] -yml <path_to_yaml_config>"));
+    System.out.println(new StringBuilder("USAGE: java -cp hivedb.jar org.hivedb.util.YamlHiveCreator -dialect [h2|mysql] -yml <path_to_yaml_config>"));
   }
 }

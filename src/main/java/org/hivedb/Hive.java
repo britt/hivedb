@@ -5,9 +5,7 @@
 package org.hivedb;
 
 import org.hivedb.meta.*;
-import org.hivedb.meta.directory.DbDirectory;
-import org.hivedb.meta.directory.DirectoryFacade;
-import org.hivedb.meta.directory.DirectoryWrapper;
+import org.hivedb.meta.directory.*;
 import org.hivedb.meta.persistence.*;
 import org.hivedb.util.HiveUtils;
 import org.hivedb.util.Preconditions;
@@ -28,7 +26,7 @@ import java.util.*;
  *         <p/>
  *         The facade for all fundamental CRUD operations on the Hive directories and Hive metadata.
  */
-public class Hive extends Observable implements Synchronizeable, Observer, Lockable, Finder, Nameable {
+public class Hive extends Observable implements Synchronizeable, Observer, Lockable, Nameable {
   //constants
   private static final int DEFAULT_JDBC_TIMEOUT = 500;
   public static final int NEW_OBJECT_ID = 0;
@@ -39,18 +37,30 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
   private PartitionDimension dimension;
   private DirectoryFacade directory;
   private Collection<Node> nodes = new ArrayList<Node>();
+  private DirectoryFacadeProvider directoryFacadeProvider;
 
   private DataSource hiveDataSource;
   private HiveDataSourceProvider dataSourceProvider;
 
   private Assigner assigner = new RandomAssigner();
 
+  public Hive(String hiveUri, int i, Status writable, HiveDataSourceProvider provider, DirectoryFacadeProvider directoryFacadeProvider) {
+    this(hiveUri, i, writable, provider);
+    this.directoryFacadeProvider = directoryFacadeProvider;
+  }
+
   /**
    * Calls {@see #load(String,DataSourceProvider,Assigner)} with the
    * default DataSourceProvider.
    */
   public static Hive load(String hiveDatabaseUri, HiveDataSourceProvider dataSourceProvider) {
-    return load(hiveDatabaseUri, dataSourceProvider, null);
+    return load(hiveDatabaseUri, dataSourceProvider, new RandomAssigner());
+  }
+
+  private static Hive load(String hiveDatabaseUri, HiveDataSourceProvider dataSourceProvider, Assigner assigner, DirectoryFacadeProvider directoryFacadeProvider) {
+    Hive hive = prepareHive(hiveDatabaseUri, dataSourceProvider, assigner, directoryFacadeProvider);
+    hive.sync();
+    return hive;
   }
 
   /**
@@ -63,11 +73,17 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
    * @param assigner The key assigner to be used by the Hive for identifying new unidentified entity instances
    * @return a Hive instance
    */
+  //TODO add DirectoryFacadeProvider
   public static Hive load(String hiveUri, HiveDataSourceProvider provider, Assigner assigner) {
-    Hive hive = prepareHive(hiveUri, provider, assigner);
-    hive.sync();
-    return hive;
+    DirectoryFacadeProvider directoryFacadeProvider = getDirectoryFacadeProvider();
+    return load(hiveUri, provider, assigner, directoryFacadeProvider);
 
+  }
+
+  private static DirectoryFacadeProvider getDirectoryFacadeProvider() {
+    DirectoryProvider directoryProvider = new DbDirectoryFactory(CachingDataSourceProvider.getInstance());
+    DirectoryFacadeProvider directoryFacadeProvider = new DirectoryWrapperFactory(directoryProvider, CachingDataSourceProvider.getInstance());
+    return directoryFacadeProvider;
   }
 
   /**
@@ -89,7 +105,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
    * @return an instance to access the created hive.
    */
   public static Hive create(String hiveUri, String dimensionName, int indexType, HiveDataSourceProvider provider, Assigner assigner) {
-    Hive hive = prepareHive(hiveUri, provider, assigner);
+    Hive hive = prepareHive(hiveUri, provider, assigner, getDirectoryFacadeProvider());
     PartitionDimension dimension = new PartitionDimension(dimensionName, indexType);
     dimension.setIndexUri(hiveUri);
     DataSource ds = provider.getDataSource(hiveUri);
@@ -104,9 +120,9 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
       throw new HiveRuntimeException(String.format("There is already a Hive with a partition dimension named %s intalled at this uri: %s", Atom.getFirstOrThrow(partitionDimensions).getName(), hiveUri));
   }
 
-  private static Hive prepareHive(String hiveUri, HiveDataSourceProvider provider, Assigner assigner) {
+  private static Hive prepareHive(String hiveUri, HiveDataSourceProvider provider, Assigner assigner, DirectoryFacadeProvider directoryFacadeProvider) {
     DriverLoader.initializeDriver(hiveUri);
-    Hive hive = new Hive(hiveUri, 0, Status.writable, provider);
+    Hive hive = new Hive(hiveUri, 0, Status.writable, provider, directoryFacadeProvider);
     if (assigner != null)
       hive.setAssigner(assigner);
     return hive;
@@ -147,7 +163,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
     //Only synchronize other properties if a Partition Dimension exists
     try {
       PartitionDimension dimension = new PartitionDimensionDao(ds).get();
-      DirectoryFacade directory = new DirectoryWrapper(this, getAssigner(), new DbDirectory(dimension, ds));
+      DirectoryFacade directory = directoryFacadeProvider.getDirectoryFacade(hiveUri, getAssigner(), getSemaphore());
       synchronized (this) {
         ConnectionManager connection = new ConnectionManager(directory, this, dataSourceProvider);
         this.dimension = dimension;
@@ -162,7 +178,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
 
 
   protected Hive() {
-    this.semaphore = new HiveSemaphore();
+    this.semaphore = new HiveSemaphoreImpl();
   }
 
   protected Hive(String hiveUri, int revision, Status status, HiveDataSourceProvider dataSourceProvider) {
@@ -453,45 +469,6 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
   }
 
   /**
-   * Updates the Hive Resource matching the id of the given instance. The hive resource_metadata
-   * table is updated immediately to reflect any changes. This method increments the hive version.
-   *
-   * @param resource
-   * @return the given Resource
-   * @throws HiveLockableException
-   */
-  public Resource updateResource(Resource resource) throws HiveLockableException {
-    Preconditions.isWritable(this);
-    Preconditions.idIsPresentInList(resource.getPartitionDimension().getResources(), resource);
-    Preconditions.nameIsUnique(resource.getPartitionDimension().getResources(), resource);
-
-    ResourceDao resourceDao = new ResourceDao(hiveDataSource);
-    resourceDao.update(resource);
-    incrementAndPersistHive(hiveDataSource);
-
-    return resource;
-  }
-
-  /**
-   * Updates the Hive SecondaryIndex matching the id of the given instance. The hive secondary_index_metadata
-   * table is updated immediately to reflect any changes. This method increments the hive version.
-   *
-   * @return the given Resource
-   * @throws HiveLockableException
-   */
-  public SecondaryIndex updateSecondaryIndex(SecondaryIndex secondaryIndex) throws HiveLockableException {
-    Preconditions.isWritable(this);
-    Preconditions.idIsPresentInList(secondaryIndex.getResource().getSecondaryIndexes(), secondaryIndex);
-    Preconditions.nameIsUnique(secondaryIndex.getResource().getSecondaryIndexes(), secondaryIndex);
-
-    SecondaryIndexDao secondaryIndexDao = new SecondaryIndexDao(hiveDataSource);
-    secondaryIndexDao.update(secondaryIndex);
-    incrementAndPersistHive(hiveDataSource);
-
-    return secondaryIndex;
-  }
-
-  /**
    * {@inheritDoc}
    */
   public Node deleteNode(Node node) throws HiveLockableException {
@@ -567,34 +544,9 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
   }
 
   /**
-   * For internal use only.
-   */
-  @SuppressWarnings("unchecked")
-  public <T extends Nameable> T findByName(Class<T> forClass, final String name) {
-    if (forClass.equals(Node.class))
-      return (T) getNode(name);
-
-    throw new RuntimeException("Invalid type " + forClass.getName());
-  }
-
-  /**
-   * For internal use only.
-   */
-  @SuppressWarnings("unchecked")
-  public <T extends Nameable> Collection<T> findCollection(Class<T> forClass) {
-    if (forClass.equals(Node.class))
-      return (Collection<T>) getNodes();
-    throw new RuntimeException("Invalid type " + forClass.getName());
-  }
-
-  /**
    * returns the name of the hive, "hive"
    */
   public String getName() {
     return "hive";
-  }
-
-  public static DataSourceProvider getNewDefaultDataSourceProvider() {
-    return new HiveBasicDataSourceProvider(DEFAULT_JDBC_TIMEOUT);
   }
 }

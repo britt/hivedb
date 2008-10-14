@@ -5,7 +5,7 @@ import org.hivedb.HiveLockableException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.annotations.*;
 import org.hivedb.configuration.*;
-import org.hivedb.management.HiveInstaller;
+import org.hivedb.management.HiveConfigurationSchemaInstaller;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
@@ -156,7 +156,7 @@ public class ConfigurationReader {
   }
 
   public void install(String uri) {
-    new HiveInstaller(uri).run();
+    new HiveConfigurationSchemaInstaller(uri).run();
     install(Hive.load(uri, CachingDataSourceProvider.getInstance()));
   }
 

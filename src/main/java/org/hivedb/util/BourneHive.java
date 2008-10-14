@@ -3,7 +3,7 @@ package org.hivedb.util;
 import org.hivedb.Hive;
 import org.hivedb.HiveLockableException;
 import org.hivedb.Schema;
-import org.hivedb.management.HiveInstaller;
+import org.hivedb.management.HiveConfigurationSchemaInstaller;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
@@ -38,7 +38,7 @@ public class BourneHive {
 
   public BourneHive(Map<String, String> dimension, HiveDataSourceProvider dataSourceProvider, HiveDbDialect dialect) {
     this.dialect = dialect;
-    new HiveInstaller(DialectTools.getHiveTestUri(dialect)).run();
+    new HiveConfigurationSchemaInstaller(DialectTools.getHiveTestUri(dialect)).run();
     String name = dimension.get("name");
     int type = JdbcTypeMapper.parseJdbcType(stringToVarchar(dimension.get("type")));
     hive = Hive.create(DialectTools.getHiveTestUri(dialect), name, type, dataSourceProvider, null);
