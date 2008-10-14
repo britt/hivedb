@@ -57,7 +57,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
     return load(hiveDatabaseUri, dataSourceProvider, new RandomAssigner());
   }
 
-  private static Hive load(String hiveDatabaseUri, HiveDataSourceProvider dataSourceProvider, Assigner assigner, DirectoryFacadeProvider directoryFacadeProvider) {
+  public static Hive load(String hiveDatabaseUri, HiveDataSourceProvider dataSourceProvider, Assigner assigner, DirectoryFacadeProvider directoryFacadeProvider) {
     Hive hive = prepareHive(hiveDatabaseUri, dataSourceProvider, assigner, directoryFacadeProvider);
     hive.sync();
     return hive;
@@ -298,8 +298,8 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
    */
   public String toString() {
     return HiveUtils.toDeepFormatedString(this, "HiveUri", getUri(),
-      "Revision", getRevision(), "PartitionDimensions",
-      getPartitionDimension());
+        "Revision", getRevision(), "PartitionDimensions",
+        getPartitionDimension());
   }
 
   /**
@@ -365,7 +365,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
    * {@inheritDoc}
    */
   public Node addNode(Node node)
-    throws HiveLockableException {
+      throws HiveLockableException {
 
     Preconditions.isWritable(this);
     Preconditions.nameIsUnique(getNodes(), node);

@@ -24,7 +24,7 @@ public class DirectoryWrapper implements DirectoryFacade {
   private Collection<Resource> resources;
   private Lockable semaphore;
 
-  DirectoryWrapper(Directory directory, Assigner assigner, Collection<Node> nodes, Collection<Resource> resources, Lockable semaphore) {
+  public DirectoryWrapper(Directory directory, Assigner assigner, Collection<Node> nodes, Collection<Resource> resources, Lockable semaphore) {
     this.assigner = assigner;
     this.directory = directory;
     this.nodes = nodes;
@@ -35,7 +35,7 @@ public class DirectoryWrapper implements DirectoryFacade {
   public void deletePrimaryIndexKey(Object primaryIndexKey) throws HiveLockableException {
     if (!directory.doesPrimaryIndexKeyExist(primaryIndexKey))
       throw new HiveKeyNotFoundException("The primary index key " + primaryIndexKey
-        + " does not exist", primaryIndexKey);
+          + " does not exist", primaryIndexKey);
     Preconditions.isWritable(directory.getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey), semaphore);
     directory.deletePrimaryIndexKey(primaryIndexKey);
   }
@@ -64,9 +64,9 @@ public class DirectoryWrapper implements DirectoryFacade {
     Preconditions.isWritable(directory.getKeySemaphoresOfResourceId(getResource(resource), resourceId), semaphore);
     if (!directory.doesSecondaryIndexKeyExist(index, secondaryIndexKey, resourceId))
       throw new HiveKeyNotFoundException(
-        String.format(
-          "Secondary index key %s of secondary index %s does not exist",
-          secondaryIndexKey, index.getName()), secondaryIndexKey);
+          String.format(
+              "Secondary index key %s of secondary index %s does not exist",
+              secondaryIndexKey, index.getName()), secondaryIndexKey);
 
     directory.deleteSecondaryIndexKey(index, secondaryIndexKey, resourceId);
   }
@@ -109,14 +109,14 @@ public class DirectoryWrapper implements DirectoryFacade {
 
   public boolean getReadOnlyOfPrimaryIndexKey(Object primaryIndexKey) {
     Collection<Boolean> locks =
-      Transform.map(semaphoreToReadOnly(), directory.getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey));
+        Transform.map(semaphoreToReadOnly(), directory.getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey));
     Preconditions.isNotEmpty(locks, String.format("Unable to find partitionKey %s ", primaryIndexKey));
     return Lists.or(locks);
   }
 
   public boolean getReadOnlyOfResourceId(String resource, Object id) {
     Collection<Boolean> locks =
-      Transform.map(semaphoreToReadOnly(), directory.getKeySemaphoresOfResourceId(getResource(resource), id));
+        Transform.map(semaphoreToReadOnly(), directory.getKeySemaphoresOfResourceId(getResource(resource), id));
     Preconditions.isNotEmpty(locks, String.format("Unable to find resource %s with id = %s ", resource, id));
     return Lists.or(locks);
   }
@@ -144,7 +144,7 @@ public class DirectoryWrapper implements DirectoryFacade {
 
   public void insertSecondaryIndexKey(String resource, String secondaryIndex, Object secondaryIndexKey, Object resourceId) throws HiveLockableException {
     Collection<KeySemaphore> semaphores =
-      directory.getKeySemaphoresOfResourceId(getResource(resource), resourceId);
+        directory.getKeySemaphoresOfResourceId(getResource(resource), resourceId);
     Preconditions.isWritable(semaphores, semaphore);
     directory.insertSecondaryIndexKey(getSecondaryIndex(resource, secondaryIndex), secondaryIndexKey, resourceId);
   }
@@ -196,8 +196,8 @@ public class DirectoryWrapper implements DirectoryFacade {
 
   public Object getPrimaryIndexKeyOfResourceId(String name, Object resourceId) {
     return getResource(name).isPartitioningResource()
-      ? resourceId
-      : directory.getPrimaryIndexKeyOfResourceId(getResource(name), resourceId);
+        ? resourceId
+        : directory.getPrimaryIndexKeyOfResourceId(getResource(name), resourceId);
   }
 
   /*
@@ -233,13 +233,13 @@ public class DirectoryWrapper implements DirectoryFacade {
 
   private Map<SecondaryIndex, Collection<Object>> stringMapToIndexValueMap(final String resource, final Map<String, Collection<Object>> map) {
     return Transform.toMap(
-      Transform.map(
-        new Unary<Entry<String, Collection<Object>>, Entry<SecondaryIndex, Collection<Object>>>() {
-          public Entry<SecondaryIndex, Collection<Object>> f(Entry<String, Collection<Object>> item) {
-            return new Pair<SecondaryIndex, Collection<Object>>(
-              getSecondaryIndex(resource, item.getKey()),
-              item.getValue());
-          }
-        }, map.entrySet()));
+        Transform.map(
+            new Unary<Entry<String, Collection<Object>>, Entry<SecondaryIndex, Collection<Object>>>() {
+              public Entry<SecondaryIndex, Collection<Object>> f(Entry<String, Collection<Object>> item) {
+                return new Pair<SecondaryIndex, Collection<Object>>(
+                    getSecondaryIndex(resource, item.getKey()),
+                    item.getValue());
+              }
+            }, map.entrySet()));
   }
 }
