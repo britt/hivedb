@@ -8,7 +8,6 @@ import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.persistence.DataSourceProvider;
 import org.hivedb.meta.persistence.NodeDao;
-import org.hivedb.meta.persistence.PartitionDimensionDao;
 
 import javax.sql.DataSource;
 import java.util.Collection;
@@ -23,16 +22,15 @@ public class DirectoryWrapperFactory implements DirectoryFacadeProvider {
     this.directoryProvider = directoryProvider;
   }
 
-  public DirectoryFacade getDirectoryFacade(String hiveConfigurationUri, Assigner assigner, Lockable semaphore) {
+  public DirectoryFacade getDirectoryFacade(String hiveConfigurationUri, Assigner assigner, Lockable semaphore, PartitionDimension partitionDimension) {
     DataSource dataSource = dataSourceProvider.getDataSource(hiveConfigurationUri);
-    PartitionDimension partitionDimension = new PartitionDimensionDao(dataSource).get();
     Collection<Node> nodes = new NodeDao(dataSource).loadAll();
     return new DirectoryWrapper(
-      directoryProvider.getDirectory(hiveConfigurationUri),
-      assigner,
-      nodes,
-      partitionDimension.getResources(),
-      semaphore);
+        directoryProvider.getDirectory(hiveConfigurationUri),
+        assigner,
+        nodes,
+        partitionDimension.getResources(),
+        semaphore);
   }
 }
 

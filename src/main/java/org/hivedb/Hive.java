@@ -163,7 +163,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
     //Only synchronize other properties if a Partition Dimension exists
     try {
       PartitionDimension dimension = new PartitionDimensionDao(ds).get();
-      DirectoryFacade directory = directoryFacadeProvider.getDirectoryFacade(hiveUri, getAssigner(), getSemaphore());
+      DirectoryFacade directory = directoryFacadeProvider.getDirectoryFacade(hiveUri, getAssigner(), getSemaphore(), dimension);
       synchronized (this) {
         ConnectionManager connection = new ConnectionManager(directory, this, dataSourceProvider);
         this.dimension = dimension;
