@@ -87,7 +87,7 @@ public class ResourceImpl implements Comparable<Resource>, Resource {
     return isPartitioningResource;
   }
 
-  public void setIsPartitioningResource(boolean value) {
+  public void setPartitioningResource(boolean value) {
     isPartitioningResource = value;
   }
 

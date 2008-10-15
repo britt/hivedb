@@ -7,7 +7,6 @@ package org.hivedb.meta.persistence;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.Resource;
-import org.hivedb.meta.ResourceImpl;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
@@ -55,7 +54,7 @@ public class PartitionDimensionDao extends JdbcDaoSupport {
     newObject.updateId(generatedKey.getKey().intValue());
 
     // dependencies
-    for (ResourceImpl r : newObject.getResources())
+    for (Resource r : newObject.getResources())
       new ResourceDao(getDataSource()).create(r);
 
     return new Integer(newObject.getId());
@@ -90,7 +89,7 @@ public class PartitionDimensionDao extends JdbcDaoSupport {
   protected class PartitionDimensionRowMapper implements RowMapper {
     public Object mapRow(ResultSet rs, int rowNumber) throws SQLException {
       final int id = rs.getInt("id");
-      List<ResourceImpl> resources = new ResourceDao(getDataSource()).findByDimension(id);
+      List<Resource> resources = new ResourceDao(getDataSource()).findByDimension(id);
       PartitionDimension dimension;
       dimension = new PartitionDimension(
         rs.getInt("id"),

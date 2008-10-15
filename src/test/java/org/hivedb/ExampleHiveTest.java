@@ -99,7 +99,7 @@ public class ExampleHiveTest extends HiveTest {
 
     // First create a Resource.  All Secondary Indexes will be associated with this Resource.
     String resourceName = "Product";
-    ResourceImpl product = new ResourceImpl(resourceName, Types.INTEGER, false, new ArrayList<SecondaryIndex>());
+    Resource product = new ResourceImpl(resourceName, Types.INTEGER, false, new ArrayList<SecondaryIndex>());
 
     // Add it to the Hive
     product = hive.addResource(product);

@@ -1,26 +1,26 @@
 package org.hivedb.util;
 
+import org.hivedb.meta.Resource;
+import org.hivedb.meta.SecondaryIndex;
+
 import java.util.Collection;
 import java.util.Map;
 
-import org.hivedb.meta.SecondaryIndex;
-import org.hivedb.meta.ResourceImpl;
-
 public class HiveDiff {
 
-	Collection<ResourceImpl> missingResources;
-	Map<ResourceImpl, Collection<SecondaryIndex>> missingSecondaryIndexes;
+	Collection<Resource> missingResources;
+	Map<Resource, Collection<SecondaryIndex>> missingSecondaryIndexes;
 	public HiveDiff(
-			Collection<ResourceImpl> missingResources,
-			Map<ResourceImpl, Collection<SecondaryIndex>> missingSecondaryIndexes) {
+			Collection<Resource> missingResources,
+			Map<Resource, Collection<SecondaryIndex>> missingSecondaryIndexes) {
 		
 		this.missingResources = missingResources;
 		this.missingSecondaryIndexes = missingSecondaryIndexes;
 	}
-	public Collection<ResourceImpl> getMissingResources() {
+	public Collection<Resource> getMissingResources() {
 		return missingResources;
 	}
-	public Map<ResourceImpl, Collection<SecondaryIndex>> getMissingSecondaryIndexes() {
+	public Map<Resource, Collection<SecondaryIndex>> getMissingSecondaryIndexes() {
 		return missingSecondaryIndexes;
 	}
 	@Override

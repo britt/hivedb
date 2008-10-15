@@ -24,7 +24,7 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	private String name;
 	private int columnType;
 	private String indexUri;
-	private Collection<ResourceImpl> resources;
+	private Collection<Resource> resources;
 
 	/**
 	 * 
@@ -37,7 +37,7 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	 * @param nodes
 	 * @param resources
 	 */
-	public PartitionDimension(String name, int columnType, Collection<ResourceImpl> resources) {
+	public PartitionDimension(String name, int columnType, Collection<Resource> resources) {
 		this(Hive.NEW_OBJECT_ID, name, columnType, null,
 				resources);
 	}
@@ -52,7 +52,7 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	 * @param columnType
 	 */
 	public PartitionDimension(String name, int columnType) {
-		this(name, columnType, new ArrayList<ResourceImpl>());
+		this(name, columnType, new ArrayList<Resource>());
 	}
 
 	/**
@@ -66,7 +66,7 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	 * @param resources
 	 */
 	public PartitionDimension(int id, String name, int columnType, String indexUri,
-			Collection<ResourceImpl> resources) {
+			Collection<Resource> resources) {
 		super();
 		this.id = id;
 		this.name = name;
@@ -75,9 +75,9 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 		this.resources = insetResources(resources);
 	}
 
-	private Collection<ResourceImpl> insetResources(
-			Collection<ResourceImpl> resources) {
-		for (ResourceImpl resource : resources)
+	private Collection<Resource> insetResources(
+			Collection<Resource> resources) {
+		for (Resource resource : resources)
 			resource.setPartitionDimension(this);
 		return resources;
 	}
@@ -110,11 +110,11 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 		this.indexUri = indexUri;
 	}
 
-	public Collection<ResourceImpl> getResources() {
+	public Collection<Resource> getResources() {
 		return resources;
 	}
-	public ResourceImpl getResource(String resourceName) {
-		for (ResourceImpl resource : resources)
+	public Resource getResource(String resourceName) {
+		for (Resource resource : resources)
 			if (resource.getName().equalsIgnoreCase(resourceName))
 				return resource;
 		throw new HiveKeyNotFoundException("Resource with name " + resourceName + " not found.", resourceName);

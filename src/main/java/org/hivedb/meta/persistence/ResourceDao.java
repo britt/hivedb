@@ -4,18 +4,10 @@
  */
 package org.hivedb.meta.persistence;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.sql.DataSource;
-
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.meta.Resource;
-import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.ResourceImpl;
+import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
@@ -23,6 +15,13 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
+
+import javax.sql.DataSource;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Justin McCarthy (jmccarthy@cafepress.com)
@@ -46,7 +45,7 @@ public class ResourceDao extends JdbcDaoSupport {
 		return results;
 	}
 
-	public Integer create(ResourceImpl newResource) {
+	public Integer create(Resource newResource) {
 		int columnType = newResource.getIdIndex().getColumnInfo().getColumnType();
 		Object[] parameters = new Object[] { newResource.getName(), newResource.getPartitionDimension().getId(), JdbcTypeMapper.jdbcTypeToString(columnType),newResource.isPartitioningResource()};
 		KeyHolder generatedKey = new GeneratedKeyHolder();
@@ -62,7 +61,7 @@ public class ResourceDao extends JdbcDaoSupport {
 					+ parameters);
 		if (generatedKey.getKeyList().size() == 0)
 			throw new HiveRuntimeException("Unable to retrieve generated primary key");
-		newResource.updateId(generatedKey.getKey().intValue());
+		newResource.setId(generatedKey.getKey().intValue());
 		
 		// dependencies
 		for (SecondaryIndex si : newResource.getSecondaryIndexes())
@@ -115,13 +114,13 @@ public class ResourceDao extends JdbcDaoSupport {
 		}
 	}
 
-	public List<ResourceImpl> findByDimension(int id) {
+	public List<Resource> findByDimension(int id) {
 		JdbcTemplate t = getJdbcTemplate();
-		ArrayList<ResourceImpl> results = new ArrayList<ResourceImpl>();
+		ArrayList<Resource> results = new ArrayList<Resource>();
 		for (Object r : t.query("SELECT * FROM resource_metadata WHERE dimension_id = ?",
 				new Object[] { id },
 				new ResourceRowMapper())) {
-			results.add((ResourceImpl) r);
+			results.add((Resource) r);
 		}
 		return results;
 	}
