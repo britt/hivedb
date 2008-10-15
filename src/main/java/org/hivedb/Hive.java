@@ -403,7 +403,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
   /**
    * {@inheritDoc}
    */
-  public Resource addResource(Resource resource) throws HiveLockableException {
+  public ResourceImpl addResource(ResourceImpl resource) throws HiveLockableException {
     resource.setPartitionDimension(dimension);
 
     Preconditions.isWritable(this);
@@ -486,7 +486,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
   /**
    * {@inheritDoc}
    */
-  public Resource deleteResource(Resource resource) throws HiveLockableException {
+  public Resource deleteResource(ResourceImpl resource) throws HiveLockableException {
     Preconditions.isWritable(this);
     Preconditions.idIsPresentInList(this.getPartitionDimension().getResources(), resource);
 
