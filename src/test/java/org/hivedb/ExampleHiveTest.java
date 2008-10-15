@@ -1,10 +1,7 @@
 package org.hivedb;
 
 import org.hivedb.management.HiveConfigurationSchemaInstaller;
-import org.hivedb.meta.AccessType;
-import org.hivedb.meta.Node;
-import org.hivedb.meta.Resource;
-import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.meta.*;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.HiveDestructor;
 import org.hivedb.util.database.HiveDbDialect;
@@ -102,7 +99,7 @@ public class ExampleHiveTest extends HiveTest {
 
     // First create a Resource.  All Secondary Indexes will be associated with this Resource.
     String resourceName = "Product";
-    Resource product = new Resource(resourceName, Types.INTEGER, false, new ArrayList<SecondaryIndex>());
+    ResourceImpl product = new ResourceImpl(resourceName, Types.INTEGER, false, new ArrayList<SecondaryIndex>());
 
     // Add it to the Hive
     product = hive.addResource(product);

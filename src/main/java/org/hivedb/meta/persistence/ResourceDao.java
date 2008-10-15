@@ -15,6 +15,7 @@ import javax.sql.DataSource;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.meta.ResourceImpl;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
@@ -34,18 +35,18 @@ public class ResourceDao extends JdbcDaoSupport {
 		this.setDataSource(ds);
 	}
 
-	public List<Resource> loadAll() {
+	public List<ResourceImpl> loadAll() {
 		JdbcTemplate t = getJdbcTemplate();
-		ArrayList<Resource> results = new ArrayList<Resource>();
+		ArrayList<ResourceImpl> results = new ArrayList<ResourceImpl>();
 		for (Object si : t.query("SELECT * FROM resource_metadata",
 				new ResourceRowMapper())) {
 			
-			results.add((Resource)si);
+			results.add((ResourceImpl)si);
 		}
 		return results;
 	}
 
-	public Integer create(Resource newResource) {
+	public Integer create(ResourceImpl newResource) {
 		int columnType = newResource.getIdIndex().getColumnInfo().getColumnType();
 		Object[] parameters = new Object[] { newResource.getName(), newResource.getPartitionDimension().getId(), JdbcTypeMapper.jdbcTypeToString(columnType),newResource.isPartitioningResource()};
 		KeyHolder generatedKey = new GeneratedKeyHolder();
@@ -110,17 +111,17 @@ public class ResourceDao extends JdbcDaoSupport {
 		public Object mapRow(ResultSet rs, int rowNumber) throws SQLException {
 			SecondaryIndexDao sDao = new SecondaryIndexDao(ds);
 			List<SecondaryIndex> indexes = sDao.findByResource(rs.getInt("id"));
-			return new Resource(rs.getInt("id"), rs.getString("name"), JdbcTypeMapper.parseJdbcType(rs.getString("db_type")), rs.getBoolean("is_partitioning_resource"), indexes);
+			return new ResourceImpl(rs.getInt("id"), rs.getString("name"), JdbcTypeMapper.parseJdbcType(rs.getString("db_type")), rs.getBoolean("is_partitioning_resource"), indexes);
 		}
 	}
 
-	public List<Resource> findByDimension(int id) {
+	public List<ResourceImpl> findByDimension(int id) {
 		JdbcTemplate t = getJdbcTemplate();
-		ArrayList<Resource> results = new ArrayList<Resource>();
+		ArrayList<ResourceImpl> results = new ArrayList<ResourceImpl>();
 		for (Object r : t.query("SELECT * FROM resource_metadata WHERE dimension_id = ?",
 				new Object[] { id },
 				new ResourceRowMapper())) {
-			results.add((Resource) r);
+			results.add((ResourceImpl) r);
 		}
 		return results;
 	}

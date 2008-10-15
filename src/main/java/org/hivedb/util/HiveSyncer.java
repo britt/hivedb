@@ -7,8 +7,8 @@ import org.hivedb.annotations.IndexType;
 import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.configuration.EntityIndexConfig;
-import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.meta.ResourceImpl;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.functional.*;
 
@@ -43,9 +43,9 @@ public class HiveSyncer {
 	public HiveDiff syncHive(EntityHiveConfig entityHiveConfig) throws HiveLockableException
 	{
 		HiveDiff hiveDiff = diffHive(entityHiveConfig);
-		for(Resource resource: hiveDiff.getMissingResources())
+		for(ResourceImpl resource: hiveDiff.getMissingResources())
 			hive.addResource(resource);
-		for(Entry<Resource, Collection<SecondaryIndex>> entry : hiveDiff.getMissingSecondaryIndexes().entrySet())
+		for(Entry<ResourceImpl, Collection<SecondaryIndex>> entry : hiveDiff.getMissingSecondaryIndexes().entrySet())
 			for(SecondaryIndex index: entry.getValue())
 				hive.addSecondaryIndex(entry.getKey(), index);
 		return hiveDiff;
@@ -59,12 +59,12 @@ public class HiveSyncer {
 	 */
 	public HiveDiff diffHive(final EntityHiveConfig updater)
 	{	
-		Collection<Resource> missingResources = Lists.newArrayList();
-		Map<Resource, Collection<SecondaryIndex>> indexMap = Maps.newHashMap();
+		Collection<ResourceImpl> missingResources = Lists.newArrayList();
+		Map<ResourceImpl, Collection<SecondaryIndex>> indexMap = Maps.newHashMap();
 
 		for(EntityConfig config : updater.getEntityConfigs()) {
 			try {
-				Resource resource = hive.getPartitionDimension().getResource(config.getResourceName());
+				ResourceImpl resource = hive.getPartitionDimension().getResource(config.getResourceName());
 				for(EntityIndexConfig indexConfig : getHiveIndexes(config)) {
 					try {
 						resource.getSecondaryIndex(indexConfig.getIndexName());
@@ -75,7 +75,7 @@ public class HiveSyncer {
 					}
 				}
 			} catch(HiveKeyNotFoundException e) {
-				Resource resource = new Resource(
+				ResourceImpl resource = new ResourceImpl(
 						config.getResourceName(),
 						JdbcTypeMapper.primitiveTypeToJdbcType(config.getIdClass()),
 						config.isPartitioningResource());

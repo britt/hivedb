@@ -5,10 +5,7 @@ import org.hivedb.HiveLockableException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.Lockable;
 import org.hivedb.Lockable.Status;
-import org.hivedb.meta.Assigner;
-import org.hivedb.meta.Node;
-import org.hivedb.meta.Resource;
-import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.meta.*;
 import org.hivedb.util.Lists;
 import org.hivedb.util.Preconditions;
 import org.hivedb.util.functional.*;
@@ -21,10 +18,10 @@ public class DirectoryWrapper implements DirectoryFacade {
   private Directory directory;
   private Assigner assigner;
   private Collection<Node> nodes;
-  private Collection<Resource> resources;
+  private Collection<ResourceImpl> resources;
   private Lockable semaphore;
 
-  DirectoryWrapper(Directory directory, Assigner assigner, Collection<Node> nodes, Collection<Resource> resources, Lockable semaphore) {
+  DirectoryWrapper(Directory directory, Assigner assigner, Collection<Node> nodes, Collection<ResourceImpl> resources, Lockable semaphore) {
     this.assigner = assigner;
     this.directory = directory;
     this.nodes = nodes;

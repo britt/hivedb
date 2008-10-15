@@ -5,10 +5,7 @@ import org.hivedb.configuration.EntityHiveConfig;
 import org.hivedb.hibernate.BaseDataAccessObjectFactory;
 import org.hivedb.hibernate.ConfigurationReader;
 import org.hivedb.hibernate.DataAccessObject;
-import org.hivedb.meta.Node;
-import org.hivedb.meta.PartitionDimension;
-import org.hivedb.meta.Resource;
-import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.meta.*;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.HiveDestructor;
 import org.hivedb.util.YamlHiveCreator;
@@ -121,11 +118,11 @@ public class HiveTest {
 
   protected PartitionDimension createEmptyPartitionDimension() {
     return new PartitionDimension(Hive.NEW_OBJECT_ID, getHive().getPartitionDimension().getName(), Types.INTEGER,
-      getConnectString(getHiveDatabaseName()), new ArrayList<Resource>());
+      getConnectString(getHiveDatabaseName()), new ArrayList<ResourceImpl>());
   }
 
-  protected Resource createResource() {
-    final Resource resource = new Resource("FOO", Types.INTEGER, false);
+  protected ResourceImpl createResource() {
+    final ResourceImpl resource = new ResourceImpl("FOO", Types.INTEGER, false);
     resource.setPartitionDimension(createEmptyPartitionDimension());
     return resource;
   }

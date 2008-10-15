@@ -6,10 +6,7 @@ import org.hivedb.Lockable.Status;
 import org.hivedb.Schema;
 import org.hivedb.configuration.HiveConfigurationSchema;
 import org.hivedb.management.HiveConfigurationSchemaInstaller;
-import org.hivedb.meta.Node;
-import org.hivedb.meta.PartitionDimension;
-import org.hivedb.meta.Resource;
-import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.meta.*;
 import static org.hivedb.meta.directory.DirectoryWrapper.semaphoreToId;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.meta.persistence.IndexSchema;
@@ -32,7 +29,7 @@ public class DbDirectoryTest extends H2TestCase {
   private SecondaryIndex nameIndex, numIndex;
   private String secondaryKeyString = "secondary key";
   private Integer secondaryKeyNum = 1;
-  private Resource resource;
+  private ResourceImpl resource;
 
   public Collection<Schema> getSchemas() {
     return Arrays.asList(new Schema[]{
@@ -82,14 +79,14 @@ public class DbDirectoryTest extends H2TestCase {
       createResources());
   }
 
-  protected Collection<Resource> createResources() {
-    ArrayList<Resource> resources = new ArrayList<Resource>();
+  protected Collection<ResourceImpl> createResources() {
+    ArrayList<ResourceImpl> resources = new ArrayList<ResourceImpl>();
     resources.add(createResource());
     return resources;
   }
 
-  protected Resource createResource() {
-    final Resource resource = new Resource("FOO", Types.INTEGER, false, createSecondaryIndexes());
+  protected ResourceImpl createResource() {
+    final ResourceImpl resource = new ResourceImpl("FOO", Types.INTEGER, false, createSecondaryIndexes());
     return resource;
   }
 
@@ -105,7 +102,7 @@ public class DbDirectoryTest extends H2TestCase {
       partitionDimensionName(),
       Types.INTEGER,
       getConnectString(H2TestCase.TEST_DB),
-      new ArrayList<Resource>());
+      new ArrayList<ResourceImpl>());
   }
 
   protected String partitionDimensionName() {

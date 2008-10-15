@@ -5,8 +5,8 @@ import org.hivedb.HiveLockableException;
 import org.hivedb.Schema;
 import org.hivedb.management.HiveConfigurationSchemaInstaller;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.Resource;
 import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.meta.ResourceImpl;
 import org.hivedb.meta.persistence.HiveDataSourceProvider;
 import org.hivedb.util.database.DialectTools;
 import org.hivedb.util.database.HiveDbDialect;
@@ -75,7 +75,7 @@ public class BourneHive {
         Collection<SecondaryIndex> secondaryIndexes = getSecondaryIndexes((List<Map<String, String>>) resource.get("indexes"));
         boolean isPartitioningResource = hive.getPartitionDimension().getName().equals(name) && hive.getPartitionDimension().getColumnType() == type;
         try {
-          hive.addResource(new Resource(name, type, isPartitioningResource, secondaryIndexes));
+          hive.addResource(new ResourceImpl(name, type, isPartitioningResource, secondaryIndexes));
         } catch (HiveLockableException ex) {
           throw new RuntimeException(ex);
         }

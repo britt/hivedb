@@ -1,6 +1,6 @@
 package org.hivedb.configuration;
 
-public interface HiveConfig {
+public interface PartitionDimensionConfig {
 	String getPartitionDimensionName();
 	Class<?> getPartitionDimensionType();
 }

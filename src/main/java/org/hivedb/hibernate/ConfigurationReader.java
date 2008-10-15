@@ -8,6 +8,7 @@ import org.hivedb.configuration.*;
 import org.hivedb.management.HiveConfigurationSchemaInstaller;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.meta.ResourceImpl;
 import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.Lists;
 import org.hivedb.util.PrimitiveUtils;
@@ -195,8 +196,8 @@ public class ConfigurationReader {
     return new SecondaryIndex(config.getIndexName(), JdbcTypeMapper.primitiveTypeToJdbcType(config.getIndexClass()));
   }
 
-  private org.hivedb.meta.Resource createResource(EntityConfig config) {
-    return new org.hivedb.meta.Resource(
+  private ResourceImpl createResource(EntityConfig config) {
+    return new ResourceImpl(
       config.getResourceName(),
       JdbcTypeMapper.primitiveTypeToJdbcType(config.getIdClass()),
       config.isPartitioningResource());
