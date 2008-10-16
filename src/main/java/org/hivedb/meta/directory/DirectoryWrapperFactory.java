@@ -8,16 +8,17 @@ import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
 import org.hivedb.meta.persistence.DataSourceProvider;
 import org.hivedb.meta.persistence.NodeDao;
+import org.hivedb.util.functional.Factory;
 
 import javax.sql.DataSource;
 import java.util.Collection;
 
 public class DirectoryWrapperFactory implements DirectoryFacadeProvider {
   private final static Log log = LogFactory.getLog(DirectoryWrapperFactory.class);
-  private DirectoryProvider directoryProvider;
+  private Factory<Directory> directoryProvider;
   private DataSourceProvider dataSourceProvider;
 
-  public DirectoryWrapperFactory(DirectoryProvider directoryProvider, DataSourceProvider dataSourceProvider) {
+  public DirectoryWrapperFactory(Factory<Directory> directoryProvider, DataSourceProvider dataSourceProvider) {
     this.dataSourceProvider = dataSourceProvider;
     this.directoryProvider = directoryProvider;
   }
@@ -26,11 +27,11 @@ public class DirectoryWrapperFactory implements DirectoryFacadeProvider {
     DataSource dataSource = dataSourceProvider.getDataSource(hiveConfigurationUri);
     Collection<Node> nodes = new NodeDao(dataSource).loadAll();
     return new DirectoryWrapper(
-        directoryProvider.getDirectory(hiveConfigurationUri),
-        assigner,
-        nodes,
-        partitionDimension.getResources(),
-        semaphore);
+      directoryProvider.newInstance(),
+      assigner,
+      nodes,
+      partitionDimension.getResources(),
+      semaphore);
   }
 }
 

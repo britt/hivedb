@@ -13,6 +13,7 @@ import org.hivedb.util.database.DriverLoader;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.Schemas;
 import org.hivedb.util.functional.Atom;
+import org.hivedb.util.functional.Factory;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Predicate;
 
@@ -75,13 +76,13 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
    */
   //TODO add DirectoryFacadeProvider
   public static Hive load(String hiveUri, HiveDataSourceProvider provider, Assigner assigner) {
-    DirectoryFacadeProvider directoryFacadeProvider = getDirectoryFacadeProvider();
+    DirectoryFacadeProvider directoryFacadeProvider = getDirectoryFacadeProvider(hiveUri);
     return load(hiveUri, provider, assigner, directoryFacadeProvider);
 
   }
 
-  private static DirectoryFacadeProvider getDirectoryFacadeProvider() {
-    DirectoryProvider directoryProvider = new DbDirectoryFactory(CachingDataSourceProvider.getInstance());
+  private static DirectoryFacadeProvider getDirectoryFacadeProvider(String uri) {
+    Factory<Directory> directoryProvider = new DbDirectoryFactory(CachingDataSourceProvider.getInstance().getDataSource(uri));
     DirectoryFacadeProvider directoryFacadeProvider = new DirectoryWrapperFactory(directoryProvider, CachingDataSourceProvider.getInstance());
     return directoryFacadeProvider;
   }
@@ -105,7 +106,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
    * @return an instance to access the created hive.
    */
   public static Hive create(String hiveUri, String dimensionName, int indexType, HiveDataSourceProvider provider, Assigner assigner) {
-    Hive hive = prepareHive(hiveUri, provider, assigner, getDirectoryFacadeProvider());
+    Hive hive = prepareHive(hiveUri, provider, assigner, getDirectoryFacadeProvider(hiveUri));
     PartitionDimension dimension = new PartitionDimension(dimensionName, indexType);
     dimension.setIndexUri(hiveUri);
     DataSource ds = provider.getDataSource(hiveUri);
@@ -298,8 +299,8 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
    */
   public String toString() {
     return HiveUtils.toDeepFormatedString(this, "HiveUri", getUri(),
-        "Revision", getRevision(), "PartitionDimensions",
-        getPartitionDimension());
+      "Revision", getRevision(), "PartitionDimensions",
+      getPartitionDimension());
   }
 
   /**
@@ -365,7 +366,7 @@ public class Hive extends Observable implements Synchronizeable, Observer, Locka
    * {@inheritDoc}
    */
   public Node addNode(Node node)
-      throws HiveLockableException {
+    throws HiveLockableException {
 
     Preconditions.isWritable(this);
     Preconditions.nameIsUnique(getNodes(), node);
