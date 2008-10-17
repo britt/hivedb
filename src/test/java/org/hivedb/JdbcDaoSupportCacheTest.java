@@ -1,9 +1,10 @@
 package org.hivedb;
 
 import org.hivedb.meta.AccessType;
-import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.database.test.HiveTest;
-import org.junit.Test;import static org.junit.Assert.assertTrue;import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 
 import java.sql.SQLException;
@@ -15,7 +16,7 @@ public class JdbcDaoSupportCacheTest extends HiveTest {
 	@Test
 	public void testDataSourceCacheCreation() throws HiveException, SQLException{
 		getHive().directory().insertPrimaryIndexKey(intKey());
-		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
+		Hive hive = null;//Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
 		JdbcDaoSupportCacheImpl cache = (JdbcDaoSupportCacheImpl) hive.connection().daoSupport();
 		Collection<SimpleJdbcDaoSupport> read = cache.get(intKey(), AccessType.Read);
 		Collection<SimpleJdbcDaoSupport> readWrite = cache.get(intKey(), AccessType.ReadWrite);
@@ -27,7 +28,7 @@ public class JdbcDaoSupportCacheTest extends HiveTest {
 	@Test
 	public void testGetAllUnsafe() throws Exception {
 		getHive().directory().insertPrimaryIndexKey(intKey());
-		Hive hive = Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
+		Hive hive = null;//Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
 		JdbcDaoSupportCacheImpl cache = (JdbcDaoSupportCacheImpl) hive.connection().daoSupport();
 		assertEquals(3, cache.getAllUnsafe().size());
 	}

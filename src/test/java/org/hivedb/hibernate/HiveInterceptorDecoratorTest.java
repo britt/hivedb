@@ -75,7 +75,7 @@ public class HiveInterceptorDecoratorTest extends HiveTest {
     assertTrue(hive.directory().doesSecondaryIndexKeyExist("Continent", "population", asia.getPopulation(), asia.getName()));
   }
 
-  @Test
+  @Test(expected = HiveLockableException.class)
   public void testOnSaveInsertReadOnlyFailure() throws Exception {
     Hive hive = getHive();
     ConfigurationReader reader = new ConfigurationReader(Continent.class, WeatherReport.class);
@@ -85,12 +85,7 @@ public class HiveInterceptorDecoratorTest extends HiveTest {
     WeatherReport report = generateInstance();
     hive.directory().insertPrimaryIndexKey(report.getContinent());
     hive.updateHiveStatus(Status.readOnly);
-    try {
-      interceptor.postFlush(Arrays.asList(new Object[]{report}).iterator());
-      fail("No exception thrown");
-    } catch (CallbackException e) {
-      assertEquals(HiveLockableException.class, e.getCause().getClass());
-    }
+    interceptor.postFlush(Arrays.asList(new Object[]{report}).iterator());
   }
 
   @Test

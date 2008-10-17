@@ -2,7 +2,6 @@ package org.hivedb;
 
 import org.hivedb.management.HiveConfigurationSchemaInstaller;
 import org.hivedb.meta.*;
-import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.HiveDestructor;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2TestCase;
@@ -58,7 +57,7 @@ public class ExampleHiveTest extends HiveTest {
     String dimensionName = "ProductType";
 
     //Create a Hive
-    Hive hive = Hive.create(getConnectString(H2TestCase.TEST_DB), dimensionName, Types.VARCHAR, CachingDataSourceProvider.getInstance(), null);
+    Hive hive = null;//Hive.create(getConnectString(H2TestCase.TEST_DB), dimensionName, Types.VARCHAR, CachingDataSourceProvider.getInstance(), null);
 
     //Create a Data Node
     Node dataNode = new Node(Hive.NEW_OBJECT_ID, "aNode", H2TestCase.TEST_DB, "", HiveDbDialect.H2);

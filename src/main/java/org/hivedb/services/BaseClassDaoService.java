@@ -18,7 +18,7 @@ public class BaseClassDaoService<T,ID extends Serializable> implements ClassDaoS
 	public static BaseClassDaoService create(Class<?> clazz, Hive hive, ShardAccessStrategy strategy) {
 		ConfigurationReader reader = new ConfigurationReader(clazz);
 		List classes = Collections.singletonList(clazz);
-		HiveSessionFactory factory = new HiveSessionFactoryBuilderImpl(hive.getUri(), classes, strategy);
+		HiveSessionFactory factory = new HiveSessionFactoryBuilderImpl(hive.getHiveConfiguration().getUri(), classes, strategy);
 		BaseDataAccessObject dao = new BaseDataAccessObject(reader.getEntityConfig(clazz.getName()), hive, factory);
 		return new BaseClassDaoService(reader.getEntityConfig(clazz.getName()), dao);
 	}

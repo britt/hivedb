@@ -3,12 +3,10 @@ package org.hivedb.util;
 import org.hivedb.Hive;
 import org.hivedb.HiveLockableException;
 import org.hivedb.Schema;
-import org.hivedb.management.HiveConfigurationSchemaInstaller;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.ResourceImpl;
+import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.persistence.HiveDataSourceProvider;
-import org.hivedb.util.database.DialectTools;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.database.Schemas;
@@ -37,11 +35,12 @@ public class BourneHive {
   }
 
   public BourneHive(Map<String, String> dimension, HiveDataSourceProvider dataSourceProvider, HiveDbDialect dialect) {
-    this.dialect = dialect;
-    new HiveConfigurationSchemaInstaller(DialectTools.getHiveTestUri(dialect)).run();
-    String name = dimension.get("name");
-    int type = JdbcTypeMapper.parseJdbcType(stringToVarchar(dimension.get("type")));
-    hive = Hive.create(DialectTools.getHiveTestUri(dialect), name, type, dataSourceProvider, null);
+//    this.dialect = dialect;
+//    new HiveConfigurationSchemaInstaller(DialectTools.getHiveTestUri(dialect)).run();
+//    String name = dimension.get("name");
+//    int type = JdbcTypeMapper.parseJdbcType(stringToVarchar(dimension.get("type")));
+//    hive = Hive.create(DialectTools.getHiveTestUri(dialect), name, type, dataSourceProvider, null);
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 
   @SuppressWarnings("unchecked")

@@ -2,36 +2,24 @@ package org.hivedb.meta.directory;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hivedb.Lockable;
+import org.hivedb.configuration.HiveConfiguration;
 import org.hivedb.meta.Assigner;
-import org.hivedb.meta.Node;
-import org.hivedb.meta.PartitionDimension;
-import org.hivedb.meta.persistence.DataSourceProvider;
-import org.hivedb.meta.persistence.NodeDao;
 import org.hivedb.util.functional.Factory;
-
-import javax.sql.DataSource;
-import java.util.Collection;
 
 public class DirectoryWrapperFactory implements DirectoryFacadeProvider {
   private final static Log log = LogFactory.getLog(DirectoryWrapperFactory.class);
   private Factory<Directory> directoryProvider;
-  private DataSourceProvider dataSourceProvider;
 
-  public DirectoryWrapperFactory(Factory<Directory> directoryProvider, DataSourceProvider dataSourceProvider) {
-    this.dataSourceProvider = dataSourceProvider;
+  public DirectoryWrapperFactory(Factory<Directory> directoryProvider) {
     this.directoryProvider = directoryProvider;
   }
 
-  public DirectoryFacade getDirectoryFacade(String hiveConfigurationUri, Assigner assigner, Lockable semaphore, PartitionDimension partitionDimension) {
-    DataSource dataSource = dataSourceProvider.getDataSource(hiveConfigurationUri);
-    Collection<Node> nodes = new NodeDao(dataSource).loadAll();
+  public DirectoryFacade getDirectoryFacade(HiveConfiguration hiveConfiguration, Assigner assigner) {
     return new DirectoryWrapper(
       directoryProvider.newInstance(),
       assigner,
-      nodes,
-      partitionDimension.getResources(),
-      semaphore);
+      hiveConfiguration
+    );
   }
 }
 

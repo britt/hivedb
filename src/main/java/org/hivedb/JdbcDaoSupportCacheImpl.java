@@ -1,5 +1,6 @@
 package org.hivedb;
 
+import org.hivedb.configuration.HiveConfiguration;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.directory.DirectoryFacade;
@@ -8,6 +9,7 @@ import org.hivedb.meta.directory.KeySemaphoreImpl;
 import org.hivedb.meta.persistence.DataSourceProvider;
 import org.hivedb.util.Preconditions;
 import org.hivedb.util.functional.Filter;
+import org.hivedb.util.functional.Predicate;
 import org.hivedb.util.functional.Unary;
 import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
 
@@ -24,13 +26,13 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache {
   private Map<Integer, SimpleJdbcDaoSupport> jdbcDaoSupports;
   private DirectoryFacade directory;
   private DataSourceProvider dataSourceProvider;
-  private Hive hive;
+  private HiveConfiguration hiveConfiguration;
 
-  public JdbcDaoSupportCacheImpl(DirectoryFacade directory, Hive hive, DataSourceProvider dataSourceProvider) {
-    this.hive = hive;
+  public JdbcDaoSupportCacheImpl(DirectoryFacade directory, HiveConfiguration hiveConfiguration, DataSourceProvider dataSourceProvider) {
+    this.hiveConfiguration = hiveConfiguration;
     this.directory = directory;
     this.dataSourceProvider = dataSourceProvider;
-    this.jdbcDaoSupports = getDataSourceMap(hive.getNodes(), dataSourceProvider);
+    this.jdbcDaoSupports = getDataSourceMap(hiveConfiguration.getNodes(), dataSourceProvider);
   }
 
   public static Map<Integer, SimpleJdbcDaoSupport> getDataSourceMap(Collection<Node> nodes, DataSourceProvider dataSourceProvider) {
@@ -55,7 +57,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache {
 
   private SimpleJdbcDaoSupport get(KeySemaphore semaphore, AccessType intention) throws HiveLockableException {
     Node node = null;
-    node = hive.getNode(semaphore.getNodeId());
+    node = getNodeById(semaphore.getNodeId(), hiveConfiguration.getNodes());
 
     if (intention == AccessType.ReadWrite)
       Preconditions.isWritable(node, semaphore);
@@ -64,6 +66,14 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache {
       return jdbcDaoSupports.get(semaphore.getNodeId());
 
     throw new HiveKeyNotFoundException("Could not find dataSource for ", semaphore);
+  }
+
+  private Node getNodeById(final Object id, Collection<Node> nodes) {
+    return Filter.grepSingle(new Predicate<Node>(){
+      public boolean f(Node item) {
+        return item.getId().equals(id);
+      }
+    }, nodes);
   }
 
   /**
@@ -113,7 +123,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache {
 
   public SimpleJdbcDaoSupport getUnsafe(String nodeName) {
     try {
-      Node node = hive.getNode(nodeName);
+      Node node = getNodeByName(nodeName, hiveConfiguration.getNodes());
       KeySemaphore semaphore = new KeySemaphoreImpl(null, node.getId(), node.getStatus());
       return get(semaphore, AccessType.ReadWrite);
     } catch (HiveException e) {
@@ -121,6 +131,14 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache {
       // HiveLockable should become runtime
       throw new RuntimeException(e);
     }
+  }
+
+  private Node getNodeByName(final String nodeName, Collection<Node> nodes) {
+    return Filter.grepSingle(new Predicate<Node>(){
+      public boolean f(Node item) {
+        return item.getName().equals(nodeName);
+      }
+    }, nodes);
   }
 
   public Collection<SimpleJdbcDaoSupport> get(String resource, Object resourceId, AccessType intention) throws HiveLockableException {
@@ -133,7 +151,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache {
 
   public Collection<SimpleJdbcDaoSupport> getAllUnsafe() {
     Collection<SimpleJdbcDaoSupport> daos = new ArrayList<SimpleJdbcDaoSupport>();
-    for (Node node : hive.getNodes())
+    for (Node node : hiveConfiguration.getNodes())
       daos.add(jdbcDaoSupports.get(node.getId()));
     return daos;
   }

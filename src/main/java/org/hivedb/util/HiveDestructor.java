@@ -23,7 +23,7 @@ public class HiveDestructor {
     }
     Schemas.uninstall(hive.getPartitionDimension());
     for (Node node : hive.getNodes()) {
-      if (!node.getUri().equals(hive.getUri())) {
+      if (!node.getUri().equals(hive.getHiveConfiguration().getUri())) {
         shutdown(node);
       }
     }
@@ -37,12 +37,13 @@ public class HiveDestructor {
   }
 
   private void shutdown(Hive hive) {
-    DriverLoader.initializeDriver(hive.getUri());
-    try {
-      DriverManager.getConnection(hive.getUri()).createStatement().execute(DialectTools.getDropDatabase(hive.getDialect(), hive.getName()));
-    } catch (SQLException ex) {
-      throw new RuntimeException(ex);
-    }
+    DriverLoader.initializeDriver(hive.getHiveConfiguration().getUri());
+//    try {
+////      DriverManager.getConnection(hive.getHiveConfiguration().getUri(hive)).createStatement().execute(DialectTools.getDropDatabase(hive.getHiveConfiguration().getDialect(), hive.getName()));
+//    } catch (SQLException ex) {
+//      throw new RuntimeException(ex);
+//    }
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 
   private void shutdown(Node node) {

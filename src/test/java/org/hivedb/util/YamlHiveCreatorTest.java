@@ -44,15 +44,16 @@ public class YamlHiveCreatorTest extends HiveTest {
         // expected
       }
     }
-    try {
-      DriverManager.getConnection(getHive().getUri());
-      // We have to verify by running a select to since H2 automatically starts the mem db on getConnection
-      DriverManager.getConnection(getHive().getUri()).prepareStatement("select * from hive_primary_member").execute();
-      throw new RuntimeException("Hive not destroyed");
-    } catch (SQLException ex) {
-      // expected
-    }
-    new YamlHiveCreator(dialect).load(getHiveConfigurationFile());
+    throw new UnsupportedOperationException("Not yet implemented");
+//    try {
+////      DriverManager.getConnection(hiveConfiguration.getUri(getHive()));
+//      // We have to verify by running a select to since H2 automatically starts the mem db on getConnection
+////      DriverManager.getConnection(hiveConfiguration.getUri(getHive())).prepareStatement("select * from hive_primary_member").execute();
+//      throw new RuntimeException("Hive not destroyed");
+//    } catch (SQLException ex) {
+//      // expected
+//    }
+//    new YamlHiveCreator(dialect).load(getHiveConfigurationFile());
   }
 
   @SuppressWarnings("unchecked")

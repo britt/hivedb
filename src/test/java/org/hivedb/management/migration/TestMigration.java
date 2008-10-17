@@ -40,14 +40,14 @@ public class TestMigration extends HiveTest {
 
   @Test
   public void testMigration() throws Exception {
-    Hive hive = Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
+    Hive hive = null;//= Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
     String primaryKey = new String("Asia");
     Integer secondaryKey = new Integer(7);
 
     Pair<Node, Node> nodes = initializeTestData(hive, primaryKey, secondaryKey);
     Node origin = nodes.getKey();
     Node destination = nodes.getValue();
-    NodeResolver dir = new DbDirectory(hive.getPartitionDimension(), CachingDataSourceProvider.getInstance().getDataSource(getConnectString(getHiveDatabaseName())));
+    NodeResolver dir = new DbDirectory(hive.getHiveConfiguration(), CachingDataSourceProvider.getInstance().getDataSource(getConnectString(getHiveDatabaseName())));
     PartitionKeyMover<String> pMover = new PrimaryMover(origin.getUri());
     Mover<Integer> secMover = new SecondaryMover();
 
@@ -65,14 +65,14 @@ public class TestMigration extends HiveTest {
   @SuppressWarnings("unchecked")
   @Test
   public void testFailDuringCopy() throws Exception {
-    Hive hive = Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
+    Hive hive = null;// = Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
     String primaryKey = new String("Oceana");
     Integer secondaryKey = new Integer(7);
 
     Pair<Node, Node> nodes = initializeTestData(hive, primaryKey, secondaryKey);
     Node origin = nodes.getKey();
     Node destination = nodes.getValue();
-    NodeResolver dir = new DbDirectory(hive.getPartitionDimension(), getDataSource(getConnectString(getHiveDatabaseName())));
+    NodeResolver dir = new DbDirectory(hive.getHiveConfiguration(), getDataSource(getConnectString(getHiveDatabaseName())));
     PartitionKeyMover<String> pMover = new PrimaryMover(origin.getUri());
     //This mover just craps out on copy
     Mover<Integer> failingMover = new Mover<Integer>() {
@@ -106,7 +106,7 @@ public class TestMigration extends HiveTest {
   @SuppressWarnings("unchecked")
   @Test
   public void testFailDuringDelete() throws Exception {
-    Hive hive = Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
+    Hive hive = null;// = Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
     String primaryKey = new String("Asia");
     Integer secondaryKey = new Integer(7);
 
@@ -114,7 +114,7 @@ public class TestMigration extends HiveTest {
     Node origin = nodes.getKey();
     Node destination = nodes.getValue();
 
-    NodeResolver dir = new DbDirectory(hive.getPartitionDimension(), getDataSource(getConnectString(getHiveDatabaseName())));
+    NodeResolver dir = new DbDirectory(hive.getHiveConfiguration(), getDataSource(getConnectString(getHiveDatabaseName())));
     PartitionKeyMover<String> pMover = new PrimaryMover(origin.getUri());
 //		This mover just craps out on delete
     Mover<Integer> failingMover = new Mover<Integer>() {
@@ -154,7 +154,7 @@ public class TestMigration extends HiveTest {
   private Pair<Node, Node> initializeTestData(Hive hive, String primaryKey, Integer secondaryKey) throws Exception {
     hive.directory().insertPrimaryIndexKey(primaryKey);
     //Setup the test data on one node
-    NodeResolver dir = new DbDirectory(hive.getPartitionDimension(), getDataSource(getConnectString(getHiveDatabaseName())));
+    NodeResolver dir = new DbDirectory(hive.getHiveConfiguration(), getDataSource(getConnectString(getHiveDatabaseName())));
     int originId = Atom.getFirst(dir.getKeySemamphoresOfPrimaryIndexKey(primaryKey)).getNodeId();
     Node origin = hive.getNode(originId);
     Node destination = origin.getName().equals("data1") ? hive.getNode("data2") :

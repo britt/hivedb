@@ -8,7 +8,6 @@ import org.hivedb.configuration.HiveConfigurationSchema;
 import org.hivedb.management.HiveConfigurationSchemaInstaller;
 import org.hivedb.meta.*;
 import static org.hivedb.meta.directory.DirectoryWrapper.semaphoreToId;
-import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.meta.persistence.IndexSchema;
 import org.hivedb.util.AssertUtils;
 import org.hivedb.util.Lists;
@@ -40,10 +39,10 @@ public class DbDirectoryTest extends H2TestCase {
   private void prepare() {
     try {
       new HiveConfigurationSchemaInstaller(getConnectString(H2TestCase.TEST_DB)).run();
-      Hive hive = Hive.create(getConnectString(H2TestCase.TEST_DB), partitionDimensionName(), Types.INTEGER, CachingDataSourceProvider.getInstance(), null);
+//      Hive hive = Hive.create(getConnectString(H2TestCase.TEST_DB), partitionDimensionName(), Types.INTEGER, CachingDataSourceProvider.getInstance(), null);
       dimension = createPopulatedPartitionDimension();
-      dimension.setId(hive.getPartitionDimension().getId());
-      hive.setPartitionDimension(dimension);
+      Hive hive = null;
+      dimension.setId(hive.getHiveConfiguration().getPartitionDimension().getId());
       resource = Atom.getFirstOrThrow(dimension.getResources());
       hive.addResource(resource);
       numIndex = resource.getSecondaryIndex("num");
@@ -53,7 +52,7 @@ public class DbDirectoryTest extends H2TestCase {
       }
       hive.addNode(new Node("node", H2TestCase.TEST_DB, "", HiveDbDialect.H2));
       SimpleJdbcDaoSupport dao = new SimpleJdbcDaoSupport();
-      dao.setDataSource(hive.getDataSourceProvider().getDataSource(getConnectString(H2TestCase.TEST_DB)));
+//      dao.setDataSource(hive.().getDataSource(getConnectString(H2TestCase.TEST_DB)));
       //		dao.getJdbcTemplate().update("SET TRACE_LEVEL_SYSTEM_OUT 3");
     }
     catch (Exception e) {
@@ -110,7 +109,8 @@ public class DbDirectoryTest extends H2TestCase {
   }
 
   private Hive getHive() {
-    return Hive.load(getConnectString(H2TestCase.TEST_DB), CachingDataSourceProvider.getInstance());
+    throw new UnsupportedOperationException("Not yet implemented");
+//    return Hive.load(getConnectString(H2TestCase.TEST_DB), CachingDataSourceProvider.getInstance());
   }
 
   @Test
@@ -198,7 +198,7 @@ public class DbDirectoryTest extends H2TestCase {
 
   @Test
   public void testGetKeySemaphoresOfPartitioningResourceIds() throws Exception {
-    Hive hive = Hive.load(getConnectString(H2TestCase.TEST_DB), CachingDataSourceProvider.getInstance());
+    Hive hive = null;//= Hive.load(getConnectString(H2TestCase.TEST_DB), CachingDataSourceProvider.getInstance());
     hive.deleteResource(resource);
     resource = Atom.getFirstOrNull(dimension.getResources());
     resource.setPartitioningResource(true);
@@ -466,7 +466,8 @@ public class DbDirectoryTest extends H2TestCase {
   }
 
   private DbDirectory getDirectory() {
-    return new DbDirectory(dimension, CachingDataSourceProvider.getInstance().getDataSource(dimension.getIndexUri()));
+    throw new UnsupportedOperationException("Not yet implemented");
+//    return new DbDirectory(dimension, CachingDataSourceProvider.getInstance().getDataSource(dimension.getIndexUri()));
   }
 
   @Override

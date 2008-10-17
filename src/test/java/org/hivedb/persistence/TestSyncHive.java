@@ -4,7 +4,6 @@ import org.hivedb.Hive;
 import org.hivedb.HiveException;
 import org.hivedb.HiveSyncDaemon;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.HiveTest.Config;
 import org.junit.Assert;
@@ -25,7 +24,7 @@ public class TestSyncHive extends HiveTest {
     Hive hive = loadHive();
     Hive passiveSync = loadHive();
     ArrayList<Observer> observers = new ArrayList<Observer>();
-    observers.add(passiveSync);
+//    observers.add(passiveSync);
     HiveSyncDaemon daemon = new HiveSyncDaemon(getConnectString(getHiveDatabaseName()), observers);
     daemon.detectChanges();
 
@@ -49,6 +48,7 @@ public class TestSyncHive extends HiveTest {
   }
 
   private Hive loadHive() throws HiveException {
-    return Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
+    throw new UnsupportedOperationException("Not yet implemented");
+//    return Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
   }
 }

@@ -1,13 +1,11 @@
 package org.hivedb;
 
 import org.hivedb.meta.Node;
-import org.hivedb.meta.persistence.CachingDataSourceProvider;
-import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.HiveDbDialect;
+import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Predicate;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import org.junit.Test;
 
@@ -35,8 +33,9 @@ public class TestHiveWithNodeOutOfService extends HiveTest {
     Node outOfService = Atom.getFirst(hive.getNodes());
     outOfService.setStatus(Lockable.Status.unavailable);
     hive.updateNode(outOfService);
-    Hive newHive = Hive.load(hive.getUri(), CachingDataSourceProvider.getInstance());
-    assertNotNull(newHive);
+//    Hive newHive = Hive.load(hive.getHiveConfiguration().getUri(), CachingDataSourceProvider.getInstance());
+//    assertNotNull(newHive);
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 
   @Test

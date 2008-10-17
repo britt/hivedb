@@ -1,5 +1,6 @@
 package org.hivedb;
 
+import org.hivedb.configuration.HiveConfiguration;
 import org.hivedb.meta.AccessType;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.directory.DirectoryFacade;
@@ -9,6 +10,7 @@ import org.hivedb.meta.persistence.HiveDataSourceProvider;
 import org.hivedb.util.Preconditions;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Unary;
+import org.hivedb.util.functional.Predicate;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -23,14 +25,14 @@ public class ConnectionManager {
   private HiveDataSourceProvider dataSourceProvider;
   private Map<Integer, DataSource> nodeDataSources;
   private JdbcDaoSupportCacheImpl cache;
-  private Hive hive;
+  private HiveConfiguration hiveConfiguration;
 
-  public ConnectionManager(DirectoryFacade directory, Hive hive, HiveDataSourceProvider provider) {
-    this.hive = hive;
+  public ConnectionManager(DirectoryFacade directory, HiveConfiguration hiveConfiguration, HiveDataSourceProvider provider) {
+    this.hiveConfiguration = hiveConfiguration;
     this.directory = directory;
     this.dataSourceProvider = provider;
-    this.cache = new JdbcDaoSupportCacheImpl(directory, hive, provider);
-    this.nodeDataSources = getDataSourceMap(hive.getNodes(), provider);
+    this.cache = new JdbcDaoSupportCacheImpl(directory, hiveConfiguration, provider);
+    this.nodeDataSources = getDataSourceMap(hiveConfiguration.getNodes(), provider);
   }
 
   public static Map<Integer, DataSource> getDataSourceMap(Collection<Node> nodes, DataSourceProvider dataSourceProvider) {
@@ -42,8 +44,16 @@ public class ConnectionManager {
 
   private Connection getConnection(KeySemaphore semaphore, AccessType intention) throws HiveLockableException, SQLException {
     if (intention == AccessType.ReadWrite)
-      Preconditions.isWritable(hive, semaphore, hive.getNode(semaphore.getNodeId()));
+      Preconditions.isWritable(hiveConfiguration.getSemaphore(), semaphore, getNodeById(semaphore.getNodeId(), hiveConfiguration.getNodes()));
     return nodeDataSources.get(semaphore.getNodeId()).getConnection();
+  }
+
+  private Node getNodeById(final Object id, Collection<Node> nodes) {
+    return Filter.grepSingle(new Predicate<Node>(){
+      public boolean f(Node item) {
+        return item.getId().equals(id);
+      }
+    }, nodes);
   }
 
   public Collection<Connection> getByPartitionKey(Object primaryIndexKey, AccessType intent) throws SQLException, HiveLockableException {

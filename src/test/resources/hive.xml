@@ -5,22 +5,41 @@
        xsi:schemaLocation="
 http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
 http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-2.0.xsd">
-	
-	<bean id="hiveInitializer" class="org.hivedb.test.HiveInitializer" depends-on="nodes,entityClasses,schemata">
-		<constructor-arg>
-			<bean class="org.hivedb.test.H2ContextInitializer">
-				<constructor-arg>
-					<ref bean="nodes" />
-				</constructor-arg>
-			</bean>
-		</constructor-arg>
-		<constructor-arg ref="entityClasses" />
-		<constructor-arg ref="schemata" />
-		<constructor-arg value="hive" />
-		<constructor-arg ref="nodes" />
-	</bean>
-	
-	<bean id="hive" class="org.hivedb.Hive" factory-method="load" depends-on="hiveInitializer">
-		<constructor-arg value="jdbc:h2:mem:hive;LOCK_MODE=3" />
-	</bean>
+ 
+  <bean id="dataSourceProvider" class="org.hivedb.meta.persistence.CachingDataSourceProvider"/>
+
+  <bean id="hiveDataSource" class="org.hivedb.meta.persistence.HiveBasicDataSource">
+    <constructor-arg value="${hive.uri}"/>
+  </bean>
+
+  <bean id="hiveConfigFactory" class="org.hivedb.configuration.HiveConfigurationFactory">
+    <constructor-arg index="0" value="${hive.uri}"/>
+    <constructor-arg index="1" ref="hiveDataSource"/>
+  </bean>
+
+  <bean id="hiveConfiguration" class="org.hivedb.configuration.HiveConfigurationImpl" factory-bean="hiveConfigFactory"
+        factory-method="newInstance"></bean>
+
+  <bean id="directoryFactory" class="org.hivedb.meta.directory.DbDirectoryFactory">
+    <constructor-arg index="0" ref="hiveDataSource"/>
+    <constructor-arg index="1" ref="hiveConfiguration"/>
+  </bean>
+
+  <bean id="directoryFacadeFactory" class="org.hivedb.meta.directory.DirectoryWrapperFactory">
+    <constructor-arg>
+      <bean class="org.hivedb.meta.directory.DbDirectoryFactory">
+        <constructor-arg index="0" ref="hiveDataSource"/>
+        <constructor-arg index="1" ref="hiveConfiguration"/>
+      </bean>
+    </constructor-arg>
+  </bean>
+
+  <bean id="hiveFactory" class="org.hivedb.HiveFactory">
+    <constructor-arg index="0" ref="hiveConfigFactory"/>
+    <constructor-arg index="1" ref="directoryFacadeFactory"/>
+    <constructor-arg index="2" ref="dataSourceProvider"/>
+  </bean>
+
+  <bean id="hive" class="org.hivedb.Hive" factory-bean="hiveFactory" factory-method="newInstance"></bean>
+
 </beans>

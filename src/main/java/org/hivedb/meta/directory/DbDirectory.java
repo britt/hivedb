@@ -2,6 +2,7 @@ package org.hivedb.meta.directory;
 
 import org.hivedb.DirectoryCorruptionException;
 import org.hivedb.HiveKeyNotFoundException;
+import org.hivedb.configuration.HiveConfiguration;
 import org.hivedb.Lockable.Status;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
@@ -32,22 +33,22 @@ import java.util.Map;
 
 public class DbDirectory extends SimpleJdbcDaoSupport implements NodeResolver, IndexWriter, Directory {
   private static QuickCache cache = new QuickCache();
-  private PartitionDimension partitionDimension;
+  private HiveConfiguration hiveConfiguration;
   private IndexSqlFormatter sql = new IndexSqlFormatter();
 
 
-  public DbDirectory(PartitionDimension dimension, DataSource dataSource) {
-    this.partitionDimension = dimension;
+  public DbDirectory(HiveConfiguration dimension, DataSource dataSource) {
+    this.hiveConfiguration = dimension;
     this.setDataSource(dataSource);
   }
 
-  public DbDirectory(PartitionDimension dimension) {
-    this.partitionDimension = dimension;
-    this.setDataSource(CachingDataSourceProvider.getInstance().getDataSource(dimension.getIndexUri()));
+  public DbDirectory(HiveConfiguration hiveConfiguration) {
+    this.hiveConfiguration = hiveConfiguration;
+    this.setDataSource(CachingDataSourceProvider.getInstance().getDataSource(hiveConfiguration.getPartitionDimension().getIndexUri()));
   }
 
   public PartitionDimension getPartitionDimension() {
-    return this.partitionDimension;
+    return this.hiveConfiguration.getPartitionDimension();
   }
 
   public void insertPrimaryIndexKey(final Node node, final Object primaryIndexKey) {
@@ -57,7 +58,7 @@ public class DbDirectory extends SimpleJdbcDaoSupport implements NodeResolver, I
         Object[] parameters = new Object[]{primaryIndexKey, node.getId()};
 
         if (lockPrimaryKeyForInsert(primaryIndexKey, node))
-          doUpdate(sql.insertPrimaryIndexKey(partitionDimension), types, parameters);
+          doUpdate(sql.insertPrimaryIndexKey(getPartitionDimension()), types, parameters);
         return primaryIndexKey;
       }
     });
@@ -86,7 +87,7 @@ public class DbDirectory extends SimpleJdbcDaoSupport implements NodeResolver, I
         Object[] parameters = new Object[]{isReadOnly, primaryIndexKey};
         int[] types = new int[]{Types.BOOLEAN, JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass())};
         lockPrimaryKeyForUpdate(primaryIndexKey);
-        doUpdate(sql.updateReadOnlyOfPrimaryIndexKey(partitionDimension), types, parameters);
+        doUpdate(sql.updateReadOnlyOfPrimaryIndexKey(getPartitionDimension()), types, parameters);
         return primaryIndexKey;
       }
     });
@@ -121,7 +122,7 @@ public class DbDirectory extends SimpleJdbcDaoSupport implements NodeResolver, I
       public Object doInTransaction(TransactionStatus arg0) {
         lockPrimaryKeyForUpdate(primaryIndexKey);
         doUpdate(
-            sql.deletePrimaryIndexKey(partitionDimension),
+            sql.deletePrimaryIndexKey(getPartitionDimension()),
             new int[]{JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass())},
             new Object[]{primaryIndexKey});
         return primaryIndexKey;
@@ -151,14 +152,14 @@ public class DbDirectory extends SimpleJdbcDaoSupport implements NodeResolver, I
 
   @SuppressWarnings("unchecked")
   public boolean doesPrimaryIndexKeyExist(Object primaryIndexKey) {
-    Collection count = doRead(sql.checkExistenceOfPrimaryKey(partitionDimension),
+    Collection count = doRead(sql.checkExistenceOfPrimaryKey(getPartitionDimension()),
         new Object[]{primaryIndexKey},
         RowMappers.newTrueRowMapper());
     return count.size() > 0;
   }
 
   public Collection<KeySemaphore> getKeySemamphoresOfPrimaryIndexKey(Object primaryIndexKey) {
-    return doRead(sql.selectKeySemaphoreOfPrimaryIndexKey(partitionDimension),
+    return doRead(sql.selectKeySemaphoreOfPrimaryIndexKey(getPartitionDimension()),
         new Object[]{primaryIndexKey},
         new KeySemaphoreRowMapper());
   }
@@ -334,13 +335,13 @@ public class DbDirectory extends SimpleJdbcDaoSupport implements NodeResolver, I
   }
 
   private boolean lockPrimaryKeyForInsert(Object primaryIndexKey, Node node) {
-    return doRead(sql.selectCompositeKeyForUpdateLock(Schemas.getPrimaryIndexTableName(partitionDimension), "id", "node"),
+    return doRead(sql.selectCompositeKeyForUpdateLock(Schemas.getPrimaryIndexTableName(getPartitionDimension()), "id", "node"),
         new Object[]{primaryIndexKey, node.getId()},
         RowMappers.newTrueRowMapper()).size() == 0;
   }
 
   private boolean lockPrimaryKeyForUpdate(Object primaryIndexKey) {
-    return doRead(sql.selectForUpdateLock(Schemas.getPrimaryIndexTableName(partitionDimension), "id"),
+    return doRead(sql.selectForUpdateLock(Schemas.getPrimaryIndexTableName(getPartitionDimension()), "id"),
         new Object[]{primaryIndexKey},
         RowMappers.newTrueRowMapper()).size() == 0;
   }

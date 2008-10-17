@@ -7,6 +7,7 @@ package org.hivedb.meta;
 import org.hivedb.Hive;
 import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.util.HiveUtils;
+import org.hivedb.util.Preconditions;
 import org.hivedb.util.database.JdbcTypeMapper;
 
 import java.util.ArrayList;
@@ -168,4 +169,12 @@ public class PartitionDimension implements Comparable<PartitionDimension>, Clone
 	public void setId(Integer id) {
 		this.id = id;
 	}
+
+  /**
+   * {@inheritDoc}
+   * @param resourceName
+   */
+  public boolean doesResourceExist(String resourceName) {
+    return !Preconditions.isNameUnique(getResources(), resourceName);
+  }
 }

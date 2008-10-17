@@ -26,6 +26,7 @@ public class SynchronizedSingletonProvider<T> implements Observer {
   public void update(Observable o, Object arg) {
     T newInstance = factory.newInstance();
     wrapper.replace(newInstance);
+    log.info(String.format("Replaced %s with new instance", newInstance.getClass()));
   }
 }
 

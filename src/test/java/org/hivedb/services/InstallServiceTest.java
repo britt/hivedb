@@ -1,24 +1,18 @@
 package org.hivedb.services;
 
 import org.hivedb.Hive;
-import org.hivedb.HiveRuntimeException;
-import org.hivedb.Lockable.Status;
 import org.hivedb.Schema;
 import org.hivedb.management.HiveConfigurationSchemaInstaller;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.meta.persistence.TableInfo;
-import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.Schemas;
 import org.hivedb.util.database.test.ContinentalSchema;
 import org.hivedb.util.database.test.H2TestCase;
 import org.hivedb.util.database.test.WeatherSchema;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.sql.Types;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -31,7 +25,8 @@ public class InstallServiceTest extends H2TestCase {
     super.afterMethod();
     super.beforeMethod();
     new HiveConfigurationSchemaInstaller(uri()).run();
-    Hive.create(uri(), "split", Types.INTEGER, CachingDataSourceProvider.getInstance(), null);
+//    Hive.create(uri(), "split", Types.INTEGER, CachingDataSourceProvider.getInstance(), null);
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 
   @Test
@@ -39,32 +34,35 @@ public class InstallServiceTest extends H2TestCase {
     Schema schema = WeatherSchema.getInstance();
     String nodeName = "aNewNode";
     getService().install(schema.getName(), nodeName, H2TestCase.TEST_DB, "unecessary for H2", "H2", "na", "na");
-    validateSchema(schema, Hive.load(uri(), CachingDataSourceProvider.getInstance()).getNode(nodeName));
+//    validateSchema(schema, Hive.load(uri(), CachingDataSourceProvider.getInstance()).getNode(nodeName));
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 
   @Test
   public void installASchemaOnAnExistingNode() throws Exception {
-    Hive hive = Hive.load(uri(), CachingDataSourceProvider.getInstance());
-    String nodeName = "anExistingNode";
-    Node node = new Node(nodeName, H2TestCase.TEST_DB, "unecessary", HiveDbDialect.H2);
-    hive.addNode(node);
-    WeatherSchema weatherSchema = WeatherSchema.getInstance();
-    getService().install(weatherSchema.getName(), nodeName);
-    validateSchema(weatherSchema, node);
+//    Hive hive = Hive.load(uri(), CachingDataSourceProvider.getInstance());
+//    String nodeName = "anExistingNode";
+//    Node node = new Node(nodeName, H2TestCase.TEST_DB, "unecessary", HiveDbDialect.H2);
+//    hive.addNode(node);
+//    WeatherSchema weatherSchema = WeatherSchema.getInstance();
+//    getService().install(weatherSchema.getName(), nodeName);
+//    validateSchema(weatherSchema, node);
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 
   @Test
   public void tryToInstallToAReadOnlyHive() throws Exception {
-    Hive hive = Hive.load(uri(), CachingDataSourceProvider.getInstance());
-    hive.updateHiveStatus(Status.readOnly);
-
-    try {
-      getService().install(WeatherSchema.getInstance().getName(), "aNewNode", H2TestCase.TEST_DB, "unecessary for H2", "H2", "na", "na");
-
-      fail("No exception Thrown");
-    } catch (HiveRuntimeException e) {
-      //pass
-    }
+//    Hive hive = Hive.load(uri(), CachingDataSourceProvider.getInstance());
+//    hive.updateHiveStatus(Status.readOnly);
+//
+//    try {
+//      getService().install(WeatherSchema.getInstance().getName(), "aNewNode", H2TestCase.TEST_DB, "unecessary for H2", "H2", "na", "na");
+//
+//      fail("No exception Thrown");
+//    } catch (HiveRuntimeException e) {
+//      //pass
+//    }
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 
   private void validateSchema(Schema schema, Node node) {
@@ -84,7 +82,11 @@ public class InstallServiceTest extends H2TestCase {
   }
 
   private InstallServiceImpl getService() {
-    return new InstallServiceImpl(getSchemata(), Hive.load(uri(), CachingDataSourceProvider.getInstance()));
+    return new InstallServiceImpl(getSchemata(), getHive());
+  }
+
+  private Hive getHive() {
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 
   @Override

@@ -143,7 +143,7 @@ public class HiveMigrator implements Migrator {
   private void doMigration(Object key, Collection<Node> destinations, PartitionKeyMover mover) {
     try {
       lock(key);
-      DbDirectory dir = new DbDirectory(dimension);
+      DbDirectory dir = new DbDirectory(hive.getHiveConfiguration());
       Collection<Node> origins = Transform.map(new Unary<KeySemaphore, Node>() {
         public Node f(KeySemaphore keySemaphore) {
           return getNode(keySemaphore.getNodeId());

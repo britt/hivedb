@@ -3,7 +3,6 @@ package org.hivedb;
 import org.hivedb.configuration.HiveConfigurationSchema;
 import org.hivedb.management.HiveConfigurationSchemaInstaller;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2TestCase;
 import static org.junit.Assert.assertEquals;
@@ -11,7 +10,6 @@ import static org.junit.Assert.assertNotNull;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.sql.Types;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -26,7 +24,7 @@ public class TestHiveLoading extends H2TestCase {
     super.afterMethod();
     super.beforeMethod();
     new HiveConfigurationSchemaInstaller(getConnectString(H2TestCase.TEST_DB)).run();
-    hive = Hive.load(getConnectString(H2TestCase.TEST_DB), CachingDataSourceProvider.getInstance());
+    hive = null;//Hive.load(getConnectString(H2TestCase.TEST_DB), CachingDataSourceProvider.getInstance());
   }
 
   public Collection<Schema> getSchemas() {
@@ -36,12 +34,12 @@ public class TestHiveLoading extends H2TestCase {
 
   @Test
   public void testLoadingWithoutPartitionDimension() throws Exception {
-    Hive hive = Hive.load(getConnectString(H2TestCase.TEST_DB), CachingDataSourceProvider.getInstance());
+    Hive hive = null;// = Hive.load(getConnectString(H2TestCase.TEST_DB), CachingDataSourceProvider.getInstance());
     assertNotNull(hive);
     Node node = getNode();
     hive.addNode(node);
 
-    Hive fetched = Hive.load(getConnectString(H2TestCase.TEST_DB), CachingDataSourceProvider.getInstance());
+    Hive fetched = null;// = Hive.load(getConnectString(H2TestCase.TEST_DB), CachingDataSourceProvider.getInstance());
     assertEquals(1, fetched.getNodes().size());
     assertEquals(node, fetched.getNode(node.getName()));
   }
@@ -52,12 +50,12 @@ public class TestHiveLoading extends H2TestCase {
 
   @Test
   public void testLoadWithPartitionDimension() throws Exception {
-    Hive hive = Hive.create(getConnectString(H2TestCase.TEST_DB), "DIM", Types.INTEGER, CachingDataSourceProvider.getInstance(), null);
+    Hive hive = null;// = Hive.create(getConnectString(H2TestCase.TEST_DB), "DIM", Types.INTEGER, CachingDataSourceProvider.getInstance(), null);
     assertNotNull(hive);
     Node node = getNode();
     hive.addNode(node);
 
-    Hive fetched = Hive.load(getConnectString(H2TestCase.TEST_DB), CachingDataSourceProvider.getInstance());
+    Hive fetched = null;//= Hive.load(getConnectString(H2TestCase.TEST_DB), CachingDataSourceProvider.getInstance());
     assertEquals(1, fetched.getNodes().size());
     assertEquals(node, fetched.getNode(node.getName()));
   }

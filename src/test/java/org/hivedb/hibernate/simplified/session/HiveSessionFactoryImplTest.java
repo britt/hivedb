@@ -10,7 +10,6 @@ import org.hivedb.Hive;
 import org.hivedb.hibernate.RecordNodeOpenSessionEvent;
 import org.hivedb.meta.Assigner;
 import org.hivedb.meta.Node;
-import org.hivedb.meta.persistence.HiveDataSourceProvider;
 import org.hivedb.util.Lists;
 import org.hivedb.util.database.Schemas;
 import org.hivedb.util.database.test.HiveTest;
@@ -187,7 +186,7 @@ public class HiveSessionFactoryImplTest extends HiveTest {
   @Test
   public void shouldThrowAnExceptionIfARecordIsStoredOnMoreThanOneNode() throws Exception {
     final Assigner assigner = context.mock(Assigner.class);
-    final Hive hive = Hive.load(getHive().getUri(), (HiveDataSourceProvider) getHive().getDataSourceProvider(), assigner);
+    final Hive hive = null; //= Hive.load(hiveConfiguration.getUri(getHive()), (HiveDataSourceProvider) getHive().getDataSourceProvider(), assigner);
     context.checking(new Expectations() {
       {
         exactly(2).of(assigner).chooseNode(with(any(Collection.class)), with(anything()));
@@ -215,6 +214,7 @@ public class HiveSessionFactoryImplTest extends HiveTest {
       if (session != null)
         session.close();
     }
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 
   private Node getNodeForFirstId(Hive hive, Collection<Integer> nodes) throws Exception {

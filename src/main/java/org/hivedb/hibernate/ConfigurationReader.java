@@ -5,11 +5,9 @@ import org.hivedb.HiveLockableException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.annotations.*;
 import org.hivedb.configuration.*;
-import org.hivedb.management.HiveConfigurationSchemaInstaller;
 import org.hivedb.meta.PartitionDimension;
-import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.meta.ResourceImpl;
-import org.hivedb.meta.persistence.CachingDataSourceProvider;
+import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.Lists;
 import org.hivedb.util.PrimitiveUtils;
 import org.hivedb.util.classgen.ReflectionTools;
@@ -157,24 +155,26 @@ public class ConfigurationReader {
   }
 
   public void install(String uri) {
-    new HiveConfigurationSchemaInstaller(uri).run();
-    install(Hive.load(uri, CachingDataSourceProvider.getInstance()));
+    throw new UnsupportedOperationException("Not yet implemented");
+//    new HiveConfigurationSchemaInstaller(uri).run();
+//    install(Hive.load(uri, CachingDataSourceProvider.getInstance()));
   }
 
   public void install(Hive hive) {
-    Hive target = hive;
-    if (hive.getPartitionDimension() == null) {
-      target = Hive.create(hive.getUri(), dimension.getName(), dimension.getColumnType(), CachingDataSourceProvider.getInstance(), null);
-    }
-
-    for (EntityConfig config : hiveConfigs.values())
-      installConfiguration(config, target);
+    throw new UnsupportedOperationException("Not yet implemented");
+//    Hive target = hive;
+//    if (hive.getPartitionDimension() == null) {
+//      target = Hive.create(hiveConfiguration.getUri(hive), dimension.getName(), dimension.getColumnType(), CachingDataSourceProvider.getInstance(), null);
+//    }
+//
+//    for (EntityConfig config : hiveConfigs.values())
+//      installConfiguration(config, target);
   }
 
   public void installConfiguration(EntityConfig config, Hive hive) {
     try {
       // Duplicate installations are possible due to delegated indexes
-      if (hive.doesResourceExist(config.getResourceName()))
+      if (hive.getHiveConfiguration().getPartitionDimension().doesResourceExist(config.getResourceName()))
         return;
 
       org.hivedb.meta.Resource resource =

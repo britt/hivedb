@@ -7,7 +7,6 @@ import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.configuration.HiveConfigurationSchema;
 import org.hivedb.management.HiveConfigurationSchemaInstaller;
-import org.hivedb.meta.persistence.CachingDataSourceProvider;
 import org.hivedb.util.classgen.GenerateInstance;
 import org.hivedb.util.database.test.Continent;
 import org.hivedb.util.database.test.H2TestCase;
@@ -102,7 +101,7 @@ public class ConfigurationReaderTest extends H2TestCase {
   @Test
   public void testInstallWithPartitionDimensionInstalled() throws Exception {
     new HiveConfigurationSchemaInstaller(getConnectString(H2TestCase.TEST_DB)).run();
-    Hive hive = Hive.create(getConnectString(H2TestCase.TEST_DB), WeatherReport.CONTINENT, Types.VARCHAR, org.hivedb.meta.persistence.CachingDataSourceProvider.getInstance(), null);
+    Hive hive = null;// = Hive.create(getConnectString(H2TestCase.TEST_DB), WeatherReport.CONTINENT, Types.VARCHAR, org.hivedb.meta.persistence.CachingDataSourceProvider.getInstance(), null);
     ConfigurationReader reader = new ConfigurationReader(WeatherReport.class);
     reader.install(hive);
     EntityConfig config = reader.getEntityConfig(WeatherReport.class.getName());
@@ -115,7 +114,7 @@ public class ConfigurationReaderTest extends H2TestCase {
   @Test
   public void testInstallPartitioningResourceWithPartitionDimensionInstalled() throws Exception {
     new HiveConfigurationSchemaInstaller(getConnectString(H2TestCase.TEST_DB)).run();
-    Hive hive = Hive.create(getConnectString(H2TestCase.TEST_DB), WeatherReport.CONTINENT, Types.VARCHAR, CachingDataSourceProvider.getInstance(), null);
+    Hive hive = null;// = Hive.create(getConnectString(H2TestCase.TEST_DB), WeatherReport.CONTINENT, Types.VARCHAR, CachingDataSourceProvider.getInstance(), null);
     ConfigurationReader reader = new ConfigurationReader(Continent.class);
     reader.install(hive);
     EntityConfig config = reader.getEntityConfig(Continent.class.getName());
@@ -130,7 +129,7 @@ public class ConfigurationReaderTest extends H2TestCase {
     ConfigurationReader reader = new ConfigurationReader(WeatherReport.class);
     reader.install(getConnectString(H2TestCase.TEST_DB));
     EntityConfig config = reader.getEntityConfig(WeatherReport.class.getName());
-    Hive hive = Hive.load(getConnectString(H2TestCase.TEST_DB), CachingDataSourceProvider.getInstance());
+    Hive hive = null;// Hive.load(getConnectString(H2TestCase.TEST_DB), CachingDataSourceProvider.getInstance());
     assertNotNull(hive.getPartitionDimension().getResource(config.getResourceName()));
     int hiveEntityIndexConfigCount = config.getEntityIndexConfigs(IndexType.Hive).size();
     assertEquals(hiveEntityIndexConfigCount, hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes().size());
@@ -142,7 +141,7 @@ public class ConfigurationReaderTest extends H2TestCase {
     ConfigurationReader reader = new ConfigurationReader(Continent.class);
     reader.install(getConnectString(H2TestCase.TEST_DB));
     EntityConfig config = reader.getEntityConfig(Continent.class.getName());
-    Hive hive = Hive.load(getConnectString(H2TestCase.TEST_DB), CachingDataSourceProvider.getInstance());
+    Hive hive = null;// Hive.load(getConnectString(H2TestCase.TEST_DB), CachingDataSourceProvider.getInstance());
 
     assertNotNull(hive.getPartitionDimension().getResource(config.getResourceName()));
     assertEquals(1, hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes().size());
@@ -156,7 +155,7 @@ public class ConfigurationReaderTest extends H2TestCase {
     ConfigurationReader reader = new ConfigurationReader(WeatherReport.class);
     reader.install(getConnectString(H2TestCase.TEST_DB));
     EntityConfig config = reader.getEntityConfig(WeatherReport.class.getName());
-    Hive hive = Hive.load(getConnectString(H2TestCase.TEST_DB), CachingDataSourceProvider.getInstance());
+    Hive hive = null;// Hive.load(getConnectString(H2TestCase.TEST_DB), CachingDataSourceProvider.getInstance());
     assertNotNull(hive.getPartitionDimension().getResource(config.getResourceName()));
     int hiveEntityIndexConfigCount = config.getEntityIndexConfigs(IndexType.Hive).size();
     assertEquals(hiveEntityIndexConfigCount, hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes().size());
@@ -169,7 +168,7 @@ public class ConfigurationReaderTest extends H2TestCase {
     ConfigurationReader reader = new ConfigurationReader(Continent.class);
     reader.install(getConnectString(H2TestCase.TEST_DB));
     EntityConfig config = reader.getEntityConfig(Continent.class.getName());
-    Hive hive = Hive.load(getConnectString(H2TestCase.TEST_DB), CachingDataSourceProvider.getInstance());
+    Hive hive = null;// Hive.load(getConnectString(H2TestCase.TEST_DB), CachingDataSourceProvider.getInstance());
 
     assertNotNull(hive.getPartitionDimension().getResource(config.getResourceName()));
     assertEquals(1, hive.getPartitionDimension().getResource(config.getResourceName()).getSecondaryIndexes().size());
