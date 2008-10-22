@@ -25,6 +25,11 @@
       <name>Justin McCarthy</name>
       <email>jmccarthy@cafepress.com</email>
     </developer>
+    <developer>
+      <id>dpeckham</id>
+      <name>Dave Peckham</name>
+      <email>dpeckham@cafepress.com</email>
+    </developer>
   </developers>
   <properties>
     <cxf.version>2.1</cxf.version>
@@ -71,10 +76,6 @@
         <enabled>true</enabled>
       </snapshots>
     </pluginRepository>
-    <!--<pluginRepository>-->
-    <!--<id>tapestry.javaforge</id>-->
-    <!--<url>http://howardlewisship.com/repository</url>-->
-    <!--</pluginRepository>-->
   </pluginRepositories>
   <reporting>
     <plugins>
@@ -250,13 +251,6 @@
       <version>1.1</version>
       <scope>test</scope>
     </dependency>
-    <!--<dependency>-->
-    <!--<groupId>org.testng</groupId>-->
-    <!--<artifactId>testng</artifactId>-->
-    <!--<version>5.7</version>-->
-    <!--<classifier>jdk15</classifier>-->
-    <!--<scope>provided</scope>-->
-    <!--</dependency>-->
     <dependency>
       <groupId>org.apache.cxf</groupId>
       <artifactId>cxf-rt-core</artifactId>

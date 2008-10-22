@@ -6,6 +6,7 @@ package org.hivedb.meta.persistence;
 
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.meta.PartitionDimension;
+import org.hivedb.meta.PartitionDimensionImpl;
 import org.hivedb.meta.Resource;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -51,13 +52,13 @@ public class PartitionDimensionDao extends JdbcDaoSupport {
       throw new HiveRuntimeException("Unable to create Partition Dimension: " + parameters);
     if (generatedKey.getKeyList().size() == 0)
       throw new HiveRuntimeException("Unable to retrieve generated primary key");
-    newObject.updateId(generatedKey.getKey().intValue());
+//    newObject.updateId(generatedKey.getKey().intValue());
 
     // dependencies
     for (Resource r : newObject.getResources())
       new ResourceDao(getDataSource()).create(r);
 
-    return new Integer(newObject.getId());
+    return newObject.getId();
   }
 
   public List<PartitionDimension> loadAll() {
@@ -91,7 +92,7 @@ public class PartitionDimensionDao extends JdbcDaoSupport {
       final int id = rs.getInt("id");
       List<Resource> resources = new ResourceDao(getDataSource()).findByDimension(id);
       PartitionDimension dimension;
-      dimension = new PartitionDimension(
+      dimension = new PartitionDimensionImpl(
         rs.getInt("id"),
         rs.getString("name"),
         JdbcTypeMapper.parseJdbcType(rs.getString("db_type")),

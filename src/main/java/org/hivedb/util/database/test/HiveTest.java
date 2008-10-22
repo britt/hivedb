@@ -117,7 +117,7 @@ public class HiveTest {
   }
 
   protected PartitionDimension createEmptyPartitionDimension() {
-    return new PartitionDimension(Hive.NEW_OBJECT_ID, getHive().getPartitionDimension().getName(), Types.INTEGER,
+    return new PartitionDimensionImpl(Hive.NEW_OBJECT_ID, getHive().getPartitionDimension().getName(), Types.INTEGER,
       getConnectString(getHiveDatabaseName()), new ArrayList<Resource>());
   }
 

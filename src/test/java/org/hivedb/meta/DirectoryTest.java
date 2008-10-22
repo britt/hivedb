@@ -43,7 +43,7 @@ public class DirectoryTest extends H2TestCase {
       new HiveConfigurationSchemaInstaller(getConnectString(H2TestCase.TEST_DB)).run();
       Hive hive = null; //= Hive.create(getConnectString(H2TestCase.TEST_DB), partitionDimensionName(), Types.INTEGER, CachingDataSourceProvider.getInstance(), null);
       dimension = createPopulatedPartitionDimension();
-      dimension.setId(hive.getPartitionDimension().getId());
+//      dimension.setId(hive.getPartitionDimension().getId());
       resource = Atom.getFirstOrThrow(dimension.getResources());
       hive.addResource(resource);
       numIndex = resource.getSecondaryIndex("num");
@@ -71,8 +71,8 @@ public class DirectoryTest extends H2TestCase {
     prepare();
   }
 
-  protected PartitionDimension createPopulatedPartitionDimension() {
-    return new PartitionDimension(
+  protected PartitionDimensionImpl createPopulatedPartitionDimension() {
+    return new PartitionDimensionImpl(
       Hive.NEW_OBJECT_ID,
       partitionDimensionName(),
       Types.INTEGER,
@@ -98,7 +98,7 @@ public class DirectoryTest extends H2TestCase {
   }
 
   protected PartitionDimension createEmptyPartitionDimension() {
-    return new PartitionDimension(
+    return new PartitionDimensionImpl(
       Hive.NEW_OBJECT_ID,
       partitionDimensionName(),
       Types.INTEGER,

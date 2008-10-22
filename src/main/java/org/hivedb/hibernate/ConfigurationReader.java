@@ -6,6 +6,7 @@ import org.hivedb.HiveRuntimeException;
 import org.hivedb.annotations.*;
 import org.hivedb.configuration.*;
 import org.hivedb.meta.PartitionDimension;
+import org.hivedb.meta.PartitionDimensionImpl;
 import org.hivedb.meta.ResourceImpl;
 import org.hivedb.meta.SecondaryIndex;
 import org.hivedb.util.Lists;
@@ -59,7 +60,7 @@ public class ConfigurationReader {
   @SuppressWarnings("unchecked")
   public static PartitionDimension extractPartitionDimension(Class clazz) {
     Method partitionIndexMethod = AnnotationHelper.getFirstMethodWithAnnotation(clazz, PartitionIndex.class);
-    return new PartitionDimension(getPartitionDimensionName(clazz), JdbcTypeMapper.primitiveTypeToJdbcType(partitionIndexMethod.getReturnType()));
+    return new PartitionDimensionImpl(getPartitionDimensionName(clazz), JdbcTypeMapper.primitiveTypeToJdbcType(partitionIndexMethod.getReturnType()));
   }
 
   public static EntityConfig readConfiguration(Class<?> clazz) {

@@ -1,7 +1,7 @@
 package org.hivedb.persistence;
 
 import org.hivedb.Hive;
-import org.hivedb.meta.PartitionDimension;
+import org.hivedb.meta.PartitionDimensionImpl;
 import org.hivedb.meta.Resource;
 import org.hivedb.meta.persistence.PartitionDimensionDao;
 import org.hivedb.util.database.test.HiveTest;
@@ -20,7 +20,7 @@ public class TestPartitionDimensionPersistence extends HiveTest {
   public void testCreate() throws Exception {
     PartitionDimensionDao dao = new PartitionDimensionDao(getDataSource(getConnectString(getHiveDatabaseName())));
     int initialSize = dao.loadAll().size();
-    final PartitionDimension d = new PartitionDimension(Hive.NEW_OBJECT_ID, getHive().getPartitionDimension().getName(), Types.INTEGER, getConnectString(getHiveDatabaseName()), new ArrayList<Resource>());
+    final PartitionDimensionImpl d = new PartitionDimensionImpl(Hive.NEW_OBJECT_ID, getHive().getPartitionDimension().getName(), Types.INTEGER, getConnectString(getHiveDatabaseName()), new ArrayList<Resource>());
     dao.create(d);
     assertTrue(d.getId() > 0);
     assertEquals(initialSize + 1, dao.loadAll().size());

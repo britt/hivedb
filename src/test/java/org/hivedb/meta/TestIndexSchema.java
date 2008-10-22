@@ -9,15 +9,15 @@ import java.util.Arrays;
 import java.util.Collection;
 
 public class TestIndexSchema extends H2TestCase {
-	@Test
-	public void testSchemaInstallation() {
-		PartitionDimension dimension = new PartitionDimension("aDimension", Types.INTEGER);
-		dimension.setIndexUri(getConnectString("testDb"));
-		Schemas.install(dimension);
-	}
-	
-	@Override
-	public Collection<String> getDatabaseNames(){
-		return Arrays.asList(new String[]{"testDb"});
-	}
+  @Test
+  public void testSchemaInstallation() {
+    PartitionDimensionImpl dimension = new PartitionDimensionImpl("aDimension", Types.INTEGER);
+    dimension.setIndexUri(getConnectString("testDb"));
+    Schemas.install(dimension);
+  }
+
+  @Override
+  public Collection<String> getDatabaseNames() {
+    return Arrays.asList(new String[]{"testDb"});
+  }
 }

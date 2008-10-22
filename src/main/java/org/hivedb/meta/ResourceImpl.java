@@ -26,6 +26,9 @@ public class ResourceImpl implements Comparable<Resource>, Resource {
   private ResourceIndex idIndex;
   private boolean isPartitioningResource;
 
+  public ResourceImpl() {
+  }
+
   /**
    * Create Constructor
    *
@@ -104,9 +107,9 @@ public class ResourceImpl implements Comparable<Resource>, Resource {
       if (secondaryIndex.getName().equalsIgnoreCase(secondaryIndexName))
         return secondaryIndex;
     throw new HiveRuntimeException(String.format("Secondary index %s of resource %s of partitition dimension %s not found.",
-        secondaryIndexName,
-        getName(),
-        getPartitionDimension().getName()));
+      secondaryIndexName,
+      getName(),
+      getPartitionDimension().getName()));
   }
 
   /**
@@ -124,15 +127,15 @@ public class ResourceImpl implements Comparable<Resource>, Resource {
 
   public int hashCode() {
     return HiveUtils.makeHashCode(new Object[]{
-        getName(), HiveUtils.makeHashCode(secondaryIndexes)
+      getName(), HiveUtils.makeHashCode(secondaryIndexes)
     });
   }
 
   public String toString() {
     return HiveUtils.toDeepFormatedString(this,
-        "Id", getId(),
-        "Name", getName(),
-        "SecondaryIndexes", getSecondaryIndexes());
+      "Id", getId(),
+      "Name", getName(),
+      "SecondaryIndexes", getSecondaryIndexes());
   }
 
   public int compareTo(Resource o) {
@@ -158,5 +161,5 @@ public class ResourceImpl implements Comparable<Resource>, Resource {
 
   public void setId(Integer field) {
     this.id = field;
-	}
+  }
 }

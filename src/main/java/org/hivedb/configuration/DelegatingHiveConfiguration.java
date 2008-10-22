@@ -2,14 +2,14 @@ package org.hivedb.configuration;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hivedb.util.SynchronizedWrapper;
-import org.hivedb.util.Preconditions;
-import org.hivedb.util.database.HiveDbDialect;
-import org.hivedb.util.database.DriverLoader;
+import org.hivedb.Hive;
+import org.hivedb.meta.HiveSemaphore;
 import org.hivedb.meta.Node;
 import org.hivedb.meta.PartitionDimension;
-import org.hivedb.meta.HiveSemaphore;
-import org.hivedb.Hive;
+import org.hivedb.util.Preconditions;
+import org.hivedb.util.SynchronizedWrapper;
+import org.hivedb.util.database.DriverLoader;
+import org.hivedb.util.database.HiveDbDialect;
 
 import java.util.Collection;
 
@@ -35,6 +35,7 @@ public class DelegatingHiveConfiguration implements HiveConfiguration {
 
   /**
    * {@inheritDoc}
+   *
    * @param resourceName
    * @param hive
    */
