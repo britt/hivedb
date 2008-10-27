@@ -296,6 +296,11 @@
       <artifactId>cxf-common-utilities</artifactId>
       <version>${cxf.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+      <version>20070829</version>
+    </dependency>
   </dependencies>
   <build>
     <finalName>hivedb</finalName>

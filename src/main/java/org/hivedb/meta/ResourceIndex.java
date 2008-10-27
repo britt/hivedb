@@ -4,6 +4,12 @@ import org.hivedb.Hive;
 
 public class ResourceIndex extends SecondaryIndex {
 
+  public ResourceIndex(SecondaryIndex index) {
+    this(index.getId(), index.getName(), index.getColumnInfo().getColumnType());
+    if(index.getResource() != null)
+      setResource(index.getResource());
+  }
+
   public ResourceIndex(String name, int type, Resource resource) {
     this(name, type);
     setResource(resource);

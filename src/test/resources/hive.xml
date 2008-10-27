@@ -12,9 +12,8 @@ http://www.springframework.org/schema/util http://www.springframework.org/schema
     <constructor-arg value="${hive.uri}"/>
   </bean>
 
-  <bean id="hiveConfigFactory" class="org.hivedb.configuration.HiveConfigurationFactory">
-    <constructor-arg index="0" value="${hive.uri}"/>
-    <constructor-arg index="1" ref="hiveDataSource"/>
+  <bean id="hiveConfigFactory" class="org.hivedb.configuration.DbHiveConfigurationFactory">
+    <constructor-arg ref="hiveDataSource"/>
   </bean>
 
   <bean id="hiveConfiguration" class="org.hivedb.configuration.HiveConfigurationImpl" factory-bean="hiveConfigFactory"

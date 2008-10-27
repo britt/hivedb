@@ -14,14 +14,12 @@ import org.hivedb.util.functional.Factory;
 import javax.sql.DataSource;
 import java.util.Collection;
 
-public class HiveConfigurationFactory implements Factory<HiveConfiguration> {
-  private final static Log log = LogFactory.getLog(HiveConfigurationFactory.class);
+public class DbHiveConfigurationFactory implements Factory<HiveConfiguration> {
+  private final static Log log = LogFactory.getLog(DbHiveConfigurationFactory.class);
   private DataSource dataSource;
-  private String uri;
-  
-  public HiveConfigurationFactory(String uri, DataSource dataSource) {
+
+  public DbHiveConfigurationFactory(DataSource dataSource) {
     this.dataSource = dataSource;
-    this.uri = uri;
   }
 
   public HiveConfiguration newInstance() {
@@ -30,7 +28,7 @@ public class HiveConfigurationFactory implements Factory<HiveConfiguration> {
     Collection<Node> nodes = new NodeDao(dataSource).loadAll();
 
     Preconditions.isNotNull(semaphore, partitionDimension, nodes);
-    return new HiveConfigurationImpl(uri, nodes, partitionDimension, semaphore);
+    return new HiveConfigurationImpl(nodes, partitionDimension, semaphore);
   }
 }
 

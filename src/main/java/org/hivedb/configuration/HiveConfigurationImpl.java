@@ -16,10 +16,8 @@ public class HiveConfigurationImpl implements HiveConfiguration {
   private Collection<Node> nodes;
   private HiveSemaphore semaphore;
   private PartitionDimension partitionDimension;
-  private String uri;
 
-  public HiveConfigurationImpl(String uri, Collection<Node> nodes, PartitionDimension partitionDimension, HiveSemaphore semaphore) {
-    this.uri = uri;
+  public HiveConfigurationImpl(Collection<Node> nodes, PartitionDimension partitionDimension, HiveSemaphore semaphore) {
     this.nodes = nodes;
     this.partitionDimension = partitionDimension;
     this.semaphore = semaphore;
@@ -38,7 +36,7 @@ public class HiveConfigurationImpl implements HiveConfiguration {
   }
 
   public String getUri() {
-    return uri;
+    return partitionDimension.getIndexUri();
   }
 
   public boolean equals(Object o) {
@@ -51,7 +49,6 @@ public class HiveConfigurationImpl implements HiveConfiguration {
     if (partitionDimension != null ? !partitionDimension.equals(that.partitionDimension) : that.partitionDimension != null)
       return false;
     if (semaphore != null ? !semaphore.equals(that.semaphore) : that.semaphore != null) return false;
-    if (uri != null ? !uri.equals(that.uri) : that.uri != null) return false;
 
     return true;
   }
@@ -61,7 +58,6 @@ public class HiveConfigurationImpl implements HiveConfiguration {
     result = (nodes != null ? nodes.hashCode() : 0);
     result = 31 * result + (semaphore != null ? semaphore.hashCode() : 0);
     result = 31 * result + (partitionDimension != null ? partitionDimension.hashCode() : 0);
-    result = 31 * result + (uri != null ? uri.hashCode() : 0);
     return result;
   }
 
@@ -71,7 +67,7 @@ public class HiveConfigurationImpl implements HiveConfiguration {
 
   @Override
   public String toString() {
-    return HiveUtils.toDeepFormatedString(uri, semaphore);
+    return HiveUtils.toDeepFormatedString(getUri(), semaphore);
   }
 }
 

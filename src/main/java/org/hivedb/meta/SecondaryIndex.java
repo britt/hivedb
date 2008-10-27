@@ -16,6 +16,7 @@ import org.hivedb.util.HiveUtils;
  */
 public class SecondaryIndex implements Comparable<SecondaryIndex>, IdAndNameIdentifiable<Integer> {
   private int id;
+  // TODO break circular dependencies
   private Resource resource;
   private ColumnInfo columnInfo;
 
