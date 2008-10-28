@@ -44,4 +44,22 @@ public class HiveSemaphoreImpl implements HiveSemaphore {
     revision++;
   }
 
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof HiveSemaphore)) return false;
+
+    HiveSemaphore that = (HiveSemaphore) o;
+
+    if (revision != that.getRevision()) return false;
+    if (status != that.getStatus()) return false;
+
+    return true;
+  }
+
+  public int hashCode() {
+    int result;
+    result = (status != null ? status.hashCode() : 0);
+    result = 31 * result + revision;
+    return result;
+  }
 }

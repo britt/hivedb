@@ -2,18 +2,48 @@ package org.hivedb.configuration.json;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.Test;
 import org.hivedb.HiveRuntimeException;
+import org.hivedb.Lockable;
+import org.hivedb.configuration.HiveConfiguration;
+import org.hivedb.meta.*;
+import org.hivedb.util.Lists;
+import org.hivedb.util.database.HiveDbDialect;
+import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+
+import java.sql.Types;
+import java.util.Collection;
+import java.util.List;
 
 public class JSONHiveConfigurationFactoryTest {
   private final static Log log = LogFactory.getLog(JSONHiveConfigurationFactoryTest.class);
 
-  @Test
-  public void shouldLoadAJSONConfigurationFromAFile() throws Exception {
-    throw new UnsupportedOperationException("Not yet implemented");    
+  private List<Node> getNodes() {
+    return Lists.newList(new Node(0,"aNode","nodeDb","localhost", HiveDbDialect.H2));
   }
 
-  @Test(expected = HiveRuntimeException.class)
+  private PartitionDimensionImpl getPartitionDimension() {
+    Collection<SecondaryIndex> indexes = Lists.newList(new SecondaryIndex(1,"anIndex",Types.VARCHAR));
+    Collection<Resource> resources = Lists.newArrayList();
+    resources.add(new ResourceImpl(1, "aResource",Types.INTEGER, false, indexes));
+    return new PartitionDimensionImpl(0,"aDimension", Types.INTEGER,"jdbc://uri", resources);
+  }
+
+  private HiveSemaphore getSemaphore() {
+    return new HiveSemaphoreImpl(Lockable.Status.writable, 1);
+  }
+
+  @Test
+  public void shouldLoadAHiveConfigurationFromAJSONFile() throws Exception {
+    JSONHiveConfigurationFactory factory = new JSONHiveConfigurationFactory("src/test/resources/hive_configuration.js");
+    HiveConfiguration config = factory.newInstance();
+    assertEquals(getSemaphore(), config.getSemaphore());
+    assertEquals(getPartitionDimension(), config.getPartitionDimension());
+    assertEquals(getNodes(), config.getNodes());
+  }
+
+
+  @Test(expected = IllegalStateException.class)
   public void shouldThrowIfTheFileCannotBeRead() throws Exception {
     JSONHiveConfigurationFactory factory = new JSONHiveConfigurationFactory("non-existent_test_config.js");
     factory.newInstance();
@@ -21,7 +51,7 @@ public class JSONHiveConfigurationFactoryTest {
 
   @Test(expected = HiveRuntimeException.class)
   public void shouldThrowIfTheJSONCannotBeParsed() throws Exception {
-    JSONHiveConfigurationFactory factory = new JSONHiveConfigurationFactory("invalid_test_config.js");
+    JSONHiveConfigurationFactory factory = new JSONHiveConfigurationFactory("src/test/resources/invalid_test_config.js");
     factory.newInstance();
   }
 }

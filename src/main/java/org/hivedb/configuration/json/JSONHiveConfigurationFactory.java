@@ -2,16 +2,16 @@ package org.hivedb.configuration.json;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hivedb.HiveRuntimeException;
 import org.hivedb.configuration.HiveConfiguration;
 import org.hivedb.util.functional.Factory;
-import org.hivedb.HiveRuntimeException;
-import org.json.JSONObject;
 import org.json.JSONException;
+import org.json.JSONObject;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-//TODO test
 public class JSONHiveConfigurationFactory implements Factory<HiveConfiguration> {
   private final static Log log = LogFactory.getLog(JSONHiveConfigurationFactory.class);
   private String configurationFileName;
@@ -26,7 +26,7 @@ public class JSONHiveConfigurationFactory implements Factory<HiveConfiguration> 
     try {
       json = readFile();
     } catch (IOException e) {
-      throw new HiveRuntimeException("Unable to load hive configuration file " + configurationFileName);
+      throw new IllegalStateException("Unable to load hive configuration file " + configurationFileName);
     }
 
     HiveConfiguration configuration = null;
@@ -39,7 +39,8 @@ public class JSONHiveConfigurationFactory implements Factory<HiveConfiguration> 
   }
 
   private String readFile() throws IOException {
-    FileInputStream file = new FileInputStream(configurationFileName);
+    String absolutePath = new File(configurationFileName).getAbsolutePath();
+    FileInputStream file = new FileInputStream(absolutePath);
     byte[] bytes = new byte[file.available()];
     file.read(bytes);
     file.close();
