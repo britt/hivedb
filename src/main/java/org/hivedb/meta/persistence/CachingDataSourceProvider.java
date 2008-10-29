@@ -28,6 +28,9 @@ public class CachingDataSourceProvider implements HiveDataSourceProvider {
     return getDataSource(node.getUri());
   }
 
+  /**
+   * @see HiveDataSourceProvider#close()
+   */
   public void close() {
     delegate.close();
   }

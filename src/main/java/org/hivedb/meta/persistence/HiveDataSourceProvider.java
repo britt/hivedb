@@ -15,5 +15,8 @@ import javax.sql.DataSource;
 public interface HiveDataSourceProvider extends DataSourceProvider {
   public DataSource getDataSource(Node node);
 
+  /**
+   * Should be called when done with the provider to release underlying resources (e.g. connections)
+   */
   public void close();
 }

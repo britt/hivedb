@@ -26,6 +26,9 @@ public class HiveBasicDataSourceProvider implements HiveDataSourceProvider {
     return getDataSource(node.getUri());
   }
 
+  /**
+   * @see HiveDataSourceProvider#close()
+   */
   public void close() {
     HiveRuntimeException exceptionWhileClosing = null;
     for (HiveBasicDataSource dataSource : dataSourcesToClose) {
