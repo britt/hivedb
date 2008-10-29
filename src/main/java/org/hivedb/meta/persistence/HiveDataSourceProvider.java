@@ -5,13 +5,15 @@
 
 package org.hivedb.meta.persistence;
 
-import javax.sql.DataSource;
 import org.hivedb.meta.Node;
 
+import javax.sql.DataSource;
+
 /**
- *
  * @author mellwanger
  */
 public interface HiveDataSourceProvider extends DataSourceProvider {
-	public DataSource getDataSource(Node node);
+  public DataSource getDataSource(Node node);
+
+  public void close();
 }

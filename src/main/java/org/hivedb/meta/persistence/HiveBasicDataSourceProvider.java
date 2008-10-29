@@ -1,48 +1,49 @@
 /**
- * 
+ *
  */
 package org.hivedb.meta.persistence;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.hivedb.HiveRuntimeException;
 import org.hivedb.meta.Node;
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy;
 
 import javax.sql.DataSource;
+import java.util.Collection;
+import java.util.HashSet;
 
 public class HiveBasicDataSourceProvider implements HiveDataSourceProvider {
-	private Long connectionTimeoutInMillis = 0l;
-	private Long socketTimeoutInMillis = 0l;
-	
-	public HiveBasicDataSourceProvider(long connection, long socket) {
-		this.connectionTimeoutInMillis = connection;
-		this.socketTimeoutInMillis = socket;
-	}
-	
-	public HiveBasicDataSourceProvider(long timeout) {
-		this(timeout,timeout);
-	}
-	
-	public DataSource getDataSource(Node node) {
-		return getDataSource(node.getUri());
-	}
+  private Log log = LogFactory.getLog(HiveBasicDataSource.class);
 
-	public long getTimeout() {
-		return connectionTimeoutInMillis;
-	}
+  private Collection<HiveBasicDataSource> dataSourcesToClose;
 
-	public void setTimeout(long timeout) {
-		this.connectionTimeoutInMillis = timeout;
-	}
+  public HiveBasicDataSourceProvider() {
+    dataSourcesToClose = new HashSet<HiveBasicDataSource>();
+  }
 
-	public DataSource getDataSource(String uri) {
-		HiveBasicDataSource ds = new HiveBasicDataSource(uri);
-		return new LazyConnectionDataSourceProxy(ds);
-	}
+  public DataSource getDataSource(Node node) {
+    return getDataSource(node.getUri());
+  }
 
-	public Long getSocketTimeout() {
-		return socketTimeoutInMillis;
-	}
+  public void close() {
+    HiveRuntimeException exceptionWhileClosing = null;
+    for (HiveBasicDataSource dataSource : dataSourcesToClose) {
+      try {
+        dataSource.close();
+      } catch (Exception e) {
+        exceptionWhileClosing = new HiveRuntimeException("Error closing datasources. Possibly more than one cause.", e);
+      }
+    }
+    if (exceptionWhileClosing != null) {
+      throw exceptionWhileClosing;
+    }
+  }
 
-	public void setSocketTimeout(Long socketTimeoutInMillis) {
-		this.socketTimeoutInMillis = socketTimeoutInMillis;
-	}
+  public DataSource getDataSource(String uri) {
+    HiveBasicDataSource ds = new HiveBasicDataSource(uri);
+    LazyConnectionDataSourceProxy dataSourceProxy = new LazyConnectionDataSourceProxy(ds);
+    dataSourcesToClose.add(ds);
+    return dataSourceProxy;
+  }
 }
