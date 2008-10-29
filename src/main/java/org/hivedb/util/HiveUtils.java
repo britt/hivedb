@@ -1,8 +1,8 @@
 package org.hivedb.util;
 
 import org.hivedb.Hive;
-import org.hivedb.meta.Node;
-import org.hivedb.meta.directory.KeySemaphore;
+import org.hivedb.Node;
+import org.hivedb.directory.KeySemaphore;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;
 

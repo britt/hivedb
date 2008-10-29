@@ -14,7 +14,7 @@ import org.apache.cxf.transport.DestinationFactoryManager;
 import org.apache.cxf.transport.local.LocalTransportFactory;
 import org.apache.cxf.wsdl.WSDLManager;
 import org.apache.cxf.wsdl11.WSDLManagerImpl;
-import org.hivedb.configuration.EntityConfig;
+import org.hivedb.configuration.entity.EntityConfig;
 import org.hivedb.hibernate.DataAccessObject;
 import org.hivedb.util.Lists;
 import org.hivedb.util.database.test.HiveTest;

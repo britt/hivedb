@@ -2,8 +2,8 @@ package org.hivedb.configuration.json;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hivedb.meta.PartitionDimension;
-import org.hivedb.meta.PartitionDimensionImpl;
+import org.hivedb.PartitionDimension;
+import org.hivedb.PartitionDimensionImpl;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.json.JSONException;
 import org.json.JSONObject;

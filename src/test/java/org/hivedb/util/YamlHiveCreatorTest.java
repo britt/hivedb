@@ -1,8 +1,8 @@
 package org.hivedb.util;
 
 import org.hivedb.Hive;
-import org.hivedb.Schema;
-import org.hivedb.meta.Node;
+import org.hivedb.persistence.Schema;
+import org.hivedb.Node;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.database.Schemas;
 import org.hivedb.util.database.test.HiveTest;

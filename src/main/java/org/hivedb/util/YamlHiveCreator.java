@@ -1,8 +1,8 @@
 package org.hivedb.util;
 
 import org.hivedb.Hive;
-import org.hivedb.meta.persistence.CachingDataSourceProvider;
-import org.hivedb.meta.persistence.HiveDataSourceProvider;
+import org.hivedb.persistence.CachingDataSourceProvider;
+import org.hivedb.persistence.HiveDataSourceProvider;
 import org.hivedb.util.database.DialectTools;
 import org.hivedb.util.database.HiveDbDialect;
 import org.ho.yaml.Yaml;

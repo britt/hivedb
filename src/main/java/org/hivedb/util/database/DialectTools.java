@@ -2,7 +2,7 @@ package org.hivedb.util.database;
 
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLInnoDBDialect;
-import org.hivedb.UnsupportedDialectException;
+import org.hivedb.persistence.UnsupportedDialectException;
 
 public class DialectTools {
 	

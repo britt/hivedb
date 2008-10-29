@@ -1,6 +1,7 @@
 package org.hivedb;
 
-import org.hivedb.meta.AccessType;
+import org.hivedb.AccessType;
+import org.hivedb.persistence.JdbcDaoSupportCacheImpl;
 import org.hivedb.util.database.test.HiveTest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

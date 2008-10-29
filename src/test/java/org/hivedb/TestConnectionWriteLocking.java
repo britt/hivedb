@@ -1,12 +1,12 @@
 package org.hivedb;
 
 import org.hivedb.Lockable.Status;
-import org.hivedb.meta.AccessType;
-import org.hivedb.meta.PartitionDimension;
-import org.hivedb.meta.directory.DbDirectory;
-import org.hivedb.meta.directory.DirectoryWrapper;
-import org.hivedb.meta.directory.NodeResolver;
-import org.hivedb.meta.persistence.CachingDataSourceProvider;
+import org.hivedb.AccessType;
+import org.hivedb.persistence.CachingDataSourceProvider;
+import org.hivedb.PartitionDimension;
+import org.hivedb.directory.DbDirectory;
+import org.hivedb.directory.DirectoryWrapper;
+import org.hivedb.directory.NodeResolver;
 import org.hivedb.util.AssertUtils;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.HiveTest.Config;

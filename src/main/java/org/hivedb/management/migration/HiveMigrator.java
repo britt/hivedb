@@ -1,11 +1,10 @@
 package org.hivedb.management.migration;
 
-import org.hivedb.Hive;
-import org.hivedb.HiveLockableException;
-import org.hivedb.meta.Node;
-import org.hivedb.meta.PartitionDimension;
-import org.hivedb.meta.directory.DbDirectory;
-import org.hivedb.meta.directory.KeySemaphore;
+import org.hivedb.Node;
+import org.hivedb.*;
+import org.hivedb.PartitionDimension;
+import org.hivedb.directory.DbDirectory;
+import org.hivedb.directory.KeySemaphore;
 import org.hivedb.util.Lists;
 import org.hivedb.util.functional.Collect;
 import org.hivedb.util.functional.Pair;

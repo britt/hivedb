@@ -1,6 +1,6 @@
 package org.hivedb.management.migration;
 
-import org.hivedb.meta.Node;
+import org.hivedb.Node;
 
 public interface Mover<T> {
 	public void copy(T item, Node node); 

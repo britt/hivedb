@@ -1,9 +1,9 @@
 package org.hivedb.management;
 
 import org.hivedb.HiveRuntimeException;
-import org.hivedb.configuration.HiveConfigurationSchema;
-import org.hivedb.meta.persistence.CachingDataSourceProvider;
-import org.hivedb.meta.persistence.HiveSemaphoreDao;
+import org.hivedb.configuration.persistence.HiveConfigurationSchema;
+import org.hivedb.persistence.CachingDataSourceProvider;
+import org.hivedb.configuration.persistence.HiveSemaphoreDao;
 import org.hivedb.util.GetOpt;
 
 import java.sql.Connection;

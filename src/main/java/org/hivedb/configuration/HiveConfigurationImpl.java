@@ -2,12 +2,12 @@ package org.hivedb.configuration;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hivedb.meta.HiveSemaphore;
-import org.hivedb.meta.Node;
-import org.hivedb.meta.PartitionDimension;
+import org.hivedb.PartitionDimension;
 import org.hivedb.util.HiveUtils;
 import org.hivedb.util.database.DriverLoader;
 import org.hivedb.util.database.HiveDbDialect;
+import org.hivedb.HiveSemaphore;
+import org.hivedb.Node;
 
 import java.util.Collection;
 

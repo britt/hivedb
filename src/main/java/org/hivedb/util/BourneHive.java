@@ -1,12 +1,10 @@
 package org.hivedb.util;
 
-import org.hivedb.Hive;
-import org.hivedb.HiveLockableException;
-import org.hivedb.Schema;
-import org.hivedb.meta.Node;
-import org.hivedb.meta.ResourceImpl;
-import org.hivedb.meta.SecondaryIndex;
-import org.hivedb.meta.persistence.HiveDataSourceProvider;
+import org.hivedb.persistence.Schema;
+import org.hivedb.persistence.HiveDataSourceProvider;
+import org.hivedb.ResourceImpl;
+import org.hivedb.*;
+import org.hivedb.SecondaryIndex;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.database.Schemas;

@@ -1,7 +1,7 @@
 package org.hivedb;
 
-import org.hivedb.meta.Assigner;
-import org.hivedb.meta.Node;
+import org.hivedb.Assigner;
+import org.hivedb.Node;
 
 import java.util.*;
 

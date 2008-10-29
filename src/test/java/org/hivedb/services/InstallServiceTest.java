@@ -1,10 +1,10 @@
 package org.hivedb.services;
 
 import org.hivedb.Hive;
-import org.hivedb.Schema;
+import org.hivedb.persistence.Schema;
 import org.hivedb.management.HiveConfigurationSchemaInstaller;
-import org.hivedb.meta.Node;
-import org.hivedb.meta.persistence.TableInfo;
+import org.hivedb.Node;
+import org.hivedb.persistence.TableInfo;
 import org.hivedb.util.database.Schemas;
 import org.hivedb.util.database.test.ContinentalSchema;
 import org.hivedb.util.database.test.H2TestCase;

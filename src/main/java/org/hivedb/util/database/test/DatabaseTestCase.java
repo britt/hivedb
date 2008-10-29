@@ -1,7 +1,7 @@
 package org.hivedb.util.database.test;
 
-import org.hivedb.Schema;
-import org.hivedb.meta.Node;
+import org.hivedb.persistence.Schema;
+import org.hivedb.Node;
 import org.hivedb.util.database.Schemas;
 import org.junit.After;
 import org.junit.Before;

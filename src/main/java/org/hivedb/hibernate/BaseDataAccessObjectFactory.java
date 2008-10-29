@@ -2,7 +2,7 @@ package org.hivedb.hibernate;
 
 import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hivedb.Hive;
-import org.hivedb.configuration.EntityHiveConfig;
+import org.hivedb.configuration.entity.EntityHiveConfig;
 
 import java.io.Serializable;
 import java.util.Collection;

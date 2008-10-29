@@ -1,6 +1,8 @@
 package org.hivedb.meta;
 
 import org.hivedb.BucketAssigner;
+import org.hivedb.Assigner;
+import org.hivedb.Node;
 import org.hivedb.util.database.HiveDbDialect;
 import org.junit.Test;import static org.junit.Assert.assertNotNull;import static org.junit.Assert.assertEquals;
 

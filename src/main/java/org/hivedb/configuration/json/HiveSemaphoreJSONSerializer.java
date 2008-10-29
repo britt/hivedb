@@ -3,8 +3,8 @@ package org.hivedb.configuration.json;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hivedb.Lockable;
-import org.hivedb.meta.HiveSemaphore;
-import org.hivedb.meta.HiveSemaphoreImpl;
+import org.hivedb.HiveSemaphore;
+import org.hivedb.HiveSemaphoreImpl;
 import org.json.JSONException;
 import org.json.JSONObject;
 

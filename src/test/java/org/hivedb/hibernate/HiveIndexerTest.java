@@ -1,7 +1,7 @@
 package org.hivedb.hibernate;
 
 import org.hivedb.Hive;
-import org.hivedb.configuration.EntityConfig;
+import org.hivedb.configuration.entity.EntityConfig;
 import org.hivedb.util.classgen.GenerateInstance;
 import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
 import org.hivedb.util.database.test.HiveTest;

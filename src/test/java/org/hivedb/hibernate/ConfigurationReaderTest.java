@@ -1,11 +1,11 @@
 package org.hivedb.hibernate;
 
 import org.hivedb.Hive;
-import org.hivedb.Schema;
+import org.hivedb.persistence.Schema;
 import org.hivedb.annotations.IndexType;
-import org.hivedb.configuration.EntityConfig;
-import org.hivedb.configuration.EntityIndexConfig;
-import org.hivedb.configuration.HiveConfigurationSchema;
+import org.hivedb.configuration.entity.EntityConfig;
+import org.hivedb.configuration.entity.EntityIndexConfig;
+import org.hivedb.configuration.persistence.HiveConfigurationSchema;
 import org.hivedb.management.HiveConfigurationSchemaInstaller;
 import org.hivedb.util.classgen.GenerateInstance;
 import org.hivedb.util.database.test.Continent;
@@ -101,7 +101,7 @@ public class ConfigurationReaderTest extends H2TestCase {
   @Test
   public void testInstallWithPartitionDimensionInstalled() throws Exception {
     new HiveConfigurationSchemaInstaller(getConnectString(H2TestCase.TEST_DB)).run();
-    Hive hive = null;// = Hive.create(getConnectString(H2TestCase.TEST_DB), WeatherReport.CONTINENT, Types.VARCHAR, org.hivedb.meta.persistence.CachingDataSourceProvider.getInstance(), null);
+    Hive hive = null;// = Hive.create(getConnectString(H2TestCase.TEST_DB), WeatherReport.CONTINENT, Types.VARCHAR, org.hivedb.persistence.CachingDataSourceProvider.getInstance(), null);
     ConfigurationReader reader = new ConfigurationReader(WeatherReport.class);
     reader.install(hive);
     EntityConfig config = reader.getEntityConfig(WeatherReport.class.getName());

@@ -4,7 +4,7 @@ import org.hibernate.shards.ShardId;
 import org.hibernate.shards.strategy.selection.ShardResolutionStrategyData;
 import org.hibernate.shards.strategy.selection.ShardResolutionStrategyDataImpl;
 import org.hivedb.Hive;
-import org.hivedb.configuration.EntityHiveConfig;
+import org.hivedb.configuration.entity.EntityHiveConfig;
 import org.hivedb.util.database.test.Continent;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.HiveTest.Config;

@@ -1,8 +1,9 @@
 package org.hivedb;
 
-import org.hivedb.meta.persistence.HiveSemaphoreDao;
+import org.hivedb.configuration.persistence.HiveSemaphoreDao;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.HiveTest.Config;
+import org.hivedb.daemon.HiveSyncDaemon;
 import org.junit.Test;import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;

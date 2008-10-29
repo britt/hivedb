@@ -1,9 +1,9 @@
 package org.hivedb.persistence;
 
 import org.hivedb.Hive;
+import org.hivedb.Node;
 import org.hivedb.Lockable.Status;
-import org.hivedb.meta.Node;
-import org.hivedb.meta.persistence.NodeDao;
+import org.hivedb.configuration.persistence.NodeDao;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.HiveTest.Config;

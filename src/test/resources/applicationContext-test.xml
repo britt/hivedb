@@ -24,7 +24,7 @@
 		factory-method="load">
 		<constructor-arg value="${hive.configuration.database}" />
 		<constructor-arg>
-			<bean class="org.hivedb.meta.persistence.HiveBasicDataSourceProvider">
+			<bean class="org.hivedb.persistence.HiveBasicDataSourceProvider">
 				<constructor-arg value="${datasource.connection.timeout}" />
 			</bean>
 		</constructor-arg>

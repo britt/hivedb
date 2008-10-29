@@ -1,8 +1,8 @@
 package org.hivedb.util;
 
 import org.hivedb.Hive;
-import org.hivedb.configuration.EntityHiveConfig;
-import org.hivedb.meta.PartitionDimension;
+import org.hivedb.configuration.entity.EntityHiveConfig;
+import org.hivedb.PartitionDimension;
 import org.hivedb.util.database.Schemas;
 
 public class InstallHiveIndexSchema {

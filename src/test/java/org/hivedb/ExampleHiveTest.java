@@ -2,12 +2,11 @@ package org.hivedb;
 
 import org.hivedb.configuration.HiveConfiguration;
 import org.hivedb.configuration.json.JSONHiveConfigurationFactory;
-import org.hivedb.meta.*;
-import org.hivedb.meta.directory.DbDirectoryFactory;
-import org.hivedb.meta.directory.DirectoryFactory;
-import org.hivedb.meta.directory.DirectoryWrapperFactory;
-import org.hivedb.meta.persistence.HiveBasicDataSourceProvider;
-import org.hivedb.meta.persistence.HiveDataSourceProvider;
+import org.hivedb.directory.DbDirectoryFactory;
+import org.hivedb.directory.DirectoryFactory;
+import org.hivedb.directory.DirectoryWrapperFactory;
+import org.hivedb.persistence.HiveBasicDataSourceProvider;
+import org.hivedb.persistence.HiveDataSourceProvider;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.Schemas;
 import org.hivedb.util.database.test.H2TestCase;

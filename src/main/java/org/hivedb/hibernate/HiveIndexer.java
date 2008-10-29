@@ -3,9 +3,9 @@ package org.hivedb.hibernate;
 import org.hivedb.Hive;
 import org.hivedb.HiveLockableException;
 import org.hivedb.annotations.IndexType;
-import org.hivedb.configuration.EntityConfig;
-import org.hivedb.configuration.EntityIndexConfig;
-import org.hivedb.configuration.EntityIndexConfigDelegator;
+import org.hivedb.configuration.entity.EntityConfig;
+import org.hivedb.configuration.entity.EntityIndexConfig;
+import org.hivedb.configuration.entity.EntityIndexConfigDelegator;
 import org.hivedb.util.functional.*;
 
 import java.util.Collection;

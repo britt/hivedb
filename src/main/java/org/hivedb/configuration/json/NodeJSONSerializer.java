@@ -2,7 +2,7 @@ package org.hivedb.configuration.json;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hivedb.meta.Node;
+import org.hivedb.Node;
 import org.hivedb.util.database.DialectTools;
 import org.json.JSONObject;
 import org.json.JSONException;

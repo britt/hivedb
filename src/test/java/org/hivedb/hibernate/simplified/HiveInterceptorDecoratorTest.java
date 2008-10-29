@@ -4,7 +4,7 @@ import org.hibernate.CallbackException;
 import org.hivedb.Hive;
 import org.hivedb.HiveLockableException;
 import org.hivedb.Lockable;
-import org.hivedb.configuration.EntityHiveConfig;
+import org.hivedb.configuration.entity.EntityHiveConfig;
 import org.hivedb.hibernate.AsiaticContinent;
 import org.hivedb.hibernate.ConfigurationReader;
 import org.hivedb.hibernate.HiveIndexer;

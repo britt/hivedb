@@ -1,8 +1,8 @@
 package org.hivedb.configuration.json;
 
 import org.hivedb.Lockable;
-import org.hivedb.meta.HiveSemaphore;
-import org.hivedb.meta.HiveSemaphoreImpl;
+import org.hivedb.HiveSemaphore;
+import org.hivedb.HiveSemaphoreImpl;
 import org.json.JSONObject;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;

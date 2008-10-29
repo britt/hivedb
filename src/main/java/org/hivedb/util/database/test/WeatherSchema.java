@@ -1,7 +1,7 @@
 package org.hivedb.util.database.test;
 
-import org.hivedb.Schema;
-import org.hivedb.meta.persistence.TableInfo;
+import org.hivedb.persistence.Schema;
+import org.hivedb.persistence.TableInfo;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -25,7 +25,7 @@ public class WeatherSchema extends Schema {
     "TYPE VARCHAR(255)," +
     "REPORT_TIME TIMESTAMP);"),
     	// Demonstrates a primitive indexed collection
-    	new TableInfo("WEATHER_REPORT_SOURCE", "CREATE TABLE WEATHER_REPORT_SOURCE (" + 
+    	new TableInfo("WEATHER_REPORT_SOURCE", "CREATE TABLE WEATHER_REPORT_SOURCE (" +
     	    "REPORT_ID INT NOT NULL ," +
     	    "SOURCE INT);"),
     	// Demonstrates a complex indexed collection (one-to-many)

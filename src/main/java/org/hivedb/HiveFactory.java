@@ -3,11 +3,10 @@ package org.hivedb;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hivedb.configuration.HiveConfiguration;
-import org.hivedb.meta.Assigner;
-import org.hivedb.meta.directory.DirectoryFacade;
-import org.hivedb.meta.directory.DirectoryFacadeProvider;
-import org.hivedb.meta.directory.DirectoryWrapperFactory;
-import org.hivedb.meta.persistence.HiveDataSourceProvider;
+import org.hivedb.directory.DirectoryFacade;
+import org.hivedb.directory.DirectoryFacadeProvider;
+import org.hivedb.directory.DirectoryWrapperFactory;
+import org.hivedb.persistence.HiveDataSourceProvider;
 import org.hivedb.util.functional.Factory;
 
 public class HiveFactory implements Factory<Hive>  {

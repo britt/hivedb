@@ -1,8 +1,8 @@
 package org.hivedb.configuration;
 
-import org.hivedb.meta.HiveSemaphore;
-import org.hivedb.meta.Node;
-import org.hivedb.meta.PartitionDimension;
+import org.hivedb.HiveSemaphore;
+import org.hivedb.Node;
+import org.hivedb.PartitionDimension;
 import org.hivedb.util.database.HiveDbDialect;
 
 import java.util.Collection;

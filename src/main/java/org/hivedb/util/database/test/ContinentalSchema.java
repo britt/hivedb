@@ -1,7 +1,7 @@
 package org.hivedb.util.database.test;
 
-import org.hivedb.Schema;
-import org.hivedb.meta.persistence.TableInfo;
+import org.hivedb.persistence.Schema;
+import org.hivedb.persistence.TableInfo;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -15,7 +15,7 @@ public class ContinentalSchema extends Schema {
 	}
 
 	public Collection<TableInfo> getTables(String uri) {
-		return Arrays.asList(new TableInfo("CONTINENT", "CREATE TABLE CONTINENT (" + 
+		return Arrays.asList(new TableInfo("CONTINENT", "CREATE TABLE CONTINENT (" +
 				"NAME VARCHAR(64) NOT NULL PRIMARY KEY," +
 				"POPULATION INT);")
 		);

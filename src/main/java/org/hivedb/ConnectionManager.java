@@ -1,12 +1,14 @@
 package org.hivedb;
 
 import org.hivedb.configuration.HiveConfiguration;
-import org.hivedb.meta.AccessType;
-import org.hivedb.meta.Node;
-import org.hivedb.meta.directory.DirectoryFacade;
-import org.hivedb.meta.directory.KeySemaphore;
-import org.hivedb.meta.persistence.DataSourceProvider;
-import org.hivedb.meta.persistence.HiveDataSourceProvider;
+import org.hivedb.AccessType;
+import org.hivedb.persistence.HiveDataSourceProvider;
+import org.hivedb.Node;
+import org.hivedb.directory.DirectoryFacade;
+import org.hivedb.directory.KeySemaphore;
+import org.hivedb.persistence.DataSourceProvider;
+import org.hivedb.persistence.JdbcDaoSupportCache;
+import org.hivedb.persistence.JdbcDaoSupportCacheImpl;
 import org.hivedb.util.Preconditions;
 import org.hivedb.util.functional.Filter;
 import org.hivedb.util.functional.Unary;

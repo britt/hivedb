@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.hivedb.configuration.EntityConfig;
+import org.hivedb.configuration.entity.EntityConfig;
 import org.hivedb.util.Lists;
 import org.hivedb.util.functional.Transform;
 import org.hivedb.util.functional.Unary;

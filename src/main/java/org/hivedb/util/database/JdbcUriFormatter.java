@@ -5,7 +5,7 @@ import static org.hivedb.util.HiveUtils.empty;
 import java.util.Map;
 import java.util.Properties;
 
-import org.hivedb.meta.Node;
+import org.hivedb.Node;
 import org.hivedb.util.FilteringStringBuilder;
 
 

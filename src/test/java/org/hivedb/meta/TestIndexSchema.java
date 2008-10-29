@@ -2,6 +2,7 @@ package org.hivedb.meta;
 
 import org.hivedb.util.database.Schemas;
 import org.hivedb.util.database.test.H2TestCase;
+import org.hivedb.PartitionDimensionImpl;
 import org.junit.Test;
 
 import java.sql.Types;

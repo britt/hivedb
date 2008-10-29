@@ -1,7 +1,8 @@
 package org.hivedb.hibernate.simplified.configuration;
 
 import org.hivedb.annotations.IndexType;
-import org.hivedb.configuration.EntityIndexConfig;
+import org.hivedb.configuration.entity.EntityIndexConfig;
+
 import java.util.Collection;
 import java.util.EnumSet;
 

@@ -1,6 +1,6 @@
 package org.hivedb.persistence;
 
-import org.hivedb.meta.persistence.ResourceDao;
+import org.hivedb.configuration.persistence.ResourceDao;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.HiveTest.Config;
 import org.junit.Test;import static org.junit.Assert.assertEquals;

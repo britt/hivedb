@@ -7,7 +7,7 @@ import org.hibernate.shards.util.Lists;
 import org.hibernate.shards.util.Maps;
 import org.hivedb.Hive;
 import org.hivedb.annotations.Resource;
-import org.hivedb.configuration.EntityConfig;
+import org.hivedb.configuration.entity.EntityConfig;
 import org.hivedb.hibernate.*;
 import org.hivedb.util.PrimitiveUtils;
 import org.hivedb.util.classgen.GenerateInstance;

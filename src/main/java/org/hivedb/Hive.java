@@ -5,9 +5,8 @@
 package org.hivedb;
 
 import org.hivedb.configuration.HiveConfiguration;
-import org.hivedb.meta.*;
-import org.hivedb.meta.directory.DirectoryFacade;
-import org.hivedb.meta.persistence.*;
+import org.hivedb.directory.DirectoryFacade;
+import org.hivedb.configuration.persistence.*;
 import org.hivedb.util.Preconditions;
 import org.hivedb.util.database.Schemas;
 import org.hivedb.util.functional.Filter;

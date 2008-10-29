@@ -1,6 +1,6 @@
 package org.hivedb;
 
-import org.hivedb.configuration.HiveConfigurationSchema;
+import org.hivedb.configuration.persistence.HiveConfigurationSchema;
 import org.hivedb.util.database.test.H2TestCase;
 import org.junit.Test;
 

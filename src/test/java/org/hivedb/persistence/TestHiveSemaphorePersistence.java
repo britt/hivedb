@@ -1,7 +1,7 @@
 package org.hivedb.persistence;
 
-import org.hivedb.meta.HiveSemaphore;
-import org.hivedb.meta.persistence.HiveSemaphoreDao;
+import org.hivedb.HiveSemaphore;
+import org.hivedb.configuration.persistence.HiveSemaphoreDao;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.HiveTest.Config;
 import org.junit.Test;import org.junit.Assert;

@@ -1,7 +1,7 @@
 package org.hivedb.util;
 
-import org.hivedb.meta.Resource;
-import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.Resource;
+import org.hivedb.SecondaryIndex;
 
 import java.util.Collection;
 import java.util.Map;

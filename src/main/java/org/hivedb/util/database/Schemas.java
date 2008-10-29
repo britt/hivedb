@@ -6,15 +6,15 @@ package org.hivedb.util.database;
 
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.context.Context;
-import org.hivedb.Schema;
-import org.hivedb.Schema.TrueRowMapper;
-import org.hivedb.meta.PartitionDimension;
-import org.hivedb.meta.Resource;
-import org.hivedb.meta.SecondaryIndex;
-import org.hivedb.meta.persistence.CachingDataSourceProvider;
-import org.hivedb.meta.persistence.IndexSchema;
-import org.hivedb.meta.persistence.TableInfo;
+import org.hivedb.persistence.Schema;
+import org.hivedb.persistence.CachingDataSourceProvider;
+import org.hivedb.persistence.TableInfo;
+import org.hivedb.persistence.Schema.TrueRowMapper;
+import org.hivedb.SecondaryIndex;
+import org.hivedb.configuration.persistence.IndexSchema;
 import org.hivedb.util.Templater;
+import org.hivedb.PartitionDimension;
+import org.hivedb.Resource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 

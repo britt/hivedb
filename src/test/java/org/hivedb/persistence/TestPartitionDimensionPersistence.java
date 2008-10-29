@@ -1,9 +1,9 @@
 package org.hivedb.persistence;
 
 import org.hivedb.Hive;
-import org.hivedb.meta.PartitionDimensionImpl;
-import org.hivedb.meta.Resource;
-import org.hivedb.meta.persistence.PartitionDimensionDao;
+import org.hivedb.PartitionDimensionImpl;
+import org.hivedb.Resource;
+import org.hivedb.configuration.persistence.PartitionDimensionDao;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.HiveTest.Config;
 import static org.junit.Assert.assertEquals;

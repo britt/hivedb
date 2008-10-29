@@ -2,7 +2,7 @@ package org.hivedb.configuration.json;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.SecondaryIndex;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.json.JSONObject;
 import org.json.JSONException;

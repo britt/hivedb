@@ -1,10 +1,11 @@
 package org.hivedb;
 
-import org.hivedb.configuration.HiveConfigurationSchema;
+import org.hivedb.configuration.persistence.HiveConfigurationSchema;
 import org.hivedb.management.HiveConfigurationSchemaInstaller;
-import org.hivedb.meta.Node;
+import org.hivedb.Node;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.H2TestCase;
+import org.hivedb.persistence.Schema;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import org.junit.Before;

@@ -5,7 +5,7 @@ import org.hibernate.EntityMode;
 import org.hivedb.Hive;
 import org.hivedb.HiveLockableException;
 import org.hivedb.Lockable.Status;
-import org.hivedb.configuration.EntityHiveConfig;
+import org.hivedb.configuration.entity.EntityHiveConfig;
 import org.hivedb.util.classgen.GenerateInstance;
 import org.hivedb.util.classgen.GeneratedClassFactory;
 import org.hivedb.util.classgen.GeneratedInstanceInterceptor;

@@ -6,27 +6,27 @@
 http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
 http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-2.0.xsd">
  
-  <bean id="dataSourceProvider" class="org.hivedb.meta.persistence.CachingDataSourceProvider"/>
+  <bean id="dataSourceProvider" class="org.hivedb.persistence.CachingDataSourceProvider"/>
 
-  <bean id="hiveDataSource" class="org.hivedb.meta.persistence.HiveBasicDataSource">
+  <bean id="hiveDataSource" class="org.hivedb.persistence.HiveBasicDataSource">
     <constructor-arg value="${hive.uri}"/>
   </bean>
 
-  <bean id="hiveConfigFactory" class="org.hivedb.configuration.DbHiveConfigurationFactory">
+  <bean id="hiveConfigFactory" class="org.hivedb.configuration.persistence.DbHiveConfigurationFactory">
     <constructor-arg ref="hiveDataSource"/>
   </bean>
 
   <bean id="hiveConfiguration" class="org.hivedb.configuration.HiveConfigurationImpl" factory-bean="hiveConfigFactory"
         factory-method="newInstance"></bean>
 
-  <bean id="directoryFactory" class="org.hivedb.meta.directory.DbDirectoryFactory">
+  <bean id="directoryFactory" class="org.hivedb.directory.DbDirectoryFactory">
     <constructor-arg index="0" ref="hiveDataSource"/>
     <constructor-arg index="1" ref="hiveConfiguration"/>
   </bean>
 
-  <bean id="directoryFacadeFactory" class="org.hivedb.meta.directory.DirectoryWrapperFactory">
+  <bean id="directoryFacadeFactory" class="org.hivedb.directory.DirectoryWrapperFactory">
     <constructor-arg>
-      <bean class="org.hivedb.meta.directory.DbDirectoryFactory">
+      <bean class="org.hivedb.directory.DbDirectoryFactory">
         <constructor-arg index="0" ref="hiveDataSource"/>
         <constructor-arg index="1" ref="hiveConfiguration"/>
       </bean>

@@ -1,16 +1,15 @@
 package org.hivedb.meta;
 
-import org.hivedb.Hive;
-import org.hivedb.HiveLockableException;
+import org.hivedb.*;
 import org.hivedb.Lockable.Status;
-import org.hivedb.Schema;
-import org.hivedb.configuration.HiveConfigurationSchema;
+import org.hivedb.persistence.Schema;
+import org.hivedb.configuration.persistence.HiveConfigurationSchema;
 import org.hivedb.management.HiveConfigurationSchemaInstaller;
-import org.hivedb.meta.directory.Directory;
-import org.hivedb.meta.directory.DirectoryWrapper;
-import static org.hivedb.meta.directory.DirectoryWrapper.semaphoreToId;
-import org.hivedb.meta.directory.KeySemaphore;
-import org.hivedb.meta.persistence.IndexSchema;
+import org.hivedb.directory.Directory;
+import org.hivedb.directory.DirectoryWrapper;
+import static org.hivedb.directory.DirectoryWrapper.semaphoreToId;
+import org.hivedb.directory.KeySemaphore;
+import org.hivedb.configuration.persistence.IndexSchema;
 import org.hivedb.util.AssertUtils;
 import org.hivedb.util.Lists;
 import org.hivedb.util.database.HiveDbDialect;

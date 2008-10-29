@@ -1,14 +1,12 @@
 package org.hivedb.hibernate;
 
-import org.hivedb.Hive;
-import org.hivedb.HiveLockableException;
-import org.hivedb.HiveRuntimeException;
 import org.hivedb.annotations.*;
-import org.hivedb.configuration.*;
-import org.hivedb.meta.PartitionDimension;
-import org.hivedb.meta.PartitionDimensionImpl;
-import org.hivedb.meta.ResourceImpl;
-import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.annotations.Resource;
+import org.hivedb.configuration.entity.*;
+import org.hivedb.PartitionDimension;
+import org.hivedb.*;
+import org.hivedb.ResourceImpl;
+import org.hivedb.SecondaryIndex;
 import org.hivedb.util.Lists;
 import org.hivedb.util.PrimitiveUtils;
 import org.hivedb.util.classgen.ReflectionTools;
@@ -178,7 +176,7 @@ public class ConfigurationReader {
       if (hive.getHiveConfiguration().getPartitionDimension().doesResourceExist(config.getResourceName()))
         return;
 
-      org.hivedb.meta.Resource resource =
+      org.hivedb.Resource resource =
         hive.addResource(createResource(config));
 
       for (EntityIndexConfig indexConfig : (Collection<EntityIndexConfig>) config.getEntityIndexConfigs())

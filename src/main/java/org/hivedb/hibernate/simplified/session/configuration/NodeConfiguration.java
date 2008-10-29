@@ -5,7 +5,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.shards.cfg.ConfigurationToShardConfigurationAdapter;
 import org.hibernate.shards.cfg.ShardConfiguration;
-import org.hivedb.meta.Node;
+import org.hivedb.Node;
 import org.hivedb.util.database.DialectTools;
 import org.hivedb.util.database.DriverLoader;
 

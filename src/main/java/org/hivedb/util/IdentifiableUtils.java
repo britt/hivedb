@@ -2,7 +2,7 @@ package org.hivedb.util;
 
 import java.util.Collection;
 
-import org.hivedb.meta.IdAndNameIdentifiable;
+import org.hivedb.util.IdAndNameIdentifiable;
 
 public class IdentifiableUtils {
 	

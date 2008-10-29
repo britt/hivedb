@@ -2,7 +2,7 @@ package org.hivedb.hibernate;
 
 import org.hibernate.shards.ShardId;
 import org.hivedb.Hive;
-import org.hivedb.meta.Node;
+import org.hivedb.Node;
 import org.hivedb.util.database.test.Continent;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.HiveTest.Config;

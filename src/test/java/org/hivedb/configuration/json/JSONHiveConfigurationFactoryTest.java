@@ -2,10 +2,8 @@ package org.hivedb.configuration.json;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hivedb.HiveRuntimeException;
-import org.hivedb.Lockable;
+import org.hivedb.*;
 import org.hivedb.configuration.HiveConfiguration;
-import org.hivedb.meta.*;
 import org.hivedb.util.Lists;
 import org.hivedb.util.database.HiveDbDialect;
 import static org.junit.Assert.assertEquals;

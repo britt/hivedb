@@ -11,7 +11,7 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hivedb.Hive;
 import org.hivedb.HiveLockableException;
-import org.hivedb.configuration.EntityConfig;
+import org.hivedb.configuration.entity.EntityConfig;
 import org.hivedb.hibernate.QueryCallback;
 import org.hivedb.hibernate.SessionCallback;
 import org.hivedb.hibernate.simplified.session.HiveCriteria;

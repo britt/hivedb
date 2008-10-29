@@ -2,8 +2,8 @@ package org.hivedb.persistence;
 
 import org.hivedb.Hive;
 import org.hivedb.HiveException;
-import org.hivedb.HiveSyncDaemon;
-import org.hivedb.meta.Node;
+import org.hivedb.Node;
+import org.hivedb.daemon.HiveSyncDaemon;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.HiveTest.Config;
 import org.junit.Assert;

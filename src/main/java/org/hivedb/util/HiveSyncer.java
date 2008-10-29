@@ -1,15 +1,13 @@
 package org.hivedb.util;
 
-import org.hivedb.Hive;
-import org.hivedb.HiveKeyNotFoundException;
-import org.hivedb.HiveLockableException;
 import org.hivedb.annotations.IndexType;
-import org.hivedb.configuration.EntityConfig;
-import org.hivedb.configuration.EntityHiveConfig;
-import org.hivedb.configuration.EntityIndexConfig;
-import org.hivedb.meta.Resource;
-import org.hivedb.meta.ResourceImpl;
-import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.configuration.entity.EntityConfig;
+import org.hivedb.configuration.entity.EntityHiveConfig;
+import org.hivedb.configuration.entity.EntityIndexConfig;
+import org.hivedb.Resource;
+import org.hivedb.*;
+import org.hivedb.ResourceImpl;
+import org.hivedb.SecondaryIndex;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.functional.*;
 

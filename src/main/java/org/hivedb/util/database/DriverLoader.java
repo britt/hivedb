@@ -3,7 +3,7 @@ package org.hivedb.util.database;
 import java.util.HashMap;
 
 import org.hivedb.HiveRuntimeException;
-import org.hivedb.UnsupportedDialectException;
+import org.hivedb.persistence.UnsupportedDialectException;
 
 /**
  * Provides default drivers for all HiveDbDialects.  

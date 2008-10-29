@@ -4,8 +4,8 @@ import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.HiveLockableException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.Lockable;
-import org.hivedb.meta.IdAndNameIdentifiable;
-import org.hivedb.meta.Identifiable;
+import org.hivedb.util.IdAndNameIdentifiable;
+import org.hivedb.util.Identifiable;
 
 import java.util.Collection;
 

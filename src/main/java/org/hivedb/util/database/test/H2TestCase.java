@@ -1,8 +1,8 @@
 package org.hivedb.util.database.test;
 
-import org.hivedb.Schema;
-import org.hivedb.meta.Node;
-import org.hivedb.meta.persistence.CachingDataSourceProvider;
+import org.hivedb.persistence.Schema;
+import org.hivedb.persistence.CachingDataSourceProvider;
+import org.hivedb.Node;
 
 import javax.sql.DataSource;
 import java.sql.Connection;

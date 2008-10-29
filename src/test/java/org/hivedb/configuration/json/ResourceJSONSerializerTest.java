@@ -2,9 +2,9 @@ package org.hivedb.configuration.json;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hivedb.meta.Resource;
-import org.hivedb.meta.ResourceImpl;
-import org.hivedb.meta.SecondaryIndex;
+import org.hivedb.Resource;
+import org.hivedb.ResourceImpl;
+import org.hivedb.SecondaryIndex;
 import org.json.JSONObject;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;

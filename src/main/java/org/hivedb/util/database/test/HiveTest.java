@@ -1,12 +1,11 @@
 package org.hivedb.util.database.test;
 
-import org.hivedb.Hive;
-import org.hivedb.configuration.EntityHiveConfig;
+import org.hivedb.*;
+import org.hivedb.configuration.entity.EntityHiveConfig;
 import org.hivedb.hibernate.BaseDataAccessObjectFactory;
 import org.hivedb.hibernate.ConfigurationReader;
 import org.hivedb.hibernate.DataAccessObject;
-import org.hivedb.meta.*;
-import org.hivedb.meta.persistence.CachingDataSourceProvider;
+import org.hivedb.persistence.CachingDataSourceProvider;
 import org.hivedb.util.HiveDestructor;
 import org.hivedb.util.YamlHiveCreator;
 import org.hivedb.util.database.HiveDbDialect;

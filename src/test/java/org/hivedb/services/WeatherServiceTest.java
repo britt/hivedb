@@ -2,8 +2,8 @@
 
  import org.junit.Assert;
 import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
-import org.hivedb.Schema;
-import org.hivedb.hibernate.ConfigurationReader;
+import org.hivedb.persistence.Schema;
+ import org.hivedb.hibernate.ConfigurationReader;
 import org.hivedb.test.ClassServiceTest;
 import org.hivedb.util.classgen.GeneratedServiceInterceptor;
 import org.hivedb.util.database.test.HiveTest.Config;

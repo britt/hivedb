@@ -1,6 +1,6 @@
 package org.hivedb;
 
-import org.hivedb.meta.Node;
+import org.hivedb.Node;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.functional.Atom;
