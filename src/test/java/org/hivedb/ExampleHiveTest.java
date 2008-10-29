@@ -38,25 +38,18 @@ import java.util.Collection;
  *
  * @author Britt Crawford (bcrawford@cafepress.com)
  */
-public class ExampleHiveTest {
+public class ExampleHiveTest extends H2TestCase {
 
   @Test
   public void createAndUseTheHive() throws Exception {
     HiveDataSourceProvider dataSourceProvider = new HiveBasicDataSourceProvider(500);
     Factory<HiveConfiguration> configFactory = new JSONHiveConfigurationFactory("src/test/default_hive_configuration.js");
-    String directoryUri = "jdbc://uri";
     DirectoryFactory directoryFactory = new DbDirectoryFactory(dataSourceProvider);
-    DirectoryWrapperFactory directoryWrapperFactory= new DirectoryWrapperFactory(directoryFactory);
+    DirectoryWrapperFactory directoryWrapperFactory = new DirectoryWrapperFactory(directoryFactory);
     HiveFactory hiveFactory = new HiveFactory(configFactory, directoryWrapperFactory, dataSourceProvider);
     HiveConfiguration config = configFactory.newInstance();
     Schemas.install(config.getPartitionDimension());
-
-    //Create a Partition Dimension
-    //We are going to partition our Product domain using the product type string.
-    String dimensionName = "ProductType";
-
-    //Create a Hive
-    Hive hive = null;//Hive.create(getConnectString(H2TestCase.TEST_DB), dimensionName, Types.VARCHAR, CachingDataSourceProvider.getInstance(), null);
+    Hive hive = hiveFactory.newInstance();
 
     //Create a Data Node
     Node dataNode = new Node(Hive.NEW_OBJECT_ID, "aNode", H2TestCase.TEST_DB, "", HiveDbDialect.H2);
