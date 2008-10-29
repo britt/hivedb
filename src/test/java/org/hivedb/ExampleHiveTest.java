@@ -7,22 +7,16 @@ import org.hivedb.directory.DirectoryFactory;
 import org.hivedb.directory.DirectoryWrapperFactory;
 import org.hivedb.persistence.HiveBasicDataSourceProvider;
 import org.hivedb.persistence.HiveDataSourceProvider;
-import org.hivedb.util.database.HiveDbDialect;
+import org.hivedb.util.Lists;
 import org.hivedb.util.database.Schemas;
 import org.hivedb.util.database.test.H2TestCase;
-import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Factory;
-import org.junit.Assert;
+import static org.junit.Assert.*;
 import org.junit.Test;
-import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.simple.SimpleJdbcDaoSupport;
-import org.springframework.jdbc.core.support.JdbcDaoSupport;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
-import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -43,7 +37,7 @@ public class ExampleHiveTest extends H2TestCase {
   @Test
   public void createAndUseTheHive() throws Exception {
     HiveDataSourceProvider dataSourceProvider = new HiveBasicDataSourceProvider(500);
-    Factory<HiveConfiguration> configFactory = new JSONHiveConfigurationFactory("src/test/default_hive_configuration.js");
+    Factory<HiveConfiguration> configFactory = new JSONHiveConfigurationFactory("src/test/resources/default_hive_configuration.js");
     DirectoryFactory directoryFactory = new DbDirectoryFactory(dataSourceProvider);
     DirectoryWrapperFactory directoryWrapperFactory = new DirectoryWrapperFactory(directoryFactory);
     HiveFactory hiveFactory = new HiveFactory(configFactory, directoryWrapperFactory, dataSourceProvider);
@@ -51,94 +45,107 @@ public class ExampleHiveTest extends H2TestCase {
     Schemas.install(config.getPartitionDimension());
     Hive hive = hiveFactory.newInstance();
 
-    //Create a Data Node
-    Node dataNode = new Node(Hive.NEW_OBJECT_ID, "aNode", H2TestCase.TEST_DB, "", HiveDbDialect.H2);
+    assertNotNull(hive.getPartitionDimension());
+    assertNotNull(hive.getNodes());
+    assertTrue(hive.getNodes().size() > 0);
 
-    //Add it to the partition dimension
-    hive.addNode(dataNode);
+    hive.directory().insertPrimaryIndexKey(77);
+    assertTrue(hive.directory().doesPrimaryIndexKeyExist(77));
+    assertFalse(hive.directory().doesPrimaryIndexKeyExist(76));
 
-    //Make sure everything we just added actually got put into the hive meta data.
-    Assert.assertNotNull(hive.getPartitionDimension());
-    Assert.assertNotNull(hive.getNodes());
-    Assert.assertTrue(hive.getNodes().size() > 0);
+//    //Create a Data Node
+//    Node dataNode = new Node(Hive.NEW_OBJECT_ID, "aNode", H2TestCase.TEST_DB, "", HiveDbDialect.H2);
+//
+//    //Add it to the partition dimension
+//    hive.addNode(dataNode);
+//
+//    //Make sure everything we just added actually got put into the hive meta data.
+//    Assert.assertNotNull(hive.getPartitionDimension());
+//    Assert.assertNotNull(hive.getNodes());
+//    Assert.assertTrue(hive.getNodes().size() > 0);
+//
+//    //Add a key, just to test.
+//    String key = "knife";
+//    hive.directory().insertPrimaryIndexKey(key);
+//    //Just cleaning up the random key.
+//    hive.directory().deletePrimaryIndexKey(key);
+//
+//    //At this point there is no real data in the Hive just a directory of Primary key to node mappings.
+//    //First we need to load our data schema on to each data node.
+//    for (Node node : hive.getNodes()) {
+//      /*
+//          *
+//          * Ordinarily to get a connection to node from the hive we would have to provide a key
+//          * and the permissions (READ or READWRITE) with which we want to acquire the connection.
+//          * However the getUnsafe method can be used [AND SHOULD ONLY BE USED] for cases like this
+//          * when there is no data yet loadedon a node and thus no key to dereference.
+//          *
+//          * NOTE: You can obtain vanilla JDBC connections from the hive or use the cached JdbcDaoSupport
+//          * objects.
+//          *
+//          */
+//      JdbcDaoSupport daoSupport = hive.connection().daoSupport().getUnsafe(node.getName());
+//      daoSupport.getJdbcTemplate().update(dataTableCreateSql);
+//    }
+//
+//    //Set up a secondary index on products so that we can query them by name
+//
+//    // First create a Resource.  All Secondary Indexes will be associated with this Resource.
+//    String resourceName = "Product";
+//    Resource product = new ResourceImpl(resourceName, Types.INTEGER, false, new ArrayList<SecondaryIndex>());
+//
+//    // Add it to the Hive
+//    product = hive.addResource(product);
+//
+//    //Now create a SecondaryIndex
+//    SecondaryIndex nameIndex = new SecondaryIndex("name", Types.VARCHAR);
+//    //Add it to the Hive
+//    nameIndex = hive.addSecondaryIndex(product, nameIndex);
+//    //Note: SecondaryIndexes are identified by ResourceName.IndexColumnName
+//
+//    //Now lets add a product to the hive.
+//    Product spork = new Product(23, "Spork", "Cutlery");
+//    //First we have to add a primary index entry in order to get allocated to a data node.
+//    //While it is possible to write a record to multiple locations within the Hive, the default implementation
+//    //inserts a single copy.
+//    hive.directory().insertPrimaryIndexKey(spork.getType());
+//    //Next we insert the record into the assigned data node
+//    Collection<SimpleJdbcDaoSupport> sporkDaos = hive.connection().daoSupport().get(spork.getType(), AccessType.ReadWrite);
+//    PreparedStatementCreatorFactory stmtFactory =
+//      new PreparedStatementCreatorFactory(productInsertSql, new int[]{Types.INTEGER, Types.VARCHAR, Types.VARCHAR});
+//    Object[] parameters = new Object[]{spork.getId(), spork.getName(), spork.getType()};
+//    for (JdbcDaoSupport dao : sporkDaos)
+//      dao.getJdbcTemplate().update(stmtFactory.newPreparedStatementCreator(parameters));
+//
+//    //Update the resource id so that the hive can locate it
+//    hive.directory().insertResourceId(resourceName, spork.getId(), spork.getType());
+//    //Finally we update the SecondaryIndex
+//    hive.directory().insertSecondaryIndexKey(resourceName, "name", spork.getName(), spork.getId());
+//
+//    //Retrieve spork by Primary Key
+//    sporkDaos = hive.connection().daoSupport().get(spork.getType(), AccessType.ReadWrite);
+//    parameters = new Object[]{spork.getId()};
+//
+//    //Here I am taking advantage of the fact that I know there is only one copy.
+//    Product productA = (Product) Atom.getFirst(sporkDaos).getJdbcTemplate().queryForObject(selectProductById, parameters, new ProductRowMapper());
+//    //Make sure its a spork
+//    Assert.assertEquals(spork.getName(), productA.getName());
+//
+//    //Retrieve the spork by Name
+//    sporkDaos = (Collection<SimpleJdbcDaoSupport>) hive.connection().daoSupport().get(resourceName, nameIndex.getName(), spork.getName(), AccessType.Read);
+//    parameters = new Object[]{spork.getName()};
+//    Product productB = (Product) Atom.getFirst(sporkDaos).getJdbcTemplate().queryForObject(selectProductByName, parameters, new ProductRowMapper());
+//    //Make sure its a spork
+//    Assert.assertEquals(spork.getId(), productB.getId());
+//
+//    //productA and productB are the same spork
+//    Assert.assertEquals(productA.getId(), productB.getId());
+//    Assert.assertEquals(productA.getName(), productB.getName());
+  }
 
-    //Add a key, just to test.
-    String key = "knife";
-    hive.directory().insertPrimaryIndexKey(key);
-    //Just cleaning up the random key.
-    hive.directory().deletePrimaryIndexKey(key);
-
-    //At this point there is no real data in the Hive just a directory of Primary key to node mappings.
-    //First we need to load our data schema on to each data node.
-    for (Node node : hive.getNodes()) {
-      /*
-          *
-          * Ordinarily to get a connection to node from the hive we would have to provide a key
-          * and the permissions (READ or READWRITE) with which we want to acquire the connection.
-          * However the getUnsafe method can be used [AND SHOULD ONLY BE USED] for cases like this
-          * when there is no data yet loadedon a node and thus no key to dereference.
-          *
-          * NOTE: You can obtain vanilla JDBC connections from the hive or use the cached JdbcDaoSupport
-          * objects.
-          *
-          */
-      JdbcDaoSupport daoSupport = hive.connection().daoSupport().getUnsafe(node.getName());
-      daoSupport.getJdbcTemplate().update(dataTableCreateSql);
-    }
-
-    //Set up a secondary index on products so that we can query them by name
-
-    // First create a Resource.  All Secondary Indexes will be associated with this Resource.
-    String resourceName = "Product";
-    Resource product = new ResourceImpl(resourceName, Types.INTEGER, false, new ArrayList<SecondaryIndex>());
-
-    // Add it to the Hive
-    product = hive.addResource(product);
-
-    //Now create a SecondaryIndex
-    SecondaryIndex nameIndex = new SecondaryIndex("name", Types.VARCHAR);
-    //Add it to the Hive
-    nameIndex = hive.addSecondaryIndex(product, nameIndex);
-    //Note: SecondaryIndexes are identified by ResourceName.IndexColumnName
-
-    //Now lets add a product to the hive.
-    Product spork = new Product(23, "Spork", "Cutlery");
-    //First we have to add a primary index entry in order to get allocated to a data node.
-    //While it is possible to write a record to multiple locations within the Hive, the default implementation
-    //inserts a single copy.
-    hive.directory().insertPrimaryIndexKey(spork.getType());
-    //Next we insert the record into the assigned data node
-    Collection<SimpleJdbcDaoSupport> sporkDaos = hive.connection().daoSupport().get(spork.getType(), AccessType.ReadWrite);
-    PreparedStatementCreatorFactory stmtFactory =
-      new PreparedStatementCreatorFactory(productInsertSql, new int[]{Types.INTEGER, Types.VARCHAR, Types.VARCHAR});
-    Object[] parameters = new Object[]{spork.getId(), spork.getName(), spork.getType()};
-    for (JdbcDaoSupport dao : sporkDaos)
-      dao.getJdbcTemplate().update(stmtFactory.newPreparedStatementCreator(parameters));
-
-    //Update the resource id so that the hive can locate it
-    hive.directory().insertResourceId(resourceName, spork.getId(), spork.getType());
-    //Finally we update the SecondaryIndex
-    hive.directory().insertSecondaryIndexKey(resourceName, "name", spork.getName(), spork.getId());
-
-    //Retrieve spork by Primary Key
-    sporkDaos = hive.connection().daoSupport().get(spork.getType(), AccessType.ReadWrite);
-    parameters = new Object[]{spork.getId()};
-
-    //Here I am taking advantage of the fact that I know there is only one copy.
-    Product productA = (Product) Atom.getFirst(sporkDaos).getJdbcTemplate().queryForObject(selectProductById, parameters, new ProductRowMapper());
-    //Make sure its a spork
-    Assert.assertEquals(spork.getName(), productA.getName());
-
-    //Retrieve the spork by Name
-    sporkDaos = (Collection<SimpleJdbcDaoSupport>) hive.connection().daoSupport().get(resourceName, nameIndex.getName(), spork.getName(), AccessType.Read);
-    parameters = new Object[]{spork.getName()};
-    Product productB = (Product) Atom.getFirst(sporkDaos).getJdbcTemplate().queryForObject(selectProductByName, parameters, new ProductRowMapper());
-    //Make sure its a spork
-    Assert.assertEquals(spork.getId(), productB.getId());
-
-    //productA and productB are the same spork
-    Assert.assertEquals(productA.getId(), productB.getId());
-    Assert.assertEquals(productA.getName(), productB.getName());
+  @Override
+  public Collection<String> getDatabaseNames() {
+    return Lists.newList("hive");
   }
 
   class Product {

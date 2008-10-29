@@ -6,80 +6,71 @@ package org.hivedb.configuration.persistence;
 
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.HiveSemaphore;
-import org.hivedb.persistence.HiveBasicDataSource;
-import org.hivedb.Lockable.Status;
 import org.hivedb.HiveSemaphoreImpl;
-import org.springframework.dao.EmptyResultDataAccessException;
+import org.hivedb.Lockable.Status;
+import org.hivedb.util.Lists;
+import org.hivedb.util.functional.Atom;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.support.JdbcDaoSupport;
-import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy;
 
 import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
 
 /**
  * @author Justin McCarthy (jmccarthy@cafepress.com)
  * @author Britt Crawford (bcrawford@cafepress.com)
  */
-public class HiveSemaphoreDao extends JdbcDaoSupport {
+public class HiveSemaphoreDao extends JdbcDaoSupport implements SingleEntityConfigurationDataAccessObject<HiveSemaphore> {
   public HiveSemaphoreDao(DataSource ds) {
     this.setDataSource(ds);
   }
 
-  //Changed to delegate but kept the method to perserve the interface
   public HiveSemaphore get() {
     return getSemaphore();
   }
 
   private HiveSemaphore getSemaphore() {
     JdbcTemplate t = getJdbcTemplate();
-    HiveSemaphore result;
+    Collection<HiveSemaphore> results;
     try {
-      result = (HiveSemaphore) t.queryForObject("SELECT * FROM semaphore_metadata", new HiveSemaphoreRowMapper());
+      results = t.query("SELECT * FROM semaphore_metadata", new HiveSemaphoreRowMapper());
     } catch (BadSqlGrammarException ex) {
       throw new HiveSemaphoreNotFound(
         "Exception loading HiveSemaphore -- verify that semaphore_metadata has one and only one row: "
           + ex.getMessage());
-    } catch (EmptyResultDataAccessException ex) {
+    }
+
+    assertSemaphoreExists(results);
+    assertHiveSemaphoreIsSingular(results.size());
+
+    return Atom.getFirstOrThrow(results);
+  }
+
+  private void assertSemaphoreExists(Collection<HiveSemaphore> results) {
+    if (results.size() == 0)
       throw new HiveSemaphoreNotFound(
-        "Exception loading HiveSemaphore -- verify that semaphore_metadata has one and only one row: "
-          + ex.getMessage());
-    } catch (RuntimeException re) {
-      String url = (getJdbcTemplate().getDataSource() instanceof HiveBasicDataSource)
-        ? ((HiveBasicDataSource) getJdbcTemplate().getDataSource()).getUrl()
-        : ((HiveBasicDataSource) ((LazyConnectionDataSourceProxy) getJdbcTemplate().getDataSource()).getTargetDataSource()).getUrl();
-      throw new HiveRuntimeException(String.format("Error connecting to the hive database %s", url), re);
-    }
-    return result;
+        "Exception loading HiveSemaphore -- query returned no results.");
   }
 
-  public HiveSemaphore create() {
-    HiveSemaphore hs;
-    if (doesHiveSemaphoreExist())
-      hs = get();
-    else {
-      JdbcTemplate j = getJdbcTemplate();
-      hs = new HiveSemaphoreImpl(Status.writable, 1);
-      Object[] parameters = new Object[]{hs.getStatus().getValue(), hs.getRevision()};
-      try {
-        j.update("INSERT INTO semaphore_metadata (status,revision) VALUES (?,?)", parameters);
-      } catch (BadSqlGrammarException e) {
-        throw new HiveSemaphoreNotFound(e.getMessage());
-      }
-    }
-    return hs;
+  public Collection<HiveSemaphore> loadAll() {
+    return Lists.newList(getSemaphore());
   }
 
-  /**
-   * ************************************************************************
-   * Update HiveSemaphore. Will perform a single attempt to create the
-   * semaphore if any Exception is encountered.
-   *
-   * @param hs
-   */
+  public HiveSemaphore create(HiveSemaphore entity) {
+    JdbcTemplate j = getJdbcTemplate();
+    Object[] parameters = new Object[]{entity.getStatus().getValue(), entity.getRevision()};
+    try {
+      j.update("INSERT INTO semaphore_metadata (status,revision) VALUES (?,?)", parameters);
+    } catch (BadSqlGrammarException e) {
+      throw new HiveSemaphoreNotFound(e.getMessage());
+    }
+    return entity;
+  }
+
   public HiveSemaphore update(HiveSemaphore hs) {
     //Unilateral decision to abandon implicit creation
     Object[] parameters = new Object[]{hs.getStatus().getValue(),
@@ -87,12 +78,19 @@ public class HiveSemaphoreDao extends JdbcDaoSupport {
     JdbcTemplate j = getJdbcTemplate();
     try {
       int rows = j.update("UPDATE semaphore_metadata SET status = ?, revision = ?", parameters);
-      if (rows != 1)
-        throw new IllegalStateException("Hive semaphore contians more than one row and has been corrupted.");
+      assertHiveSemaphoreIsSingular(rows);
     } catch (BadSqlGrammarException e) {
       throw new HiveSemaphoreNotFound(e.getMessage());
     }
     return hs;
+  }
+
+  private void assertHiveSemaphoreIsSingular(int rows) {
+    if (rows > 1)
+      throw new IllegalStateException("Hive semaphore contians more than one row and has been corrupted.");
+  }
+
+  public void delete(HiveSemaphore entity) {
   }
 
   public boolean doesHiveSemaphoreExist() {
@@ -124,5 +122,5 @@ public class HiveSemaphoreDao extends JdbcDaoSupport {
     public HiveSemaphoreNotFound(String msg) {
       super(msg);
     }
-	}
+  }
 }

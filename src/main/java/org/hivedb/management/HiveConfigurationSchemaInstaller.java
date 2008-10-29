@@ -1,9 +1,11 @@
 package org.hivedb.management;
 
 import org.hivedb.HiveRuntimeException;
+import org.hivedb.HiveSemaphoreImpl;
+import org.hivedb.Lockable;
 import org.hivedb.configuration.persistence.HiveConfigurationSchema;
-import org.hivedb.persistence.CachingDataSourceProvider;
 import org.hivedb.configuration.persistence.HiveSemaphoreDao;
+import org.hivedb.persistence.CachingDataSourceProvider;
 import org.hivedb.util.GetOpt;
 
 import java.sql.Connection;
@@ -20,7 +22,7 @@ public class HiveConfigurationSchemaInstaller implements Runnable {
   public void run() {
     try {
       new HiveConfigurationSchema(uri).install();
-      new HiveSemaphoreDao(CachingDataSourceProvider.getInstance().getDataSource(uri)).create();
+      new HiveSemaphoreDao(CachingDataSourceProvider.getInstance().getDataSource(uri)).create(new HiveSemaphoreImpl(Lockable.Status.writable, 1));
     } catch (Exception e) {
       throw new HiveRuntimeException(e.getMessage(), e);
     }

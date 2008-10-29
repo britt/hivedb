@@ -1,7 +1,5 @@
 package org.hivedb;
 
-import org.hivedb.Lockable;
-
 public interface HiveSemaphore extends Lockable {
   void setRevision(int revision);
 
