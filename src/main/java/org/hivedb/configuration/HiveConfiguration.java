@@ -7,7 +7,6 @@ import org.hivedb.util.database.HiveDbDialect;
 
 import java.util.Collection;
 
-// TODO change the namespace on all of the entity persistence configurations
 public interface HiveConfiguration {
   Collection<Node> getNodes();
 
