@@ -35,7 +35,7 @@ public class JSONHiveConfigurationFactoryTest {
 
   @Test
   public void shouldLoadAHiveConfigurationFromAJSONFile() throws Exception {
-    JSONHiveConfigurationFactory factory = new JSONHiveConfigurationFactory("src/test/resources/hive_configuration.js");
+    JSONHiveConfigurationFactory factory = new JSONHiveConfigurationFactory("src/test/resources/example_hive_configuration.js");
     HiveConfiguration config = factory.newInstance();
     assertEquals(getSemaphore(), config.getSemaphore());
     assertEquals(getPartitionDimension(), config.getPartitionDimension());

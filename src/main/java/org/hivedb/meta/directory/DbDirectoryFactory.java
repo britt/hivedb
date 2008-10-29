@@ -3,22 +3,18 @@ package org.hivedb.meta.directory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hivedb.configuration.HiveConfiguration;
-import org.hivedb.util.functional.Factory;
+import org.hivedb.meta.persistence.DataSourceProvider;
 
-import javax.sql.DataSource;
-
-public class DbDirectoryFactory implements Factory<Directory> {
+public class DbDirectoryFactory implements DirectoryFactory {
   private final static Log log = LogFactory.getLog(DbDirectoryFactory.class);
-  private DataSource dataSource;
-  private HiveConfiguration hiveConfiguration;
+  private DataSourceProvider dataSourceProvider;
 
-  public DbDirectoryFactory(DataSource dataSource, HiveConfiguration hiveConfiguration) {
-    this.dataSource = dataSource;
-    this.hiveConfiguration = hiveConfiguration;
+  public DbDirectoryFactory(DataSourceProvider provider) {
+    this.dataSourceProvider = provider;
   }
 
-  public Directory newInstance() {
-    return new DbDirectory(hiveConfiguration, dataSource);
+  public Directory newInstance(HiveConfiguration config) {
+    return new DbDirectory(config, dataSourceProvider.getDataSource(config.getUri()));
   }
 }
 

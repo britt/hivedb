@@ -1,13 +1,18 @@
 package org.hivedb;
 
-import org.hivedb.management.HiveConfigurationSchemaInstaller;
+import org.hivedb.configuration.HiveConfiguration;
+import org.hivedb.configuration.json.JSONHiveConfigurationFactory;
 import org.hivedb.meta.*;
-import org.hivedb.util.HiveDestructor;
+import org.hivedb.meta.directory.DbDirectoryFactory;
+import org.hivedb.meta.directory.DirectoryFactory;
+import org.hivedb.meta.directory.DirectoryWrapperFactory;
+import org.hivedb.meta.persistence.HiveBasicDataSourceProvider;
+import org.hivedb.meta.persistence.HiveDataSourceProvider;
 import org.hivedb.util.database.HiveDbDialect;
+import org.hivedb.util.database.Schemas;
 import org.hivedb.util.database.test.H2TestCase;
-import org.hivedb.util.database.test.HiveTest;
-import org.hivedb.util.database.test.HiveTest.Config;
 import org.hivedb.util.functional.Atom;
+import org.hivedb.util.functional.Factory;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
@@ -34,23 +39,18 @@ import java.util.Collection;
  *
  * @author Britt Crawford (bcrawford@cafepress.com)
  */
-@Config("hive_default")
-public class ExampleHiveTest extends HiveTest {
-  private static final String dataTableCreateSql = "CREATE TABLE products (id integer PRIMARY KEY, name varchar(255), type varchar(255))";
-  private static final String productInsertSql = "INSERT INTO products VALUES (?,?,?)";
-  private static final String selectProductById = "SELECT * FROM products WHERE id = ?";
-  private static final String selectProductByName = "SELECT * FROM products WHERE name = ?";
-
-
-  public void setup() {
-    // we create a new one!
-    new HiveDestructor().destroy(getHive());
-  }
+public class ExampleHiveTest {
 
   @Test
   public void createAndUseTheHive() throws Exception {
-    // Install The Hive Metadata Schema
-    new HiveConfigurationSchemaInstaller(getConnectString(H2TestCase.TEST_DB)).run();
+    HiveDataSourceProvider dataSourceProvider = new HiveBasicDataSourceProvider(500);
+    Factory<HiveConfiguration> configFactory = new JSONHiveConfigurationFactory("src/test/default_hive_configuration.js");
+    String directoryUri = "jdbc://uri";
+    DirectoryFactory directoryFactory = new DbDirectoryFactory(dataSourceProvider);
+    DirectoryWrapperFactory directoryWrapperFactory= new DirectoryWrapperFactory(directoryFactory);
+    HiveFactory hiveFactory = new HiveFactory(configFactory, directoryWrapperFactory, dataSourceProvider);
+    HiveConfiguration config = configFactory.newInstance();
+    Schemas.install(config.getPartitionDimension());
 
     //Create a Partition Dimension
     //We are going to partition our Product domain using the product type string.

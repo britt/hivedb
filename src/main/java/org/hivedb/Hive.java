@@ -58,25 +58,14 @@ public class Hive {
     new HiveSemaphoreDao(datasource).incrementAndPersist();
   }
 
-  /**
-   * Gets the ConnectionManager
-   * @return
-   */
   public ConnectionManager connection() {
     return this.connection;
   }
 
-  /**
-   * Dumps the properties of the Hive.
-   */
   public String toString() {
     return hiveConfiguration.toString();
   }
 
-  /**
-   * Exposes the DirectoryFacade for hive index operations. See {@see org.hivedb.meta.directory.DirectoryFacade}
-   * @return
-   */
   public DirectoryFacade directory() {
     return this.directory;
   }
