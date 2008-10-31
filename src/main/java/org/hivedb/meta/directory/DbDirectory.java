@@ -30,7 +30,7 @@ import java.sql.Types;
 import java.util.Collection;
 import java.util.Map;
 
-public class DbDirectory extends SimpleJdbcDaoSupport implements NodeResolver, IndexWriter, Directory {
+public class DbDirectory extends SimpleJdbcDaoSupport implements NodeResolver, Directory {
   private static QuickCache cache = new QuickCache();
   private PartitionDimension partitionDimension;
   private IndexSqlFormatter sql = new IndexSqlFormatter();
@@ -50,8 +50,8 @@ public class DbDirectory extends SimpleJdbcDaoSupport implements NodeResolver, I
     return this.partitionDimension;
   }
 
-  public void insertPrimaryIndexKey(final Node node, final Object primaryIndexKey) {
-    newTransaction().execute(new TransactionCallback() {
+  public Object insertPrimaryIndexKey(final Node node, final Object primaryIndexKey) {
+    return newTransaction().execute(new TransactionCallback() {
       public Object doInTransaction(TransactionStatus arg0) {
         int[] types = new int[]{JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass()), Types.INTEGER};
         Object[] parameters = new Object[]{primaryIndexKey, node.getId()};
@@ -63,8 +63,8 @@ public class DbDirectory extends SimpleJdbcDaoSupport implements NodeResolver, I
     });
   }
 
-  public void insertSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey, final Object resourceId) {
-    newTransaction().execute(new TransactionCallback() {
+  public Object insertSecondaryIndexKey(final SecondaryIndex secondaryIndex, final Object secondaryIndexKey, final Object resourceId) {
+    return newTransaction().execute(new TransactionCallback() {
       public Object doInTransaction(TransactionStatus arg0) {
         return insertSecondaryIndexKeyNoTransaction(secondaryIndex, secondaryIndexKey, resourceId);
       }
@@ -80,8 +80,8 @@ public class DbDirectory extends SimpleJdbcDaoSupport implements NodeResolver, I
     return secondaryIndexKey;
   }
 
-  public void updatePrimaryIndexKeyReadOnly(final Object primaryIndexKey, final boolean isReadOnly) {
-    newTransaction().execute(new TransactionCallback() {
+  public Object updatePrimaryIndexKeyReadOnly(final Object primaryIndexKey, final boolean isReadOnly) {
+    return newTransaction().execute(new TransactionCallback() {
       public Object doInTransaction(TransactionStatus arg0) {
         Object[] parameters = new Object[]{isReadOnly, primaryIndexKey};
         int[] types = new int[]{Types.BOOLEAN, JdbcTypeMapper.primitiveTypeToJdbcType(primaryIndexKey.getClass())};
@@ -92,8 +92,8 @@ public class DbDirectory extends SimpleJdbcDaoSupport implements NodeResolver, I
     });
   }
 
-  public void updatePrimaryIndexKeyOfResourceId(final Resource resource, final Object resourceId, final Object newPrimaryIndexKey) {
-    newTransaction().execute(new TransactionCallback() {
+  public Object updatePrimaryIndexKeyOfResourceId(final Resource resource, final Object resourceId, final Object newPrimaryIndexKey) {
+    return newTransaction().execute(new TransactionCallback() {
       public Object doInTransaction(TransactionStatus arg0) {
         Object[] parameters = new Object[]{newPrimaryIndexKey, resourceId};
         int[] types = new int[]{
@@ -263,8 +263,8 @@ public class DbDirectory extends SimpleJdbcDaoSupport implements NodeResolver, I
     getJdbcTemplate().update(Statements.newStmtCreatorFactory(sql, types).newPreparedStatementCreator(parameters));
   }
 
-  public void insertResourceId(final Resource resource, final Object id, final Object primaryIndexKey) {
-    newTransaction().execute(new TransactionCallback() {
+  public Object insertResourceId(final Resource resource, final Object id, final Object primaryIndexKey) {
+    return newTransaction().execute(new TransactionCallback() {
       public Object doInTransaction(TransactionStatus arg0) {
         if (lockResourceId(resource, id))
           doUpdate(sql.insertResourceId(resource),
@@ -288,9 +288,9 @@ public class DbDirectory extends SimpleJdbcDaoSupport implements NodeResolver, I
     return Atom.getFirstOrNull(keys);
   }
 
-  public void insertSecondaryIndexKeys(Map<SecondaryIndex, Collection<Object>> secondaryIndexValueMap, Object resourceId) {
+  public Object insertSecondaryIndexKeys(Map<SecondaryIndex, Collection<Object>> secondaryIndexValueMap, Object resourceId) {
     //todo: finish
-    batch().insertSecondaryIndexKeys(secondaryIndexValueMap, resourceId);
+    return batch().insertSecondaryIndexKeys(secondaryIndexValueMap, resourceId);
   }
 
   public void deleteSecondaryIndexKeys(Map<SecondaryIndex, Collection<Object>> secondaryIndexValueMap, Object resourceId) {

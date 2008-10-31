@@ -26,21 +26,21 @@ public interface Directory {
 
   Collection<KeySemaphore> getKeySemaphoresOfSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey);
 
-  void insertPrimaryIndexKey(Node node, Object primaryIndexKey);
+  Object insertPrimaryIndexKey(Node node, Object primaryIndexKey);
 
-  void insertResourceId(Resource resource, Object id, Object primaryIndexKey);
+  Object insertResourceId(Resource resource, Object id, Object primaryIndexKey);
 
-  void insertSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey, Object resourceId);
+  Object insertSecondaryIndexKey(SecondaryIndex secondaryIndex, Object secondaryIndexKey, Object resourceId);
 
-  void updatePrimaryIndexKeyOfResourceId(Resource r, Object resourceId, Object newPrimaryIndexKey);
+  Object updatePrimaryIndexKeyOfResourceId(Resource r, Object resourceId, Object newPrimaryIndexKey);
 
-  void updatePrimaryIndexKeyReadOnly(Object primaryIndexKey, boolean readOnly);
+  Object updatePrimaryIndexKeyReadOnly(Object primaryIndexKey, boolean readOnly);
 
   Object getPrimaryIndexKeyOfResourceId(Resource resource, Object resourceId);
 
   void deleteSecondaryIndexKeys(Map<SecondaryIndex, Collection<Object>> secondaryIndexValueMap, Object resourceId);
 
-  void insertSecondaryIndexKeys(Map<SecondaryIndex, Collection<Object>> secondaryIndexValueMap, Object resourceId);
+  Object insertSecondaryIndexKeys(Map<SecondaryIndex, Collection<Object>> secondaryIndexValueMap, Object resourceId);
 
   Collection getSecondaryIndexKeysOfResourceId(SecondaryIndex secondaryIndex, Object id);
 }
