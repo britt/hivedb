@@ -39,7 +39,7 @@ public class HiveSemaphoreDao extends JdbcDaoSupport implements SingleEntityConf
     try {
       results = t.query("SELECT * FROM semaphore_metadata", new HiveSemaphoreRowMapper());
     } catch (BadSqlGrammarException ex) {
-      throw new HiveSemaphoreNotFound(
+      throw new HiveRuntimeException(
         "Exception loading HiveSemaphore -- verify that semaphore_metadata has one and only one row: "
           + ex.getMessage());
     }
@@ -91,6 +91,7 @@ public class HiveSemaphoreDao extends JdbcDaoSupport implements SingleEntityConf
   }
 
   public void delete(HiveSemaphore entity) {
+    throw new UnsupportedOperationException("Operation not implemented.");
   }
 
   public boolean doesHiveSemaphoreExist() {
