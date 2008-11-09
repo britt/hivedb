@@ -7,12 +7,18 @@ import org.hivedb.util.database.DatabaseAdapter;
 import org.hivedb.util.database.DatabaseInitializer;
 import org.hivedb.util.database.H2Adapter;
 import org.hivedb.util.functional.Atom;
-import static org.junit.Assert.assertEquals;
 import org.junit.*;
+import static org.junit.Assert.assertEquals;
 
 import java.sql.Types;
 import java.util.Collection;
 
+//Exception cases left untested because the base class that ResourceDao extends
+//org.springframework.jdbc.core.support.JdbcDaoSupport contains final methods
+//that cannot be overriden for the purposes of testing i.e. generating exceptions
+//to trigger the exception handling code.
+//
+//TODO Refactor ResourceDao away from JdbcDaoSupport
 public class ResourceDaoTest {
   private static DatabaseAdapter adapter;
   private static DatabaseInitializer db;
@@ -42,7 +48,7 @@ public class ResourceDaoTest {
   }
   
   @Test
-  public void shouldLoadResources() throws Exception {
+  public void shouldReateAndLoadResources() throws Exception {
     ResourceDao d = new ResourceDao(adapter.getDataSource(DB_NAME));
 
     Resource resource = new ResourceImpl("aResource", Types.INTEGER, false);
@@ -54,10 +60,46 @@ public class ResourceDaoTest {
   }
 
 //  @Test
-//  public void testCreate() throws Exception {
-//    DataSource mockDataSource = context.mock(DataSource.class);
-//    ResourceDao d = new ResourceDao(mockDataSource);
-//    Resource mockResource = context.mock(Resource.class);
-//    d.create(mockResource);
+//  public void createShouldThrowIfTheRowIsNotInserted() throws Exception {
+//    throw new UnsupportedOperationException("Not yet implemented");
+//  }
+//
+//  @Test
+//  public void createShouldThrowIfTheIdIsNotAssigned() throws Exception {
+//    throw new UnsupportedOperationException("Not yet implemented");
+//  }
+
+  @Test
+  public void shouldUpdateAResource() throws Exception {
+    ResourceDao d = new ResourceDao(adapter.getDataSource(DB_NAME));
+
+    Resource resource = new ResourceImpl("aResource", Types.INTEGER, false);
+    d.create(resource);
+    resource.setPartitioningResource(true);
+    d.update(resource);
+    Collection<Resource> resources = d.loadAll();
+    assertEquals(1, resources.size());
+    assertEquals(resource, Atom.getFirst(resources));
+  }
+
+//  @Test(expected = HiveRuntimeException.class)
+//  public void shouldThrowIfMoreThanOneRowIsUpdated() throws Exception {
+//    throw new UnsupportedOperationException("Not yet implemented");
+//  }
+
+  @Test
+  public void shouldDeleteAResource() throws Exception {
+    ResourceDao d = new ResourceDao(adapter.getDataSource(DB_NAME));
+
+    Resource resource = new ResourceImpl("aResource", Types.INTEGER, false);
+    d.create(resource);
+    d.delete(resource);
+    Collection<Resource> resources = d.loadAll();
+    assertEquals(0, resources.size());
+  }
+
+//  @Test
+//  public void shouldThrowIfMoreThanOneResourceIsDeleted() throws Exception {
+//    throw new UnsupportedOperationException("Not yet implemented");
 //  }
 }
