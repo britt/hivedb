@@ -1,18 +1,16 @@
 package org.hivedb;
 
 import org.hivedb.configuration.HiveConfiguration;
-import org.hivedb.AccessType;
-import org.hivedb.persistence.HiveDataSourceProvider;
-import org.hivedb.Node;
 import org.hivedb.directory.DirectoryFacade;
 import org.hivedb.directory.KeySemaphore;
 import org.hivedb.persistence.DataSourceProvider;
+import org.hivedb.persistence.HiveDataSourceProvider;
 import org.hivedb.persistence.JdbcDaoSupportCache;
 import org.hivedb.persistence.JdbcDaoSupportCacheImpl;
 import org.hivedb.util.Preconditions;
 import org.hivedb.util.functional.Filter;
-import org.hivedb.util.functional.Unary;
 import org.hivedb.util.functional.Predicate;
+import org.hivedb.util.functional.Unary;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -33,6 +31,7 @@ public class ConnectionManager {
     this.hiveConfiguration = hiveConfiguration;
     this.directory = directory;
     this.dataSourceProvider = provider;
+    // TODO Unnecessarily creating 2 data sources here unless the provider hands out singletons
     this.cache = new JdbcDaoSupportCacheImpl(directory, hiveConfiguration, provider);
     this.nodeDataSources = getDataSourceMap(hiveConfiguration.getNodes(), provider);
   }
@@ -60,7 +59,7 @@ public class ConnectionManager {
 
   public Collection<Connection> getByPartitionKey(Object primaryIndexKey, AccessType intent) throws SQLException, HiveLockableException {
     Collection<Connection> connections = new ArrayList<Connection>();
-    for (KeySemaphore semaphore : directory.getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey))
+    for (KeySemaphore semaphore : directory.getKeySemamphoresOfPartitionKey(primaryIndexKey))
       connections.add(getConnection(semaphore, intent));
     return connections;
   }

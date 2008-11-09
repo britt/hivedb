@@ -85,7 +85,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache {
    * @throws HiveLockableException
    */
   public Collection<SimpleJdbcDaoSupport> get(Object primaryIndexKey, final AccessType intention) throws HiveLockableException {
-    Collection<KeySemaphore> semaphores = directory.getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey);
+    Collection<KeySemaphore> semaphores = directory.getKeySemamphoresOfPartitionKey(primaryIndexKey);
     Collection<SimpleJdbcDaoSupport> supports = new ArrayList<SimpleJdbcDaoSupport>();
     for (KeySemaphore semaphore : semaphores)
       supports.add(get(semaphore, intention));

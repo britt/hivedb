@@ -77,7 +77,7 @@ public class DirectoryWrapper implements DirectoryFacade {
     return directory.doesSecondaryIndexKeyExist(getSecondaryIndex(resource, secondaryIndex), secondaryIndexKey, resourceId);
   }
 
-  public Collection<KeySemaphore> getKeySemamphoresOfPrimaryIndexKey(Object primaryIndexKey) {
+  public Collection<KeySemaphore> getKeySemamphoresOfPartitionKey(Object primaryIndexKey) {
     return directory.getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey);
   }
 

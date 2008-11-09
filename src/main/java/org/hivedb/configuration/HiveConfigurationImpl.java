@@ -2,12 +2,11 @@ package org.hivedb.configuration;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hivedb.PartitionDimension;
-import org.hivedb.util.HiveUtils;
-import org.hivedb.util.database.DriverLoader;
-import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.HiveSemaphore;
 import org.hivedb.Node;
+import org.hivedb.PartitionDimension;
+import org.hivedb.util.database.DriverLoader;
+import org.hivedb.util.database.HiveDbDialect;
 
 import java.util.Collection;
 
@@ -67,7 +66,7 @@ public class HiveConfigurationImpl implements HiveConfiguration {
 
   @Override
   public String toString() {
-    return HiveUtils.toDeepFormatedString(getUri(), semaphore);
+    return String.format("%s %s", getUri(), semaphore);
   }
 }
 

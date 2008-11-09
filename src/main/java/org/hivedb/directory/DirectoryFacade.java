@@ -11,7 +11,7 @@ public interface DirectoryFacade {
 
   public Collection<Integer> getNodeIdsOfPartitionKey(Object primaryIndexKey);
 
-  public Collection<KeySemaphore> getKeySemamphoresOfPrimaryIndexKey(Object primaryIndexKey);
+  public Collection<KeySemaphore> getKeySemamphoresOfPartitionKey(Object primaryIndexKey);
 
   //public Collection getResourceIdsOfPrimaryIndexKey(String resource,Object primaryIndexKey);
   public boolean getReadOnlyOfPrimaryIndexKey(Object primaryIndexKey);
