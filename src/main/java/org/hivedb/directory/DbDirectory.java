@@ -1,14 +1,9 @@
 package org.hivedb.directory;
 
-import org.hivedb.directory.DirectoryCorruptionException;
-import org.hivedb.persistence.CachingDataSourceProvider;
-import org.hivedb.configuration.HiveConfiguration;
-import org.hivedb.Lockable.Status;
-import org.hivedb.Node;
-import org.hivedb.PartitionDimension;
 import org.hivedb.*;
-import org.hivedb.Resource;
-import org.hivedb.SecondaryIndex;
+import org.hivedb.Lockable.Status;
+import org.hivedb.configuration.HiveConfiguration;
+import org.hivedb.persistence.CachingDataSourceProvider;
 import org.hivedb.util.QuickCache;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.database.RowMappers;
@@ -34,17 +29,17 @@ import java.util.Map;
 public class DbDirectory extends SimpleJdbcDaoSupport implements NodeResolver, IndexWriter, Directory {
   private static QuickCache cache = new QuickCache();
   private HiveConfiguration hiveConfiguration;
-  private IndexSqlFormatter sql = new IndexSqlFormatter();
+  private IndexSqlFormatter sql;
 
 
   public DbDirectory(HiveConfiguration dimension, DataSource dataSource) {
     this.hiveConfiguration = dimension;
+    this.sql = new IndexSqlFormatter(hiveConfiguration);
     this.setDataSource(dataSource);
   }
 
   public DbDirectory(HiveConfiguration hiveConfiguration) {
-    this.hiveConfiguration = hiveConfiguration;
-    this.setDataSource(CachingDataSourceProvider.getInstance().getDataSource(hiveConfiguration.getPartitionDimension().getIndexUri()));
+    this(hiveConfiguration, CachingDataSourceProvider.getInstance().getDataSource(hiveConfiguration.getPartitionDimension().getIndexUri()));
   }
 
   public PartitionDimension getPartitionDimension() {
@@ -205,7 +200,7 @@ public class DbDirectory extends SimpleJdbcDaoSupport implements NodeResolver, I
     return doRead(
         sql.selectPrimaryIndexKeysOfSecondaryIndexKey(secondaryIndex),
         new Object[]{secondaryIndexKey},
-        RowMappers.newObjectRowMapper(secondaryIndex.getResource().getPartitionDimension().getColumnType()));
+        RowMappers.newObjectRowMapper(getPartitionDimension().getColumnType()));
   }
 
   public Collection<Object> getSecondaryIndexKeysOfPrimaryIndexKey(SecondaryIndex secondaryIndex, Object primaryIndexKey) {
@@ -269,7 +264,7 @@ public class DbDirectory extends SimpleJdbcDaoSupport implements NodeResolver, I
       public Object doInTransaction(TransactionStatus arg0) {
         if (lockResourceId(resource, id))
           doUpdate(sql.insertResourceId(resource),
-              new int[]{resource.getColumnType(), resource.getPartitionDimension().getColumnType()},
+              new int[]{resource.getColumnType(), getPartitionDimension().getColumnType()},
               new Object[]{id, primaryIndexKey});
         return id;
       }
@@ -281,7 +276,7 @@ public class DbDirectory extends SimpleJdbcDaoSupport implements NodeResolver, I
     Collection keys = doRead(
         sql.selectPrimaryIndexKeysOfResourceId(resource),
         new Object[]{id},
-        RowMappers.newObjectRowMapper(resource.getPartitionDimension().getColumnType()));
+        RowMappers.newObjectRowMapper(getPartitionDimension().getColumnType()));
     if (keys.size() == 0)
       throw new HiveKeyNotFoundException(String.format("Unable to find primary key for resource %s with id %s", resource.getName(), id), id);
     else if (keys.size() > 1)
@@ -321,13 +316,13 @@ public class DbDirectory extends SimpleJdbcDaoSupport implements NodeResolver, I
     final DbDirectory d = this;
     return cache.get(BatchIndexWriter.class, new Delay<BatchIndexWriter>() {
       public BatchIndexWriter f() {
-        return new BatchIndexWriter(d);
+        return new BatchIndexWriter(d, sql);
       }
     });
   }
 
   private void setTransactionManager(TransactionTemplate transactionTemplate, final JdbcDaoSupport jdbcDaoSupport) {
-    transactionTemplate.setTransactionManager((DataSourceTransactionManager) cache.get(jdbcDaoSupport.getDataSource(), new Delay<DataSourceTransactionManager>() {
+    transactionTemplate.setTransactionManager(cache.get(jdbcDaoSupport.getDataSource(), new Delay<DataSourceTransactionManager>() {
       public DataSourceTransactionManager f() {
         return new DataSourceTransactionManager(jdbcDaoSupport.getDataSource());
       }

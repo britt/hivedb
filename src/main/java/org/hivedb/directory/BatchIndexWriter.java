@@ -24,9 +24,9 @@ public class BatchIndexWriter extends SimpleJdbcDaoSupport {
   private DbDirectory directory;
   private IndexSqlFormatter sql;
 
-  public BatchIndexWriter(DbDirectory directory) {
+  public BatchIndexWriter(DbDirectory directory, IndexSqlFormatter indexSqlFormatter) {
     this.directory = directory;
-    this.sql = new IndexSqlFormatter();
+    this.sql = indexSqlFormatter;
     this.setDataSource(directory.getDataSource());
   }
 

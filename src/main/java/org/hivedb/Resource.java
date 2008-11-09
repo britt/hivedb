@@ -4,10 +4,7 @@ import org.hivedb.util.IdAndNameIdentifiable;
 
 import java.util.Collection;
 
-public interface Resource extends IdAndNameIdentifiable<Integer> {
-  PartitionDimension getPartitionDimension();
-  void setPartitionDimension(PartitionDimension dimension);
-  
+public interface Resource extends IdAndNameIdentifiable<Integer> {  
   boolean isPartitioningResource();
   void setPartitioningResource(boolean b);
   

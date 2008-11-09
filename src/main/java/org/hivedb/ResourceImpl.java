@@ -4,8 +4,6 @@
  */
 package org.hivedb;
 
-import org.hivedb.Hive;
-import org.hivedb.HiveRuntimeException;
 import org.hivedb.persistence.ColumnInfo;
 import org.hivedb.util.HiveUtils;
 
@@ -20,7 +18,6 @@ import java.util.Collection;
  */
 public class ResourceImpl implements Comparable<Resource>, Resource {
   private int id;
-  private PartitionDimension partitionDimension;
   private Collection<SecondaryIndex> secondaryIndexes = null;
   private ColumnInfo columnInfo;
   private ResourceIndex idIndex;
@@ -82,20 +79,12 @@ public class ResourceImpl implements Comparable<Resource>, Resource {
     this.columnInfo = new ColumnInfo(name, columnInfo.getColumnType());
   }
 
-  public PartitionDimension getPartitionDimension() {
-    return partitionDimension;
-  }
-
   public boolean isPartitioningResource() {
     return isPartitioningResource;
   }
 
   public void setPartitioningResource(boolean value) {
     isPartitioningResource = value;
-  }
-
-  public void setPartitionDimension(PartitionDimension partitionDimension) {
-    this.partitionDimension = partitionDimension;
   }
 
   public Collection<SecondaryIndex> getSecondaryIndexes() {
@@ -108,8 +97,7 @@ public class ResourceImpl implements Comparable<Resource>, Resource {
         return secondaryIndex;
     throw new HiveRuntimeException(String.format("Secondary index %s of resource %s of partitition dimension %s not found.",
       secondaryIndexName,
-      getName(),
-      getPartitionDimension().getName()));
+      getName()));
   }
 
   /**
@@ -134,8 +122,7 @@ public class ResourceImpl implements Comparable<Resource>, Resource {
   public String toString() {
     return HiveUtils.toDeepFormatedString(this,
       "Id", getId(),
-      "Name", getName(),
-      "SecondaryIndexes", getSecondaryIndexes());
+      "Name", getName());
   }
 
   public int compareTo(Resource o) {

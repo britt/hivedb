@@ -4,11 +4,9 @@
  */
 package org.hivedb;
 
-import org.hivedb.Hive;
-import org.hivedb.HiveKeyNotFoundException;
 import org.hivedb.util.HiveUtils;
-import org.hivedb.util.Preconditions;
 import org.hivedb.util.IdAndNameIdentifiable;
+import org.hivedb.util.Preconditions;
 import org.hivedb.util.database.JdbcTypeMapper;
 
 import java.util.ArrayList;
@@ -72,14 +70,7 @@ public class PartitionDimensionImpl implements Comparable<PartitionDimension>, C
     this.name = name;
     this.columnType = columnType;
     this.indexUri = indexUri;
-    this.resources = insetResources(resources);
-  }
-
-  private Collection<Resource> insetResources(
-    Collection<Resource> resources) {
-    for (Resource resource : resources)
-      resource.setPartitionDimension(this);
-    return resources;
+    this.resources = resources;
   }
 
   public int getColumnType() {

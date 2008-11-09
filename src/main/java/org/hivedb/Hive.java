@@ -105,8 +105,6 @@ public class Hive {
   }
 
   public Resource addResource(Resource resource) throws HiveLockableException {
-    resource.setPartitionDimension(getPartitionDimension());
-
     Preconditions.isWritable(hiveConfiguration.getSemaphore());
     Preconditions.isNameUnique(getPartitionDimension().getResources(), resource.getName());
 

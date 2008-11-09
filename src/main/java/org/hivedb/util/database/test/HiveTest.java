@@ -122,7 +122,6 @@ public class HiveTest {
 
   protected ResourceImpl createResource() {
     final ResourceImpl resource = new ResourceImpl("FOO", Types.INTEGER, false);
-    resource.setPartitionDimension(createEmptyPartitionDimension());
     return resource;
   }
 

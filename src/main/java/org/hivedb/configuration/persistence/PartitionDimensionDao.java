@@ -4,8 +4,9 @@
  */
 package org.hivedb.configuration.persistence;
 
+import org.hivedb.HiveRuntimeException;
 import org.hivedb.PartitionDimension;
-import org.hivedb.*;
+import org.hivedb.PartitionDimensionImpl;
 import org.hivedb.Resource;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -20,6 +21,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -89,7 +91,7 @@ public class PartitionDimensionDao extends JdbcDaoSupport {
   protected class PartitionDimensionRowMapper implements RowMapper {
     public Object mapRow(ResultSet rs, int rowNumber) throws SQLException {
       final int id = rs.getInt("id");
-      List<Resource> resources = new ResourceDao(getDataSource()).findByDimension(id);
+      Collection<Resource> resources = new ResourceDao(getDataSource()).loadAll();
       PartitionDimension dimension;
       dimension = new PartitionDimensionImpl(
         rs.getInt("id"),

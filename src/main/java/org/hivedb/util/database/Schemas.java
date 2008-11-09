@@ -61,7 +61,7 @@ public class Schemas {
 		Context context = getContext(partitionDimension.getIndexUri());
 		context.put("tableName", getResourceIndexTableName(resource));
 		context.put("indexType", addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(resource.getIdIndex().getColumnInfo().getColumnType())));
-		context.put("primaryIndexType", addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(resource.getPartitionDimension().getColumnType())));
+		context.put("primaryIndexType", addLengthForVarchar(JdbcTypeMapper.jdbcTypeToString(partitionDimension.getColumnType())));
 		return Templater.render("sql/resource_index.vsql", context);
 	}
 	
