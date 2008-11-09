@@ -94,7 +94,7 @@ public class
       transactionHelper.updateInTransaction(callback, factory.openSession());
     } catch (HibernateException dupe) {
       if (isDuplicateRecordException(dupe, entity) && !exists((ID) config.getId(entity))) {
-        transactionHelper.updateInTransaction(cleanupCallback, factory.openSession(config.getPrimaryIndexKey(entity)));
+        transactionHelper.updateInTransaction(cleanupCallback, factory.openSession(config.getPartitionKey(entity)));
       } else {
         log.error(
           String.format(
@@ -128,7 +128,7 @@ public class
 
   public boolean hasPartitionDimensionKeyChanged(Object entity) {
     return hive.directory().doesResourceIdExist(config.getResourceName(), config.getId(entity)) &&
-      !config.getPrimaryIndexKey(entity).equals(hive.directory().getPrimaryIndexKeyOfResourceId(config.getResourceName(), config.getId(entity)));
+      !config.getPartitionKey(entity).equals(hive.directory().getPrimaryIndexKeyOfResourceId(config.getResourceName(), config.getId(entity)));
   }
 
   public Boolean exists(ID id) {

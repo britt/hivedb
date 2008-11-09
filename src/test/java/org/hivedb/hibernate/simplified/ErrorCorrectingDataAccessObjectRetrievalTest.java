@@ -35,7 +35,7 @@ public class ErrorCorrectingDataAccessObjectRetrievalTest extends HiveTest {
     WeatherReport original = getPersistentInstance(dao);
     assertFalse(dao.hasPartitionDimensionKeyChanged(original));
     String newContinent = original.getContinent().equals("Asia") ? "Australia" : "Asia";
-    hive.directory().insertPrimaryIndexKey(newContinent);
+    hive.directory().insertPartitionKey(newContinent);
     hive.directory().updatePrimaryIndexKeyOfResourceId("WeatherReport", original.getReportId(), newContinent);
     assertTrue(dao.hasPartitionDimensionKeyChanged(original));
   }

@@ -64,14 +64,14 @@ public class HiveInterceptorDecoratorTest extends HiveTest {
 
     WeatherReport report = generateInstance();
     Continent asia = new AsiaticContinent();
-    hive.directory().insertPrimaryIndexKey(asia.getName());
-    hive.directory().insertPrimaryIndexKey(report.getContinent());
+    hive.directory().insertPartitionKey(asia.getName());
+    hive.directory().insertPartitionKey(report.getContinent());
     interceptor.postFlush(Arrays.asList(new Object[]{report, asia}).iterator());
 
     assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
     assertTrue(hive.directory().doesResourceIdExist("Temperature", report.getTemperature()));
 
-    assertTrue(hive.directory().doesPrimaryIndexKeyExist(asia.getName()));
+    assertTrue(hive.directory().doesPartitionKeyExist(asia.getName()));
     assertTrue(hive.directory().doesSecondaryIndexKeyExist("Continent", "population", asia.getPopulation(), asia.getName()));
   }
 
@@ -83,7 +83,7 @@ public class HiveInterceptorDecoratorTest extends HiveTest {
     HiveInterceptorDecorator interceptor = new HiveInterceptorDecorator(config, hive);
 
     WeatherReport report = generateInstance();
-    hive.directory().insertPrimaryIndexKey(report.getContinent());
+    hive.directory().insertPartitionKey(report.getContinent());
     hive.updateHiveStatus(Status.readOnly);
     interceptor.postFlush(Arrays.asList(new Object[]{report}).iterator());
   }
@@ -96,10 +96,10 @@ public class HiveInterceptorDecoratorTest extends HiveTest {
     HiveInterceptorDecorator interceptor = new HiveInterceptorDecorator(config, hive);
 
     WeatherReport report = generateInstance();
-    hive.directory().insertPrimaryIndexKey(report.getContinent());
+    hive.directory().insertPartitionKey(report.getContinent());
     interceptor.postFlush(Arrays.asList(new WeatherReport[]{report}).iterator());
 
-    assertTrue(hive.directory().doesPrimaryIndexKeyExist(report.getContinent()));
+    assertTrue(hive.directory().doesPartitionKeyExist(report.getContinent()));
     assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
     assertTrue(hive.directory().doesResourceIdExist("Temperature", report.getTemperature()));
 
@@ -121,15 +121,15 @@ public class HiveInterceptorDecoratorTest extends HiveTest {
 
     WeatherReport report = generateInstance();
     Continent asia = new AsiaticContinent();
-    hive.directory().insertPrimaryIndexKey(report.getContinent());
-    hive.directory().insertPrimaryIndexKey(asia.getName());
+    hive.directory().insertPartitionKey(report.getContinent());
+    hive.directory().insertPartitionKey(asia.getName());
     interceptor.postFlush(Arrays.asList(new Object[]{report, asia}).iterator());
 
-    assertTrue(hive.directory().doesPrimaryIndexKeyExist(report.getContinent()));
+    assertTrue(hive.directory().doesPartitionKeyExist(report.getContinent()));
     assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
     assertTrue(hive.directory().doesResourceIdExist("Temperature", report.getTemperature()));
 
-    assertTrue(hive.directory().doesPrimaryIndexKeyExist(asia.getName()));
+    assertTrue(hive.directory().doesPartitionKeyExist(asia.getName()));
     assertTrue(hive.directory().doesSecondaryIndexKeyExist("Continent", "population", asia.getPopulation(), asia.getName()));
 
     interceptor.onDelete(report, null, null, null, null);
@@ -139,7 +139,7 @@ public class HiveInterceptorDecoratorTest extends HiveTest {
     // Referenced entity does not get deleted
     assertTrue(hive.directory().doesResourceIdExist("Temperature", report.getTemperature()));
 
-    assertFalse(hive.directory().doesPrimaryIndexKeyExist(asia.getName()));
+    assertFalse(hive.directory().doesPartitionKeyExist(asia.getName()));
     assertFalse(hive.directory().doesSecondaryIndexKeyExist("Continent", "population", asia.getPopulation(), asia.getName()));
 
   }
@@ -151,10 +151,10 @@ public class HiveInterceptorDecoratorTest extends HiveTest {
     HiveInterceptorDecorator interceptor = new HiveInterceptorDecorator(config, hive);
 
     WeatherReport report = generateInstance();
-    hive.directory().insertPrimaryIndexKey(report.getContinent());
+    hive.directory().insertPartitionKey(report.getContinent());
     interceptor.postFlush(Arrays.asList(new WeatherReport[]{report}).iterator());
 
-    assertTrue(hive.directory().doesPrimaryIndexKeyExist(report.getContinent()));
+    assertTrue(hive.directory().doesPartitionKeyExist(report.getContinent()));
     assertTrue(hive.directory().doesResourceIdExist("WeatherReport", report.getReportId()));
     assertTrue(hive.directory().doesResourceIdExist("Temperature", report.getTemperature()));
 

@@ -10,7 +10,7 @@ import java.util.EnumSet;
 public interface EntityConfig {
 	String getPrimaryIndexKeyPropertyName();
 	String getPartitionDimensionName();
-	Object getPrimaryIndexKey(Object instance);
+	Object getPartitionKey(Object instance);
 	
 	String getIdPropertyName();
 	Serializable getId(Object instance);

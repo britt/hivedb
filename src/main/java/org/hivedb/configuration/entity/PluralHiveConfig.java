@@ -1,10 +1,11 @@
 package org.hivedb.configuration.entity;
 
 import org.hivedb.HiveRuntimeException;
-import org.hivedb.configuration.entity.EntityConfig;
-import org.hivedb.configuration.entity.EntityHiveConfig;
 import org.hivedb.util.Lists;
+import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.functional.DebugMap;
+import org.hivedb.util.functional.Transform;
+import org.hivedb.util.functional.Unary;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,9 +25,10 @@ public class PluralHiveConfig implements EntityHiveConfig {
 	
 	@SuppressWarnings("unchecked")
 	public EntityConfig getEntityConfig(Class<?> clazz) {
-		EntityConfig config = indexConfigurations.get(clazz.getName());
+    Class<?> knownClass = resolveEntityConfigClass(clazz);
+    EntityConfig config = indexConfigurations.get(knownClass.getName());
 		if(config == null){
-			List<Class> ancestors = getAncestors(clazz);
+			List<Class> ancestors = getAncestors(knownClass);
 			for(Class ancestor : ancestors) {
 				if(indexConfigurations.containsKey(ancestor.getName())){
 					config = indexConfigurations.get(ancestor.getName());
@@ -47,8 +49,19 @@ public class PluralHiveConfig implements EntityHiveConfig {
 		}
 		return getEntityConfig(clazz);
 	}
-	
 	@SuppressWarnings("unchecked")
+  private Class<?> resolveEntityConfigClass(Class<?> clazz) {
+    return ReflectionTools.whichIsImplemented(
+      clazz,
+      Transform.map(new Unary<EntityConfig, Class>() {
+        public Class f(EntityConfig entityConfig) {
+          return entityConfig.getRepresentedInterface();
+        }
+      },
+        getEntityConfigs()));
+  }
+  
+  @SuppressWarnings("unchecked")
 	private List<Class> getAncestors(Class<?> clazz) {
 		List<Class> ancestors = Lists.newArrayList();
 		if (!clazz.isInterface())

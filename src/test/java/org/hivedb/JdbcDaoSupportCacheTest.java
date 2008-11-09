@@ -16,7 +16,7 @@ public class JdbcDaoSupportCacheTest extends HiveTest {
 	
 	@Test
 	public void testDataSourceCacheCreation() throws HiveException, SQLException{
-		getHive().directory().insertPrimaryIndexKey(intKey());
+		getHive().directory().insertPartitionKey(intKey());
 		Hive hive = null;//Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
 		JdbcDaoSupportCacheImpl cache = (JdbcDaoSupportCacheImpl) hive.connection().daoSupport();
 		Collection<SimpleJdbcDaoSupport> read = cache.get(intKey(), AccessType.Read);
@@ -28,7 +28,7 @@ public class JdbcDaoSupportCacheTest extends HiveTest {
 	
 	@Test
 	public void testGetAllUnsafe() throws Exception {
-		getHive().directory().insertPrimaryIndexKey(intKey());
+		getHive().directory().insertPartitionKey(intKey());
 		Hive hive = null;//Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
 		JdbcDaoSupportCacheImpl cache = (JdbcDaoSupportCacheImpl) hive.connection().daoSupport();
 		assertEquals(3, cache.getAllUnsafe().size());

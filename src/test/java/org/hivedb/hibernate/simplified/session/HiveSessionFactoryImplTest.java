@@ -85,12 +85,12 @@ public class HiveSessionFactoryImplTest extends HiveTest {
   public void shouldOpenASessionByPrimaryKey() throws Exception {
     Hive hive = getHive();
     String asia = "Asia";
-    hive.directory().insertPrimaryIndexKey(asia);
+    hive.directory().insertPartitionKey(asia);
     final WeatherReportImpl report = new WeatherReportImpl();
     report.setContinent(asia);
     Session session = factory.openSession(asia);
     try {
-      Node node = getNodeForFirstId(hive, hive.directory().getNodeIdsOfPrimaryIndexKey(asia));
+      Node node = getNodeForFirstId(hive, hive.directory().getNodeIdsOfPartitionKey(asia));
       assertCorrectNode(session, node);
     } catch (Exception e) {
       fail(e.getMessage());
@@ -103,7 +103,7 @@ public class HiveSessionFactoryImplTest extends HiveTest {
   public void shouldOpenASessionByResourceId() throws Exception {
     Hive hive = getHive();
     String asia = "Asia";
-    hive.directory().insertPrimaryIndexKey(asia);
+    hive.directory().insertPartitionKey(asia);
     int id = 999;
     hive.directory().insertResourceId("WeatherReport", id, asia);
     final WeatherReportImpl report = new WeatherReportImpl();
@@ -124,7 +124,7 @@ public class HiveSessionFactoryImplTest extends HiveTest {
     Hive hive = getHive();
     String asia = "Asia";
     int id = 999;
-    hive.directory().insertPrimaryIndexKey(asia);
+    hive.directory().insertPartitionKey(asia);
     hive.directory().insertResourceId("WeatherReport", id, asia);
     int code = 765;
     hive.directory().insertSecondaryIndexKey("WeatherReport", "RegionCode", code, id);
@@ -146,12 +146,12 @@ public class HiveSessionFactoryImplTest extends HiveTest {
   public void shouldAddOpenSessionEvents() throws Exception {
     Hive hive = getHive();
     String asia = "Asia";
-    hive.directory().insertPrimaryIndexKey(asia);
+    hive.directory().insertPartitionKey(asia);
     final WeatherReportImpl report = new WeatherReportImpl();
     report.setContinent(asia);
     Session session = factory.openSession(asia);
     try {
-      Node node = getNodeForFirstId(hive, hive.directory().getNodeIdsOfPrimaryIndexKey(asia));
+      Node node = getNodeForFirstId(hive, hive.directory().getNodeIdsOfPartitionKey(asia));
       assertTrue("Opened a session to the wrong node", node.getUri().startsWith(RecordNodeOpenSessionEvent.getNode()));
     } catch (Exception e) {
       e.printStackTrace();
@@ -165,14 +165,14 @@ public class HiveSessionFactoryImplTest extends HiveTest {
   public void shouldAddOpenSessionEventsToAllShardsSession() throws Exception {
     Hive hive = getHive();
     String asia = "Asia";
-    hive.directory().insertPrimaryIndexKey(asia);
+    hive.directory().insertPartitionKey(asia);
     final WeatherReportImpl report = WeatherReportImpl.generate();
     report.setContinent(asia);
     Session session = factory.openSession();
     report.setReportId(88);
     try {
       session.save(report);
-      Node node = getNodeForFirstId(hive, hive.directory().getNodeIdsOfPrimaryIndexKey(asia));
+      Node node = getNodeForFirstId(hive, hive.directory().getNodeIdsOfPartitionKey(asia));
       assertTrue("Opened a session to the wrong node", node.getUri().startsWith(RecordNodeOpenSessionEvent.getNode()));
     } catch (Exception e) {
       e.printStackTrace();
@@ -195,15 +195,15 @@ public class HiveSessionFactoryImplTest extends HiveTest {
     });
 
     String asia = "Asia";
-    hive.directory().insertPrimaryIndexKey(asia);
-    hive.directory().insertPrimaryIndexKey(asia);
+    hive.directory().insertPartitionKey(asia);
+    hive.directory().insertPartitionKey(asia);
 
     context.assertIsSatisfied(); //asserts that this is no longer probabalistic
 
     Session session = null;
     try {
       session = factory.openSession(asia);
-      Collection<Integer> nodeIds = hive.directory().getNodeIdsOfPrimaryIndexKey(asia);
+      Collection<Integer> nodeIds = hive.directory().getNodeIdsOfPartitionKey(asia);
       assertEquals(2, nodeIds.size());
       Node node = getNodeForFirstId(hive, nodeIds);
       assertCorrectNode(session, node);

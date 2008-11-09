@@ -282,7 +282,7 @@ public class BaseDataAccessObjectTest extends HiveTest {
     // Make sure the resource is only on 1 hive node
     Assert.assertEquals(nodeIdsOfResourceId.size(), 1);
     // Make sure the node matches the new node
-    Assert.assertEquals(Atom.getFirstOrThrow(nodeIdsOfResourceId), Atom.getFirstOrThrow(getHive().directory().getNodeIdsOfPrimaryIndexKey(newPrimaryIndexKey)));
+    Assert.assertEquals(Atom.getFirstOrThrow(nodeIdsOfResourceId), Atom.getFirstOrThrow(getHive().directory().getNodeIdsOfPartitionKey(newPrimaryIndexKey)));
     // Make sure the entity can be fetched on the new node
     Assert.assertNotNull(dao.get(updated.getReportId()));
   }
@@ -293,9 +293,9 @@ public class BaseDataAccessObjectTest extends HiveTest {
     int i = 1;
     // Get a primary index key on a different node
     for (; i < 100; i++) {
-      getHive().directory().insertPrimaryIndexKey(new Integer(i).toString());
-      if (!Atom.getFirstOrThrow(getHive().directory().getNodeIdsOfPrimaryIndexKey(new Integer(i).toString())).equals(
-        Atom.getFirstOrThrow(getHive().directory().getNodeIdsOfPrimaryIndexKey(original.getContinent()))))
+      getHive().directory().insertPartitionKey(new Integer(i).toString());
+      if (!Atom.getFirstOrThrow(getHive().directory().getNodeIdsOfPartitionKey(new Integer(i).toString())).equals(
+        Atom.getFirstOrThrow(getHive().directory().getNodeIdsOfPartitionKey(original.getContinent()))))
         break;
     }
     return new Integer(i).toString();
@@ -408,7 +408,7 @@ public class BaseDataAccessObjectTest extends HiveTest {
       // Make sure the resource is only on 1 hive node
       Assert.assertEquals(nodeIdsOfResourceId.size(), 1);
       // Make sure the node matches the new node
-      Assert.assertEquals(Atom.getFirstOrThrow(nodeIdsOfResourceId), Atom.getFirstOrThrow(getHive().directory().getNodeIdsOfPrimaryIndexKey(newPrimaryIndexKey)));
+      Assert.assertEquals(Atom.getFirstOrThrow(nodeIdsOfResourceId), Atom.getFirstOrThrow(getHive().directory().getNodeIdsOfPartitionKey(newPrimaryIndexKey)));
       // Make sure the entity can be fetched on the new node
       Assert.assertNotNull(dao.get(report.getReportId()));
     }

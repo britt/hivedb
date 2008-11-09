@@ -49,9 +49,9 @@ public class ExampleHiveTest extends H2TestCase {
     assertNotNull(hive.getNodes());
     assertTrue(hive.getNodes().size() > 0);
 
-    hive.directory().insertPrimaryIndexKey(77);
-    assertTrue(hive.directory().doesPrimaryIndexKeyExist(77));
-    assertFalse(hive.directory().doesPrimaryIndexKeyExist(76));
+    hive.directory().insertPartitionKey(77);
+    assertTrue(hive.directory().doesPartitionKeyExist(77));
+    assertFalse(hive.directory().doesPartitionKeyExist(76));
 
 //    //Create a Data Node
 //    Node dataNode = new Node(Hive.NEW_OBJECT_ID, "aNode", H2TestCase.TEST_DB, "", HiveDbDialect.H2);
@@ -66,7 +66,7 @@ public class ExampleHiveTest extends H2TestCase {
 //
 //    //Add a key, just to test.
 //    String key = "knife";
-//    hive.directory().insertPrimaryIndexKey(key);
+//    hive.directory().insertPartitionKey(key);
 //    //Just cleaning up the random key.
 //    hive.directory().deletePrimaryIndexKey(key);
 //
@@ -108,7 +108,7 @@ public class ExampleHiveTest extends H2TestCase {
 //    //First we have to add a primary index entry in order to get allocated to a data node.
 //    //While it is possible to write a record to multiple locations within the Hive, the default implementation
 //    //inserts a single copy.
-//    hive.directory().insertPrimaryIndexKey(spork.getType());
+//    hive.directory().insertPartitionKey(spork.getType());
 //    //Next we insert the record into the assigned data node
 //    Collection<SimpleJdbcDaoSupport> sporkDaos = hive.connection().daoSupport().get(spork.getType(), AccessType.ReadWrite);
 //    PreparedStatementCreatorFactory stmtFactory =

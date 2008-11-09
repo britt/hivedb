@@ -190,7 +190,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
     return new ShardStrategyFactory() {
       public ShardStrategy newShardStrategy(List<ShardId> shardIds) {
         return new ShardStrategyImpl(
-          new HiveShardSelector(config, hive),
+          new HiveShardSelector(config, hive.directory()),
           new HiveShardResolver(config, hive),
           accessStrategy);
       }
@@ -266,7 +266,7 @@ public class HiveSessionFactoryBuilderImpl implements HiveSessionFactoryBuilder,
   }
 
   private Collection<Integer> getNodeIdsOrThrow(Object primaryIndexKey) {
-    final Collection<Integer> nodeIds = hive.directory().getNodeIdsOfPrimaryIndexKey(primaryIndexKey);
+    final Collection<Integer> nodeIds = hive.directory().getNodeIdsOfPartitionKey(primaryIndexKey);
     if (nodeIds.size() == 0)
       throw new HiveKeyNotFoundException(String.format("Primary index key %s was not found on any nodes", primaryIndexKey));
     return nodeIds;

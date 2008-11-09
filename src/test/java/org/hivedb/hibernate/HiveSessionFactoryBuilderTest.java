@@ -54,7 +54,7 @@ public class HiveSessionFactoryBuilderTest extends HiveTest {
 		
 		save(factoryBuilder, report);
 		assertNotNull(factoryBuilder.getSessionFactory());
-		factoryBuilder.openSession(config.getEntityConfig(getGeneratedClass(WeatherReport.class)).getPrimaryIndexKey(report));
+		factoryBuilder.openSession(config.getEntityConfig(getGeneratedClass(WeatherReport.class)).getPartitionKey(report));
 	}
 	
 	@Test

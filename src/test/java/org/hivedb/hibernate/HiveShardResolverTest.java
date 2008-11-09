@@ -45,7 +45,7 @@ public class HiveShardResolverTest extends HiveTest {
     assertTrue(asiaIds.size() > 0);
     assertTrue(reportIds.size() > 0);
 
-    Collection<Integer> nodeIds = hive.directory().getNodeIdsOfPrimaryIndexKey(asia.getName());
+    Collection<Integer> nodeIds = hive.directory().getNodeIdsOfPartitionKey(asia.getName());
     for (ShardId id : asiaIds)
       assertTrue(nodeIds.contains(id.getId()));
 

@@ -2,53 +2,42 @@ package org.hivedb.hibernate;
 
 import org.hibernate.shards.ShardId;
 import org.hibernate.shards.strategy.selection.ShardSelectionStrategy;
-import org.hivedb.Hive;
 import org.hivedb.HiveLockableException;
 import org.hivedb.HiveRuntimeException;
 import org.hivedb.configuration.entity.EntityConfig;
 import org.hivedb.configuration.entity.EntityHiveConfig;
-import org.hivedb.util.classgen.ReflectionTools;
+import org.hivedb.directory.DirectoryFacade;
+import org.hivedb.util.Preconditions;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Transform;
-import org.hivedb.util.functional.Unary;
 
 import java.util.Collection;
 
 public class HiveShardSelector implements ShardSelectionStrategy {
-  private EntityHiveConfig hiveConfig;
-  private Hive hive;
+  private EntityHiveConfig entityHiveConfig;
+  private DirectoryFacade directory;
 
-  public HiveShardSelector(EntityHiveConfig hiveConfig, Hive hive) {
-    this.hiveConfig = hiveConfig;
-    this.hive = hive;
+  public HiveShardSelector(EntityHiveConfig hiveConfig, DirectoryFacade directory) {
+    this.entityHiveConfig = hiveConfig;
+    this.directory = directory;
   }
 
-  // The Hive HAS to be responsible for shard allocation
+  // The Hive MUST to be responsible for shard allocation
   public ShardId selectShardIdForNewObject(Object entity) {
-    EntityConfig config = hiveConfig.getEntityConfig(resolveEntityConfigClass(entity.getClass()));
+    EntityConfig config = entityHiveConfig.getEntityConfig(entity.getClass());
 
-    if (!hive.directory().doesPrimaryIndexKeyExist(config.getPrimaryIndexKey(entity)))
+    Preconditions.isNotNull(config);
+
+    Object key = config.getPartitionKey(entity);
+    if (!directory.doesPartitionKeyExist(key))
       try {
-        hive.directory().insertPrimaryIndexKey(config.getPrimaryIndexKey(entity));
+        directory.insertPartitionKey(key);
       } catch (HiveLockableException e) {
         throw new HiveRuntimeException(e.getMessage(), e);
       }
 
-    Collection<Integer> nodeIds =
-      hive.directory().getNodeIdsOfPrimaryIndexKey(config.getPrimaryIndexKey(entity));
+    Collection<Integer> nodeIds = directory.getNodeIdsOfPartitionKey(key);
 
     return Atom.getFirstOrThrow(Transform.map(HiveShardResolver.nodeIdToShardIdConverter(), nodeIds));
-  }
-
-  @SuppressWarnings("unchecked")
-  private Class<?> resolveEntityConfigClass(Class<?> clazz) {
-    return ReflectionTools.whichIsImplemented(
-      clazz,
-      Transform.map(new Unary<EntityConfig, Class>() {
-        public Class f(EntityConfig entityConfig) {
-          return entityConfig.getRepresentedInterface();
-        }
-      },
-        hiveConfig.getEntityConfigs()));
   }
 }

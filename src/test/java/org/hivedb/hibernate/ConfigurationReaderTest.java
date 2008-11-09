@@ -47,7 +47,7 @@ public class ConfigurationReaderTest extends H2TestCase {
     WeatherReport report = generateInstance();
     assertEquals(WeatherReport.CONTINENT, config.getPrimaryIndexKeyPropertyName());
     assertEquals(WeatherReport.CONTINENT, config.getPartitionDimensionName());
-    assertEquals(report.getContinent(), config.getPrimaryIndexKey(report));
+    assertEquals(report.getContinent(), config.getPartitionKey(report));
     assertEquals(report.getReportId(), config.getId(report));
     assertEquals("WeatherReport", config.getResourceName());
     assertFalse(config.isPartitioningResource());
@@ -84,7 +84,7 @@ public class ConfigurationReaderTest extends H2TestCase {
     Continent asia = new AsiaticContinent();
     assertEquals("name", config.getPrimaryIndexKeyPropertyName());
     assertEquals(WeatherReport.CONTINENT, config.getPartitionDimensionName());
-    assertEquals("Asia", config.getPrimaryIndexKey(asia));
+    assertEquals("Asia", config.getPartitionKey(asia));
     assertEquals("Asia", config.getId(asia));
     assertEquals(WeatherReport.CONTINENT, config.getResourceName());
     assertTrue(config.isPartitioningResource());

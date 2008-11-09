@@ -69,7 +69,7 @@ public class ErrorCorrectingDataAccessObjectSaveTest extends HiveTest{
     try {
       oldNodeSession = hiveSessionFactory.openSession(oldContinent);
       newNodeSession = hiveSessionFactory.openSession(newContinent);
-      if(!hive.directory().getNodeIdsOfPrimaryIndexKey(oldContinent).equals(hive.directory().getNodeIdsOfPrimaryIndexKey(newContinent)))
+      if(!hive.directory().getNodeIdsOfPartitionKey(oldContinent).equals(hive.directory().getNodeIdsOfPartitionKey(newContinent)))
         assertNull(oldNodeSession.get(WeatherReport.class, report.getReportId()));
       WeatherReport fetched = (WeatherReport) newNodeSession.get(WeatherReport.class, report.getReportId());
       assertNotNull(fetched);

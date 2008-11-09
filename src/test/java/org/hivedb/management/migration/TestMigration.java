@@ -152,7 +152,7 @@ public class TestMigration extends HiveTest {
 
 
   private Pair<Node, Node> initializeTestData(Hive hive, String primaryKey, Integer secondaryKey) throws Exception {
-    hive.directory().insertPrimaryIndexKey(primaryKey);
+    hive.directory().insertPartitionKey(primaryKey);
     //Setup the test data on one node
     NodeResolver dir = new DbDirectory(hive.getHiveConfiguration(), getDataSource(getConnectString(getHiveDatabaseName())));
     int originId = Atom.getFirst(dir.getKeySemamphoresOfPrimaryIndexKey(primaryKey)).getNodeId();

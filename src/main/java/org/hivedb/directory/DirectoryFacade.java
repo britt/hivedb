@@ -7,9 +7,9 @@ import java.util.Map;
 
 public interface DirectoryFacade {
 
-  public boolean doesPrimaryIndexKeyExist(Object primaryIndexKey);
+  public boolean doesPartitionKeyExist(Object primaryIndexKey);
 
-  public Collection<Integer> getNodeIdsOfPrimaryIndexKey(Object primaryIndexKey);
+  public Collection<Integer> getNodeIdsOfPartitionKey(Object primaryIndexKey);
 
   public Collection<KeySemaphore> getKeySemamphoresOfPrimaryIndexKey(Object primaryIndexKey);
 
@@ -17,7 +17,7 @@ public interface DirectoryFacade {
   public boolean getReadOnlyOfPrimaryIndexKey(Object primaryIndexKey);
 
   // TODO Unify terminology
-  public void insertPrimaryIndexKey(Object primaryIndexKey) throws HiveLockableException;
+  public void insertPartitionKey(Object primaryIndexKey) throws HiveLockableException;
 
   public void updatePrimaryIndexKeyReadOnly(Object primaryIndexKey, boolean isReadOnly) throws HiveLockableException;
 

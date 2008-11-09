@@ -250,7 +250,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 
   private boolean partionDimensionKeyHasChanged(Object entity) {
     return hive.directory().doesResourceIdExist(config.getResourceName(), config.getId(entity)) &&
-      !config.getPrimaryIndexKey(entity).equals(getHive().directory().getPrimaryIndexKeyOfResourceId(config.getResourceName(), config.getId(entity)));
+      !config.getPartitionKey(entity).equals(getHive().directory().getPrimaryIndexKeyOfResourceId(config.getResourceName(), config.getId(entity)));
   }
 
   public Collection<Object> saveAll(Collection<Object> collection) {
@@ -600,14 +600,14 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
     } catch (org.hibernate.TransactionException dupe) {
       if (dupe.getCause().getClass().equals(org.hibernate.exception.ConstraintViolationException.class)
         && !exists(config.getId(entity))) {
-        doInTransaction(cleanupCallback, factory.openSession(config.getPrimaryIndexKey(entity)));
+        doInTransaction(cleanupCallback, factory.openSession(config.getPartitionKey(entity)));
       } else {
         log.error(String.format("Detected an integrity constraint violation on the data node but %s with id %s exists in the directory.", config.getResourceName(), config.getId(entity)));
         throw dupe;
       }
     } catch (org.hibernate.exception.ConstraintViolationException dupe) {
       if (!exists(config.getId(entity))) {
-        doInTransaction(cleanupCallback, factory.openSession(config.getPrimaryIndexKey(entity)));
+        doInTransaction(cleanupCallback, factory.openSession(config.getPartitionKey(entity)));
       } else {
         log.error(String.format("Detected an integrity constraint violation on the data node but %s with id %s exists in the directory.", config.getResourceName(), config.getId(entity)));
         throw dupe;
@@ -621,13 +621,13 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
     } catch (org.hibernate.TransactionException dupe) {
       if (dupe.getCause().getClass().equals(org.hibernate.exception.ConstraintViolationException.class)
         || dupe.getCause().getClass().equals(org.hibernate.StaleObjectStateException.class)) {
-        doInTransaction(cleanupCallback, factory.openSession(config.getPrimaryIndexKey(Atom.getFirstOrThrow(entities))));
+        doInTransaction(cleanupCallback, factory.openSession(config.getPartitionKey(Atom.getFirstOrThrow(entities))));
       } else {
         log.error(String.format("Detected an integrity constraint violation on the data node while doing a saveAll with entities of class %s.", config.getResourceName()));
         throw dupe;
       }
     } catch (org.hibernate.exception.ConstraintViolationException dupe) {
-      doInTransaction(cleanupCallback, factory.openSession(config.getPrimaryIndexKey(Atom.getFirstOrThrow(entities))));
+      doInTransaction(cleanupCallback, factory.openSession(config.getPartitionKey(Atom.getFirstOrThrow(entities))));
     }
   }
 

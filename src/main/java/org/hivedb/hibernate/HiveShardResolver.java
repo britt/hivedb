@@ -38,7 +38,7 @@ public class HiveShardResolver implements ShardResolutionStrategy {
     if (resolvedEntityInterface != null) {
       EntityConfig config = hiveConfig.getEntityConfig(resolvedEntityInterface);
       Collection<Integer> ids = (config.isPartitioningResource())
-        ? hive.directory().getNodeIdsOfPrimaryIndexKey(data.getId())
+        ? hive.directory().getNodeIdsOfPartitionKey(data.getId())
         : hive.directory().getNodeIdsOfResourceId(config.getResourceName(), data.getId());
       return Lists.newArrayList(Transform.map(nodeIdToShardIdConverter(), ids));
     } else {

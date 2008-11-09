@@ -65,7 +65,7 @@ public class DirectoryWrapper implements DirectoryFacade {
     directory.deleteSecondaryIndexKey(index, secondaryIndexKey, resourceId);
   }
 
-  public boolean doesPrimaryIndexKeyExist(Object primaryIndexKey) {
+  public boolean doesPartitionKeyExist(Object primaryIndexKey) {
     return directory.doesPrimaryIndexKeyExist(primaryIndexKey);
   }
 
@@ -89,7 +89,7 @@ public class DirectoryWrapper implements DirectoryFacade {
     return directory.getKeySemaphoresOfSecondaryIndexKey(getSecondaryIndex(resource, secondaryIndex), secondaryIndexKey);
   }
 
-  public Collection<Integer> getNodeIdsOfPrimaryIndexKey(Object primaryIndexKey) {
+  public Collection<Integer> getNodeIdsOfPartitionKey(Object primaryIndexKey) {
     return Transform.map(semaphoreToId(), directory.getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey));
   }
 
@@ -115,7 +115,7 @@ public class DirectoryWrapper implements DirectoryFacade {
     return Lists.or(locks);
   }
 
-  public void insertPrimaryIndexKey(Object primaryIndexKey) throws HiveLockableException {
+  public void insertPartitionKey(Object primaryIndexKey) throws HiveLockableException {
     Collection<Node> writableNodes = Filter.grep(new Predicate<Node>() {
       public boolean f(Node item) {
         return item.getStatus() == Lockable.Status.writable;
@@ -128,7 +128,7 @@ public class DirectoryWrapper implements DirectoryFacade {
 
   public void insertResourceId(String resource, Object id, Object primaryIndexKey) throws HiveLockableException {
     if (getResource(resource).isPartitioningResource()) {
-      insertPrimaryIndexKey(primaryIndexKey);
+      insertPartitionKey(primaryIndexKey);
     } else {
       Collection<KeySemaphore> semaphores = directory.getKeySemamphoresOfPrimaryIndexKey(primaryIndexKey);
       Preconditions.isWritable(semaphores, hiveConfiguration.getSemaphore());

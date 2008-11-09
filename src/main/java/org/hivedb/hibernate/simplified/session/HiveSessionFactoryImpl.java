@@ -47,11 +47,11 @@ public class HiveSessionFactoryImpl implements HiveSessionFactory {
   }
 
   public Session openSession(Object primaryIndexKey) {
-    return openSession(hive.directory().getNodeIdsOfPrimaryIndexKey(primaryIndexKey), getDefaultInterceptor());
+    return openSession(hive.directory().getNodeIdsOfPartitionKey(primaryIndexKey), getDefaultInterceptor());
   }
 
   public Session openSession(Object primaryIndexKey, Interceptor interceptor) {
-    return openSession(hive.directory().getNodeIdsOfPrimaryIndexKey(primaryIndexKey), wrapWithHiveInterceptor(interceptor));
+    return openSession(hive.directory().getNodeIdsOfPartitionKey(primaryIndexKey), wrapWithHiveInterceptor(interceptor));
   }
 
   public Session openSession(String resource, Object resourceId) {

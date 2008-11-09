@@ -243,7 +243,7 @@ public class DbDirectoryTest extends H2TestCase {
     //insertKeys(getHive());
     DbDirectory d = getDirectory();
     for (String primaryIndexKey : getPrimaryIndexOrResourceKeys()) {
-      hive.directory().insertPrimaryIndexKey(primaryIndexKey);
+      hive.directory().insertPartitionKey(primaryIndexKey);
       d.insertResourceId(resource, primaryIndexKey, primaryIndexKey);
 
       Map<SecondaryIndex, Collection<Object>> secondaryIndexKeyMap = new Hashtable<SecondaryIndex, Collection<Object>>();
@@ -485,7 +485,7 @@ public class DbDirectoryTest extends H2TestCase {
     DbDirectory d = getDirectory();
     Resource resource = dimension.getResource(createResource().getName());
     for (String key : getPrimaryIndexOrResourceKeys()) {
-      hive.directory().insertPrimaryIndexKey(key);
+      hive.directory().insertPartitionKey(key);
       d.insertResourceId(resource, key, key);
       hive.directory().insertSecondaryIndexKey(nameIndex.getResource().getName(), nameIndex.getName(), secondaryKeyString, key);
       hive.directory().insertSecondaryIndexKey(numIndex.getResource().getName(), numIndex.getName(), secondaryKeyNum, key);

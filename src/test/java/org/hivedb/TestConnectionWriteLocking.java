@@ -22,7 +22,7 @@ public class TestConnectionWriteLocking extends HiveTest {
     final Hive hive = getHive();
     final String key = new String("North America");
 
-    hive.directory().insertPrimaryIndexKey(key);
+    hive.directory().insertPartitionKey(key);
     hive.updateHiveStatus(Status.readOnly);
 
     AssertUtils.assertThrows(new Toss() {
@@ -38,7 +38,7 @@ public class TestConnectionWriteLocking extends HiveTest {
 //    Hive hive = Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
     final String key = new String("Stoatia");
 
-    hive.directory().insertPrimaryIndexKey(key);
+    hive.directory().insertPartitionKey(key);
     hive.updateHiveStatus(Status.readOnly);
     hive = null;
 
@@ -60,7 +60,7 @@ public class TestConnectionWriteLocking extends HiveTest {
 //    final String key = new String("Antarctica");
 //
 //    final PartitionDimension partitionDimension = hive.getPartitionDimension();
-//    hive.directory().insertPrimaryIndexKey(key);
+//    hive.directory().insertPartitionKey(key);
 //    NodeResolver directory = new DbDirectory(hive.getHiveConfiguration(), CachingDataSourceProvider.getInstance().getDataSource(hive.getHiveConfiguration().getUri()));
 //    for (Integer id : Transform.map(DirectoryWrapper.semaphoreToId(), directory.getKeySemamphoresOfPrimaryIndexKey(key)))
 //      hive.getNode(id).setStatus(Status.readOnly);
@@ -78,7 +78,7 @@ public class TestConnectionWriteLocking extends HiveTest {
     final String key = new String("Asia");
 
     PartitionDimension partitionDimension = hive.getPartitionDimension();
-    hive.directory().insertPrimaryIndexKey(key);
+    hive.directory().insertPartitionKey(key);
     NodeResolver directory = new DbDirectory(hive.getHiveConfiguration(), CachingDataSourceProvider.getInstance().getDataSource(hive.getHiveConfiguration().getUri()));
     for (Integer id : Transform.map(DirectoryWrapper.semaphoreToId(), directory.getKeySemamphoresOfPrimaryIndexKey(key)))
       hive.updateNodeStatus(hive.getNode(id), Status.readOnly);
@@ -100,7 +100,7 @@ public class TestConnectionWriteLocking extends HiveTest {
 //    final Hive hive = Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
     final String key = new String("Atlantis");
 
-    hive.directory().insertPrimaryIndexKey(key);
+    hive.directory().insertPartitionKey(key);
     hive.directory().updatePrimaryIndexKeyReadOnly(key, true);
 
     AssertUtils.assertThrows(new Toss() {
@@ -116,7 +116,7 @@ public class TestConnectionWriteLocking extends HiveTest {
 //    Hive hive = Hive.load(getConnectString(getHiveDatabaseName()), CachingDataSourceProvider.getInstance());
     final String key = new String("Africa");
 
-    hive.directory().insertPrimaryIndexKey(key);
+    hive.directory().insertPartitionKey(key);
     hive.directory().updatePrimaryIndexKeyReadOnly(key, true);
     hive = null;
 

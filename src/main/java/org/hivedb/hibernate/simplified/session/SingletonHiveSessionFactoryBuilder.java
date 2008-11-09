@@ -77,7 +77,7 @@ public class SingletonHiveSessionFactoryBuilder implements HiveSessionFactoryBui
 		return new ShardStrategyFactory() {
 			public ShardStrategy newShardStrategy(List<ShardId> shardIds) {
 				return new ShardStrategyImpl(
-						new HiveShardSelector(hiveConfig,hive),
+						new HiveShardSelector(hiveConfig,hive.directory()),
 						new HiveShardResolver(hiveConfig,hive),
 						accessStrategy);
 			}

@@ -55,7 +55,7 @@ public class DataGenerationServiceTest extends HiveTest {
 		final EntityConfig entityConfig = getEntityHiveConfig().getEntityConfig(WeatherReport.class);
 		assertEquals(partitionKeyCount, Filter.grepUnique(new Unary<Object, Object>(){
 			public Object f(Object item) {
-				return entityConfig.getPrimaryIndexKey(item);
+				return entityConfig.getPartitionKey(item);
 			}}, instances).size());
 		assertEquals(partitionKeyCount*instanceCount, Filter.grepUnique(new Unary<Object, Object>(){
 			public Object f(Object item) {

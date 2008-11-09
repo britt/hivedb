@@ -143,7 +143,7 @@ public class EntityConfigImpl implements EntityConfig {
 		return primaryIndexKeyPropertyName;
 	}
 	
-	public Object getPrimaryIndexKey(Object resourceInstance) {
+	public Object getPartitionKey(Object resourceInstance) {
 		return ReflectionTools.invokeGetter(resourceInstance, primaryIndexKeyPropertyName);
 	}
 	
