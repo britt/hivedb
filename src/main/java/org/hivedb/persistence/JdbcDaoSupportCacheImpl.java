@@ -57,6 +57,13 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache {
     Node node = null;
     node = getNodeById(semaphore.getNodeId(), hiveConfiguration.getNodes());
 
+    if(node.getStatus() == Lockable.Status.unavailable)
+      throw new HiveLockableException(
+        String.format(
+          "This operation is invalid because the %s is currently set to status %s.",
+          node.getClass().getSimpleName(),
+          node.getStatus()));
+
     if (intention == AccessType.ReadWrite)
       Preconditions.isWritable(node, semaphore);
 
@@ -123,7 +130,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache {
     try {
       Node node = getNodeByName(nodeName, hiveConfiguration.getNodes());
       KeySemaphore semaphore = new KeySemaphoreImpl(null, node.getId(), node.getStatus());
-      return get(semaphore, AccessType.ReadWrite);
+      return get(semaphore, AccessType.Read);
     } catch (HiveException e) {
       // TODO Better exception Handling
       // HiveLockable should become runtime
