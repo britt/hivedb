@@ -119,10 +119,6 @@ public class SingletonHiveSessionFactoryBuilder implements HiveSessionFactoryBui
     }
   }
 
-  public Hive getHive() {
-    return hive;
-  }
-
   public Properties getOverrides() {
     return overrides;
   }

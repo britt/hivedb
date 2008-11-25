@@ -1,28 +1,56 @@
 package org.hivedb.hibernate.simplified.session;
 
 import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
+import org.hivedb.Hive;
+import org.hivedb.Node;
 import org.hivedb.util.Lists;
-import org.hivedb.util.database.test.HiveTest;
+import org.hivedb.util.database.HiveDbDialect;
+import org.hivedb.util.database.test.WeatherEvent;
+import org.hivedb.util.database.test.WeatherReport;
+import org.jmock.Expectations;
+import org.jmock.Mockery;
+import org.jmock.integration.junit4.JMock;
+import org.jmock.integration.junit4.JUnit4Mockery;
+import org.jmock.lib.legacy.ClassImposteriser;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
-@HiveTest.Config("hive_default")
-public class SingletonHiveSessionFactoryBuilderTest extends HiveTest {
+import java.util.List;
+
+@RunWith(JMock.class)
+public class SingletonHiveSessionFactoryBuilderTest {
   SingletonHiveSessionFactoryBuilder builder;
+  Hive hive;
+  private Mockery mockery;
 
+
+  @Before
   public void setup() {
-    builder = new SingletonHiveSessionFactoryBuilder(getHive(), Lists.newList(getMappedClasses()), new SequentialShardAccessStrategy());
+    mockery = new JUnit4Mockery() {
+      {
+        setImposteriser(ClassImposteriser.INSTANCE);
+      }
+    };
+
+    hive = mockery.mock(Hive.class);
+    builder = new SingletonHiveSessionFactoryBuilder(hive, getMappedClasses(), new SequentialShardAccessStrategy());
   }
 
   @Test
   public void shouldBuildAProperlyConfiguredSessionFactory() throws Exception {
+    mockFactoryCreated();
+
     HiveSessionFactoryImpl factory = (HiveSessionFactoryImpl) builder.getSessionFactory();
     assertNotNull(factory);
   }
 
   @Test
   public void shouldOnlyBuildASessionFactoryOnce() throws Exception {
+    mockFactoryCreated();
+
     HiveSessionFactoryImpl factory = (HiveSessionFactoryImpl) builder.getSessionFactory();
     HiveSessionFactoryImpl anotherFactory = (HiveSessionFactoryImpl) builder.getSessionFactory();
     assertTrue(factory == anotherFactory);
@@ -30,9 +58,50 @@ public class SingletonHiveSessionFactoryBuilderTest extends HiveTest {
 
   @Test
   public void shouldRebuildTheSessionFactoryWhenTheObservableUpdates() throws Exception {
+    mockFactoryCreated();
+
+    mockery.checking(new Expectations() {
+      {
+        one(hive).directory();
+      }
+    });
+
+
     HiveSessionFactoryImpl factory = (HiveSessionFactoryImpl) builder.getSessionFactory();
-    builder.update(null,null);
+    builder.update(null, null);
     HiveSessionFactoryImpl anotherFactory = (HiveSessionFactoryImpl) builder.getSessionFactory();
     assertTrue(factory != anotherFactory);
+  }
+
+  private List<Class<?>> getMappedClasses() {
+    return Lists.newList(new Class<?>[]{WeatherReport.class, WeatherEvent.class});
+  }
+
+  private Node mockNode() {
+    final Node node = mockery.mock(Node.class);
+    mockery.checking(new Expectations() {
+      {
+        allowing(node).getName();
+        will(returnValue("node"));
+        allowing(node).getDialect();
+        will(returnValue(HiveDbDialect.H2));
+        allowing(node).getUri();
+        will(returnValue("jdbc:h2:mem:db"));
+        allowing(node).getId();
+        will(returnValue(1));
+      }
+    });
+    return node;
+
+  }
+
+  private void mockFactoryCreated() {
+    mockery.checking(new Expectations() {
+      {
+        allowing(hive).getNodes();
+        will(returnValue(Lists.newList(mockNode())));
+        one(hive).directory();
+      }
+    });
   }
 }
