@@ -4,10 +4,7 @@
  */
 package org.hivedb.configuration.persistence;
 
-import org.hivedb.HiveRuntimeException;
-import org.hivedb.Resource;
-import org.hivedb.ResourceImpl;
-import org.hivedb.SecondaryIndex;
+import org.hivedb.*;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory;
 import org.springframework.jdbc.core.RowMapper;

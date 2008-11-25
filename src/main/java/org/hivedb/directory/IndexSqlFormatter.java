@@ -1,10 +1,7 @@
 package org.hivedb.directory;
 
-import org.hivedb.ResourceIndex;
-import org.hivedb.SecondaryIndex;
 import org.hivedb.util.database.Schemas;
-import org.hivedb.PartitionDimension;
-import org.hivedb.Resource;
+import org.hivedb.*;
 import org.hivedb.configuration.HiveConfiguration;
 
 /***

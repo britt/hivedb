@@ -6,7 +6,6 @@ import org.hivedb.configuration.HiveConfiguration;
 import org.hivedb.Assigner;
 import org.hivedb.Node;
 import org.hivedb.Resource;
-import org.hivedb.SecondaryIndex;
 import org.hivedb.util.Lists;
 import org.hivedb.util.Preconditions;
 import org.hivedb.util.functional.*;

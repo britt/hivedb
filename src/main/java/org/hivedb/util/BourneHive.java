@@ -4,7 +4,6 @@ import org.hivedb.persistence.Schema;
 import org.hivedb.persistence.HiveDataSourceProvider;
 import org.hivedb.ResourceImpl;
 import org.hivedb.*;
-import org.hivedb.SecondaryIndex;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.hivedb.util.database.Schemas;
@@ -87,7 +86,7 @@ public class BourneHive {
       for (Map<String, String> index : indexes) {
         String name = index.get("name");
         String type = index.get("type");
-        SecondaryIndex secondaryIndex = new SecondaryIndex(name, JdbcTypeMapper.parseJdbcType(stringToVarchar(type)));
+        SecondaryIndex secondaryIndex = new SecondaryIndexImpl(name, JdbcTypeMapper.parseJdbcType(stringToVarchar(type)));
         secondaryIndexes.add(secondaryIndex);
       }
     }

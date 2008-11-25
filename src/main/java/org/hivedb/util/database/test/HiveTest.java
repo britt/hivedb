@@ -126,13 +126,13 @@ public class HiveTest {
   }
 
   protected SecondaryIndex createSecondaryIndex() {
-    SecondaryIndex index = new SecondaryIndex("FOO", java.sql.Types.VARCHAR);
+    SecondaryIndexImpl index = new SecondaryIndexImpl("FOO", java.sql.Types.VARCHAR);
     index.setResource(createResource());
     return index;
   }
 
   protected SecondaryIndex createSecondaryIndex(int id) {
-    SecondaryIndex index = new SecondaryIndex(id, "FOO", java.sql.Types.VARCHAR);
+    SecondaryIndexImpl index = new SecondaryIndexImpl(id, "FOO", java.sql.Types.VARCHAR);
     index.setResource(createResource());
     return index;
   }

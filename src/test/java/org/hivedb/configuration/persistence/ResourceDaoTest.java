@@ -48,7 +48,7 @@ public class ResourceDaoTest {
   }
   
   @Test
-  public void shouldReateAndLoadResources() throws Exception {
+  public void shouldCreateAndLoadResources() throws Exception {
     ResourceDao d = new ResourceDao(adapter.getDataSource(DB_NAME));
 
     Resource resource = new ResourceImpl("aResource", Types.INTEGER, false);

@@ -92,9 +92,7 @@ public class DbDirectoryTest extends H2TestCase {
   }
 
   private Collection<SecondaryIndex> createSecondaryIndexes() {
-    return Arrays.asList(
-      new SecondaryIndex("name", Types.VARCHAR),
-      new SecondaryIndex("num", Types.INTEGER));
+    return Lists.newList(new SecondaryIndex[]{new SecondaryIndexImpl("name", Types.VARCHAR), new SecondaryIndexImpl("num", Types.INTEGER)});
   }
 
   protected PartitionDimension createEmptyPartitionDimension() {

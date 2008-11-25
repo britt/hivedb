@@ -6,7 +6,6 @@ import org.hivedb.configuration.entity.*;
 import org.hivedb.PartitionDimension;
 import org.hivedb.*;
 import org.hivedb.ResourceImpl;
-import org.hivedb.SecondaryIndex;
 import org.hivedb.util.Lists;
 import org.hivedb.util.PrimitiveUtils;
 import org.hivedb.util.classgen.ReflectionTools;
@@ -191,8 +190,8 @@ public class ConfigurationReader {
     }
   }
 
-  private SecondaryIndex createSecondaryIndex(EntityIndexConfig config) {
-    return new SecondaryIndex(config.getIndexName(), JdbcTypeMapper.primitiveTypeToJdbcType(config.getIndexClass()));
+  private SecondaryIndexImpl createSecondaryIndex(EntityIndexConfig config) {
+    return new SecondaryIndexImpl(config.getIndexName(), JdbcTypeMapper.primitiveTypeToJdbcType(config.getIndexClass()));
   }
 
   private ResourceImpl createResource(EntityConfig config) {

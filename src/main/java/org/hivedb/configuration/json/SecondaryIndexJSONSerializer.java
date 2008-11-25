@@ -3,6 +3,7 @@ package org.hivedb.configuration.json;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hivedb.SecondaryIndex;
+import org.hivedb.SecondaryIndexImpl;
 import org.hivedb.util.database.JdbcTypeMapper;
 import org.json.JSONObject;
 import org.json.JSONException;
@@ -22,7 +23,7 @@ public class SecondaryIndexJSONSerializer implements JSONSerializer<SecondaryInd
   }
 
   public SecondaryIndex loadFromJSON(JSONObject json) throws JSONException {
-    return new SecondaryIndex(json.getInt(ID_KEY), json.getString(NAME_KEY), JdbcTypeMapper.parseJdbcType(json.getString(TYPE_KEY)));
+    return new SecondaryIndexImpl(json.getInt(ID_KEY), json.getString(NAME_KEY), JdbcTypeMapper.parseJdbcType(json.getString(TYPE_KEY)));
   }
 }
 

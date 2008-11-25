@@ -2,9 +2,9 @@ package org.hivedb;
 
 import org.hivedb.Hive;
 
-public class ResourceIndex extends SecondaryIndex {
+public class ResourceIndex extends SecondaryIndexImpl {
 
-  public ResourceIndex(SecondaryIndex index) {
+  public ResourceIndex(SecondaryIndexImpl index) {
     this(index.getId(), index.getName(), index.getColumnInfo().getColumnType());
     if(index.getResource() != null)
       setResource(index.getResource());

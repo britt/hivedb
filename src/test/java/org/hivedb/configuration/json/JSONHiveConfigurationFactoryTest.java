@@ -21,7 +21,7 @@ public class JSONHiveConfigurationFactoryTest {
   }
 
   private PartitionDimensionImpl getPartitionDimension() {
-    Collection<SecondaryIndex> indexes = Lists.newList(new SecondaryIndex(1,"anIndex",Types.VARCHAR));
+    Collection<SecondaryIndex> indexes = Lists.newList(new SecondaryIndex[]{new SecondaryIndexImpl(1, "anIndex", Types.VARCHAR)});
     Collection<Resource> resources = Lists.newArrayList();
     resources.add(new ResourceImpl(1, "aResource",Types.INTEGER, false, indexes));
     return new PartitionDimensionImpl(0,"aDimension", Types.INTEGER,"jdbc://uri", resources);
