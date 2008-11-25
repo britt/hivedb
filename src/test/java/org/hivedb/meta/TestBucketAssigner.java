@@ -3,6 +3,7 @@ package org.hivedb.meta;
 import org.hivedb.BucketAssigner;
 import org.hivedb.Assigner;
 import org.hivedb.Node;
+import org.hivedb.NodeImpl;
 import org.hivedb.util.database.HiveDbDialect;
 import org.junit.Test;import static org.junit.Assert.assertNotNull;import static org.junit.Assert.assertEquals;
 
@@ -29,7 +30,7 @@ public class TestBucketAssigner {
 	private Collection<Node> createNodes(int nodeCount) {
 		Collection<Node> nodes = new ArrayList<Node>();
 		for(int i=0; i<nodeCount; i++)
-			nodes.add(new Node(i,"Node"+i, "NodeUri"+i, "", HiveDbDialect.H2));
+			nodes.add(new NodeImpl(i,"Node"+i, "NodeUri"+i, "", HiveDbDialect.H2));
 		return nodes;
 	}
 }

@@ -1,8 +1,5 @@
 package org.hivedb;
 
-import org.hivedb.Assigner;
-import org.hivedb.Node;
-
 import java.util.*;
 
 public class RandomAssigner implements Assigner {

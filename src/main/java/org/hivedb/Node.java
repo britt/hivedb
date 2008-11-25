@@ -1,161 +1,42 @@
-/**
- * HiveDB is an Open Source (LGPL) system for creating large, high-transaction-volume
- * data storage systems.
- */
 package org.hivedb;
 
-import org.hivedb.Lockable;
-import org.hivedb.util.HiveUtils;
 import org.hivedb.util.IdAndNameIdentifiable;
 import org.hivedb.util.database.HiveDbDialect;
-import org.hivedb.util.database.JdbcUriFormatter;
 
-/**
- * Node models a database instance suitable for storage of partitioned Data.
- * 
- * @author Kevin Kelm (kkelm@fortress-consulting.com)
- *         <p/>
- */
-public class Node implements Comparable<Node>, Cloneable, IdAndNameIdentifiable<Integer>, Lockable {
-	private int id,port;
-	private String name, host,databaseName, username, password, options;
-	private Status status = Status.writable;
-	private double capacity;
-	private HiveDbDialect dialect;
+public interface Node extends IdAndNameIdentifiable<Integer>, Lockable {
+  int getPort();
 
-	public Node(int id, String name, String databaseName, String host, HiveDbDialect dialect) {
-		this(name, databaseName, host, dialect);
-		this.id = id;
-		
-	}
-	
-	public Node(String name, String databaseName, String host, HiveDbDialect dialect){
-		this.name = name;
-		this.databaseName = databaseName;
-		this.host = host;
-		this.dialect = dialect;
-	}
-	
-	public Node() {}
-	
-	public int getPort() {
-		return port;
-	}
+  String getHost();
 
-	public void setPort(int port) {
-		this.port = port;
-	}
+  String getDatabaseName();
 
-	public String getHost() {
-		return host;
-	}
+  String getUsername();
 
-	public void setHost(String host) {
-		this.host = host;
-	}
+  String getPassword();
 
-	public String getDatabaseName() {
-		return databaseName;
-	}
+  String getOptions();
 
-	public void setDatabaseName(String databaseName) {
-		this.databaseName = databaseName;
-	}
+  HiveDbDialect getDialect();
 
-	public String getUsername() {
-		return username;
-	}
+  void setId(int id);
 
-	public void setUsername(String username) {
-		this.username = username;
-	}
+  Integer getId();
 
-	public String getPassword() {
-		return password;
-	}
+  Status getStatus();
 
-	public void setPassword(String password) {
-		this.password = password;
-	}
+  void setStatus(Status status);
 
-	public String getOptions() {
-		return options;
-	}
+  String getUri();
 
-	public void setOptions(String options) {
-		this.options = options;
-	}
+  String getName();
 
-	public HiveDbDialect getDialect() {
-		return dialect;
-	}
+  void setId(Integer id);
 
-	public void setDialect(HiveDbDialect dialect) {
-		this.dialect = dialect;
-	}
+  void setName(String name);
 
-	public void setId(int id) {
-		this.id = id;
-	}
-	
-	public Integer getId() {
-		return id;
-	}
-	
-	public Status getStatus() {
-		return status;
-	}
-	public void setStatus(Status status) {
-		this.status = status;
-	}
-	
-	public String getUri() {
-		return new JdbcUriFormatter(this).getUri();
-	}
-	
-	public double getCapacity() {
-		return capacity;
-	}
-	public void setCapacity(double capacity) {
-		this.capacity = capacity;
-	}
-	
-	public void updateId(int id) {
-		this.id = id;
-	}	
+  double getCapacity();
 
-	public String getName() {
-		return name;
-	}
+  void setUsername(String user);
 
-	public void setId(Integer id) {
-		this.id = id;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public boolean equals(Object obj)
-	{
-		return obj.hashCode() == hashCode();
-	}
-	public int hashCode() {
-		return HiveUtils.makeHashCode(new Object[] {
-				id,port,name, host,databaseName, username, password, options,status,capacity,dialect
-		});
-	}
-	public String toString()
-	{
-		return HiveUtils.toDeepFormatedString(this, 
-										"Id", 		getId(), 
-										"Name", 	getName(), 
-										"Uri", 		getUri(), 
-										"Status",	status
-										);									
-	}
-
-	public int compareTo(Node o) {
-		return getUri().compareTo(o.getUri());
-	}
+  void setPassword(String password);
 }

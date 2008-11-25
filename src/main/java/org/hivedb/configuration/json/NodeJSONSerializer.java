@@ -2,6 +2,7 @@ package org.hivedb.configuration.json;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hivedb.NodeImpl;
 import org.hivedb.Node;
 import org.hivedb.util.database.DialectTools;
 import org.json.JSONObject;
@@ -36,16 +37,16 @@ public class NodeJSONSerializer implements JSONSerializer<Node> {
   }
 
   public Node loadFromJSON(JSONObject json) throws JSONException {
-    Node node;
+    NodeImpl node;
     if(json.has(ID_KEY)) {
-      node = new Node(
+      node = new NodeImpl(
         json.getInt(ID_KEY),
         json.getString(NAME_KEY),
         json.getString(DATABASE_KEY),
         json.getString(HOST_KEY),
         DialectTools.stringToDialect(json.getString(DIALECT_KEY)));
     } else {
-      node = new Node(
+      node = new NodeImpl(
         json.getString(NAME_KEY),
         json.getString(DATABASE_KEY),
         json.getString(HOST_KEY),

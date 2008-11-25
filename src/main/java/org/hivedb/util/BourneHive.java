@@ -120,12 +120,12 @@ public class BourneHive {
     return type.equalsIgnoreCase("String") ? "VARCHAR" : type;
   }
 
-  private Node getNode(String name) {
+  private NodeImpl getNode(String name) {
     switch (dialect) {
       case H2:
-        return new Node(name, String.format("%s;LOCK_MODE=3", name), "mem", dialect);
+        return new NodeImpl(name, String.format("%s;LOCK_MODE=3", name), "mem", dialect);
       case MySql:
-        return new Node(name, name, "localhost", dialect);
+        return new NodeImpl(name, name, "localhost", dialect);
       default:
         throw new RuntimeException("Unsupported dialect: " + dialect);
     }

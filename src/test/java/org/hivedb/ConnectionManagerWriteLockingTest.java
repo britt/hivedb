@@ -106,7 +106,7 @@ public class ConnectionManagerWriteLockingTest {
     context.checking(new Expectations() {
       {
         exactly(2).of(hiveConfiguration).getNodes();
-        Node node = getNode(Lockable.Status.writable);
+        NodeImpl node = getNode(Lockable.Status.writable);
         will(returnValue(Lists.newList(node)));
         exactly(2).of(datasources).getDataSource(node.getUri());
         will(returnValue(datasource));
@@ -151,8 +151,8 @@ public class ConnectionManagerWriteLockingTest {
     });
   }
   
-  private Node getNode(Lockable.Status status) {
-    Node node = new Node(1, "node", "db", "host", HiveDbDialect.H2);
+  private NodeImpl getNode(Lockable.Status status) {
+    NodeImpl node = new NodeImpl(1, "node", "db", "host", HiveDbDialect.H2);
     node.setStatus(status);
     return node;
   }

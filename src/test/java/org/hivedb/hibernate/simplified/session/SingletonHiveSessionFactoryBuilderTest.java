@@ -2,7 +2,7 @@ package org.hivedb.hibernate.simplified.session;
 
 import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hivedb.Hive;
-import org.hivedb.Node;
+import org.hivedb.NodeImpl;
 import org.hivedb.util.Lists;
 import org.hivedb.util.database.HiveDbDialect;
 import org.hivedb.util.database.test.WeatherEvent;
@@ -77,8 +77,8 @@ public class SingletonHiveSessionFactoryBuilderTest {
     return Lists.newList(new Class<?>[]{WeatherReport.class, WeatherEvent.class});
   }
 
-  private Node mockNode() {
-    final Node node = mockery.mock(Node.class);
+  private NodeImpl mockNode() {
+    final NodeImpl node = mockery.mock(NodeImpl.class);
     mockery.checking(new Expectations() {
       {
         allowing(node).getName();

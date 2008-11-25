@@ -1,10 +1,8 @@
 package org.hivedb;
 
-import java.util.Collection;
-
-import org.hivedb.Assigner;
-import org.hivedb.Node;
 import org.hivedb.util.Lists;
+
+import java.util.Collection;
 
 /***
  * A node assigner that uses a hash function to allocate partition keys

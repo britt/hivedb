@@ -16,8 +16,8 @@ import java.util.List;
 public class JSONHiveConfigurationFactoryTest {
   private final static Log log = LogFactory.getLog(JSONHiveConfigurationFactoryTest.class);
 
-  private List<Node> getNodes() {
-    return Lists.newList(new Node(0,"aNode","nodeDb","localhost", HiveDbDialect.H2));
+  private List<NodeImpl> getNodes() {
+    return Lists.newList(new NodeImpl(0,"aNode","nodeDb","localhost", HiveDbDialect.H2));
   }
 
   private PartitionDimensionImpl getPartitionDimension() {

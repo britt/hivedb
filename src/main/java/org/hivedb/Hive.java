@@ -69,7 +69,7 @@ public class Hive {
     return this.directory;
   }
 
-  public void updateNodeStatus(Node node, Lockable.Status status) {
+  public void updateNodeStatus(NodeImpl node, Lockable.Status status) {
     node.setStatus(status);
     try {
       this.updateNode(node);
@@ -91,10 +91,10 @@ public class Hive {
     return node;
   }
 
-  public Collection<Node> addNodes(Collection<Node> nodes) throws HiveLockableException {
+  public Collection<NodeImpl> addNodes(Collection<NodeImpl> nodes) throws HiveLockableException {
     Preconditions.isWritable(hiveConfiguration.getSemaphore());
 
-    for (Node node : nodes) {
+    for (NodeImpl node : nodes) {
       Preconditions.nameIsUnique(getNodes(), node);
       NodeDao nodeDao = new NodeDao(hiveDataSource);
       nodeDao.create(node);
@@ -155,7 +155,7 @@ public class Hive {
    * @return the given PartitionDimension
    * @throws HiveLockableException
    */
-  public Node updateNode(Node node) throws HiveLockableException {
+  public Node updateNode(NodeImpl node) throws HiveLockableException {
     Preconditions.isWritable(hiveConfiguration.getSemaphore());
     Preconditions.idIsPresentInList(getNodes(), node);
 
@@ -164,7 +164,7 @@ public class Hive {
     return node;
   }
 
-  public Node deleteNode(Node node) throws HiveLockableException {
+  public Node deleteNode(NodeImpl node) throws HiveLockableException {
     Preconditions.isWritable(hiveConfiguration.getSemaphore());
     Preconditions.idIsPresentInList(getNodes(), node);
 

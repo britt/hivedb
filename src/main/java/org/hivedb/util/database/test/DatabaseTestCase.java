@@ -2,6 +2,7 @@ package org.hivedb.util.database.test;
 
 import org.hivedb.persistence.Schema;
 import org.hivedb.Node;
+import org.hivedb.NodeImpl;
 import org.hivedb.util.database.Schemas;
 import org.junit.After;
 import org.junit.Before;
@@ -26,7 +27,7 @@ public abstract class DatabaseTestCase {
 	protected abstract Connection getConnection(String name);
 	protected abstract DataSource getDataSource(String name);
 	protected abstract Collection<Schema> getSchemas();
-	protected abstract Collection<Node> getDataNodes();
+	protected abstract Collection<NodeImpl> getDataNodes();
 		
 	/**
 	 * At the end of this method all databases and tables must exist and be empty

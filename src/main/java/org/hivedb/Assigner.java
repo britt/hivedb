@@ -4,8 +4,6 @@
  */
 package org.hivedb;
 
-import org.hivedb.Node;
-
 import java.util.Collection;
 
 public interface Assigner {

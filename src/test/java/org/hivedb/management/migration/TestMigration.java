@@ -2,12 +2,12 @@ package org.hivedb.management.migration;
 
 import org.hivedb.Hive;
 import org.hivedb.Node;
-import org.hivedb.persistence.Schema;
-import org.hivedb.persistence.CachingDataSourceProvider;
-import org.hivedb.persistence.TableInfo;
 import org.hivedb.directory.DbDirectory;
 import org.hivedb.directory.DirectoryWrapper;
 import org.hivedb.directory.NodeResolver;
+import org.hivedb.persistence.CachingDataSourceProvider;
+import org.hivedb.persistence.Schema;
+import org.hivedb.persistence.TableInfo;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.functional.Atom;
 import org.hivedb.util.functional.Filter;

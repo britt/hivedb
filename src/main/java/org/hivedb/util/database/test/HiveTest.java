@@ -137,8 +137,8 @@ public class HiveTest {
     return index;
   }
 
-  protected Node createNode(String name) {
-    return new Node(0, name, name, "", HiveDbDialect.H2);
+  protected NodeImpl createNode(String name) {
+    return new NodeImpl(0, name, name, "", HiveDbDialect.H2);
   }
 
   @Retention(RetentionPolicy.RUNTIME)

@@ -124,7 +124,7 @@ public class HiveSessionFactoryImpl implements HiveSessionFactory {
   }
 
   private Collection<Node> getNodesFromIds(Collection<Integer> ids) {
-    return Transform.map(new Unary<Integer,Node>(){
+    return Transform.map(new Unary<Integer, Node>(){
       public Node f(Integer item) {
         return nodesById.get(item);
       }
@@ -132,7 +132,7 @@ public class HiveSessionFactoryImpl implements HiveSessionFactory {
   }
 
    private Map<Integer, Node> buildNodeToIdMap(Hive hive) {
-    Map<Integer,Node> nodeMap = new HashMap<Integer,Node>();
+    Map<Integer, Node> nodeMap = new HashMap<Integer, Node>();
     for(Node node : hive.getNodes()) {
       nodeMap.put(node.getId(), node);
     }

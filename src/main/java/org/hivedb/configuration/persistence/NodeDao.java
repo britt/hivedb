@@ -4,17 +4,10 @@
  */
 package org.hivedb.configuration.persistence;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.sql.DataSource;
-
 import org.hivedb.HiveRuntimeException;
-import org.hivedb.Node;
 import org.hivedb.Lockable.Status;
+import org.hivedb.Node;
+import org.hivedb.NodeImpl;
 import org.hivedb.util.Lists;
 import org.hivedb.util.Strings;
 import org.hivedb.util.database.DialectTools;
@@ -28,10 +21,17 @@ import org.springframework.jdbc.core.support.JdbcDaoSupport;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 
+import javax.sql.DataSource;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author Justin McCarthy (jmccarthy@cafepress.com)
  */
-public class NodeDao extends JdbcDaoSupport {
+public class NodeDao extends JdbcDaoSupport implements ConfigurationDataAccessObject<Node>{
 	public NodeDao(DataSource ds) {
 		this.setDataSource(ds);
 	}
@@ -51,17 +51,17 @@ public class NodeDao extends JdbcDaoSupport {
 		if (generatedKey.getKeyList().size() == 0)
 			throw new HiveRuntimeException("Unable to retrieve generated primary key");
 		
-		newObject.updateId(generatedKey.getKey().intValue());
+		newObject.setId(generatedKey.getKey().intValue());
 		
 		return newObject;	
 	}
 
-	public List<Node> loadAll() {
+  public List<Node> loadAll() {
 		JdbcTemplate t = getJdbcTemplate();
 		ArrayList<Node> results = new ArrayList<Node>();
 		for (Object result : t.query("SELECT * FROM node_metadata",
 				new NodeRowMapper())) {
-			results.add((Node)result);
+			results.add((NodeImpl)result);
 		}
 		return results;
 	}
@@ -91,7 +91,7 @@ public class NodeDao extends JdbcDaoSupport {
 		return node;
 	}
 	
-	public Node delete(Node node) {
+	public void delete(Node node) {
 		Object[] parameters = new Object[] { node.getId()};
 		
 		JdbcTemplate j = getJdbcTemplate();
@@ -102,12 +102,11 @@ public class NodeDao extends JdbcDaoSupport {
 				.newPreparedStatementCreator(parameters));
 		if (rows != 1)
 			throw new HiveRuntimeException("Unable to delete node for id: " + node.getId());
-		return node;
 	}
 
 	protected class NodeRowMapper implements RowMapper {
 		public Object mapRow(ResultSet rs, int rowNumber) throws SQLException {
-			Node node = new Node(
+			NodeImpl node = new NodeImpl(
 							rs.getInt("id"), 
 							rs.getString("name"), 
 							rs.getString("database_name"), 

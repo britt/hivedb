@@ -2,11 +2,11 @@ package org.hivedb.configuration.json;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hivedb.configuration.HiveConfiguration;
-import org.hivedb.configuration.HiveConfigurationImpl;
 import org.hivedb.HiveSemaphore;
 import org.hivedb.Node;
 import org.hivedb.PartitionDimension;
+import org.hivedb.configuration.HiveConfiguration;
+import org.hivedb.configuration.HiveConfigurationImpl;
 import org.json.JSONException;
 import org.json.JSONObject;
 

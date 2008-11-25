@@ -1,9 +1,6 @@
 package org.hivedb.services;
 
-import org.hivedb.Hive;
-import org.hivedb.HiveLockableException;
-import org.hivedb.HiveRuntimeException;
-import org.hivedb.Node;
+import org.hivedb.*;
 import org.hivedb.persistence.Schema;
 import org.hivedb.util.database.DialectTools;
 import org.hivedb.util.database.HiveDbDialect;
@@ -46,7 +43,7 @@ public class InstallServiceImpl implements InstallService {
     try {
       node = hive.getNode(nodeName);
     } catch (NoSuchElementException e) {
-      node = new Node(nodeName, dbName, host, DialectTools.stringToDialect(dialect));
+      node = new NodeImpl(nodeName, dbName, host, DialectTools.stringToDialect(dialect));
       node.setUsername(user);
       node.setPassword(password);
       try {
@@ -91,7 +88,7 @@ public class InstallServiceImpl implements InstallService {
 
   public Boolean addNode(String nodeName, String dbName, String host, String dialect, String user, String password) {
     try {
-      Node node = new Node(nodeName, dbName, host, DialectTools.stringToDialect(dialect));
+      NodeImpl node = new NodeImpl(nodeName, dbName, host, DialectTools.stringToDialect(dialect));
       node.setUsername(user);
       node.setPassword(password);
       hive.addNode(node);

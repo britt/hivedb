@@ -7,6 +7,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hivedb.Hive;
 import org.hivedb.Node;
+import org.hivedb.NodeImpl;
 import org.hivedb.util.Lists;
 import org.hivedb.util.classgen.GenerateInstance;
 import org.hivedb.util.classgen.GeneratedClassFactory;
@@ -32,7 +33,7 @@ public class HiveSessionFactoryBuilderTest extends HiveTest {
 	
 	@Test
 	public void testCreateConfigurationFromNode() throws Exception {
-		Node node = new Node(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", HiveDbDialect.H2);
+		Node node = new NodeImpl(Hive.NEW_OBJECT_ID, "node", getHiveDatabaseName(), "", HiveDbDialect.H2);
 		Configuration config = HiveSessionFactoryBuilderImpl.createConfigurationFromNode(node, new Properties());
 		assertEquals(node.getUri(), config.getProperty("hibernate.connection.url"));
 		assertEquals(H2Dialect.class.getName(), config.getProperty("hibernate.dialect"));

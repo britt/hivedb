@@ -2,6 +2,7 @@ package org.hivedb.persistence;
 
 import org.hivedb.Hive;
 import org.hivedb.Node;
+import org.hivedb.NodeImpl;
 import org.hivedb.Lockable.Status;
 import org.hivedb.configuration.persistence.NodeDao;
 import org.hivedb.util.database.HiveDbDialect;
@@ -21,8 +22,8 @@ public class TestNodePersistence extends HiveTest {
     NodeDao dao = new NodeDao(getDataSource(getConnectString(getHiveDatabaseName())));
     assertEquals(count, dao.loadAll().size());
 
-    Node full = createFullyPopulatedNode();
-    Node minimal = createMinimalNode();
+    NodeImpl full = createFullyPopulatedNode();
+    NodeImpl minimal = createMinimalNode();
 
     dao.create(full);
     dao.create(minimal);
@@ -55,8 +56,8 @@ public class TestNodePersistence extends HiveTest {
     NodeDao dao = new NodeDao(getDataSource(getConnectString(getHiveDatabaseName())));
     assertEquals(count, dao.loadAll().size());
 
-    Node full = createFullyPopulatedNode();
-    Node minimal = createMinimalNode();
+    NodeImpl full = createFullyPopulatedNode();
+    NodeImpl minimal = createMinimalNode();
 
     dao.create(full);
     dao.create(minimal);
@@ -97,8 +98,8 @@ public class TestNodePersistence extends HiveTest {
     NodeDao dao = new NodeDao(getDataSource(getConnectString(getHiveDatabaseName())));
     assertEquals(count, dao.loadAll().size());
 
-    Node full = createFullyPopulatedNode();
-    Node minimal = createMinimalNode();
+    NodeImpl full = createFullyPopulatedNode();
+    NodeImpl minimal = createMinimalNode();
 
     dao.create(full);
     dao.create(minimal);
@@ -111,8 +112,8 @@ public class TestNodePersistence extends HiveTest {
     assertEquals(0, dao.loadAll().size());
   }
 
-  public Node createFullyPopulatedNode() {
-    Node node = createMinimalNode();
+  public NodeImpl createFullyPopulatedNode() {
+    NodeImpl node = createMinimalNode();
     node.setName("full node");
     node.setStatus(Status.writable);
     node.setUsername("test");
@@ -123,8 +124,8 @@ public class TestNodePersistence extends HiveTest {
     return node;
   }
 
-  public Node createMinimalNode() {
-    return new Node(
+  public NodeImpl createMinimalNode() {
+    return new NodeImpl(
       Hive.NEW_OBJECT_ID,
       "minimal node",
       "blahbase",

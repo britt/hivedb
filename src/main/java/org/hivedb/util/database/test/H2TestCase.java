@@ -2,7 +2,7 @@ package org.hivedb.util.database.test;
 
 import org.hivedb.persistence.Schema;
 import org.hivedb.persistence.CachingDataSourceProvider;
-import org.hivedb.Node;
+import org.hivedb.NodeImpl;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -79,7 +79,7 @@ public class H2TestCase extends DatabaseTestCase {
 	}
 
 	@Override
-	protected Collection<Node> getDataNodes() {
+	protected Collection<NodeImpl> getDataNodes() {
 		return Collections.emptyList();
 	}
 }

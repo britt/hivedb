@@ -52,7 +52,7 @@ public class DbDirectoryTest extends H2TestCase {
       for (SecondaryIndex secondaryIndex : resource.getSecondaryIndexes()) {
         hive.addSecondaryIndex(resource, secondaryIndex);
       }
-      hive.addNode(new Node("node", H2TestCase.TEST_DB, "", HiveDbDialect.H2));
+      hive.addNode(new NodeImpl("node", H2TestCase.TEST_DB, "", HiveDbDialect.H2));
       SimpleJdbcDaoSupport dao = new SimpleJdbcDaoSupport();
 //      dao.setDataSource(hive.().getDataSource(getConnectString(H2TestCase.TEST_DB)));
       //		dao.getJdbcTemplate().update("SET TRACE_LEVEL_SYSTEM_OUT 3");

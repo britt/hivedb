@@ -1,9 +1,7 @@
 package org.hivedb.persistence;
 
-import org.hivedb.configuration.HiveConfiguration;
 import org.hivedb.*;
-import org.hivedb.persistence.DataSourceProvider;
-import org.hivedb.Node;
+import org.hivedb.configuration.HiveConfiguration;
 import org.hivedb.directory.DirectoryFacade;
 import org.hivedb.directory.KeySemaphore;
 import org.hivedb.directory.KeySemaphoreImpl;
@@ -129,7 +127,7 @@ public class JdbcDaoSupportCacheImpl implements JdbcDaoSupportCache {
     } catch (HiveException e) {
       // TODO Better exception Handling
       // HiveLockable should become runtime
-      throw new RuntimeException(e);
+      throw new HiveRuntimeException(e);
     }
   }
 
