@@ -124,7 +124,7 @@ public class AnnotationHelper {
 
 	@SuppressWarnings("unchecked")
 	public static <T> T getAnnotationDeeply(Method method, Class<? extends T> annotationClass) {
-		if (deepAnnotationByAnnotationClass.contains(method,annotationClass)) {
+		if (deepAnnotationByAnnotationClass.contains(method, annotationClass)) {
 			return (T) deepAnnotationByAnnotationClass.get(method, annotationClass);
 		}
 
@@ -137,7 +137,7 @@ public class AnnotationHelper {
 			}
 		}
 
-		deepAnnotationByAnnotationClass.add(method,annotationClass, annotation);
+		deepAnnotationByAnnotationClass.add(method, annotationClass, annotation);
 		return (T) annotation;
 	}
 
@@ -181,8 +181,6 @@ public class AnnotationHelper {
 			}
 
 			methodMappings.put(obj, value);
-
-			System.out.println("cache: " + cache.size() + " thisMethod: " + methodMappings.size());
 		}
 
 	}
