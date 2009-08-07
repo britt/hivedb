@@ -1,11 +1,12 @@
 package org.hivedb.hibernate;
 
+import org.hibernate.shards.strategy.access.SequentialShardAccessStrategy;
 import org.hivedb.Hive;
 import org.hivedb.HiveLockableException;
-import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.classgen.GenerateInstance;
 import org.hivedb.util.classgen.GeneratedClassFactory;
 import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
+import org.hivedb.util.classgen.ReflectionTools;
 import org.hivedb.util.database.test.HiveTest;
 import org.hivedb.util.database.test.HiveTest.Config;
 import org.hivedb.util.database.test.WeatherReport;
@@ -439,4 +440,62 @@ public class BaseDataAccessObjectTest extends HiveTest {
 		// Make sure all instances are found across nodes
 		Assert.assertEquals(INSTANCES, dao.findByProperty("latitude", 1d).size());
 	}
+
+	/**
+	 * Test illustrating bug 6520-6522.
+	 * <p/>
+	 * The count code issues a count query to each node. The broken code was then looking only at the count returned by the first node. This was
+	 * only the correct behavior 1/n percent of the time. The correct behavior is to sum the counts from all the nodes.
+	 */
+	@Test
+	public void shouldSumCountsFromAllNodes() throws Exception {
+		final QueryCountStubDAO dao = new QueryCountStubDAO(getGeneratedClass());
+
+		assertEquals(5, dao.getCount("foo", "bar").intValue());
+		assertEquals(5, dao.getCount("foo", "bar").intValue());
+		assertEquals(5, dao.getCount("foo", "bar").intValue());
+
+		assertEquals(3, dao.callCount);
+	}
+
+	/**
+	 * Overrides the counts returned in support of the shouldSumCountsFromAllNodes test.
+	 */
+	public class QueryCountStubDAO extends BaseDataAccessObject {
+		int callCount = 0;
+
+		public QueryCountStubDAO(Class clazz) {
+			super(
+					config.getEntityConfig(clazz),
+					hive,
+					new HiveSessionFactoryBuilderImpl(
+							config,
+							getMappedClasses(),
+							hive,
+							new SequentialShardAccessStrategy()));
+		}
+
+
+		@Override
+		protected Collection<Object> queryByProperties(String partitioningPropertyName, Map<String, Object> propertyNameValueMap, Integer firstResult, Integer maxResults, boolean justCount) {
+			ArrayList<Object> list = new ArrayList<Object>();
+			switch (callCount++) {
+				case 0:
+					list.add(0);
+					list.add(5);
+					return list;
+				case 1:
+					list.add(5);
+					list.add(0);
+					return list;
+				case 2:
+					list.add(2);
+					list.add(3);
+					return list;
+				default:
+					throw new RuntimeException("unexpect call");
+			}
+		}
+  }
+
 }

@@ -1,22 +1,8 @@
 package org.hivedb.hibernate;
 
-import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.Criteria;
-import org.hibernate.FlushMode;
-import org.hibernate.LockMode;
-import org.hibernate.Query;
-import org.hibernate.SQLQuery;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
+import org.hibernate.*;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -31,19 +17,21 @@ import org.hivedb.configuration.EntityConfig;
 import org.hivedb.configuration.EntityIndexConfig;
 import org.hivedb.configuration.EntityIndexConfigDelegator;
 import org.hivedb.configuration.EntityIndexConfigImpl;
-import org.hivedb.util.*;
+import org.hivedb.util.Lists;
 import org.hivedb.util.classgen.GenerateInstance;
 import org.hivedb.util.classgen.GeneratedClassFactory;
 import org.hivedb.util.classgen.GeneratedInstanceInterceptor;
 import org.hivedb.util.classgen.ReflectionTools;
-import org.hivedb.util.functional.Amass;
-import org.hivedb.util.functional.Atom;
+import org.hivedb.util.functional.*;
 import org.hivedb.util.functional.Filter;
-import org.hivedb.util.functional.Joiner;
-import org.hivedb.util.functional.Pair;
-import org.hivedb.util.functional.Predicate;
-import org.hivedb.util.functional.Transform;
-import org.hivedb.util.functional.Unary;
+
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class BaseDataAccessObject implements DataAccessObject<Object, Serializable>{
 	private final Log log = LogFactory.getLog(BaseDataAccessObject.class);
@@ -67,9 +55,8 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		this.config = config;
 		this.factory = factory;
 		this.hive = hive;
-		
+
 	}
-	
 
 	public Boolean exists(Serializable id) {
 		return hive.directory().doesResourceIdExist(config.getResourceName(), id);
@@ -90,7 +77,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 					}
 					return Collections.singletonList(fetched);
 				}};
-			
+
 			Object fetched = Atom.getFirstOrThrow(queryInTransaction(query, getSession()));
 			if(fetched == null && exists(id)){
 				try {
@@ -104,21 +91,21 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		} catch(RuntimeException e) {
 			//This save us a directory hit for all cases except when requesting a non-existent id.
 			if(!exists(id))
-				return null; 
+				return null;
 			else
 				throw e;
 		}
 	}
-	
+
 	public Collection<Object> getPropertyValue(final String propertyName, final int firstResult, final int maxResults) {
 		QueryCallback callback = new QueryCallback(){
 			@SuppressWarnings("unchecked")
 			public Collection<Object> execute(Session session) {
-				Query query = 
+				Query query =
 					session.createQuery(
 						String.format(
-								"select %s from %s", 
-								propertyName, 
+								"select %s from %s",
+								propertyName,
 								GeneratedClassFactory.getGeneratedClass(config.getRepresentedInterface()).getSimpleName()));
 				if (maxResults > 0) {
 					query.setFirstResult(firstResult);
@@ -128,29 +115,37 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			}};
 		return queryInTransaction(callback, getSession());
 	}
-	
+
 	public Collection<Object> findByProperty(final String propertyName, final Object propertyValue) {
 		return findByProperties(propertyName, Collections.singletonMap(propertyName, propertyValue));
 	}
 	public Collection<Object> findByProperty(final String propertyName, final Object propertyValue, final Integer firstResult, final Integer maxResults) {
 		return findByProperties(propertyName, Collections.singletonMap(propertyName, propertyValue), firstResult, maxResults);
 	}
-	public Collection<Object> findByProperties(String partitioningPropertyName, final Map<String,Object> propertyNameValueMap) { 
+	public Collection<Object> findByProperties(String partitioningPropertyName, final Map<String,Object> propertyNameValueMap) {
 		return findByProperties(partitioningPropertyName, propertyNameValueMap, 0, 0);
 	}
 	public Collection<Object> findByProperties(String partitioningPropertyName, final Map<String,Object> propertyNameValueMap, final Integer firstResult, final Integer maxResults) {
 		return queryByProperties(partitioningPropertyName, propertyNameValueMap, firstResult, maxResults, false);
 	}
 	public Integer getCount(final String propertyName, final Object propertyValue) {
-		return (Integer)Atom.getFirstOrThrow(queryByProperties(propertyName, Collections.singletonMap(propertyName, propertyValue), 0, 0, true));
+		return sumCounts(queryByProperties(propertyName, Collections.singletonMap(propertyName, propertyValue), 0, 0, true));
 	}
 	public Integer getCountByProperties(String partitioningPropertyName, Map<String, Object> propertyNameValueMap) {
-		return (Integer)Atom.getFirstOrThrow(queryByProperties(partitioningPropertyName, propertyNameValueMap, 0, 0, true));
+		return sumCounts(queryByProperties(partitioningPropertyName, propertyNameValueMap, 0, 0, true));
 	}
 	public Integer getCountByProperties(String partitioningPropertyName, Map<String, Object> propertyNameValueMap, Integer firstResult, Integer maxResults) {
-		return (Integer)Atom.getFirstOrThrow(queryByProperties(partitioningPropertyName, propertyNameValueMap, firstResult, maxResults, true));
+		return sumCounts(queryByProperties(partitioningPropertyName, propertyNameValueMap, firstResult, maxResults, true));
 	}
-	
+
+	private Integer sumCounts(Collection<Object> objects) {
+		int count = 0;
+		for (Object object : objects) {
+			count += ((Number) object).intValue();
+		}
+		return count;
+	}
+
 	public Collection<Object> findByPropertyRange(final String propertyName, final Object minValue, final Object maxValue) {
 		// Use an AllShardsresolutionStrategy + Criteria
 		final EntityConfig entityConfig = config;
@@ -179,7 +174,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		}
 		return queryInTransaction(callback, session);
 	}
-	
+
 	public Integer getCountByRange(final String propertyName, final Object minValue, final Object maxValue) {
 		// Use an AllShardsresolutionStrategy + Criteria
 		Session session = factory.openAllShardsSession();
@@ -193,7 +188,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			}};
 		return (Integer)Atom.getFirstOrThrow(queryInTransaction(query, session));
 	}
-	
+
 	public Collection<Object> findByPropertyRange(final String propertyName, final Object minValue, final Object maxValue, final Integer firstResult, final Integer maxResults) {
 		// Use an AllShardsresolutionStrategy + Criteria
 		final EntityConfig entityConfig = config;
@@ -252,7 +247,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	}
 
 	private boolean partionDimensionKeyHasChanged(Object entity) {
-		return hive.directory().doesResourceIdExist(config.getResourceName(), config.getId(entity)) && 
+		return hive.directory().doesResourceIdExist(config.getResourceName(), config.getId(entity)) &&
 				!config.getPrimaryIndexKey(entity).equals(getHive().directory().getPrimaryIndexKeyOfResourceId(config.getResourceName(), config.getId(entity)));
 	}
 
@@ -279,7 +274,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			  }}};
 			  deleteAll(chunk, callback);
 		  }
-		 
+
 	      SessionCallback callback = new SessionCallback(){
 			  public void execute(Session session) {
 				  for(Object entity : chunk) {
@@ -319,7 +314,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 
 		return collection;
 	}
-    
+
     public Serializable delete(final Serializable id) {
         SessionCallback callback = new SessionCallback() {
             public void execute(Session session) {
@@ -333,7 +328,8 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
     private Object get(Serializable id, Session session) {
 		return session.get(getRespresentedClass(), id);
 	}
-	private Collection<Object> queryByProperties(
+
+	protected Collection<Object> queryByProperties(
 			String partitioningPropertyName,
 			final Map<String, Object> propertyNameValueMap,
 			final Integer firstResult, final Integer maxResults,
@@ -342,9 +338,9 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		Session session = createSessionForIndex(config, entityIndexConfig, propertyNameValueMap.get(partitioningPropertyName));
 
 		final Map<String, Entry<EntityIndexConfig, Object>> propertyNameEntityIndexConfigValueMap = createPropertyNameToValueMap(propertyNameValueMap);
-	
+
 		QueryCallback query;
-		
+
 		if (Filter.isMatch(new Predicate<String>() { public boolean f(String propertyName) {
 				return isPrimitiveCollection(propertyName);
 			}}, propertyNameEntityIndexConfigValueMap.keySet()))
@@ -362,8 +358,8 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 								}
 							},
 							propertyNameEntityIndexConfigValueMap.entrySet());
-			
-					return justCount 
+
+					return justCount
 						? queryWithHQLRowCount(session, revisedPropertyNameValueMap, firstResult, maxResults)
 						: queryWithHQL(session, revisedPropertyNameValueMap, firstResult, maxResults);
 			}};
@@ -398,12 +394,12 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 							? resolveEntityIndexConfig(dataIndexDelegate.value())
 							: entityIndexConfig;
 						return new Pair<String, Entry<EntityIndexConfig, Object>>(
-								resolvedEntityIndexConfig.getPropertyName(), 
+								resolvedEntityIndexConfig.getPropertyName(),
 								new Pair<EntityIndexConfig, Object>(resolvedEntityIndexConfig, propertyNameValueMap.get(propertyName)));
 					}
 			}, propertyNameValueMap.keySet());
 	}
-	
+
 
 	@SuppressWarnings("unchecked")
 	protected Collection<Object> queryWithHQL(Session session, Map<String, Object> propertyNameValueMap, Integer firstResult, Integer maxResults) {
@@ -422,7 +418,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		String queryString = String.format("select count(%s) %s",
 			config.getIdPropertyName(),
 			createHQLQuery(propertyNameValueMap));
-		
+
 		Query query = session.createQuery(queryString);
         if (maxResults != 0) {
             query.setFirstResult(firstResult);
@@ -458,8 +454,8 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		else
 			return String.format(" :%s = x.%s", propertyName, propertyName);
 	}
-	
-	
+
+
 
 
   private static int getSaveChunkSize() {
@@ -474,7 +470,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 	public Class<Object> getRespresentedClass() {
 		return (Class<Object>) EntityResolver.getPersistedImplementation(clazz);
 	}
-	
+
 	public static void doInTransaction(SessionCallback callback, Session session) {
 		Transaction tx = null;
 		try {
@@ -490,7 +486,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			session.close();
 		}
 	}
-	
+
 	public static Collection<Object> queryInTransaction(QueryCallback callback, Session session) {
 		Collection<Object> results = Lists.newArrayList();
 		try {
@@ -506,9 +502,9 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		}
 		return results;
 	}
-	
+
 	public Collection<Object> populateDataIndexDelegates(Collection<Object> instances) {
-		return Transform.map(new Unary<Object, Object>() { 
+		return Transform.map(new Unary<Object, Object>() {
 			@SuppressWarnings("unchecked")
 			public Object f(final Object instance) {
 				final List<Method> allMethodsWithAnnotation = AnnotationHelper.getAllMethodsWithAnnotation(clazz, DataIndexDelegate.class);
@@ -527,12 +523,12 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 				return modified;
 			}}, instances);
 	}
-	
+
 	private boolean isPrimitiveCollection(final String propertyName) {
 		return ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName)
 			&& !ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName);
 	}
-	
+
 	protected EntityIndexConfig resolveEntityIndexConfig(String propertyName) {
 		return config.getPrimaryIndexKeyPropertyName().equals(propertyName)
 			? createEntityIndexConfigForPartitionIndex(config)
@@ -544,7 +540,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			partitionIndexEntityIndexConfig = new EntityIndexConfigImpl(entityConfig.getRepresentedInterface(), entityConfig.getPrimaryIndexKeyPropertyName());
 		return partitionIndexEntityIndexConfig;
 	}
-	
+
 	private void addPropertyRestriction(EntityIndexConfig indexConfig, Criteria criteria, String propertyName, Object propertyValue) {
 		if (ReflectionTools.isCollectionProperty(config.getRepresentedInterface(), propertyName))
 			if (ReflectionTools.isComplexCollectionItemProperty(config.getRepresentedInterface(), propertyName)) {
@@ -556,7 +552,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		else
 			criteria.add( Restrictions.eq(propertyName, propertyValue));
 	}
-	
+
 	protected Session createSessionForIndex(EntityConfig entityConfig, EntityIndexConfig indexConfig, Object propertyValue) {
 		if (indexConfig.getIndexType().equals(IndexType.Delegates))
 			return factory.openSession(
@@ -564,8 +560,8 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 					propertyValue);
 		else if (indexConfig.getIndexType().equals(IndexType.Hive))
 			return factory.openSession(
-					entityConfig.getResourceName(), 
-					indexConfig.getIndexName(), 
+					entityConfig.getResourceName(),
+					indexConfig.getIndexName(),
 					propertyValue);
 		else if (indexConfig.getIndexType().equals(IndexType.Data))
 			return factory.openAllShardsSession();
@@ -584,8 +580,8 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		else
 			criteria.add( Restrictions.between(propertyName, minValue, maxValue));
 	}
-	
-	private void doSave(final Object entity, SessionCallback callback, SessionCallback cleanupCallback) {		
+
+	private void doSave(final Object entity, SessionCallback callback, SessionCallback cleanupCallback) {
 		try {
 			doInTransaction(callback, getSession());
 		} catch(org.hibernate.TransactionException dupe) {
@@ -605,8 +601,8 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 			}
 		}
 	}
-	
-	private void doSaveAll(final Collection<Object> entities, SessionCallback callback, SessionCallback cleanupCallback) {		
+
+	private void doSaveAll(final Collection<Object> entities, SessionCallback callback, SessionCallback cleanupCallback) {
 		try {
 			doInTransaction(callback, getSession());
 		} catch(org.hibernate.TransactionException dupe) {
@@ -625,25 +621,25 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 		doInTransaction(callback, getSession());
 	 }
 
-	
+
 	private Boolean existsInSession(Session session, Serializable id) {
 		return null != session.get(getRespresentedClass(), id);
 	}
 
 	private void validateNonNull(final Collection<Object> collection) {
 		if (Filter.isMatch(new Filter.NullPredicate<Object>(), collection)) {
-			String ids = Amass.joinByToString(new Joiner.ConcatStrings<String>(", "), 
+			String ids = Amass.joinByToString(new Joiner.ConcatStrings<String>(", "),
 				Transform.map(new Unary<Object, String>() {
 					public String f(Object item) {
 						return item != null ? config.getId(item).toString() : "null"; }}, collection));
 			throw new HiveRuntimeException(String.format("Encountered null items in collection: %s", ids));
 		}
 	}
-	
+
 	protected Session getSession() {
 		return factory.openSession(factory.getDefaultInterceptor());
 	}
-	
+
 	private void addPaging(final Integer firstResult,
 			final Integer maxResults, Criteria criteria) {
 		if (maxResults > 0) {
@@ -662,7 +658,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 				Criteria criteria = session.createCriteria(config.getRepresentedInterface()).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
 				return criteria.list();
 			}};
-		
+
 		return queryInTransaction(query, factory.openAllShardsSession());
 	}
 	public Collection<Object> queryDataIndex(final String joinTableName, Object primaryIndexKey) {
@@ -672,7 +668,7 @@ public class BaseDataAccessObject implements DataAccessObject<Object, Serializab
 				SQLQuery query = session.createSQLQuery("select * from " + joinTableName);
 				return query.list();
 			}};
-		
+
 		return queryInTransaction(query, factory.openSession(primaryIndexKey));
 	}
 }
